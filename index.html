@@ -139,7 +139,7 @@ main { max-width: 1520px; margin: 0 auto; padding-block: 24px 64px; }
 .edge.hot { stroke: var(--fg); stroke-width: 2; }
 .edge.dim { opacity: .2; }
 .node { cursor: pointer; }
-.node rect.box { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1; }
+.node rect.box { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1; transition: stroke .12s ease; }
 .node text.id { font-family: var(--f-mono); font-size: 11px; font-weight: 600; fill: var(--c); }
 .node text.t { font-family: var(--f-cjk); font-size: 13px; font-weight: 500; fill: var(--fg); }
 .node text.en { font-family: var(--f-mono); font-size: 10.5px; fill: var(--muted); }
@@ -374,7 +374,21 @@ tr td { transition: opacity .15s var(--ease); }
   let solved = new Set(store.get("solved", []));
   let notes = store.get("notes", {});
   const statusOf = id => prog[id] || "none";
-  function setStatus(id, s) { if (s === "none") delete prog[id]; else prog[id] = s; store.set("progress", prog); toast(`${id} · ${s === "none" ? "not started" : s}`); }
+  function setStatus(id, s) {
+    const key = id.replace(/\d+$/, ""), full = () => A.filter(c => c.id.startsWith(key)).every(c => statusOf(c.id) === "learned");
+    const was = full();
+    if (s === "none") delete prog[id]; else prog[id] = s;
+    store.set("progress", prog);
+    toast(`${id} · ${s === "none" ? "not started" : s}`);
+    if (!was && full()) setTimeout(() => celebrate(key)); // after the caller re-renders
+  }
+  // Rare moment, so it may run longer than UI motion: the finished lane lights up once.
+  function celebrate(key) {
+    toast(`${LEVELS.find(l => l.key === key).name} complete`);
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const lane = document.querySelector(`.lane-bg[data-lv="${key}"]`);
+    if (lane) lane.animate([{ opacity: 0.045 }, { opacity: 0.22 }, { opacity: 0.045 }], { duration: 900, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
+  }
   function toggleSolved(pid) { solved.has(pid) ? solved.delete(pid) : solved.add(pid); store.set("solved", [...solved]); }
 
   const $ = s => document.querySelector(s);
@@ -471,7 +485,7 @@ tr td { transition: opacity .15s var(--ease); }
     lanes.forEach(({ level: l, top, height: h }) => {
       const list = A.filter(c => c.id.startsWith(l.key));
       const done = list.filter(c => statusOf(c.id) === "learned").length;
-      out += `<g style="--c: var(--lv-${l.slug})"><rect class="lane-bg" x="0" y="${top}" width="${width}" height="${h}"/>
+      out += `<g style="--c: var(--lv-${l.slug})"><rect class="lane-bg" data-lv="${l.key}" x="0" y="${top}" width="${width}" height="${h}"/>
         <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/>
         <text class="lane-name" x="16" y="${top + 28}">${l.name}</text>
         <text class="lane-en" x="16" y="${top + 46}">${l.en}</text>
