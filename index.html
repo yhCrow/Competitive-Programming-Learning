@@ -55,6 +55,7 @@ img { max-width: 100%; }
   --r-ctl: 8px;
   --r-card: 12px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1); /* on-screen movement: visualizer bars and pointers */
   --f-ui: "JetBrains Mono", "Atlas CJK", "Atlas CJK Sys", "Noto Sans SC", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --f-cjk: "JetBrains Mono", "Atlas CJK", "Atlas CJK Sys", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", monospace;
   --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -365,7 +366,7 @@ tr td { transition: opacity .15s var(--ease); }
 .vis-ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .vis-ctl input[type="range"] { flex: 1 1 160px; accent-color: var(--accent); }
 .bars { height: 172px; min-width: 352px; }
-.vbar { position: absolute; bottom: 24px; left: 0; width: 36px; background: var(--raised); border: 1px solid var(--line-strong); border-radius: 6px 6px 0 0; transition: transform .3s cubic-bezier(0.77, 0, 0.175, 1), background-color .15s ease; }
+.vbar { position: absolute; bottom: 24px; left: 0; width: 36px; background: var(--raised); border: 1px solid var(--line-strong); border-radius: 6px 6px 0 0; transition: transform .3s var(--ease-in-out), background-color .15s ease; }
 .vbar span { position: absolute; bottom: -22px; width: 100%; text-align: center; font-size: 13px; color: var(--fg-2); }
 .vbar.done { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }
 .vbar.on { background: var(--accent); border-color: var(--accent); }
@@ -376,7 +377,7 @@ tr td { transition: opacity .15s var(--ease); }
 .cell.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
 .cell.hit { background: var(--accent); color: var(--bg); }
 .ptrs { position: relative; height: 24px; margin-top: 6px; }
-.ptr { position: absolute; left: 0; width: 36px; text-align: center; font-size: 11px; color: var(--accent); transition: transform .3s cubic-bezier(0.77, 0, 0.175, 1), opacity .15s ease; }
+.ptr { position: absolute; left: 0; width: 36px; text-align: center; font-size: 11px; color: var(--accent); transition: transform .3s var(--ease-in-out), opacity .15s ease; }
 .ptr.lo, .ptr.hi { color: var(--muted); }
 .ptr.mid { top: 10px; }
 .gsvg, .tsvg { width: 100%; max-width: 480px; height: auto; display: block; }
@@ -529,7 +530,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 .tileacts { position: absolute; right: 8px; bottom: 8px; display: flex; gap: 2px; }
 .iconbtn { border: 1px solid transparent; background: transparent; width: 28px; height: 28px; border-radius: 6px; color: var(--muted); font-size: 16.5px; line-height: 1; transition: background-color .15s ease, color .15s ease, transform .12s var(--ease); }
 .iconbtn:hover { background: var(--raised); color: var(--fg); }
-.iconbtn:active { transform: scale(.92); }
+.iconbtn:active { transform: scale(.97); }
 .iconbtn[aria-pressed="true"] { color: var(--v-cmp); }
 .tile .row small { flex: 1; }
 .tile { padding-bottom: 40px; }
@@ -604,7 +605,7 @@ table.syl tr.learned td { opacity: .7; }
 .steprow { position: relative; height: 30px; overflow: hidden; }
 .step i { font-style: normal; } .steprow.narrow .step i { display: none; }
 .step { position: absolute; left: 0; top: 6px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; transition: opacity .15s ease; }
-svg .node rect.box, svg .edge { transition: opacity .18s ease, stroke .18s ease; }
+svg .node rect.box, svg .edge { transition: opacity .18s ease, stroke .18s ease, transform .15s var(--ease); }
 svg.hovering .node:not(.hl) { opacity: .28; }
 svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
 .edge.hin { stroke: #22b8cf; } .edge.hout { stroke: var(--v-done); }
@@ -613,7 +614,7 @@ svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
   .node:hover rect.box { transform: translateY(-2px) scale(1.03); filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .25)); }
 }
 @keyframes breathe { 50% { transform: scale(1.7); opacity: .35; } }
-.node.ready:not(.learned):not(.learning) circle.ready { transform-box: fill-box; transform-origin: center; animation: breathe 2.2s ease-in-out infinite; }
+.node.ready:not(.learned):not(.learning) circle.ready { transform-box: fill-box; transform-origin: center; animation: breathe 2.2s ease-in-out 3; }
 @media (max-width: 767px) {
   .mapwrap { grid-template-columns: 64px minmax(0, 1fr); gap: 0 6px; }
   .rail-label { padding: 10px 6px; }
@@ -628,7 +629,7 @@ svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
 }
 
 /* a chapter card's title grows into the chapter heading */
-::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
 /* this round: merged programs, tag search, more visualizers, motion */
 details.prog { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); overflow: hidden; }
@@ -671,12 +672,14 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 /* the map draws itself the first time it appears, column by column */
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes nodein { from { opacity: 0; transform: translateY(6px); } }
-.intro .edge { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .9s var(--ease) forwards; animation-delay: calc(var(--d) * 70ms); }
-.intro .node > * { animation: nodein .4s var(--ease) both; animation-delay: calc(var(--d) * 70ms); }
+.intro .edge { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s var(--ease) forwards; animation-delay: calc(min(var(--d), 8) * 50ms); }
+.intro .node > * { animation: nodein .4s var(--ease) both; animation-delay: calc(min(var(--d), 8) * 50ms); }
 /* a chosen chapter's path draws in */
 /* highlighted paths flow in the direction you would learn them */
 @keyframes flow { to { stroke-dashoffset: -0.06; } }
-.edge.hot, .edge.hin, .edge.hout { stroke-dasharray: 0.035 0.025; animation: flow 1.2s linear infinite; stroke-width: 2.4; }
+.edge.hot { stroke-width: 2.4; stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s var(--ease) forwards; }
+.edge.hin, .edge.hout { stroke-width: 2.4; stroke-dasharray: 0.035 0.025; animation: flow 1.2s linear infinite; } /* hover only, so it ends on pointer-leave */
+.edge.hot.hin, .edge.hot.hout { animation: draw .6s var(--ease) forwards, flow 1.2s linear infinite; } /* keep the finished draw in the list so leaving the hover doesn't redraw the path */
 /* a chapter just marked learned pops */
 @keyframes popnode { 40% { transform: scale(1.08); } }
 .node.pop rect.box { transform-box: fill-box; transform-origin: center; animation: popnode .45s var(--ease); }
@@ -728,7 +731,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 @media (prefers-reduced-motion: reduce) {
   .hero > * { animation: none; }
   .toast, .toast.show { transform: translate(-50%, 0); }
-  .btn:active, .status button:active, .copy:active, .chip:active, .seg button:active { transform: none; }
+  .btn:active, .status button:active, .copy:active, .chip:active, .seg button:active, .iconbtn:active { transform: none; }
+  .chip:hover .ficon, .tile:hover .ficon, .trackcard:hover .ficon, .mrow:hover .ficon, .box:hover .ci,
+  .tile:hover, .trackcard:hover, .tier:hover, .badge.got:hover, .place:hover, .nextcard:hover { transform: none; }
 }
 </style>
 </head>
@@ -811,7 +816,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     toast(`${LEVELS.find(l => l.key === key).name} complete`);
     // An opacity glow with no movement, so it stays under reduced motion.
     const lane = document.querySelector(`.lane-bg[data-lv="${key}"]`);
-    if (lane) lane.animate([{ opacity: 0.045 }, { opacity: 0.22 }, { opacity: 0.045 }], { duration: 900, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
+    if (lane) lane.animate([{ opacity: 0.045 }, { opacity: 0.22 }, { opacity: 0.045 }], { duration: 900, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }); // same curve as --ease; WAAPI can't read CSS variables
   }
   function toggleSolved(pid) { solved.has(pid) ? solved.delete(pid) : solved.add(pid); store.set("solved", [...solved]); logDay(); }
 
@@ -2012,9 +2017,13 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       ${pick ? `<div class="pickrow"><span>Your starting point: <a href="#ch-${pick.slug}" class="cjk"><span class="lv ${lvClass(pick)}">${pick.id}</span> ${esc(pick.title)}</a>. It is ringed on the map and the chapter list.</span><button class="btn" data-locate="${pick.id}">Locate in tree</button></div>` : ""}
     </section>`;
   }
-  // Numbers roll up from zero when a view opens.
+  // Numbers roll up from zero the first time a view opens in this visit; after that they are just shown.
+  const rolledViews = new Set();
   function rollCounters() {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const view = location.hash.split("?")[0] || "#home";
+    if (rolledViews.has(view)) return;
+    rolledViews.add(view);
     document.querySelectorAll("#view [data-count]").forEach(el => {
       const to = +el.dataset.count, suf = el.dataset.suffix || "";
       if (!to) return;
@@ -2114,7 +2123,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   document.addEventListener("click", e => {
     // Moving between views by click cross-fades; a chapter card's title also grows into the chapter heading.
     const link = e.target.closest('a[href^="#"]');
-    if (link && link.getAttribute("href").length > 1 && document.startViewTransition && !e.ctrlKey && !e.metaKey && !e.shiftKey && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    // keyboard activation (detail 0) navigates instantly; only pointer clicks cross-fade
+    if (link && e.detail !== 0 && link.getAttribute("href").length > 1 && document.startViewTransition && !e.ctrlKey && !e.metaKey && !e.shiftKey && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
       e.preventDefault();
       if (link.dataset.select) { selected = link.dataset.select; zoomS = 1; pulseId = selected; }
       const title = link.matches("a.tile") && link.querySelector(".t");
@@ -2235,7 +2245,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (selected === n.dataset.id && e.key === "Enter") { location.hash = "ch-" + byId[n.dataset.id].slug; return; }
       if (!$("#canvas")) { selected = n.dataset.id; zoomS = 1; location.hash = "tree"; return; }
       selected = n.dataset.id;
-      if (curS < 0.99) { const before = n.getBoundingClientRect(); zoomS = 1; viewTree(); zoomFrom(before, n.dataset.id); } else refreshTree();
+      if (curS < 0.99) { zoomS = 1; viewTree(); } else refreshTree(); // keyboard: jump to full size, no zoom animation
       const again = document.querySelector(`.node[data-id="${n.dataset.id}"]`); if (again) again.focus();
     }
   });
