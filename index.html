@@ -7,56 +7,60 @@
 <title>Contest Chapter Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Sans+SC:wght@400;500&display=swap">
 <style>
-/* Standalone reset (the Claude artifact wrapper used to add this). */
+/* Standalone reset (the Claude artifact wrapper adds this there). */
 [hidden] { display: none !important; }
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 html, body { margin: 0; }
 img { max-width: 100%; }
 
-/* Layout: a sticky judge-style bar over two views. The tree view is a layered prerequisite map (columns = depth) with a side card;
-   the chapter view is a reading column with tabs. Level colours borrow Codeforces rating colours: 基 pupil green, 进 expert blue,
-   拓 candidate-master violet, NOI master orange. */
+/* Layout: a quiet judge-style bar over three views. The tree is the one rich element: a route map with one lane per
+   level, coloured with Codeforces rating colours (基 pupil green, 进 expert blue, 拓 candidate-master violet, NOI master
+   orange). Those four colours appear only on chapter ids and in the tree; everything else is a graphite ramp. */
 :root {
-  --bg: #f4f6f9;
+  --bg: #f6f7f9;
   --surface: #ffffff;
-  --sunk: #eaeef4;
-  --line: #d5dce6;
-  --fg: #18202b;
-  --muted: #5b6676;
+  --raised: #eef0f3;
+  --line: rgba(17, 24, 39, 0.10);
+  --line-strong: rgba(17, 24, 39, 0.18);
+  --fg: #151a22;
+  --fg-2: #4a5362;
+  --muted: #6b7382;
   --accent: #2f5fd0;
   --lv-b: #1f8a4c;
   --lv-j: #2f5fd0;
   --lv-t: #9b3fb5;
-  --lv-n: #d4670f;
-  --idea: #2f5fd0;
-  --key: #1f8a4c;
+  --lv-n: #c85d0b;
   --trap: #c2372f;
-  --code-bg: #f7f9fc;
+  --code-bg: #f8f9fb;
   --k-kw: #8a3fb0;
   --k-ty: #1f6fb0;
   --k-str: #2c7a3f;
   --k-num: #b45309;
   --k-com: #7b8594;
   --k-pre: #b0306a;
+  --r-tag: 6px;
+  --r-ctl: 8px;
+  --r-card: 12px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --f-ui: "JetBrains Mono", "Noto Sans SC", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --f-cjk: "JetBrains Mono", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", monospace;
   --f-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f141b; --surface: #161d27; --sunk: #1c2531; --line: #2a3544; --fg: #e4e9f0; --muted: #98a3b3; --accent: #7aa2ff;
-    --lv-b: #4cc47e; --lv-j: #7aa2ff; --lv-t: #c98be0; --lv-n: #f2994a;
-    --idea: #7aa2ff; --key: #4cc47e; --trap: #ff7b72; --code-bg: #121922;
+    --bg: #121417; --surface: #181b20; --raised: #20242a; --line: rgba(236, 239, 244, 0.08); --line-strong: rgba(236, 239, 244, 0.16);
+    --fg: #eceff4; --fg-2: #b3b9c3; --muted: #8a919c; --accent: #7aa2ff;
+    --lv-b: #4cc47e; --lv-j: #7aa2ff; --lv-t: #c98be0; --lv-n: #f2994a; --trap: #ff7b72; --code-bg: #15181c;
     --k-kw: #d2a8ff; --k-ty: #79c0ff; --k-str: #7ee787; --k-num: #f2b35a; --k-com: #7d8896; --k-pre: #ff8fc0;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f141b; --surface: #161d27; --sunk: #1c2531; --line: #2a3544; --fg: #e4e9f0; --muted: #98a3b3; --accent: #7aa2ff;
-  --lv-b: #4cc47e; --lv-j: #7aa2ff; --lv-t: #c98be0; --lv-n: #f2994a;
-  --idea: #7aa2ff; --key: #4cc47e; --trap: #ff7b72; --code-bg: #121922;
+  --bg: #121417; --surface: #181b20; --raised: #20242a; --line: rgba(236, 239, 244, 0.08); --line-strong: rgba(236, 239, 244, 0.16);
+  --fg: #eceff4; --fg-2: #b3b9c3; --muted: #8a919c; --accent: #7aa2ff;
+  --lv-b: #4cc47e; --lv-j: #7aa2ff; --lv-t: #c98be0; --lv-n: #f2994a; --trap: #ff7b72; --code-bg: #15181c;
   --k-kw: #d2a8ff; --k-ty: #79c0ff; --k-str: #7ee787; --k-num: #f2b35a; --k-com: #7d8896; --k-pre: #ff8fc0;
   color-scheme: dark;
 }
@@ -68,193 +72,222 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 a { color: var(--accent); }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }
+h1, h2, h3, h4 { font-weight: 500; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cjk { font-family: var(--f-cjk); }
 .mono { font-family: var(--f-mono); }
 .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.label { font-size: 12px; color: var(--muted); margin: 0 0 8px; font-weight: 500; }
+.hint { color: var(--muted); font-size: 13px; }
 
-/* top bar */
+/* bar */
 .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
-.bar-in { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-block: 10px; max-width: 1500px; margin: 0 auto; }
-.brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: var(--fg); }
-.brand b { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
-.brand span { font-family: var(--f-cjk); color: var(--muted); font-size: 13px; }
+.bar-in { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 12px; max-width: 1520px; margin: 0 auto; }
+.brand { display: flex; align-items: baseline; gap: 12px; text-decoration: none; color: var(--fg); }
+.brand b { font-weight: 500; font-size: 16px; }
+.brand span { font-family: var(--f-cjk); color: var(--muted); font-size: 12px; }
 .nav { display: flex; gap: 4px; }
-.nav a { text-decoration: none; color: var(--muted); padding: 5px 10px; border-radius: 6px; font-weight: 500; font-size: 14px; }
-.nav a[aria-current="page"] { color: var(--fg); background: var(--sunk); }
-.search { position: relative; flex: 1 1 220px; max-width: 420px; margin-left: auto; }
-.search input { width: 100%; padding: 7px 10px 7px 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
-.search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; fill: var(--muted); }
-.results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 32px rgba(10, 20, 40, .16); max-height: 60vh; overflow: auto; padding: 6px; }
-.results a { display: block; padding: 8px 10px; border-radius: 6px; text-decoration: none; color: var(--fg); }
-.results a:hover, .results a.on { background: var(--sunk); }
-.results small { display: block; color: var(--muted); font-size: 12.5px; }
-.results .none { padding: 10px; color: var(--muted); }
+.nav a { text-decoration: none; color: var(--fg-2); padding: 4px 12px; border-radius: var(--r-ctl); font-size: 13px; transition: background-color .15s var(--ease), color .15s var(--ease); }
+.nav a:hover { background: var(--raised); }
+.nav a[aria-current="page"] { color: var(--fg); background: var(--raised); }
+.search { position: relative; flex: 1 1 220px; max-width: 360px; margin-left: auto; }
+.search input { width: 100%; height: 32px; padding: 0 12px 0 32px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--bg); }
+.search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; fill: var(--muted); }
+.results { position: absolute; top: calc(100% + 8px); left: 0; right: 0; min-width: 320px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-card); box-shadow: 0 8px 24px rgba(0, 0, 0, .10); max-height: 60vh; overflow: auto; padding: 4px; }
+.results a { display: block; padding: 8px 12px; border-radius: var(--r-ctl); text-decoration: none; color: var(--fg); }
+.results a:hover, .results a.on { background: var(--raised); }
+.results small { display: block; color: var(--muted); font-size: 12px; }
+.results .none { padding: 12px; color: var(--muted); font-size: 13px; }
 
-main { max-width: 1500px; margin: 0 auto; padding-block: 18px 60px; }
+main { max-width: 1520px; margin: 0 auto; padding-block: 24px 64px; }
 
-/* level chips */
+/* level id: the signature */
 .lv { --c: var(--muted); display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 12px; font-weight: 600; color: var(--c); }
 .lv::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
 .lv-b { --c: var(--lv-b); } .lv-j { --c: var(--lv-j); } .lv-t { --c: var(--lv-t); } .lv-n { --c: var(--lv-n); }
 
-/* overview */
-.overview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
-.track { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
-.track h3 { margin: 0; font-size: 14px; font-family: var(--f-cjk); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.track h3 small { font-family: var(--f-mono); color: var(--muted); font-size: 12px; font-weight: 400; font-variant-numeric: tabular-nums; }
-.meter { height: 6px; background: var(--sunk); border-radius: 3px; margin-top: 8px; overflow: hidden; display: flex; }
-.meter i { display: block; height: 100%; background: var(--c); }
-.meter i.half { opacity: .4; }
-.tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
-.chipset { display: flex; gap: 6px; flex-wrap: wrap; }
-.chip { border: 1px solid var(--line); background: var(--surface); padding: 4px 10px; border-radius: 999px; font-size: 13px; }
+/* progress strip */
+.strip { display: flex; gap: 8px 32px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; font-size: 13px; color: var(--fg-2); }
+.strip .item { display: inline-flex; align-items: center; gap: 8px; }
+.strip .meter { width: 72px; height: 4px; background: var(--raised); border-radius: 2px; overflow: hidden; display: inline-flex; }
+.strip .meter i { display: block; height: 100%; background: var(--c); }
+.strip .meter i.half { opacity: .4; }
+.strip .n { font-variant-numeric: tabular-nums; color: var(--muted); }
+.strip .name { font-family: var(--f-cjk); }
+
+.tools { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.chipset { display: flex; gap: 4px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line-strong); background: var(--surface); height: 28px; padding: 0 12px; border-radius: 14px; font-size: 12px; transition: background-color .15s var(--ease); }
+.chip:hover { background: var(--raised); }
 .chip[aria-pressed="true"] { border-color: var(--fg); background: var(--fg); color: var(--bg); }
-.hint { color: var(--muted); font-size: 13px; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); overflow: hidden; }
+.seg button { border: 0; background: transparent; height: 28px; padding: 0 12px; font-size: 12px; color: var(--fg-2); white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 
 /* tree */
-.treeview { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 14px; align-items: start; }
-.canvas { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: auto; max-height: calc(100vh - 230px); min-height: 420px; position: relative; }
+.treeview { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
+.canvas { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow: auto; max-height: calc(100vh - 200px); min-height: 320px; position: relative; }
+.canvas.fit { overflow: hidden; }
 .canvas svg { display: block; }
-.edge { fill: none; stroke: var(--line); stroke-width: 1.4; }
-.edge.hot { stroke: var(--accent); stroke-width: 2.2; }
-.edge.dim { opacity: .25; }
+.canvas.fit svg { width: 100%; height: auto; }
+.lane-bg { fill: var(--c); opacity: .045; }
+.lane-rule { stroke: var(--line); stroke-width: 1; }
+.lane-name { font-family: var(--f-cjk); font-size: 15px; font-weight: 500; fill: var(--c); }
+.lane-en, .lane-n { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
 .col-label { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
+.edge { fill: none; stroke: var(--line-strong); stroke-width: 1.2; }
+.edge.hot { stroke: var(--fg); stroke-width: 2; }
+.edge.dim { opacity: .2; }
 .node { cursor: pointer; }
-.node rect.box { fill: var(--surface); stroke: var(--line); stroke-width: 1.2; }
-.node rect.band { fill: var(--c); }
+.node rect.box { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1; }
 .node text.id { font-family: var(--f-mono); font-size: 11px; font-weight: 600; fill: var(--c); }
 .node text.t { font-family: var(--f-cjk); font-size: 13px; font-weight: 500; fill: var(--fg); }
-.node text.en { font-family: var(--f-ui); font-size: 10.5px; fill: var(--muted); }
-.node.learning rect.box { stroke: var(--c); stroke-width: 2; stroke-dasharray: 5 3; }
-.node.learned rect.box { fill: color-mix(in srgb, var(--c) 16%, var(--surface)); stroke: var(--c); }
-.node.ready circle.ready { fill: var(--c); }
+.node text.en { font-family: var(--f-mono); font-size: 10.5px; fill: var(--muted); }
 .node circle.ready { fill: transparent; }
-.node.sel rect.box { stroke: var(--fg); stroke-width: 2.4; }
-.node.dim { opacity: .28; }
+.node.ready circle.ready { fill: var(--c); }
+.node.learning rect.box { stroke: var(--c); stroke-width: 1.5; stroke-dasharray: 5 3; }
+.node.learned rect.box { fill: var(--c); stroke: var(--c); }
+.node.learned text.t, .node.learned text.id { fill: var(--surface); }
+.node.learned text.en { fill: var(--surface); opacity: .8; }
+.node.sel rect.box { stroke: var(--fg); stroke-width: 2.5; }
+.node.dim { opacity: .25; }
+.node:hover rect.box { stroke: var(--fg); }
 .node:focus-visible rect.box { stroke: var(--accent); stroke-width: 3; }
-.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
-.legend span { display: inline-flex; gap: 6px; align-items: center; }
-.sw { width: 18px; height: 11px; border-radius: 3px; border: 1.5px solid var(--muted); display: inline-block; }
+.legend { display: flex; gap: 8px 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 12px; }
+.legend span { display: inline-flex; gap: 8px; align-items: center; }
+.sw { width: 18px; height: 12px; border-radius: 3px; border: 1.5px solid var(--muted); display: inline-block; }
 .sw.learning { border-style: dashed; }
-.sw.learned { background: color-mix(in srgb, var(--muted) 25%, transparent); }
+.sw.learned { background: var(--muted); }
 
-/* side card */
-.side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 70px); display: grid; gap: 12px; min-width: 0; }
-.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; min-width: 0; }
-.card h2 { margin: 4px 0 2px; font-family: var(--f-cjk); font-size: 20px; text-wrap: balance; }
-.card .en { color: var(--muted); margin: 0 0 8px; }
-.card p { margin: 6px 0; }
-.card h4 { margin: 12px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-.btn { border: 1px solid var(--line); background: var(--surface); padding: 6px 12px; border-radius: 8px; font-weight: 500; font-size: 14px; text-decoration: none; color: var(--fg); display: inline-flex; align-items: center; gap: 6px; }
+/* side and aside: plain sections, one card for the selected chapter */
+.side, .aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 80px); display: grid; gap: 24px; min-width: 0; align-content: start; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px; min-width: 0; }
+.card h2 { margin: 8px 0 0; font-family: var(--f-cjk); font-size: 20px; line-height: 1.3; text-wrap: balance; }
+.en { color: var(--muted); margin: 0 0 8px; }
+.block p { margin: 0 0 8px; }
+.block + .block { margin-top: 20px; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.btn { border: 1px solid var(--line-strong); background: var(--surface); height: 32px; padding: 0 12px; border-radius: var(--r-ctl); font-size: 13px; text-decoration: none; color: var(--fg); display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: background-color .15s var(--ease), border-color .15s var(--ease); }
 .btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .btn:hover { border-color: var(--fg); }
-.status { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.status { max-width: 100%; }
-.status button { border: 0; background: transparent; padding: 5px 8px; font-size: 12px; color: var(--muted); white-space: nowrap; flex: 1 1 auto; }
-.status button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
-.links { display: flex; flex-wrap: wrap; gap: 6px; }
-.links a { font-family: var(--f-mono); font-size: 12px; text-decoration: none; padding: 2px 8px; border-radius: 6px; background: var(--sunk); color: var(--fg); }
+.btn:active { transform: scale(.98); }
+.btns.even { display: grid; grid-template-columns: 1fr 1fr; }
+.links { display: flex; flex-wrap: wrap; gap: 4px; }
+.links a { font-family: var(--f-mono); font-size: 12px; text-decoration: none; padding: 2px 8px; border-radius: var(--r-tag); background: var(--raised); color: var(--fg); }
+.links a:hover { background: var(--line-strong); }
 .links a.done { text-decoration: line-through; color: var(--muted); }
-ol.path { margin: 4px 0 0; padding-left: 20px; }
-ol.path li { margin: 3px 0; }
+ol.path { margin: 0; padding-left: 24px; }
+ol.path li { margin: 4px 0; }
 ol.path a { text-decoration: none; color: var(--fg); }
-ol.path .cjk { font-size: 14px; }
+ol.path a:hover .cjk { text-decoration: underline; }
+.cc { font-family: var(--f-mono); font-size: 12px; background: var(--raised); border-radius: var(--r-ctl); padding: 8px 12px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0 0 4px; }
 
 /* list view */
-.levels { display: grid; gap: 22px; }
-.level h2 { font-family: var(--f-cjk); margin: 0 0 10px; font-size: 18px; display: flex; gap: 10px; align-items: baseline; }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
-.tile { display: grid; gap: 2px; text-decoration: none; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; min-width: 0; }
-.tile:hover { border-color: var(--c); }
+.levels { display: grid; gap: 40px; }
+.level h2 { font-family: var(--f-cjk); margin: 0 0 12px; font-size: 18px; display: flex; gap: 12px; align-items: baseline; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.tile { display: grid; gap: 4px; text-decoration: none; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 16px; min-width: 0; transition: border-color .15s var(--ease); }
+.tile:hover { border-color: var(--line-strong); }
 .tile .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .tile .t { font-family: var(--f-cjk); font-weight: 500; }
-.tile small { color: var(--muted); }
-.tile.learned { background: color-mix(in srgb, var(--c) 12%, var(--surface)); border-color: var(--c); }
+.tile small { color: var(--muted); font-size: 12px; }
+.tile.learned { border-color: var(--c); }
 .tile.learning { border-style: dashed; border-color: var(--c); }
-.pill { font-size: 11px; font-family: var(--f-mono); padding: 1px 7px; border-radius: 999px; background: var(--sunk); color: var(--muted); white-space: nowrap; }
+.pill { font-size: 11px; font-family: var(--f-mono); padding: 1px 6px; border-radius: var(--r-tag); background: var(--raised); color: var(--muted); white-space: nowrap; }
 
 /* chapter view */
-.chapter { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 22px; align-items: start; }
-.crumbs { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.chapter { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 40px; align-items: start; }
+.crumbs { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
 .crumbs a { color: var(--muted); }
-.chead h1 { font-family: var(--f-cjk); font-size: clamp(26px, 4vw, 36px); line-height: 1.2; margin: 6px 0 2px; text-wrap: balance; }
-.chead .en { font-size: 17px; color: var(--muted); margin: 0; }
-.chead .sum { max-width: 68ch; margin: 10px 0 0; }
-.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin: 20px 0 16px; overflow-x: auto; }
-.tabs a { text-decoration: none; color: var(--muted); padding: 9px 14px; font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap; }
-.tabs a[aria-current="page"] { color: var(--fg); border-bottom-color: var(--c); }
+.chead h1 { font-family: var(--f-cjk); font-size: clamp(28px, 4vw, 36px); line-height: 1.15; margin: 8px 0 4px; text-wrap: balance; }
+.chead .en { font-size: 16px; }
+.chead .sum { max-width: 72ch; margin: 12px 0 0; color: var(--fg-2); line-height: 1.7; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); margin: 24px 0 24px; overflow-x: auto; }
+.tabs a { text-decoration: none; color: var(--muted); padding: 8px 12px; border-bottom: 2px solid transparent; white-space: nowrap; font-size: 13px; transition: color .15s var(--ease); }
+.tabs a:hover { color: var(--fg); }
+.tabs a[aria-current="page"] { color: var(--fg); border-bottom-color: var(--fg); }
 .tabs a small { font-family: var(--f-mono); font-size: 11px; color: var(--muted); margin-left: 4px; }
-.sec { margin: 22px 0 8px; display: flex; gap: 10px; align-items: baseline; }
-.sec .n { font-family: var(--f-mono); color: var(--c); font-weight: 600; }
-.sec h3 { margin: 0; font-family: var(--f-cjk); font-size: 18px; }
-.boxes { display: grid; gap: 10px; }
-.box { --k: var(--idea); border: 1px solid var(--line); border-left: 3px solid var(--k); background: var(--surface); border-radius: 4px 10px 10px 4px; padding: 10px 14px; max-width: 78ch; }
-.box.key { --k: var(--key); } .box.trap { --k: var(--trap); }
-.box b { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; color: var(--k); display: block; margin-bottom: 2px; }
-.recap { background: var(--sunk); border-radius: 10px; padding: 12px 16px; max-width: 78ch; margin-top: 24px; }
-.recap h3 { margin: 0 0 6px; font-size: 15px; }
-.recap p { margin: 3px 0; font-size: 14px; }
-.prog { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); margin: 14px 0; overflow: hidden; }
-.prog header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.sec { margin: 32px 0 12px; display: flex; gap: 12px; align-items: baseline; }
+.sec:first-child { margin-top: 0; }
+.sec .n { font-family: var(--f-mono); color: var(--muted); font-size: 13px; }
+.sec h3 { margin: 0; font-family: var(--f-cjk); font-size: 17px; }
+.boxes { display: grid; gap: 12px; }
+.box { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-card); padding: 12px 16px; max-width: 72ch; line-height: 1.7; }
+.box b { font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: var(--muted); display: block; margin-bottom: 4px; }
+.box.trap { border-color: color-mix(in srgb, var(--trap) 35%, var(--line)); }
+.box.trap b { color: var(--trap); }
+.jump { font-size: 12px; color: var(--muted); text-decoration: none; }
+.jump:hover { color: var(--fg); }
+.recap { background: var(--raised); border-radius: var(--r-card); padding: 16px; max-width: 72ch; margin-top: 32px; line-height: 1.7; }
+.recap h3 { margin: 0 0 8px; font-size: 14px; }
+.recap p { margin: 4px 0; font-size: 13px; }
+.prog { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); margin: 0 0 16px; overflow: hidden; }
+.prog header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 12px 8px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .prog header .mono { font-weight: 600; }
-.prog header small { color: var(--muted); }
-pre.code { margin: 0; padding: 12px 14px; background: var(--code-bg); overflow-x: auto; font-family: var(--f-mono); font-size: 13px; line-height: 1.55; tab-size: 4; counter-reset: ln; }
+.prog header small { color: var(--muted); font-size: 12px; }
+pre.code { margin: 0; padding: 12px 16px; background: var(--code-bg); overflow-x: auto; font-family: var(--f-mono); font-size: 13px; line-height: 1.6; tab-size: 4; counter-reset: ln; }
 pre.code .l { display: block; }
 pre.code .l::before { counter-increment: ln; content: counter(ln); display: inline-block; width: 2.6em; margin-right: 12px; text-align: right; color: var(--k-com); opacity: .7; user-select: none; }
-.io { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0; border-top: 1px solid var(--line); }
-.io > div { padding: 8px 12px; min-width: 0; }
+.io { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); border-top: 1px solid var(--line); }
+.io > div { padding: 8px 16px 12px; min-width: 0; }
 .io > div + div { border-left: 1px solid var(--line); }
-.io b { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
-.io pre { margin: 4px 0 0; font-family: var(--f-mono); font-size: 12.5px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.copy { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; font-size: 12px; padding: 2px 8px; color: var(--muted); }
+.io b { font-size: 12px; font-weight: 500; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
+.io pre { margin: 4px 0 0; font-family: var(--f-mono); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.copy { border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r-tag); font-size: 12px; height: 24px; padding: 0 8px; color: var(--fg-2); transition: background-color .15s var(--ease); }
+.copy:hover { background: var(--raised); }
 .hljs-keyword, .hljs-built_in { color: var(--k-kw); }
 .hljs-type { color: var(--k-ty); }
 .hljs-string, .hljs-char { color: var(--k-str); }
 .hljs-number, .hljs-literal { color: var(--k-num); }
-.hljs-comment { color: var(--k-com); font-style: italic; }
+.hljs-comment { color: var(--k-com); }
 .hljs-meta, .hljs-meta .hljs-keyword { color: var(--k-pre); }
 .hljs-meta .hljs-string { color: var(--k-str); }
 .hljs-title { color: var(--k-ty); }
 
-.ptools { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
-.ptools select, .ptools input[type="text"] { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 5px 8px; }
-.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
-table { border-collapse: collapse; width: 100%; font-size: 14px; }
-th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
-th { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; background: var(--sunk); position: sticky; top: 0; }
+.ptools { display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.ptools select, .ptools input[type="text"] { border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r-ctl); height: 28px; padding: 0 8px; font-size: 12px; }
+.ptools label { font-size: 12px; color: var(--fg-2); display: inline-flex; gap: 6px; align-items: center; }
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+th { font-size: 12px; color: var(--muted); font-weight: 500; background: var(--raised); position: sticky; top: 0; }
 tr:last-child td { border-bottom: 0; }
-td.num { font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); font-family: var(--f-mono); font-size: 12.5px; }
-td.id a { font-family: var(--f-mono); font-weight: 600; text-decoration: none; }
+tbody tr:hover td { background: color-mix(in srgb, var(--raised) 60%, transparent); }
+td.num { font-variant-numeric: tabular-nums; text-align: right; color: var(--muted); font-size: 12px; }
+td.id a { font-weight: 600; text-decoration: none; }
 tr.solved td:not(:first-child) { opacity: .5; }
-.diff { font-size: 12px; font-weight: 600; padding: 1px 8px; border-radius: 999px; color: #fff; white-space: nowrap; }
+.diff { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: var(--r-tag); color: #fff; white-space: nowrap; }
 .star { color: var(--lv-n); }
-.reader { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; white-space: pre-wrap; font-family: var(--f-cjk); font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; max-width: 90ch; }
-.reader .pg { display: block; font-family: var(--f-mono); font-size: 11px; color: var(--muted); border-top: 1px dashed var(--line); margin: 14px 0 6px; padding-top: 6px; }
-textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 12px; font-family: var(--f-ui); line-height: 1.6; }
-.aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 70px); display: grid; gap: 12px; min-width: 0; }
-.pager { display: flex; justify-content: space-between; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
-.pager a { text-decoration: none; border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; color: var(--fg); background: var(--surface); flex: 1 1 200px; min-width: 0; }
+.reader { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px 20px; white-space: pre-wrap; font-family: var(--f-cjk); font-size: 13px; line-height: 1.8; overflow-wrap: anywhere; max-width: 88ch; }
+.reader .pg { display: block; font-family: var(--f-mono); font-size: 11px; color: var(--muted); border-top: 1px dashed var(--line-strong); margin: 16px 0 8px; padding-top: 8px; }
+textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-strong); border-radius: var(--r-card); background: var(--surface); padding: 12px 16px; line-height: 1.7; }
+.pager { display: flex; justify-content: space-between; gap: 12px; margin-top: 40px; flex-wrap: wrap; }
+.pager a { text-decoration: none; border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 16px; color: var(--fg); background: var(--surface); flex: 1 1 200px; min-width: 0; transition: border-color .15s var(--ease); }
+.pager a:hover { border-color: var(--line-strong); }
 .pager a small { display: block; color: var(--muted); font-size: 12px; }
 .pager a.next { text-align: right; }
-.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 14px; z-index: 20; }
-.empty { color: var(--muted); padding: 20px; text-align: center; }
-.cc { font-family: var(--f-mono); font-size: 12.5px; background: var(--sunk); border-radius: 8px; padding: 8px 10px; white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: var(--r-ctl); font-size: 13px; z-index: 20; }
+.empty { color: var(--muted); padding: 24px; text-align: center; }
+.status { display: flex; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); overflow: hidden; }
+.status button { flex: 1 1 auto; border: 0; background: transparent; height: 32px; padding: 0 8px; font-size: 12px; color: var(--fg-2); white-space: nowrap; transition: background-color .15s var(--ease); }
+.status button:hover { background: var(--raised); }
+.status button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.progress-page { display: grid; gap: 32px; max-width: 880px; }
 
 @media (max-width: 1000px) {
   .treeview, .chapter { grid-template-columns: minmax(0, 1fr); }
   .side, .aside { position: static; }
-  .overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
-  .overview { grid-template-columns: minmax(0, 1fr); }
-  .canvas { max-height: 70vh; }
+  .bar-in { gap: 8px 12px; padding-block: 8px; }
+  .brand span { display: none; }
   .search { order: 3; flex-basis: 100%; max-width: none; }
+  .strip { gap: 4px 16px; font-size: 12px; }
+  .strip .meter, .strip .en { display: none; }
+  .canvas { max-height: 64vh; min-height: 200px; }
+  .results { min-width: 0; }
 }
-@media (prefers-reduced-motion: no-preference) {
-  .edge, .node { transition: opacity .15s, stroke .15s; }
-}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
@@ -268,13 +301,13 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
     </nav>
     <div class="search" role="search">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.7 10.3a6 6 0 1 0-1.4 1.4l3.6 3.6 1.4-1.4-3.6-3.6zM6.8 11a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4z"/></svg>
-      <input id="q" type="search" placeholder="Search chapters, concepts, programs… (try 懒标记, dijkstra, P3372)" autocomplete="off" aria-label="Search">
+      <input id="q" type="search" placeholder="Search" autocomplete="off" aria-label="Search chapters, concepts, programs and problems">
       <div class="results" id="results" hidden></div>
     </div>
   </div>
 </header>
 
-<main class="wrap" id="view"><p class="empty">Loading the atlas…</p></main>
+<main class="wrap" id="view"><p class="empty">Loading the atlas</p></main>
 <div class="toast" id="toast" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -288,19 +321,14 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
     { key: "N", slug: "n", name: "NOI篇", en: "NOI" },
   ];
   const LUOGU = [
-    ["入门", "#fe4c61"], ["普及−", "#f39c11"], ["普及", "#e6a700"], ["普及+/提高−", "#52c41a"],
+    ["入门", "#fe4c61"], ["普及−", "#f39c11"], ["普及", "#d99500"], ["普及+/提高−", "#3fa415"],
     ["提高", "#3498db"], ["提高+/省选−", "#9d3dcf"], ["省选/NOI−", "#0e1d69"], ["NOI/NOI+/CTS", "#222222"],
   ];
   const cfColor = r => r < 1200 ? "#808080" : r < 1400 ? "#2e8b2e" : r < 1600 ? "#03a89e" : r < 1900 ? "#3b5bdb" : r < 2100 ? "#a0a" : r < 2400 ? "#e08a00" : "#d22";
-  const STATUS = ["none", "learning", "learned"];
+  const KIND = { "IDEA": "Idea", "KEY POINT": "Key point", "TRAP": "Trap", "NOTE": "Note", "TIP": "Tip", "WARNING": "Warning" };
 
-  let A = [];            // chapters
-  let byId = {};         // id -> chapter
-  let bySlug = {};
-  let kids = {};         // id -> chapters that list it as a prerequisite
-  let problems = null;   // loaded on demand
-  let selected = null;   // selected node in the tree
-  let levelFilter = "all";
+  let A = [], byId = {}, bySlug = {}, kids = {};
+  let problems = null, selected = null, levelFilter = "all", zoom = "fit";
   const texts = {};
 
   // ---- per-viewer storage (this browser only) ----
@@ -322,7 +350,7 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
   const isReady = c => statusOf(c.id) !== "learned" && c.pre.every(p => statusOf(p) === "learned");
   let toastTimer = 0;
   function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 1800); }
-  async function copy(text, btn) {
+  async function copy(text) {
     try { await navigator.clipboard.writeText(text); toast("Copied"); }
     catch (e) {
       const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
@@ -342,123 +370,139 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
     return need;
   }
 
-  // ---- layout (layered DAG) ----
-  const W = 176, H = 50, COLW = 226, ROWH = 62, PADX = 22, PADY = 40;
+  // ---- lane layout: one horizontal lane per level, columns = prerequisite depth ----
+  const W = 212, H = 56, COLW = 244, ROWH = 68, LANEW = 132, PADY = 36, LANEGAP = 16, LANEPAD = 14;
   let layout = null;
   function computeLayout() {
-    const cols = [];
-    A.forEach(c => { const d = depthOf(c.id); (cols[d] = cols[d] || []).push(c.id); });
     const order = A.map(c => c.id);
-    cols.forEach(col => col.sort((a, b) => order.indexOf(a) - order.indexOf(b)));
-    const pos = {};
-    const place = () => cols.forEach((col, d) => col.forEach((id, i) => (pos[id] = { d, i })));
-    place();
-    for (let sweep = 0; sweep < 6; sweep++) {
-      cols.forEach((col, d) => {
-        if (d === 0) return;
-        const key = id => { const ps = byId[id].pre; return ps.reduce((s, p) => s + pos[p].i, 0) / ps.length; };
-        col.sort((a, b) => key(a) - key(b) || order.indexOf(a) - order.indexOf(b));
-      });
-      place();
-    }
-    const maxRows = Math.max(...cols.map(c => c.length));
+    const maxD = Math.max(...A.map(c => depthOf(c.id)));
+    const cells = {}; // level -> depth -> [ids]
+    LEVELS.forEach(l => (cells[l.key] = Array.from({ length: maxD + 1 }, () => [])));
+    A.forEach(c => cells[lvOf(c).key][depthOf(c.id)].push(c.id));
     const xy = {};
-    cols.forEach((col, d) => {
-      const off = (maxRows - col.length) * ROWH / 2;
-      col.forEach((id, i) => (xy[id] = { x: PADX + d * COLW, y: PADY + off + i * ROWH }));
-    });
-    layout = { cols, xy, width: PADX * 2 + (cols.length - 1) * COLW + W, height: PADY + maxRows * ROWH + 10 };
+    let lanes = [];
+    const place = () => {
+      let y = PADY;
+      lanes = LEVELS.map(l => {
+        const rows = Math.max(1, ...cells[l.key].map(col => col.length));
+        const top = y;
+        cells[l.key].forEach((col, d) => col.forEach((id, i) => (xy[id] = { x: LANEW + d * COLW, y: top + LANEPAD + i * ROWH })));
+        y += rows * ROWH + LANEPAD * 2 - (ROWH - H) + LANEGAP;
+        return { level: l, top, height: y - top - LANEGAP };
+      });
+      return y;
+    };
+    let height = place();
+    for (let sweep = 0; sweep < 6; sweep++) {
+      LEVELS.forEach(l => cells[l.key].forEach(col => {
+        const key = id => { const ps = byId[id].pre; return ps.length ? ps.reduce((s, p) => s + xy[p].y, 0) / ps.length : xy[id].y; };
+        col.sort((a, b) => key(a) - key(b) || order.indexOf(a) - order.indexOf(b));
+      }));
+      height = place();
+    }
+    layout = { xy, lanes, maxD, width: LANEW + maxD * COLW + W + 24, height: height - LANEGAP + 12 };
   }
 
   function svgTree() {
-    const { xy, width, height, cols } = layout;
-    const hot = selected ? new Set([selected, ...ancestors(selected), ...descendants(selected)]) : null;
-    let edges = "", nodes = "", labels = "";
-    cols.forEach((_, d) => (labels += `<text class="col-label" x="${PADX + d * COLW}" y="22">STEP ${d + 1}</text>`));
-    A.forEach(c => {
-      c.pre.forEach(p => {
-        const a = xy[p], b = xy[c.id];
-        const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = (x1 + x2) / 2;
-        const on = hot && hot.has(p) && hot.has(c.id) && (p === selected || c.id === selected || ancestors(selected).has(c.id) || descendants(selected).has(p));
-        const filtered = levelFilter !== "all" && !(c.id.startsWith(levelFilter) || p.startsWith(levelFilter));
-        edges += `<path class="edge${on ? " hot" : ""}${(hot && !on) || filtered ? " dim" : ""}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}"/>`;
-      });
+    const { xy, width, height, lanes, maxD } = layout;
+    const anc = selected ? ancestors(selected) : null, desc = selected ? descendants(selected) : null;
+    const hot = selected ? new Set([selected, ...anc, ...desc]) : null;
+    let out = "";
+    lanes.forEach(({ level: l, top, height: h }) => {
+      const list = A.filter(c => c.id.startsWith(l.key));
+      const done = list.filter(c => statusOf(c.id) === "learned").length;
+      out += `<g style="--c: var(--lv-${l.slug})"><rect class="lane-bg" x="0" y="${top}" width="${width}" height="${h}"/>
+        <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/>
+        <text class="lane-name" x="16" y="${top + 28}">${l.name}</text>
+        <text class="lane-en" x="16" y="${top + 46}">${l.en}</text>
+        <text class="lane-n" x="16" y="${top + 62}">${done}/${list.length}</text></g>`;
     });
+    for (let d = 0; d <= maxD; d++) out += `<text class="col-label" x="${LANEW + d * COLW}" y="22">Step ${d + 1}</text>`;
+    A.forEach(c => c.pre.forEach(p => {
+      const a = xy[p], b = xy[c.id];
+      const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = x1 + Math.max(24, (x2 - x1) / 2);
+      const on = selected && ((c.id === selected && anc.has(p)) || (p === selected) || (anc.has(c.id) && anc.has(p)) || (desc.has(c.id) && (desc.has(p) || p === selected)));
+      const filtered = levelFilter !== "all" && !(c.id.startsWith(levelFilter) || p.startsWith(levelFilter));
+      out += `<path class="edge${on ? " hot" : ""}${(selected && !on) || filtered ? " dim" : ""}" d="M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}"/>`;
+    }));
     A.forEach(c => {
       const { x, y } = xy[c.id];
       const st = statusOf(c.id);
       const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter));
-      const title = c.title.length > 11 ? c.title.slice(0, 10) + "…" : c.title;
-      const en = c.en.length > 27 ? c.en.slice(0, 26) + "…" : c.en;
-      nodes += `<g class="node ${lvClass(c)} ${st}${isReady(c) ? " ready" : ""}${selected === c.id ? " sel" : ""}${dim ? " dim" : ""}" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(c.id + " " + c.title + ", " + c.en + ", " + (st === "none" ? "not started" : st))}" style="--c: var(--${lvClass(c)})" transform="translate(${x},${y})">
+      const title = c.title.length > 15 ? c.title.slice(0, 14) + "…" : c.title;
+      const en = c.en.length > 30 ? c.en.slice(0, 29) + "…" : c.en;
+      out += `<g class="node ${st}${isReady(c) ? " ready" : ""}${selected === c.id ? " sel" : ""}${dim ? " dim" : ""}" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(c.id + " " + c.title + ", " + c.en + ", " + (st === "none" ? "not started" : st))}" style="--c: var(--${lvClass(c)})" transform="translate(${x},${y})">
         <title>${esc(c.id + " " + c.title + " · " + c.en)}</title>
         <rect class="box" width="${W}" height="${H}" rx="8"/>
-        <rect class="band" width="4" height="${H - 16}" x="0" y="8" rx="2"/>
-        <text class="id" x="12" y="17">${esc(c.id)}</text>
-        <circle class="ready" cx="${W - 12}" cy="12" r="4"/>
-        <text class="t" x="12" y="33">${esc(title)}</text>
-        <text class="en" x="12" y="45">${esc(en)}</text>
+        <text class="id" x="12" y="18">${esc(c.id)}</text>
+        <circle class="ready" cx="${W - 12}" cy="14" r="4"/>
+        <text class="t" x="12" y="36">${esc(title)}</text>
+        <text class="en" x="12" y="49">${esc(en)}</text>
       </g>`;
     });
-    return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Prerequisite tree of all 101 chapters">${labels}${edges}${nodes}</svg>`;
+    return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Route map of all 101 chapters, one lane per level">${out}</svg>`;
   }
 
   // ---- shared bits ----
-  function trackHtml() {
-    return `<div class="overview">${LEVELS.map(l => {
+  function stripHtml() {
+    return `<div class="strip">${LEVELS.map(l => {
       const list = A.filter(c => c.id.startsWith(l.key));
       const done = list.filter(c => statusOf(c.id) === "learned").length;
       const half = list.filter(c => statusOf(c.id) === "learning").length;
-      return `<div class="track lv-${l.slug}" style="--c: var(--lv-${l.slug})"><h3><span>${l.name} <span class="hint">${l.en}</span></span><small>${done}/${list.length}</small></h3>
-        <div class="meter"><i style="width:${done / list.length * 100}%"></i><i class="half" style="width:${half / list.length * 100}%"></i></div></div>`;
+      return `<span class="item lv-${l.slug}" style="--c: var(--lv-${l.slug})"><span class="lv lv-${l.slug}">${l.key}</span><span class="name">${l.name}</span><span class="meter"><i style="width:${done / list.length * 100}%"></i><i class="half" style="width:${half / list.length * 100}%"></i></span><span class="n">${done}/${list.length}</span></span>`;
     }).join("")}</div>`;
   }
-  const chLink = (id, cls = "") => `<a class="${cls}${statusOf(id) === "learned" ? " done" : ""}" href="#ch-${byId[id].slug}" title="${esc(byId[id].title + " · " + byId[id].en)}">${esc(id)}</a>`;
+  const chLink = id => `<a class="${statusOf(id) === "learned" ? "done" : ""}" href="#ch-${byId[id].slug}" title="${esc(byId[id].title + " · " + byId[id].en)}">${esc(id)}</a>`;
   function statusButtons(id) {
     const st = statusOf(id);
     return `<div class="status" role="group" aria-label="Status">${[["none", "Not started"], ["learning", "Learning"], ["learned", "Learned"]].map(([s, label]) => `<button data-status="${s}" data-id="${id}" aria-pressed="${st === s}">${label}</button>`).join("")}</div>`;
   }
+  const pathList = ids => `<ol class="path">${ids.map(id => `<li><a href="#ch-${byId[id].slug}"><span class="lv ${lvClass(byId[id])}">${id}</span> <span class="cjk">${esc(byId[id].title)}</span></a></li>`).join("")}</ol>`;
 
   function sideCard() {
     if (!selected) {
-      const ready = A.filter(isReady).slice(0, 8);
-      return `<div class="card"><h4>How to read this</h4>
-        <p>Each box is a handout chapter. Lines run from a chapter to the ones that build on it, left to right. Click a chapter to see what it needs and what it unlocks.</p>
-        <div class="legend"><span><i class="sw"></i>Not started</span><span><i class="sw learning"></i>Learning</span><span><i class="sw learned"></i>Learned</span><span><svg width="10" height="10"><circle cx="5" cy="5" r="4" fill="var(--muted)"/></svg>Ready: all prerequisites learned</span></div>
-        <p class="hint">The prerequisite links are my estimate from the chapter contents, not from the book.</p></div>
-        <div class="card"><h4>Ready to learn next</h4>${ready.length ? `<ol class="path">${ready.map(c => `<li><a href="#ch-${c.slug}"><span class="lv ${lvClass(c)}">${c.id}</span> <span class="cjk">${esc(c.title)}</span></a></li>`).join("")}</ol>` : `<p class="hint">Everything is learned.</p>`}</div>`;
+      const ready = A.filter(isReady).slice(0, 8).map(c => c.id);
+      return `<div class="block"><p class="label">How to read the map</p>
+        <p>Each lane is one level of the course. A line runs from a chapter to the chapters that build on it, left to right. Click a chapter to trace its path.</p>
+        <div class="legend"><span><i class="sw"></i>Not started</span><span><i class="sw learning"></i>Learning</span><span><i class="sw learned"></i>Learned</span><span><svg width="10" height="10" aria-hidden="true"><circle cx="5" cy="5" r="4" fill="var(--muted)"/></svg>Ready to learn</span></div>
+        <p class="hint" style="margin-top:12px">Prerequisites are estimated from the chapter contents</p></div>
+        <div class="block"><p class="label">Ready to learn next</p>${ready.length ? pathList(ready) : `<p class="hint">Everything is learned</p>`}</div>`;
     }
     const c = byId[selected];
     const need = pathTo(c.id);
-    return `<div class="card ${lvClass(c)}" style="--c: var(--${lvClass(c)})">
+    return `<div class="card" style="--c: var(--${lvClass(c)})">
       <span class="lv ${lvClass(c)}">${c.id} · ${lvOf(c).name} 第${c.num}章</span>
       <h2>${esc(c.title)}</h2><p class="en">${esc(c.en)}</p>
-      <p>${esc(c.summary)}</p>
+      <p class="hint" style="margin:0 0 12px">${esc(c.summary)}</p>
       ${statusButtons(c.id)}
-      <div class="btns"><a class="btn primary" href="#ch-${c.slug}">Open chapter</a><a class="btn" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a></div>
-      <h4>Needs</h4><div class="links">${c.pre.length ? c.pre.map(p => chLink(p)).join("") : '<span class="hint">Nothing: a starting point.</span>'}</div>
-      <h4>Unlocks</h4><div class="links">${(kids[c.id] || []).length ? kids[c.id].map(k => chLink(k)).join("") : '<span class="hint">Nothing further in the course.</span>'}</div>
-      <h4>Path to here · ${need.length} chapter${need.length === 1 ? "" : "s"} left</h4>
-      ${need.length ? `<ol class="path">${need.map(id => `<li><a href="#ch-${byId[id].slug}"><span class="lv ${lvClass(byId[id])}">${id}</span> <span class="cjk">${esc(byId[id].title)}</span></a></li>`).join("")}</ol>` : `<p class="hint">All prerequisites learned.</p>`}
+      <div class="btns even"><a class="btn primary" href="#ch-${c.slug}">Open chapter</a><a class="btn" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a></div>
+      <div class="block" style="margin-top:20px"><p class="label">Needs</p><div class="links">${c.pre.length ? c.pre.map(chLink).join("") : '<span class="hint">Nothing, a starting point</span>'}</div></div>
+      <div class="block"><p class="label">Unlocks</p><div class="links">${(kids[c.id] || []).length ? kids[c.id].map(chLink).join("") : '<span class="hint">Nothing further in the course</span>'}</div></div>
+      <div class="block"><p class="label">Path to here · ${need.length} left</p>${need.length ? pathList(need) : `<p class="hint">All prerequisites learned</p>`}</div>
       <div class="btns"><button class="btn" data-clear>Clear selection</button></div>
     </div>`;
   }
 
   // ---- views ----
-  function viewTree() {
-    if (!layout) computeLayout();
-    $("#view").innerHTML = `${trackHtml()}
-      <div class="tools"><div class="chipset" role="group" aria-label="Highlight a level">
-        <button class="chip" data-level="all" aria-pressed="${levelFilter === "all"}">All levels</button>
-        ${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}
-      </div><span class="hint">Scroll the map sideways. Click a chapter for its path; double-click to open it.</span></div>
-      <div class="treeview"><div class="canvas" id="canvas">${svgTree()}</div><aside class="side" id="side">${sideCard()}</aside></div>`;
+  function placeCanvas() {
     const canvas = $("#canvas");
-    // Open on the selected chapter, else on the first one not yet learned.
+    if (!canvas || zoom === "fit") return;
     const focusId = selected || (A.find(c => statusOf(c.id) !== "learned") || A[0]).id;
     const p = layout.xy[focusId];
-    canvas.scrollLeft = Math.max(0, p.x - (selected ? canvas.clientWidth / 2 - W / 2 : 40));
+    canvas.scrollLeft = Math.max(0, p.x - (selected ? canvas.clientWidth / 2 - W / 2 : LANEW));
     canvas.scrollTop = Math.max(0, p.y - canvas.clientHeight / 2 + H / 2);
+  }
+  function viewTree() {
+    if (!layout) computeLayout();
+    $("#view").innerHTML = `${stripHtml()}
+      <div class="tools">
+        <div class="seg" role="group" aria-label="Map size"><button data-zoom="fit" aria-pressed="${zoom === "fit"}">Whole course</button><button data-zoom="full" aria-pressed="${zoom === "full"}">Actual size</button></div>
+        <div class="chipset" role="group" aria-label="Highlight a level">
+          <button class="chip" data-level="all" aria-pressed="${levelFilter === "all"}">All levels</button>
+          ${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}
+        </div></div>
+      <div class="treeview"><div class="canvas${zoom === "fit" ? " fit" : ""}" id="canvas">${svgTree()}</div><aside class="side" id="side">${sideCard()}</aside></div>`;
+    placeCanvas();
   }
   function refreshTree() {
     const canvas = $("#canvas");
@@ -467,16 +511,16 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
     canvas.innerHTML = svgTree();
     canvas.scrollLeft = sl; canvas.scrollTop = st;
     $("#side").innerHTML = sideCard();
-    const tr = document.querySelector(".overview");
-    if (tr) tr.outerHTML = trackHtml();
+    const s = document.querySelector(".strip");
+    if (s) s.outerHTML = stripHtml();
   }
 
   function viewList() {
-    $("#view").innerHTML = `${trackHtml()}<div class="levels">${LEVELS.map(l => {
+    $("#view").innerHTML = `${stripHtml()}<div class="levels">${LEVELS.map(l => {
       const list = A.filter(c => c.id.startsWith(l.key));
       return `<section class="level"><h2><span class="lv lv-${l.slug}">${l.key}</span> ${l.name} <span class="hint">${l.en} · ${list.length} chapters</span></h2>
-        <div class="grid">${list.map(c => `<a class="tile ${statusOf(c.id)} ${lvClass(c)}" style="--c: var(--${lvClass(c)})" href="#ch-${c.slug}">
-          <span class="row"><span class="lv ${lvClass(c)}">${c.id}</span><span class="pill">${statusOf(c.id) === "none" ? (isReady(c) ? "ready" : c.pages + " pp") : statusOf(c.id)}</span></span>
+        <div class="grid">${list.map(c => `<a class="tile ${statusOf(c.id)}" style="--c: var(--${lvClass(c)})" href="#ch-${c.slug}">
+          <span class="row"><span class="lv ${lvClass(c)}">${c.id}</span><span class="pill">${statusOf(c.id) === "none" ? (isReady(c) ? "ready" : c.pages + " pages") : statusOf(c.id)}</span></span>
           <span class="t">${esc(c.title)}</span><small>${esc(c.en)}</small>
           <small>${c.boxes.length} concepts · ${c.programs.length} programs · ${c.counts.luogu + c.counts.codeforces} problems</small></a>`).join("")}</div></section>`;
     }).join("")}</div>`;
@@ -485,16 +529,16 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
   function viewProgress() {
     const learned = A.filter(c => statusOf(c.id) === "learned");
     const learning = A.filter(c => statusOf(c.id) === "learning");
+    const ready = A.filter(isReady);
     const cc = `Mark these chapters learned in CP Coach: ${learned.map(c => c.id).join(" ") || "(none yet)"}${learning.length ? `\nIn progress: ${learning.map(c => c.id).join(" ")}` : ""}${solved.size ? `\nProblems I solved: ${[...solved].join(" ")}` : ""}`;
-    $("#view").innerHTML = `${trackHtml()}
-      <div class="chapter" style="grid-template-columns:minmax(0,1fr)">
-      <div class="card"><h4>Learned · ${learned.length}</h4><div class="links">${learned.map(c => chLink(c.id)).join("") || '<span class="hint">Nothing marked yet. Open a chapter and press Learned, or use the tree.</span>'}</div>
-      <h4>Learning · ${learning.length}</h4><div class="links">${learning.map(c => chLink(c.id)).join("") || '<span class="hint">None.</span>'}</div>
-      <h4>Ready to learn · ${A.filter(isReady).length}</h4><div class="links">${A.filter(isReady).map(c => chLink(c.id)).join("")}</div>
-      <h4>Problems ticked · ${solved.size}</h4><div class="links">${[...solved].slice(0, 200).map(p => `<span class="pill">${esc(p)}</span>`).join("") || '<span class="hint">None yet.</span>'}</div></div>
-      <div class="card"><h4>Send to CP Coach</h4><p>Your progress here is saved in this browser only. To copy it into the CP Coach mod, paste this to Claude:</p>
-        <div class="cc" id="ccText">${esc(cc)}</div><div class="btns"><button class="btn primary" data-copy-cc>Copy</button></div></div>
-      <div class="card"><h4>Quick set</h4><p>Mark a whole level at once.</p><div class="btns">${LEVELS.map(l => `<button class="btn" data-bulk="${l.key}">All ${l.name} learned</button>`).join("")}<button class="btn" data-bulk="reset">Reset everything</button></div>
+    $("#view").innerHTML = `${stripHtml()}<div class="progress-page">
+      <div class="block"><p class="label">Learned · ${learned.length}</p><div class="links">${learned.map(c => chLink(c.id)).join("") || '<span class="hint">Nothing marked yet. Open a chapter and press Learned, or select it in the tree</span>'}</div></div>
+      <div class="block"><p class="label">Learning · ${learning.length}</p><div class="links">${learning.map(c => chLink(c.id)).join("") || '<span class="hint">None</span>'}</div></div>
+      <div class="block"><p class="label">Ready to learn · ${ready.length}</p><div class="links">${ready.map(c => chLink(c.id)).join("")}</div></div>
+      <div class="block"><p class="label">Problems ticked · ${solved.size}</p><div class="links">${[...solved].slice(0, 200).map(p => `<span class="pill">${esc(p)}</span>`).join("") || '<span class="hint">None yet</span>'}</div></div>
+      <div class="card"><p class="label">Send to CP Coach</p><p style="margin:0 0 12px">Progress here is saved in this browser only. To copy it into the CP Coach mod, paste this to Claude.</p>
+        <div class="cc">${esc(cc)}</div><div class="btns"><button class="btn primary" data-copy-cc>Copy</button></div></div>
+      <div class="block"><p class="label">Mark a whole level learned</p><div class="btns" style="margin-top:0">${LEVELS.map(l => `<button class="btn" data-bulk="${l.key}">${l.name}</button>`).join("")}<button class="btn" data-bulk="reset">Reset everything</button></div>
         <p class="hint" id="resetNote" hidden>Press Reset everything again to confirm. This clears chapter status, ticked problems and notes in this browser.</p></div>
       </div>`;
     $("#view").dataset.cc = cc;
@@ -503,12 +547,10 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
   function codeHtml(code) {
     let html;
     try { html = window.hljs ? hljs.highlight(code, { language: "cpp", ignoreIllegals: true }).value : esc(code); } catch (e) { html = esc(code); }
-    // keep highlight spans balanced per line
-    const out = []; let open = [];
+    const out = []; const open = [];
     html.split("\n").forEach(line => {
       const prefix = open.join("");
-      const tags = line.match(/<span[^>]*>|<\/span>/g) || [];
-      tags.forEach(t => (t.startsWith("</") ? open.pop() : open.push(t)));
+      (line.match(/<span[^>]*>|<\/span>/g) || []).forEach(t => (t.startsWith("</") ? open.pop() : open.push(t)));
       out.push(`<span class="l">${prefix}${line}${"</span>".repeat(open.length)}</span>`);
     });
     return out.join("");
@@ -518,19 +560,19 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
     const bySec = {};
     c.boxes.forEach(b => (bySec[b.section] = bySec[b.section] || []).push(b));
     const secs = c.sections.filter(s => bySec[s.num] || c.programs.some(p => p.section === s.num));
-    const kind = k => (k === "KEY POINT" ? "key" : k === "TRAP" ? "trap" : "idea");
+    const box = b => `<div class="box${b.kind === "TRAP" ? " trap" : ""}"><b>${KIND[b.kind] || b.kind}</b>${esc(b.text)}</div>`;
     const recap = c.exercises.filter(l => /^\d+\./.test(l));
-    let html = (bySec[""] || []).map(b => `<div class="box ${kind(b.kind)}"><b>${b.kind}</b>${esc(b.text)}</div>`).join("");
+    let html = (bySec[""] || []).map(box).join("");
     html += secs.map(s => `<div class="sec"><span class="n">${s.num}</span><h3>${esc(s.title)}</h3></div>
-      <div class="boxes">${(bySec[s.num] || []).map(b => `<div class="box ${kind(b.kind)}"><b>${b.kind}</b>${esc(b.text)}</div>`).join("")}
-      ${c.programs.filter(p => p.section === s.num).map(p => `<a class="hint" href="#ch-${c.slug}-code" data-jump="${esc(p.file)}">Program: <span class="mono">${esc(p.file)}</span> →</a>`).join("")}</div>`).join("");
+      <div class="boxes">${(bySec[s.num] || []).map(box).join("")}
+      ${c.programs.filter(p => p.section === s.num).map(p => `<a class="jump" href="#ch-${c.slug}-code" data-jump="${esc(p.file)}">Program <span class="mono">${esc(p.file)}</span> →</a>`).join("")}</div>`).join("");
     if (recap.length) html += `<div class="recap"><h3>Key points to memorise</h3>${recap.map(l => `<p>${esc(l)}</p>`).join("")}</div>`;
-    return html || `<p class="empty">No concept boxes were found in this handout. The Handout tab has its full text.</p>`;
+    return html || `<p class="empty">No concept boxes were found in this handout. The Handout tab has its full text</p>`;
   }
 
   function programs(c) {
-    if (!c.programs.length) return `<p class="empty">No programs in this handout.</p>`;
-    return `<p class="hint">${c.programs.length} programs from the handout, all C++17. To run one with CP Coach, save it as <span class="mono">name.cpp</span> with <span class="mono">name1.in</span> / <span class="mono">name1.out</span> beside it and type <span class="mono">/test name.cpp</span>.</p>` +
+    if (!c.programs.length) return `<p class="empty">No programs in this handout</p>`;
+    return `<p class="hint" style="margin:0 0 16px">${c.programs.length} programs from the handout, all C++17. To run one with CP Coach, save it as <span class="mono">name.cpp</span> with <span class="mono">name1.in</span> and <span class="mono">name1.out</span> beside it, then type <span class="mono">/test name.cpp</span></p>` +
       c.programs.map((p, i) => `<article class="prog" id="prog-${i}"><header><span><span class="mono">${esc(p.file)}</span> <small>§${esc(p.section)} · ${p.code.split("\n").length} lines</small></span><button class="copy" data-copy-prog="${i}">Copy code</button></header>
         <pre class="code"><code>${codeHtml(p.code)}</code></pre>
         ${p.samples.length ? `<div class="io">${p.samples.map((s, j) => `<div><b><span>${esc(s.label)}</span><button class="copy" data-copy-io="${i}:${j}">Copy</button></b><pre>${esc(s.text)}</pre></div>`).join("")}</div>` : ""}</article>`).join("");
@@ -545,25 +587,25 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
     return { html: rows.length ? `<div class="tablewrap"><table><thead><tr><th>Done</th><th>Problem</th><th>Name</th><th>${judge === "luogu" ? "Difficulty" : "Rating"}</th><th>Tags</th><th style="text-align:right">${judge === "luogu" ? "Accepted" : "Solved"}</th></tr></thead><tbody>
       ${rows.map(p => `<tr class="${solved.has(p.id) ? "solved" : ""}"><td><input type="checkbox" id="s-${judge}-${esc(p.id)}" data-solve="${esc(p.id)}" ${solved.has(p.id) ? "checked" : ""} aria-label="Mark ${esc(p.id)} solved"></td>
         <td class="id">${p.star ? '<span class="star" title="Tests exactly this chapter\'s technique">★</span> ' : ""}<a href="${url(p)}" target="_blank" rel="noopener">${judge === "luogu" ? esc(p.id) : "CF " + esc(p.id)}</a></td>
-        <td class="cjk">${esc(p.name)}</td><td>${diff(p)}</td><td class="hint">${esc(p.tags.slice(0, 4).join(", "))}</td><td class="num">${p.ac.toLocaleString()}</td></tr>`).join("")}</tbody></table></div>` : `<p class="empty">No problems match these filters.</p>`, done, total: list.length, shown: rows.length };
+        <td class="cjk">${esc(p.name)}</td><td>${diff(p)}</td><td class="hint">${esc(p.tags.slice(0, 4).join(", "))}</td><td class="num">${p.ac.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="empty">No problems match these filters</p>`, done, total: list.length, shown: rows.length };
   }
 
   let pstate = { judge: "luogu", star: false, hide: false, d: "", q: "" };
   function problemsTab(c) {
     if (!problems) {
-      fetch("problems.json").then(r => r.json()).then(j => { problems = j; route(); }).catch(() => { $("#tabbody").innerHTML = `<p class="empty">The problem list didn't load. Reload the page to try again.</p>`; });
-      return `<p class="empty">Loading ${c.counts.luogu + c.counts.codeforces} problems…</p>`;
+      fetch("problems.json").then(r => r.json()).then(j => { problems = j; route(); }).catch(() => { $("#tabbody").innerHTML = `<p class="empty">The problem list didn't load. Reload the page to try again</p>`; });
+      return `<p class="empty">Loading ${c.counts.luogu + c.counts.codeforces} problems</p>`;
     }
     const r = problemRows(c, pstate.judge, pstate);
     const opts = pstate.judge === "luogu" ? LUOGU.map((l, i) => `<option value="${i}" ${pstate.d === String(i) ? "selected" : ""}>${l[0]}</option>`).join("") : [800, 1200, 1600, 2000, 2400, 2800, 3200].map(v => `<option value="${v}" ${pstate.d === String(v) ? "selected" : ""}>${v}–${v + 399}</option>`).join("");
     return `<div class="ptools">
-      <div class="chipset" role="group" aria-label="Judge"><button class="chip" data-judge="luogu" aria-pressed="${pstate.judge === "luogu"}">Luogu · ${c.counts.luogu}</button><button class="chip" data-judge="codeforces" aria-pressed="${pstate.judge === "codeforces"}">Codeforces · ${c.counts.codeforces}</button></div>
+      <div class="seg" role="group" aria-label="Judge"><button data-judge="luogu" aria-pressed="${pstate.judge === "luogu"}">Luogu ${c.counts.luogu}</button><button data-judge="codeforces" aria-pressed="${pstate.judge === "codeforces"}">Codeforces ${c.counts.codeforces}</button></div>
       <select id="pdiff" aria-label="Difficulty"><option value="">All difficulties</option>${opts}</select>
-      <input type="text" id="pq" placeholder="Filter by name or tag" value="${esc(pstate.q)}" aria-label="Filter problems">
+      <input type="text" id="pq" placeholder="Filter" value="${esc(pstate.q)}" aria-label="Filter problems by name or tag">
       <label><input type="checkbox" id="pstar" ${pstate.star ? "checked" : ""}> ★ only</label>
       <label><input type="checkbox" id="phide" ${pstate.hide ? "checked" : ""}> Hide done</label>
       <span class="hint">${r.done}/${r.total} done · showing ${r.shown}</span></div>
-      <p class="hint">★ problems test exactly this chapter's technique: do those first. Lists run easiest to hardest. Ticks are saved in this browser.</p>
+      <p class="hint" style="margin:0 0 12px">★ problems test exactly this chapter's technique, so do those first. Lists run easiest to hardest, and ticks are saved in this browser</p>
       ${r.html}`;
   }
 
@@ -571,39 +613,39 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
     const t = texts[c.id];
     if (t === undefined) {
       fetch(`handouts/${c.slug}.txt`).then(r => r.text()).then(x => { texts[c.id] = x; route(); }).catch(() => { texts[c.id] = null; route(); });
-      return `<p class="empty">Loading the handout text…</p>`;
+      return `<p class="empty">Loading the handout text</p>`;
     }
-    const body = t === null ? "The text didn't load." : esc(t.replace(/^# .*\n/gm, "")).replace(/=== page (\d+) ===/g, '<span class="pg">PAGE $1</span>');
-    return `<div class="btns" style="margin-bottom:12px"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Open the PDF (${c.pages} pages)</a><span class="hint">The text below is extracted from the PDF; diagrams and table layout are in the PDF only.</span></div><div class="reader">${body}</div>`;
+    const body = t === null ? "The text didn't load" : esc(t.replace(/^# .*\n/gm, "")).replace(/=== page (\d+) ===/g, '<span class="pg">Page $1</span>');
+    return `<div class="btns" style="margin:0 0 16px;align-items:center"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Open the PDF · ${c.pages} pages</a><span class="hint">Text extracted from the PDF. Diagrams and table layout are in the PDF only</span></div><div class="reader">${body}</div>`;
   }
 
   function notesTab(c) {
-    return `<p class="hint">Your own notes for ${c.id}. Saved in this browser as you type.</p><textarea class="notes" id="notes-${c.slug}" data-notes="${c.id}" placeholder="What clicked, what tripped you up, problems to revisit…">${esc(notes[c.id] || "")}</textarea>`;
+    return `<p class="hint" style="margin:0 0 12px">Your notes for ${c.id}, saved in this browser as you type</p><textarea class="notes" id="notes-${c.slug}" data-notes="${c.id}" placeholder="What clicked, what tripped you up, problems to revisit">${esc(notes[c.id] || "")}</textarea>`;
   }
 
   function viewChapter(slug, tab) {
     const c = bySlug[slug];
     if (!c) return viewTree();
     const i = A.indexOf(c), prev = A[i - 1], next = A[i + 1];
-    const tabs = [["concepts", "Concepts", c.boxes.length], ["code", "Code", c.programs.length], ["problems", "Problems", c.counts.luogu + c.counts.codeforces], ["handout", "Handout", c.pages + "pp"], ["notes", "Notes", notes[c.id] ? "✎" : ""]];
+    const tabs = [["concepts", "Concepts", c.boxes.length], ["code", "Code", c.programs.length], ["problems", "Problems", c.counts.luogu + c.counts.codeforces], ["handout", "Handout", c.pages + "p"], ["notes", "Notes", notes[c.id] ? "✎" : ""]];
     const body = tab === "code" ? programs(c) : tab === "problems" ? problemsTab(c) : tab === "handout" ? handoutTab(c) : tab === "notes" ? notesTab(c) : concepts(c);
-    $("#view").innerHTML = `<div class="chapter ${lvClass(c)}" style="--c: var(--${lvClass(c)})">
+    const need = pathTo(c.id);
+    $("#view").innerHTML = `<div class="chapter" style="--c: var(--${lvClass(c)})">
       <div style="min-width:0">
-        <div class="crumbs"><a href="#tree" data-select="${c.id}">Tree</a> / <a href="#list">${lvOf(c).name}</a> / <span>${c.id}</span></div>
+        <div class="crumbs"><a href="#tree" data-select="${c.id}">Tree</a><span>/</span><a href="#list">${lvOf(c).name}</a><span>/</span><span>${c.id}</span></div>
         <div class="chead"><span class="lv ${lvClass(c)}">${c.id} · ${lvOf(c).name} 第${c.num}章</span><h1>${esc(c.title)}</h1><p class="en">${esc(c.en)}</p><p class="sum">${esc(c.summary)}</p></div>
         <nav class="tabs" aria-label="Chapter sections">${tabs.map(([k, label, n]) => `<a href="#ch-${c.slug}${k === "concepts" ? "" : "-" + k}" ${(tab || "concepts") === k ? 'aria-current="page"' : ""}>${label}<small>${n}</small></a>`).join("")}</nav>
         <div id="tabbody">${body}</div>
         <div class="pager">${prev ? `<a href="#ch-${prev.slug}"><small>← ${prev.id}</small><span class="cjk">${esc(prev.title)}</span></a>` : "<span></span>"}${next ? `<a class="next" href="#ch-${next.slug}"><small>${next.id} →</small><span class="cjk">${esc(next.title)}</span></a>` : "<span></span>"}</div>
       </div>
       <aside class="aside">
-        <div class="card"><h4>Status</h4>${statusButtons(c.id)}
-          <div class="btns"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a><a class="btn" href="#tree" data-select="${c.id}">Show in tree</a></div>
-          <h4>Sections</h4><ol class="path">${c.sections.map(s => `<li class="cjk">${esc(s.title)}</li>`).join("")}</ol>
-          <h4>Needs</h4><div class="links">${c.pre.length ? c.pre.map(p => chLink(p)).join("") : '<span class="hint">Nothing: a starting point.</span>'}</div>
-          <h4>Unlocks</h4><div class="links">${(kids[c.id] || []).map(k => chLink(k)).join("") || '<span class="hint">Nothing further.</span>'}</div>
-          ${pathTo(c.id).length ? `<h4>Still to learn first</h4><div class="links">${pathTo(c.id).map(id => chLink(id)).join("")}</div>` : ""}
-        </div>
-        <div class="card"><h4>With CP Coach</h4><div class="cc">/learn ${c.id}</div><div class="cc">/practice ${c.id}</div><p class="hint">Type these in Claude Code to study this chapter or get its next problems.</p></div>
+        <div class="block"><p class="label">Status</p>${statusButtons(c.id)}
+          <div class="btns even"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a><a class="btn" href="#tree" data-select="${c.id}">Show in tree</a></div></div>
+        <div class="block"><p class="label">Sections</p><ol class="path">${c.sections.map(s => `<li class="cjk">${esc(s.title)}</li>`).join("")}</ol></div>
+        <div class="block"><p class="label">Needs</p><div class="links">${c.pre.length ? c.pre.map(chLink).join("") : '<span class="hint">Nothing, a starting point</span>'}</div></div>
+        <div class="block"><p class="label">Unlocks</p><div class="links">${(kids[c.id] || []).map(chLink).join("") || '<span class="hint">Nothing further</span>'}</div></div>
+        ${need.length ? `<div class="block"><p class="label">Still to learn first · ${need.length}</p><div class="links">${need.map(chLink).join("")}</div></div>` : ""}
+        <div class="block"><p class="label">With CP Coach</p><div class="cc">/learn ${c.id}</div><div class="cc">/practice ${c.id}</div><p class="hint" style="margin-top:8px">Type these in Claude Code to study this chapter or get its next problems</p></div>
       </aside></div>`;
     window.scrollTo(0, 0);
   }
@@ -611,7 +653,7 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
   // ---- routing ----
   function route() {
     const h = location.hash.slice(1) || "tree";
-    ["tree", "list", "progress"].forEach(k => $("#nav-" + k).toggleAttribute("aria-current", false));
+    ["tree", "list", "progress"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
     const m = h.match(/^ch-([a-z]\d+)(?:-(code|problems|handout|notes))?$/);
     if (m) return viewChapter(m[1], m[2]);
     const nav = $("#nav-" + h);
@@ -625,14 +667,21 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
 
   // ---- events ----
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-status],[data-level],[data-clear],[data-copy-prog],[data-copy-io],[data-judge],[data-copy-cc],[data-bulk],[data-select],[data-jump],.node,[data-solve]");
+    const t = e.target.closest("[data-status],[data-level],[data-zoom],[data-clear],[data-copy-prog],[data-copy-io],[data-judge],[data-copy-cc],[data-bulk],[data-select],[data-jump],.node,[data-solve]");
     if (!t) return;
-    if (t.classList.contains("node")) { const id = t.dataset.id; selected = selected === id && e.detail < 2 ? null : id; if (e.detail >= 2) { location.hash = "ch-" + byId[id].slug; return; } refreshTree(); return; }
+    if (t.classList.contains("node")) {
+      const id = t.dataset.id;
+      if (e.detail >= 2) { location.hash = "ch-" + byId[id].slug; return; }
+      selected = selected === id ? null : id;
+      if (selected && zoom === "fit") { zoom = "full"; viewTree(); return; }
+      refreshTree(); return;
+    }
     if (t.dataset.status) { setStatus(t.dataset.id, t.dataset.status); route(); return; }
     if (t.dataset.level) { levelFilter = t.dataset.level; viewTree(); return; }
+    if (t.dataset.zoom) { zoom = t.dataset.zoom; viewTree(); return; }
     if (t.hasAttribute("data-clear")) { selected = null; refreshTree(); return; }
-    if (t.dataset.select) { selected = t.dataset.select; layout || computeLayout(); }
-    if (t.dataset.jump) { const name = t.dataset.jump; setTimeout(() => { const c = bySlug[(location.hash.match(/ch-([a-z]\d+)/) || [])[1]]; const i = c ? c.programs.findIndex(p => p.file === name) : -1; const el = document.getElementById("prog-" + i); if (el) el.scrollIntoView({ block: "start" }); }, 30); }
+    if (t.dataset.select) { selected = t.dataset.select; zoom = "full"; }
+    if (t.dataset.jump) { const name = t.dataset.jump; setTimeout(() => { const ch = bySlug[(location.hash.match(/ch-([a-z]\d+)/) || [])[1]]; const i = ch ? ch.programs.findIndex(p => p.file === name) : -1; const el = document.getElementById("prog-" + i); if (el) el.scrollIntoView({ block: "start" }); }, 30); }
     const c = bySlug[(location.hash.match(/ch-([a-z]\d+)/) || [])[1]];
     if (t.dataset.copyProg !== undefined && c) copy(c.programs[+t.dataset.copyProg].code);
     if (t.dataset.copyIo !== undefined && c) { const [i, j] = t.dataset.copyIo.split(":").map(Number); copy(c.programs[i].samples[j].text); }
@@ -644,7 +693,7 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
         if (note.hidden) { note.hidden = false; return; }
         prog = {}; solved = new Set(); notes = {}; store.set("progress", prog); store.set("solved", []); store.set("notes", notes); toast("Cleared"); route(); return;
       }
-      A.filter(x => x.id.startsWith(t.dataset.bulk)).forEach(x => (prog[x.id] = "learned")); store.set("progress", prog); toast(`All ${LEVELS.find(l => l.key === t.dataset.bulk).name} marked learned`); route();
+      A.filter(x => x.id.startsWith(t.dataset.bulk)).forEach(x => (prog[x.id] = "learned")); store.set("progress", prog); toast(`${LEVELS.find(l => l.key === t.dataset.bulk).name} marked learned`); route();
     }
   });
   document.addEventListener("change", e => {
@@ -662,15 +711,21 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
   });
   document.addEventListener("keydown", e => {
     const n = e.target.closest && e.target.closest(".node");
-    if (n && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); if (selected === n.dataset.id && e.key === "Enter") location.hash = "ch-" + byId[n.dataset.id].slug; else { selected = n.dataset.id; refreshTree(); const again = document.querySelector(`.node[data-id="${n.dataset.id}"]`); if (again) again.focus(); } }
+    if (n && (e.key === "Enter" || e.key === " ")) {
+      e.preventDefault();
+      if (selected === n.dataset.id && e.key === "Enter") { location.hash = "ch-" + byId[n.dataset.id].slug; return; }
+      selected = n.dataset.id;
+      if (zoom === "fit") { zoom = "full"; viewTree(); } else refreshTree();
+      const again = document.querySelector(`.node[data-id="${n.dataset.id}"]`); if (again) again.focus();
+    }
   });
 
   // ---- search ----
-  let index = [];
+  const index = [];
   function buildIndex() {
     A.forEach(c => {
       index.push({ c, kind: "Chapter", text: `${c.id} ${c.title} ${c.en} ${c.summary}`, show: c.summary, href: `#ch-${c.slug}` });
-      c.boxes.forEach(b => index.push({ c, kind: b.kind, text: b.text, show: b.text, href: `#ch-${c.slug}` }));
+      c.boxes.forEach(b => index.push({ c, kind: KIND[b.kind] || b.kind, text: b.text, show: b.text, href: `#ch-${c.slug}` }));
       c.programs.forEach(p => index.push({ c, kind: "Program", text: `${p.file} ${p.code.slice(0, 600)}`, show: p.file, href: `#ch-${c.slug}-code` }));
       [...c.stars.luogu, ...c.stars.codeforces].forEach(p => index.push({ c, kind: "★ Problem", text: `${p.id} ${p.name}`, show: `${p.id} ${p.name}`, href: `#ch-${c.slug}-problems` }));
     });
@@ -679,13 +734,13 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
   let hits = [], hi = 0;
   function search() {
     const s = q.value.trim().toLowerCase();
-    if (!s) { res.hidden = true; return; }
+    if (!s) { res.innerHTML = `<div class="none">Search chapters, concept boxes, programs and starred problems. Try 懒标记, dijkstra or P3372</div>`; res.hidden = false; return; }
     const words = s.split(/\s+/);
     hits = index.filter(x => { const t = x.text.toLowerCase(); return words.every(w => t.includes(w)); });
     hits.sort((a, b) => (a.kind === "Chapter" ? 0 : 1) - (b.kind === "Chapter" ? 0 : 1));
     hits = hits.slice(0, 30); hi = 0;
     const snip = t => { const i = t.toLowerCase().indexOf(words[0]); const a = Math.max(0, i - 40); return (a ? "…" : "") + t.slice(a, a + 140) + (t.length > a + 140 ? "…" : ""); };
-    res.innerHTML = hits.length ? hits.map((x, i) => `<a href="${x.href}" class="${i === 0 ? "on" : ""}"><span class="lv ${lvClass(x.c)}">${x.c.id}</span> <span class="cjk">${esc(x.c.title)}</span> <span class="pill">${esc(x.kind)}</span><small>${esc(snip(x.show))}</small></a>`).join("") : `<div class="none">No matches for “${esc(q.value)}”.</div>`;
+    res.innerHTML = hits.length ? hits.map((x, i) => `<a href="${x.href}" class="${i === 0 ? "on" : ""}"><span class="lv ${lvClass(x.c)}">${x.c.id}</span> <span class="cjk">${esc(x.c.title)}</span> <span class="pill">${esc(x.kind)}</span><small>${esc(snip(x.show))}</small></a>`).join("") : `<div class="none">No matches for “${esc(q.value)}”</div>`;
     res.hidden = false;
   }
   q.addEventListener("input", search);
@@ -693,11 +748,11 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
   q.addEventListener("keydown", e => {
     if (res.hidden) return;
     const links = res.querySelectorAll("a");
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); hi = (hi + (e.key === "ArrowDown" ? 1 : -1) + links.length) % links.length; links.forEach((l, i) => l.classList.toggle("on", i === hi)); links[hi] && links[hi].scrollIntoView({ block: "nearest" }); }
+    if ((e.key === "ArrowDown" || e.key === "ArrowUp") && links.length) { e.preventDefault(); hi = (hi + (e.key === "ArrowDown" ? 1 : -1) + links.length) % links.length; links.forEach((l, i) => l.classList.toggle("on", i === hi)); links[hi].scrollIntoView({ block: "nearest" }); }
     if (e.key === "Enter" && links[hi]) { location.hash = links[hi].getAttribute("href").slice(1); res.hidden = true; q.blur(); }
-    if (e.key === "Escape") { res.hidden = true; }
+    if (e.key === "Escape") { res.hidden = true; q.blur(); }
   });
-  document.addEventListener("click", e => { if (!e.target.closest(".search")) res.hidden = true; else if (e.target.closest(".results a")) res.hidden = true; });
+  document.addEventListener("click", e => { if (!e.target.closest(".search") || e.target.closest(".results a")) res.hidden = true; });
 
   // ---- boot ----
   fetch("atlas.json").then(r => r.json()).then(data => {
@@ -706,7 +761,7 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line); 
     A.forEach(c => c.pre.forEach(p => (kids[p] = kids[p] || []).push(c.id)));
     buildIndex();
     route();
-  }).catch(err => { console.error(err); $("#view").innerHTML = `<p class="empty">The chapter data didn't load. Reload the page to try again.</p>`; });
+  }).catch(err => { console.error(err); $("#view").innerHTML = `<p class="empty">The chapter data didn't load. Reload the page to try again</p>`; });
 })();
 </script>
 </body>
