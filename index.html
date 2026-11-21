@@ -2308,6 +2308,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   const SITE = "https://yhcrow.github.io/Competitive-Programming-Learning/";
   const solutionUrl = id => `https://www.luogu.com.cn/problem/solution/${id}`;
   function download(name, blob) {
+    if (!document.querySelector('link[rel="manifest"]')) { toast("Downloads work on the GitHub site. Here, use Copy as text"); return; } // the Claude preview blocks file saves
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
