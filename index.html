@@ -266,8 +266,8 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
 .pager a:hover { border-color: var(--line-strong); }
 .pager a small { display: block; color: var(--muted); font-size: 12px; }
 .pager a.next { text-align: right; }
-.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 8px); opacity: 0; pointer-events: none; background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: var(--r-ctl); font-size: 13px; z-index: 20; transition: opacity .2s var(--ease), transform .2s var(--ease); }
-.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 8px); opacity: 0; pointer-events: none; background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: var(--r-ctl); font-size: 13px; z-index: 20; transition: opacity .15s var(--ease), transform .15s var(--ease); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); transition-duration: .2s; } /* arrive in 200ms, leave in 150ms */
 /* motion: press feedback, solved-row fade, map zoom origin */
 .status button:active, .copy:active, .chip:active, .seg button:active { transform: scale(.97); }
 .copy, .chip, .seg button { transition: background-color .15s var(--ease), transform .12s var(--ease); }
@@ -321,7 +321,12 @@ tr td { transition: opacity .15s var(--ease); }
   .canvas { max-height: 64vh; min-height: 200px; }
   .results { min-width: 0; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+/* Reduced motion: drop movement, keep the fades and colour changes that confirm an action. */
+@media (prefers-reduced-motion: reduce) {
+  .hero > * { animation: none; }
+  .toast, .toast.show { transform: translate(-50%, 0); }
+  .btn:active, .status button:active, .copy:active, .chip:active, .seg button:active { transform: none; }
+}
 </style>
 </head>
 <body>
@@ -385,7 +390,7 @@ tr td { transition: opacity .15s var(--ease); }
   // Rare moment, so it may run longer than UI motion: the finished lane lights up once.
   function celebrate(key) {
     toast(`${LEVELS.find(l => l.key === key).name} complete`);
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // An opacity glow with no movement, so it stays under reduced motion.
     const lane = document.querySelector(`.lane-bg[data-lv="${key}"]`);
     if (lane) lane.animate([{ opacity: 0.045 }, { opacity: 0.22 }, { opacity: 0.045 }], { duration: 900, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
   }
