@@ -1,0 +1,205 @@
+# NOI篇 第22章 LGV 引理、整数划分与子集卷积  (N22)
+# source: NOI篇 第22章 LGV 引理、整数划分与子集卷积.pdf
+
+=== page 1 ===
+1NOI 篇  第 22 章  LGV 引理、整数划分与子集卷积
+第 22 章 	LGV	 引理、整数划分与子集卷积
+LGV lemma, partitions, subset convolution Luogu (verified) 3 problems C++17 · all programs run
+22.1 LGV 引理 22.2 整数划分
+22.3 子集卷积 22.4 课后习题与实验
+22.1 LGV	 引理
+det	of	path	counts	=	disjoint	systems.
+IDEA The LGV	lemma (Lindström–Gessel–Viennot): in a DAG, take starts A1 … Ak and ends B1 … Bk, and let
+e(Ai, Bj) = number of paths from Ai to Bj. Then det[e(Ai, Bj)] = Σ over vertex-disjoint path systems of
+sign(σ), where σ says which start goes to which end.
+KEY POINT On a grid moving only right / down with starts and ends in "compatible order" (sorted the same way
+along a diagonal), every disjoint system uses the identity σ, so the determinant counts	the	non-
+intersecting	path	systems exactly (P6657). Grid path counts are binomials: C(dx + dy, dx).
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Count non-intersecting lattice paths with a determinant, compute partition numbers with the pentagonal
+number theorem, and convolve over disjoint subsets with ranked zeta transforms.
+
+=== page 2 ===
+2NOI 篇  第 22 章  LGV 引理、整数划分与子集卷积
+lgv.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const ll MOD = 998244353;
+6 ll C[60][60];
+7 ll power(ll a, ll b) { ll r = 1; for (a %= MOD; b; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD; 
+return r; }
+8 ll ways(int x1, int y1, int x2, int y2) { if (x2 < x1 || y2 < y1) return 0; return C[(x2 - x1) + (y2 - 
+y1)][x2 - x1]; }
+9  
+10 int main() {
+11     for (int i = 0; i < 60; i++) { C[i][0] = 1; for (int j = 1; j <= i; j++) C[i][j] = (C[i - 1][j - 1] 
++ C[i - 1][j]) % MOD; }
+12     int k;
+13     cin >> k;
+14     vector<int> ax(k), ay(k), bx(k), by(k);
+15     for (int i = 0; i < k; i++) cin >> ax[i] >> ay[i];
+16     for (int i = 0; i < k; i++) cin >> bx[i] >> by[i];
+17     vector<vector<ll>> m(k, vector<ll>(k));
+18     for (int i = 0; i < k; i++) for (int j = 0; j < k; j++) m[i][j] = ways(ax[i], ay[i], bx[j], by[j]);
+19     ll det = 1;
+20     for (int c = 0; c < k; c++) {                 // Gaussian elimination mod p
+21         int piv = -1;
+22         for (int r = c; r < k; r++) if (m[r][c]) { piv = r; break; }
+23         if (piv < 0) { det = 0; break; }
+24         if (piv != c) { swap(m[piv], m[c]); det = (MOD - det) % MOD; }
+25         det = det * m[c][c] % MOD;
+26         ll inv = power(m[c][c], MOD - 2);
+27         for (int r = c + 1; r < k; r++) {
+28             ll f = m[r][c] * inv % MOD;
+29             for (int j = c; j < k; j++) m[r][j] = ((m[r][j] - f * m[c][j]) % MOD + MOD) % MOD;
+30         }
+31     }
+32     cout << det << "\n";
+33     return 0;
+34 }
+INPUT 1
+2
+0 0
+0 1
+3 1
+3 2
+OUTPUT 1
+6
+INPUT 2
+3
+0 0
+0 1
+0 2
+3 1
+3 2
+3 3
+OUTPUT 2
+4
+KEY POINT Two and three paths from the top row to the bottom row of a 4 × 4 grid, checked by listing every
+combination of paths in Python and keeping the vertex-disjoint ones.
+TRAP Order matters: if the i-th start is not "left of" the (i+1)-th in the same sense as the ends, crossing systems
+get sign −1 and the determinant is no longer a count (it can even be negative). Sort starts and ends
+consistently along the boundary first.
+
+=== page 3 ===
+3NOI 篇  第 22 章  LGV 引理、整数划分与子集卷积
+22.2 整数划分
+Pentagonal	number	theorem;	O(n√n).
+IDEA The partition	number p(n) ( 整数划分 ) counts ways to write n as an unordered sum of positive integers.
+The simple DP "coins 1 … n" ( 进阶篇  第 13 章 ) is O(n²). Euler's pentagonal	number	theorem: Π (1 − xk)
+= Σj (−1)j xj(3j−1)/2, so p(n) = Σj≥1 (−1)j+1 (p(n − j(3j−1)/2) + p(n − j(3j+1)/2)): only O(√n) terms each,
+O(n√n) total.
+KEY POINT The generalised pentagonal numbers 1, 2, 5, 7, 12, 15, … come in pairs with signs + +, − −, + +, ….
+Partitions into distinct parts, or parts with bounds, use similar generating-function tricks ( 跑步  P6189 has
+n = 10⁵).
+partitions.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long MOD = 1000000007;
+5 int main() {
+6     int n;
+7     cin >> n;
+8     vector<long long> p(n + 1, 0);
+9     p[0] = 1;
+10     for (int i = 1; i <= n; i++) {
+11         long long s = 0;
+12         for (int j = 1; ; j++) {
+13             int g1 = j * (3 * j - 1) / 2, g2 = j * (3 * j + 1) / 2;   // generalised pentagonal numbers
+14             if (g1 > i) break;
+15             long long t = p[i - g1] + (g2 <= i ? p[i - g2] : 0);
+16             s += (j % 2 ? t : -t);                                // signs + + - - + + ...
+17         }
+18         p[i] = (s % MOD + MOD) % MOD;
+19     }
+20     cout << p[n] << "\n";
+21     return 0;
+22 }
+INPUT 1
+10
+OUTPUT 1
+42
+INPUT 2
+100
+OUTPUT 2
+190569292
+INPUT 3
+2000
+OUTPUT 3
+298613045
+IDEA p(10) = 42, p(100) = 190569292, p(2000) mod 10⁹+7, all checked against the O(n²) coin DP in Python.
+KEY POINT Keep s as a long long sum of at most 2√n terms below MOD before reducing; the alternating signs need the
+final (s % MOD + MOD) % MOD.
+22.3 子集卷积
+Ranks	+	OR	transform;	O(2ⁿ	n²).
+
+=== page 4 ===
+4NOI 篇  第 22 章  LGV 引理、整数划分与子集卷积
+IDEA Subset	convolution ( 子集卷积 ): c[S] = ΣT⊆S a[T]·b[S∖T], i.e. split S into two disjoint parts. Plain
+enumeration is 3ⁿ. OR-convolution (NOI 篇  第 7 章 ) would also allow overlapping parts. Fix it by rank:
+split a, b by popcount, ai[S] = a[S] if |S| = i; OR-transform each; for each S multiply as polynomials in the
+rank, ck = Σi+j=k âi·bj; inverse-transform and keep c|S|[S]. O(2ⁿ n²) (P6097).
+KEY POINT Why it works: T ∪ U = S with |T| + |U| = |S| forces T and U to be disjoint. Used for DP over subsets where a
+set splits into disjoint pieces (counting connected subgraphs, set partitions).
+subset_convolution.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 int main() {
+6     int n;
+7     cin >> n;
+8     int N = 1 << n;
+9     vector<vector<ll>> A(n + 1, vector<ll>(N, 0)), B(n + 1, vector<ll>(N, 0)), C(n + 1, vector<ll>(N, 
+0));
+10     for (int s = 0; s < N; s++) { ll x; cin >> x; A[__builtin_popcount(s)][s] = x; }
+11     for (int s = 0; s < N; s++) { ll x; cin >> x; B[__builtin_popcount(s)][s] = x; }
+12     for (int r = 0; r <= n; r++)                                   // OR (zeta) transform per rank
+13         for (int b = 0; b < n; b++) for (int s = 0; s < N; s++)
+14             if (s >> b & 1) { A[r][s] += A[r][s ^ (1 << b)]; B[r][s] += B[r][s ^ (1 << b)]; }
+15     for (int s = 0; s < N; s++)
+16         for (int k = 0; k <= n; k++)
+17             for (int i = 0; i <= k; i++) C[k][s] += A[i][s] * B[k - i][s];   // multiply by rank
+18     for (int r = 0; r <= n; r++)                                   // inverse (Möbius) transform
+19         for (int b = 0; b < n; b++) for (int s = 0; s < N; s++)
+20             if (s >> b & 1) C[r][s] -= C[r][s ^ (1 << b)];
+21     for (int s = 0; s < N; s++) cout << C[__builtin_popcount(s)][s] << (s + 1 < N ? " " : "");
+22     cout << "\n";
+23     return 0;
+24 }
+INPUT
+4
+7 6 9 9 7 3 6 7 1 4 3 7 6 3 8 9
+2 4 9 1 7 5 2 8 0 3 7 9 3 1 9 3
+OUTPUT
+14 40 81 115 63 111 152 248 2 33 64 195 40 109 232 
+376
+KEY POINT Random arrays on 4 bits, checked against enumerating every submask T of every S in Python (the 3ⁿ
+method). Real problems work modulo a prime, which keeps the intermediate values small.
+22.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. LGV: det[e(Ai, Bj)] = signed count of disjoint systems; compatible order ⇒ exact count.
+2. Grid paths: C(dx + dy, dx).
+3. p(n) = Σ (−1)^(j+1) [p(n − j(3j−1)/2) + p(n − j(3j+1)/2)].
+4. Subset convolution: split by popcount, zeta, multiply by rank, Möbius, take rank |S|.
+
+=== page 5 ===
+5NOI 篇  第 22 章  LGV 引理、整数划分与子集卷积
+22.4.1 Problems
+Problem Name Section What it tests
+P6657 【模板】 LGV 引理 22.1 Determinant of binomials.
+P6189 跑步 22.2 Partition numbers.
+P6097 【模板】子集卷积 22.3 Ranked transforms.
+22.4.2 Practice	ladder
+1. Direct. P6189: partitions (22.2).
+2. One	twist. P6657: LGV (22.1).
+3. Idea	hidden. P6097: subset convolution (22.3).
+22.4.3 Experiments
+1. Swap two end points in lgv.cpp and see the sign change.
+2. Print the generalised pentagonal numbers up to 100.
+3. Compare subset_convolution.cpp with OR convolution on the same input.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

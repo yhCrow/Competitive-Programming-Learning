@@ -1,0 +1,250 @@
+# 拓展篇 第26章 存图、块状链表与二维树状数组  (拓26)
+# source: 拓展篇 第26章 存图、块状链表与二维树状数组.pdf
+
+=== page 1 ===
+1拓展篇  第 26 章  存图、块状链表与二维树状数组
+第 26 章 	 存图、块状链表与二维树状数组
+Graph storage, block lists, 2D Fenwick Luogu (verified) 3 problems C++17 · all programs run
+26.1 图的存储 26.2 块状链表
+26.3 二维树状数组 26.4 课后习题与实验
+26.1 图的存储
+Matrix,	list,	chain	forward	star.
+Storage Memory List neighbours ofu Is (u, v) anedge? Use when
+adjacency matrix ( 邻接矩阵 ) O(n²) O(n) O(1) n ≤ a few thousand, dense graphs,
+Floyd
+adjacency list (vector<int>
+g[N] )
+O(n +
+m)
+O(deg u) O(deg u) almost always
+chain forward star ( 链式前向星 ) O(n +
+m)
+O(deg u) O(deg u) no vectors, edge ids matter (flows)
+edge list O(m) — — Kruskal, Bellman-Ford
+IDEA Chain	forward	star stores all edges in arrays: to[e], nxt[e], and head[u] = the newest edge leaving u.
+Adding an edge pushes it at the front of u's list: nxt[cnt] = head[u], head[u] = cnt. Walking u's list: for (e =
+head[u]; e; e = nxt[e]).
+KEY POINT It is a linked list per vertex built in one array, so it never reallocates. Edge numbers are stable, so the
+reverse edge of e can be e ^ 1 (start cnt at 1 so the first pair is 2, 3), exactly what flows need ( 第 1 章 ).
+Neighbours come out in reverse input order.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 据 结 构 补 充
+Choose how to store a graph and write the chain forward star, keep a sequence in √n blocks for fast insert
+and index, and do rectangle add / rectangle sum with four Fenwick trees.
+
+=== page 2 ===
+2拓展篇  第 26 章  存图、块状链表与二维树状数组
+forward_star.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005, M = 200005;
+5 int head[N], to[M], nxt[M], cnt = 0;
+6  
+7 void addEdge(int u, int v) {
+8     to[++cnt] = v;
+9     nxt[cnt] = head[u];                // new edge points to the old first edge
+10     head[u] = cnt;                     // and becomes the first
+11 }
+12  
+13 int main() {
+14     int n, m;
+15     cin >> n >> m;
+16     for (int i = 0; i < m; i++) { int u, v; cin >> u >> v; addEdge(u, v); }
+17     for (int u = 1; u <= n; u++) {
+18         cout << u << ":";
+19         for (int e = head[u]; e; e = nxt[e]) cout << " " << to[e];   // 0 ends the list
+20         cout << "\n";
+21     }
+22     return 0;
+23 }
+INPUT
+4 6
+1 2
+1 3
+2 3
+3 4
+1 4
+4 2
+OUTPUT
+1: 4 3 2
+2: 3
+3: 4
+4: 2
+IDEA Directed edges 1→2, 1→3, 2→3, 3→4, 1→4, 4→2. Vertex 1 lists 4, 3, 2: newest first. Edge 0 is the "end"
+marker, which is why counting starts at 1.
+KEY POINT For undirected graphs add both directions and size M = 2m. With weights, add a third array w[e].
+26.2 块状链表
+Blocks	of	√n;	split	when	too	big.
+IDEA A block	linked	list ( 块状链表 ) stores a sequence as a list of blocks of about √n elements each. To find
+position k, skip whole blocks by their sizes (O(√n)), then index inside one block. Insert / delete only shift
+elements inside one block (O(√n)). When a block grows past 2√n, split it in two.
+KEY POINT It sits between an array (fast index, slow insert) and a linked list (fast insert, slow index): both operations
+O(√n). A balanced tree with implicit keys ( 第 4 章 ) does the same in O(log n), but the block list is simpler
+and has small constants ( 文本编辑器  P4008).
+
+=== page 3 ===
+3拓展篇  第 26 章  存图、块状链表与二维树状数组
+block_list.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int B = 4;                              // block size (about sqrt(n) in real use)
+5 list<vector<int>> blocks;
+6  
+7 void insertAt(int pos, int x) {               // after the first pos elements
+8     for (auto it = blocks.begin(); it != blocks.end(); it++) {
+9         if (pos <= int(it->size())) {
+10             it->insert(it->begin() + pos, x);
+11             if (int(it->size()) > 2 * B) {    // too big: split in half
+12                 vector<int> right(it->begin() + B, it->end());
+13                 it->resize(B);
+14                 blocks.insert(next(it), right);
+15             }
+16             return;
+17         }
+18         pos -= it->size();
+19     }
+20 }
+21 int kth(int k) {                              // 1-based
+22     for (auto it = blocks.begin(); it != blocks.end(); it++) {
+23         if (k <= int(it->size())) return (*it)[k - 1];
+24         k -= it->size();
+25     }
+26     return -1;
+27 }
+28  
+29 int main() {
+30     int n, q;
+31     cin >> n >> q;
+32     blocks.push_back(vector<int>());
+33     for (int i = 0; i < n; i++) { int x; cin >> x; insertAt(i, x); }
+34     while (q--) {
+35         char op; cin >> op;
+36         if (op == 'I') { int pos, x; cin >> pos >> x; insertAt(pos, x); }
+37         else { int k; cin >> k; cout << kth(k) << "\n"; }
+38     }
+39     return 0;
+40 }
+INPUT
+6 12
+17 21 13 16 13 8
+I 4 90
+I 0 68
+I 7 62
+Q 4
+I 6 62
+I 1 56
+Q 5
+I 3 65
+I 1 63
+Q 8
+Q 9
+I 13 96
+OUTPUT
+13
+13
+16
+90
+KEY POINT Random inserts and k-th queries checked against a plain Python list. Here std::list of vectors keeps the
+code short; the iterator loops are the one place where an iterator (not an index) is the natural tool. B is tiny
+only to make splits happen on a small test.
+
+=== page 4 ===
+4拓展篇  第 26 章  存图、块状链表与二维树状数组
+26.3 二维树状数组
+Range	add,	range	sum	in	1D	and	2D.
+IDEA Range	add,	range	sum with Fenwick trees. 1D: keep the difference array d; a1 + … + ax = (x + 1)·Σdi − Σ
+i·di, so two Fenwick trees (d and i·d) give both operations in O(log n). 2D: the same expansion over (i, j)
+needs four trees: d, i·d, j·d, i·j·d.
+KEY POINT Rectangle add = 4 corner updates of the 2D difference ( 第 24 章 ), rectangle sum = inclusion-exclusion of 4
+prefix sums. Each is O(log n · log m) on the 2D Fenwick tree ( 上帝造题的七分钟  P4514). A 2D segment
+tree / tree of trees is the heavier alternative when the operation is not additive.
+
+=== page 5 ===
+5拓展篇  第 26 章  存图、块状链表与二维树状数组
+bit2d.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, m;
+5 long long t[4][105][105];                     // d, d*i, d*j, d*i*j
+6  
+7 void add(int x, int y, long long v) {
+8     for (int i = x; i <= n; i += i & -i)
+9         for (int j = y; j <= m; j += j & -j) {
+10             t[0][i][j] += v; t[1][i][j] += v * x; t[2][i][j] += v * y; t[3][i][j] += v * x * y;
+11         }
+12 }
+13 long long prefix(int x, int y) {              // sum of the rectangle (1,1)..(x,y)
+14     long long s0 = 0, s1 = 0, s2 = 0, s3 = 0;
+15     for (int i = x; i > 0; i -= i & -i)
+16         for (int j = y; j > 0; j -= j & -j) { s0 += t[0][i][j]; s1 += t[1][i][j]; s2 += t[2][i][j]; s3 
++= t[3][i][j]; }
+17     return s0 * (x + 1) * (y + 1) - s1 * (y + 1) - s2 * (x + 1) + s3;
+18 }
+19 void rangeAdd(int a, int b, int c, int d, long long v) {
+20     add(a, b, v); add(a, d + 1, -v); add(c + 1, b, -v); add(c + 1, d + 1, v);
+21 }
+22 long long rangeSum(int a, int b, int c, int d) {
+23     return prefix(c, d) - prefix(a - 1, d) - prefix(c, b - 1) + prefix(a - 1, b - 1);
+24 }
+25  
+26 int main() {
+27     int q;
+28     cin >> n >> m >> q;
+29     while (q--) {
+30         char op; int a, b, c, d; long long v;
+31         cin >> op >> a >> b >> c >> d >> v;           // v is ignored for queries
+32         if (op == 'L') rangeAdd(a, b, c, d, v);
+33         else cout << rangeSum(a, b, c, d) << "\n";
+34     }
+35     return 0;
+36 }
+INPUT
+5 6 10
+k 3 3 5 6 9
+k 1 1 4 2 2
+k 3 2 4 4 4
+L 1 3 2 4 7
+k 1 2 2 5 3
+k 1 1 2 2 3
+k 2 2 3 3 4
+L 2 3 5 4 7
+L 2 1 5 3 1
+L 3 1 5 3 5
+OUTPUT
+0
+0
+0
+28
+0
+7
+KEY POINT Ten random rectangle adds and sums checked against a brute-force grid in Python. The coefficients come
+from expanding Σi≤x, j≤y Σp≤i, q≤j d[p][q] and counting how often each d[p][q] appears: (x − p + 1)(y − q +
+1).
+26.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 6 ===
+6拓展篇  第 26 章  存图、块状链表与二维树状数组
+Key	points	to	memorise
+1. Matrix O(n²) / list O(n + m) / forward star: head, nxt, to arrays.
+2. Forward star: neighbours in reverse order; e ^ 1 pairs from cnt = 2.
+3. Block list: skip blocks by size, insert inside one, split above 2√n.
+4. 1D range add + range sum: two Fenwick trees (d, i·d).
+5. 2D: four trees (d, i·d, j·d, i·j·d); 4 corner updates, 4 prefix queries.
+26.4.1 Problems
+Problem Name Section What it tests
+P3366 【模板】最小生成树 26.1 Edge list storage.
+P4008 文本编辑器 26.2 Block linked list.
+P4514 上帝造题的七分钟 26.3 2D range add, range sum.
+26.4.2 Practice	ladder
+1. Direct. P3366: edge list (26.1).
+2. One	twist. P4514: 2D Fenwick (26.3).
+3. Idea	hidden. P4008: block list (26.2).
+26.4.3 Experiments
+1. Store a dense graph of 2000 vertices all three ways and compare memory.
+2. Try block sizes √n/2, √n, 2√n in block_list.cpp on 10⁵ random inserts.
+3. Derive the four coefficients of bit2d.cpp for a 2×2 example by hand.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

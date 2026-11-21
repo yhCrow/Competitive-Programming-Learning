@@ -1,0 +1,526 @@
+# 进阶篇 第10章 最短路  (进10)
+# source: 进阶篇 第10章 最短路.pdf
+
+=== page 1 ===
+1进阶篇  第 10 章  最短路
+第 10 章 	 最短路
+Shortest paths Luogu #208 19 problems C++17 · all programs run
+10.1 单源最短路径 10.2 负环与差分约束
+10.3 次短路 10.4 多源最短路径与传递闭包
+10.5 课后习题与实验
+10.1 单源最短路径
+Dijkstra	with	a	heap;	layered	graphs.
+2 2
+1
+5
+3
+4
+1
+d = 0
+2
+d = 2
+3
+d = 4
+4
+d = 3 thick: shortest-path tree
+IDEA Dijkstra (non-negative weights): keep
+tentative distances d[]. Repeatedly take
+the unfinished node u with the smallest
+d, mark it finished, and relax its edges:
+d[v] = min(d[v], d[u] + w). A priority
+queue finds u in O(log n), so the whole
+run is O(m log m).
+KEY POINT Why it is right: when u has the smallest
+d among unfinished nodes, any other
+route to u must leave the finished set
+through a node already at least d[u]
+away, and adding non-negative edges
+cannot make it shorter. A negative edge
+breaks this argument.
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 3 部 分  图 论
+Dijkstra for non-negative edges, SPFA for negative ones and negative cycles, inequalities turned into graphs,
+second-best routes, and Floyd for every pair at once.
+
+=== page 2 ===
+2进阶篇  第 10 章  最短路
+dijkstra.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 vector<pair<int, int>> g[N];                 // (to, weight)
+6 long long dist[N];
+7 bool done[N];
+8  
+9 int main() {
+10     ios::sync_with_stdio(false);
+11     cin.tie(nullptr);
+12     int n, m, s;
+13     cin >> n >> m >> s;
+14     for (int i = 0; i < m; i++) {
+15         int u, v, w;
+16         cin >> u >> v >> w;
+17         g[u].push_back(make_pair(v, w));     // directed
+18     }
+19     for (int i = 1; i <= n; i++) dist[i] = LLONG_MAX;
+20     // (distance, node), smallest distance on top
+21     priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<pair<long long, int>>> 
+pq;
+22     dist[s] = 0;
+23     pq.push(make_pair(0LL, s));
+24     while (!pq.empty()) {
+25         int u = pq.top().second;
+26         pq.pop();
+27         if (done[u]) continue;               // an outdated entry
+28         done[u] = true;
+29         for (int k = 0; k < int(g[u].size()); k++) {
+30             int v = g[u][k].first, w = g[u][k].second;
+31             if (dist[u] + w < dist[v]) {     // relax
+32                 dist[v] = dist[u] + w;
+33                 pq.push(make_pair(dist[v], v));
+34             }
+35         }
+36     }
+37     for (int i = 1; i <= n; i++) cout << dist[i] << " ";
+38     cout << "\n";
+39     return 0;
+40 }
+INPUT
+4 6 1
+1 2 2
+2 3 2
+2 4 1
+1 3 5
+3 4 3
+1 4 4
+OUTPUT
+0 2 4 3
+KEY POINT Instead of decreasing a key, push a new pair and skip outdated ones with done[u] . The queue holds at
+most m entries (P4779).
+TRAP Unreachable nodes keep LLONG_MAX: never add to it (overflow). Print them as the problem asks. Dense
+graphs with n ≤ 5000 can use the O(n²) version without a heap.
+KEY POINT Counting shortest paths (P1144): when dist[u] + w == dist[v], add cnt[u] to cnt[v]; when it is smaller,
+reset cnt[v] = cnt[u]. Done nodes come out in distance order, so counts are final.
+
+=== page 3 ===
+3进阶篇  第 10 章  最短路
+10.1.1 Layered	graphs
+free_flights.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 10005, K = 11;
+5 vector<pair<int, int>> g[N];
+6 long long dist[N][K];                        // dist[v][j]: at v, j free flights used
+7 bool done[N][K];
+8  
+9 int main() {
+10     int n, m, k, s, t;
+11     cin >> n >> m >> k >> s >> t;
+12     for (int i = 0; i < m; i++) {
+13         int a, b, c;
+14         cin >> a >> b >> c;
+15         g[a].push_back(make_pair(b, c));
+16         g[b].push_back(make_pair(a, c));
+17     }
+18     for (int v = 0; v < n; v++) for (int j = 0; j <= k; j++) dist[v][j] = LLONG_MAX;
+19     priority_queue<pair<long long, pair<int, int>>, vector<pair<long long, pair<int, int>>>,
+20                    greater<pair<long long, pair<int, int>>>> pq;
+21     dist[s][0] = 0;
+22     pq.push(make_pair(0LL, make_pair(s, 0)));
+23     while (!pq.empty()) {
+24         int u = pq.top().second.first, j = pq.top().second.second;
+25         pq.pop();
+26         if (done[u][j]) continue;
+27         done[u][j] = true;
+28         for (int e = 0; e < int(g[u].size()); e++) {
+29             int v = g[u][e].first, w = g[u][e].second;
+30             if (dist[u][j] + w < dist[v][j]) {                       // pay
+31                 dist[v][j] = dist[u][j] + w;
+32                 pq.push(make_pair(dist[v][j], make_pair(v, j)));
+33             }
+34             if (j < k && dist[u][j] < dist[v][j + 1]) {             // fly free: next layer
+35                 dist[v][j + 1] = dist[u][j];
+36                 pq.push(make_pair(dist[v][j + 1], make_pair(v, j + 1)));
+37             }
+38         }
+39     }
+40     long long best = LLONG_MAX;
+41     for (int j = 0; j <= k; j++) best = min(best, dist[t][j]);
+42     cout << best << "\n";
+43     return 0;
+44 }
+INPUT
+5 6 1
+0 4
+0 1 5
+1 2 5
+2 3 5
+3 4 5
+2 3 3
+0 2 100
+OUTPUT
+8
+IDEA Layered	graph ( 分层图 ): when the route also has a small counter (free flights used, keys held, fuel),
+make the state (node, counter). Each layer is a copy of the graph; a free flight is an edge of weight 0 into the
+next layer (P4568).
+
+=== page 4 ===
+4进阶篇  第 10 章  最短路
+KEY POINT States: n·(k + 1); edges: about 2m·(k + 1). Any shortest path idea works on the state graph unchanged.
+"Minimise the largest toll on the way, with a budget" (P1462) binary searches the toll and runs Dijkstra on
+the allowed edges.
+10.2 负环与差分约束
+Bellman-Ford	/	SPFA,	negative	cycles,	inequality	systems.
+IDEA With negative edges use Bellman-Ford: relax every edge, n − 1 rounds. A shortest path has at most n − 1
+edges, so that is enough, unless a negative	cycle is reachable: then distances keep falling forever. SPFA
+relaxes only from nodes whose distance just changed, using a queue.
+KEY POINT Negative cycle test with SPFA: keep cnt[v] = number of edges on the current shortest path to v. If cnt[v]
+reaches n, the path repeats a node, so a negative cycle exists. SPFA is O(nm) in the worst case: use it only
+where negative edges force you to.
+
+=== page 5 ===
+5进阶篇  第 10 章  最短路
+negative_cycle.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 2005;
+5 vector<pair<int, int>> g[N];
+6 long long dist[N];
+7 int cnt[N];
+8 bool inq[N];
+9  
+10 int main() {
+11     int T;
+12     cin >> T;
+13     while (T--) {
+14         int n, m;
+15         cin >> n >> m;
+16         for (int i = 1; i <= n; i++) { g[i].clear(); dist[i] = LLONG_MAX; cnt[i] = 0; inq[i] = false; }
+17         for (int i = 0; i < m; i++) {
+18             int u, v, w;
+19             cin >> u >> v >> w;
+20             g[u].push_back(make_pair(v, w));
+21         }
+22         queue<int> q;
+23         dist[1] = 0; q.push(1); inq[1] = true;
+24         bool neg = false;
+25         while (!q.empty() && !neg) {
+26             int u = q.front();
+27             q.pop();
+28             inq[u] = false;
+29             for (int k = 0; k < int(g[u].size()); k++) {
+30                 int v = g[u][k].first, w = g[u][k].second;
+31                 if (dist[u] + w < dist[v]) {
+32                     dist[v] = dist[u] + w;
+33                     cnt[v] = cnt[u] + 1;             // edges on the path to v
+34                     if (cnt[v] >= n) { neg = true; break; }
+35                     if (!inq[v]) { q.push(v); inq[v] = true; }
+36                 }
+37             }
+38         }
+39         cout << (neg ? "YES" : "NO") << "\n";
+40     }
+41     return 0;
+42 }
+INPUT
+2
+3 3
+1 2 1
+2 3 -2
+3 1 -1
+3 3
+1 2 1
+2 3 -2
+3 1 2
+OUTPUT
+YES
+NO
+IDEA Only cycles reachable	from	the	start are found, because only those nodes ever get a finite distance
+(P3385 asks exactly this). To find any negative cycle at all, start from a super source joined to every node
+by a 0 edge.
+TRAP Count edges (cnt[v] = cnt[u] + 1), not how many times v was queued: a node can be pushed many times
+without any cycle, and the queue count needs n + 1, not n.
+
+=== page 6 ===
+6进阶篇  第 10 章  最短路
+10.2.1 Difference	constraints
+diff_constraints.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 5005;
+5 vector<pair<int, int>> g[N];
+6 long long dist[N];
+7 int cnt[N];
+8 bool inq[N];
+9  
+10 int main() {
+11     int n, m;
+12     cin >> n >> m;
+13     for (int i = 0; i < m; i++) {
+14         int a, b, c;
+15         cin >> a >> b >> c;                  // x[a] - x[b] <= c
+16         g[b].push_back(make_pair(a, c));     // edge b -> a, weight c
+17     }
+18     for (int i = 1; i <= n; i++) g[0].push_back(make_pair(i, 0));   // super source 0
+19     for (int i = 1; i <= n; i++) dist[i] = LLONG_MAX;
+20     queue<int> q;
+21     q.push(0); inq[0] = true;
+22     while (!q.empty()) {
+23         int u = q.front();
+24         q.pop();
+25         inq[u] = false;
+26         for (int k = 0; k < int(g[u].size()); k++) {
+27             int v = g[u][k].first, w = g[u][k].second;
+28             if (dist[u] + w < dist[v]) {
+29                 dist[v] = dist[u] + w;
+30                 cnt[v] = cnt[u] + 1;
+31                 if (cnt[v] > n) { cout << "NO\n"; return 0; }   // n + 1 nodes now
+32                 if (!inq[v]) { q.push(v); inq[v] = true; }
+33             }
+34         }
+35     }
+36     for (int i = 1; i <= n; i++) cout << dist[i] << " ";
+37     cout << "\n";
+38     return 0;
+39 }
+INPUT 1
+3 3
+1 2 3
+2 3 -2
+1 3 1
+OUTPUT 1
+0 -2 0
+INPUT 2
+2 2
+1 2 -1
+2 1 -1
+OUTPUT 2
+NO
+IDEA A system of inequalities xa − xb ≤ c looks like the shortest-path rule d[a] ≤ d[b] + w. So add an edge b → a
+of weight c, run shortest paths from a super source, and d[] is a solution. A negative cycle means no
+solution (P5960).
+KEY POINT Rewrite other forms first: xa − xb ≥ c becomes xb − xa ≤ −c; xa = xb is two ≤ 0 edges; xa < xb on integers is xa
+− xb ≤ −1 (P1993, P3275 糖果  uses longest paths for the minimum total).
+
+=== page 7 ===
+7进阶篇  第 10 章  最短路
+10.3 次短路
+Two	distances	per	node.
+IDEA The second	shortest	path ( 次短路 ): keep two values per node, d1[v] the shortest and d2[v] the strictly
+second shortest. A candidate length L at v either beats d1 (old d1 slides down to d2) or lies strictly
+between d1 and d2. Both changes are pushed into the queue (P2865).
+KEY POINT A node may now be taken from the queue twice (once per value), so do not use a done[] array: skip an
+entry only when its length exceeds d2[v]. Paths may reuse edges, which the problem allows here.
+
+=== page 8 ===
+8进阶篇  第 10 章  最短路
+second_shortest.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 5005;
+5 vector<pair<int, int>> g[N];
+6 long long d1[N], d2[N];
+7  
+8 int main() {
+9     int n, m;
+10     cin >> n >> m;
+11     for (int i = 0; i < m; i++) {
+12         int a, b, c;
+13         cin >> a >> b >> c;
+14         g[a].push_back(make_pair(b, c));
+15         g[b].push_back(make_pair(a, c));
+16     }
+17     for (int i = 1; i <= n; i++) d1[i] = d2[i] = LLONG_MAX;
+18     priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<pair<long long, int>>> 
+pq;
+19     d1[1] = 0;
+20     pq.push(make_pair(0LL, 1));
+21     while (!pq.empty()) {
+22         long long du = pq.top().first;
+23         int u = pq.top().second;
+24         pq.pop();
+25         if (du > d2[u]) continue;                    // outdated
+26         for (int k = 0; k < int(g[u].size()); k++) {
+27             int v = g[u][k].first;
+28             long long L = du + g[u][k].second;
+29             if (L < d1[v]) {                         // new best; old best becomes second
+30                 swap(d1[v], L);
+31                 pq.push(make_pair(d1[v], v));
+32             }
+33             if (L > d1[v] && L < d2[v]) {            // strictly between
+34                 d2[v] = L;
+35                 pq.push(make_pair(d2[v], v));
+36             }
+37         }
+38     }
+39     cout << d2[n] << "\n";
+40     return 0;
+41 }
+INPUT
+4 4
+1 2 100
+2 4 200
+2 3 250
+3 4 100
+OUTPUT
+450
+IDEA The swap does both jobs at once: after a new best is stored, L holds the old best, which then gets the
+"strictly between" test. Shortest 1 → 2 → 4 is 300; second is 1 → 2 → 3 → 4 = 450.
+KEY POINT Another way: Dijkstra from 1 and from n, then for every edge (u, v, w) the best path through it is d1[u] + w
++ dn[v]; the smallest value above the shortest is the answer. The same "from both ends" trick solves 最优
+贸易  (P1073) on a forward and a reversed graph.
+
+=== page 9 ===
+9进阶篇  第 10 章  最短路
+10.4 多源最短路径与传递闭包
+Floyd	and	reachability.
+IDEA Floyd computes all-pairs shortest paths in O(n³): for k = 1 … n, allow node k as a middle stop: d[i][j] =
+min(d[i][j], d[i][k] + d[k][j]). After round k, d[i][j] is the shortest path whose middle nodes are all in {1,
+…, k}.
+KEY POINT The k	loop	must	be	outermost. Floyd handles negative edges (not negative cycles: some d[i][i] < 0
+reveals one). Use it when n ≤ 400 or so, or when every pair is needed.
+floyd.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long d[105][105];
+5  
+6 int main() {
+7     int n, m;
+8     cin >> n >> m;
+9     const long long INF = 1e18;
+10     for (int i = 1; i <= n; i++)
+11         for (int j = 1; j <= n; j++) d[i][j] = (i == j ? 0 : INF);
+12     for (int i = 0; i < m; i++) {
+13         int u, v;
+14         long long w;
+15         cin >> u >> v >> w;
+16         d[u][v] = min(d[u][v], w);               // keep the cheapest parallel edge
+17         d[v][u] = min(d[v][u], w);
+18     }
+19     for (int k = 1; k <= n; k++)                 // middle stop: outermost
+20         for (int i = 1; i <= n; i++)
+21             for (int j = 1; j <= n; j++)
+22                 if (d[i][k] < INF && d[k][j] < INF)
+23                     d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
+24     for (int i = 1; i <= n; i++) {
+25         for (int j = 1; j <= n; j++) cout << d[i][j] << " ";
+26         cout << "\n";
+27     }
+28     return 0;
+29 }
+INPUT
+4 5
+1 2 2
+2 3 2
+2 4 1
+1 3 5
+3 4 3
+OUTPUT
+0 2 4 3 
+2 0 2 1 
+4 2 0 3 
+3 1 3 0
+
+=== page 10 ===
+10进阶篇  第 10 章  最短路
+cow_contest.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 bool beat[105][105];                             // beat[i][j]: i is known to beat j
+5  
+6 int main() {
+7     int n, m;
+8     cin >> n >> m;
+9     for (int i = 0; i < m; i++) {
+10         int a, b;
+11         cin >> a >> b;
+12         beat[a][b] = true;
+13     }
+14     for (int k = 1; k <= n; k++)                 // transitive closure
+15         for (int i = 1; i <= n; i++)
+16             for (int j = 1; j <= n; j++)
+17                 if (beat[i][k] && beat[k][j]) beat[i][j] = true;
+18     int known = 0;
+19     for (int i = 1; i <= n; i++) {
+20         int c = 0;
+21         for (int j = 1; j <= n; j++) if (beat[i][j] || beat[j][i]) c++;
+22         if (c == n - 1) known++;                 // compared with everyone: rank fixed
+23     }
+24     cout << known << "\n";
+25     return 0;
+26 }
+INPUT
+5 5
+4 3
+4 2
+3 2
+1 2
+2 5
+OUTPUT
+2
+KEY POINT Transitive	closure ( 传递闭包 ) is Floyd with "or / and" instead of "min / +": can i reach j? (B3611). A
+cow's rank is fixed exactly when every other cow is comparable to it (P2419). With bitset<N>  rows, "if
+beat[i][k] then row i |= row k" is n³ / 64.
+KEY POINT Floyd's order is a tool: in 灾后重建  (P1119) villages are rebuilt in time order, so process k in that order
+and answer each query once its time is reached. Counting shortest paths through each node (P2047 社交
+网络 ) keeps a count matrix next to d.
+10.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 11 ===
+11进阶篇  第 10 章  最短路
+Key	points	to	memorise
+1. Dijkstra (w ≥ 0): pop smallest d, skip if done, relax d[v] = min(d[v], d[u] + w). O(m log m).
+2. Unreachable: keep INF and never add to it.
+3. Layered graph: state (node, counter); free move = 0 edge to the next layer.
+4. Bellman-Ford: n − 1 rounds; SPFA: queue of changed nodes; worst O(nm).
+5. Negative cycle: cnt[v] = cnt[u] + 1 ≥ n (edges on the path).
+6. x[a] − x[b] ≤ c ⇒ edge b → a, weight c; super source; negative cycle = no solution.
+7. Second shortest: d1, d2 per node; new best slides old into L, then test d1 < L < d2.
+8. Floyd: k outermost; d[i][j] = min(d[i][j], d[i][k] + d[k][j]); O(n³).
+9. Closure: reach[i][j] |= reach[i][k] && reach[k][j].
+10.5.1 Problems
+Problem Name Section What it tests
+P4779 【模板】单源最短路径
+（标准版）
+10.1 Dijkstra with a heap.
+P4568 飞行路线 10.1 Layered graph: k free flights.
+P3385 【模板】负环 10.2 SPFA with edge counts.
+P5960 【模板】差分约束 10.2 Inequalities as edges.
+P2865 Roadblocks G 10.3 Strict second shortest.
+P2910 Clear And Present Danger S 10.4 Floyd, sum along a given order.
+B3611 【模板】传递闭包 10.4 Reachability matrix.
+P1144 最短路计数 10.1 Count shortest paths.
+P1875 佳佳的魔法药水 10.1 Dijkstra-like with "make from two" rules.
+P1462 通往奥格瑞玛的道路 10.1 Binary search + Dijkstra.
+P1073 最优贸易 10.3 Forward and reverse graph minima / maxima.
+P1993 小  K 的农场 10.2 Three constraint forms.
+P3275 糖果 10.2 Minimum total: longest paths (or SCC).
+P6464 传送门 10.4 Try each zero edge, update Floyd fast.
+P3403 跳楼机 10.1 Residues mod x as nodes.
+P1119 灾后重建 10.4 Floyd with k in rebuild order.
+P1037 产生数 10.4 Closure on digits, big-number product.
+P2419 Cow Contest S 10.4 Closure: comparable with all.
+P2047 社交网络 10.4 Floyd with path counts.
+10.5.2 Practice	ladder
+1. Direct. P4779: write Dijkstra (10.1).
+2. One	twist. P3385: negative cycle (10.2).
+3. Idea	hidden. P2419: transitive closure (10.4).
+4. Two	ideas. P4568: layered graph (10.1).
+5. Stretch. P5960: difference constraints (10.2).
+
+=== page 12 ===
+12进阶篇  第 10 章  最短路
+10.5.3 Experiments
+1. Add a negative edge to the dijkstra.cpp sample and find a case where it prints a wrong distance.
+2. In negative_cycle.cpp count pushes instead of edges and find a graph without a cycle that says YES.
+3. Swap the loop order in floyd.cpp (k innermost) and find an input where the matrix becomes wrong.
+4. Time Dijkstra and SPFA on a grid of 10⁵ nodes with random weights.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

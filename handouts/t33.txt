@@ -1,0 +1,252 @@
+# 拓展篇 第33章 网络流与字符串补充  (拓33)
+# source: 拓展篇 第33章 网络流与字符串补充.pdf
+
+=== page 1 ===
+1拓展篇  第 33 章  网络流与字符串补充
+第 33 章 	 网络流与字符串补充
+ISAP, mixed Euler circuits, endpos, suffix trees Luogu (verified) 4 problems C++17 · all programs run
+33.1 ISAP 算法 33.2 混合图的欧拉回路
+33.3 endpos 与后缀树 33.4 课后习题与实验
+33.1 ISAP	 算法
+Distance	labels,	relabel,	gap.
+IDEA ISAP (Improved Shortest Augmenting Path) keeps a distance label d[v] = distance from v to the sink in the
+residual graph, computed once by BFS from t. It only pushes along edges with d[u] = d[v] + 1; when u has
+no such edge, it relabels d[u] to 1 + the smallest label among its usable neighbours, instead of rebuilding
+all levels as Dinic does.
+KEY POINT Gap	optimisation: keep cnt[k] = number of vertices with label k. If relabelling empties some cnt[k], no
+path from s to t can exist any more, so stop. With current-arc and gap, ISAP is usually as fast as or faster
+than Dinic, and needs only one BFS.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 综 合 补 充
+Run max flow with one BFS and relabelling (ISAP), decide Euler circuits in mixed graphs with a flow, and
+connect endpos classes, suffix trees, suffix arrays and suffix automata.
+
+=== page 2 ===
+2拓展篇  第 33 章  网络流与字符串补充
+isap.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Edge { int to; long long cap; };
+5 vector<Edge> e;
+6 vector<int> g[205];
+7 int n, m, s, t, dist_[205], cnt[410], cur[205];
+8  
+9 void addEdge(int u, int v, long long c) {
+10     g[u].push_back(e.size()); e.push_back(Edge{v, c});
+11     g[v].push_back(e.size()); e.push_back(Edge{u, 0});
+12 }
+13 long long dfs(int u, long long f) {
+14     if (u == t) return f;
+15     long long used = 0;
+16     for (int &k = cur[u]; k < int(g[u].size()); k++) {
+17         int id = g[u][k]; Edge &x = e[id];
+18         if (x.cap > 0 && dist_[u] == dist_[x.to] + 1) {
+19             long long got = dfs(x.to, min(f - used, x.cap));
+20             x.cap -= got; e[id ^ 1].cap += got; used += got;
+21             if (used == f) return used;
+22         }
+23     }
+24     // no admissible edge left: relabel u
+25     if (--cnt[dist_[u]] == 0) dist_[s] = n;      // gap: s can no longer reach t
+26     dist_[u]++; cnt[dist_[u]]++;
+27     cur[u] = 0;
+28     return used;
+29 }
+30  
+31 int main() {
+32     cin >> n >> m >> s >> t;
+33     for (int i = 0; i < m; i++) { int u, v; long long c; cin >> u >> v >> c; addEdge(u, v, c); }
+34     fill(dist_, dist_ + n + 1, n);               // unreachable: label n
+35     queue<int> q; dist_[t] = 0; q.push(t);       // one BFS from the sink on reversed edges
+36     while (!q.empty()) {
+37         int u = q.front(); q.pop();
+38         for (int k = 0; k < int(g[u].size()); k++) {
+39             int v = e[g[u][k]].to;
+40             if (e[g[u][k] ^ 1].cap > 0 && dist_[v] == n && v != t) { dist_[v] = dist_[u] + 1; q.push(v); 
+}
+41         }
+42     }
+43     for (int v = 1; v <= n; v++) cnt[dist_[v]]++;
+44     long long flow = 0;
+45     while (dist_[s] < n) flow += dfs(s, LLONG_MAX);
+46     cout << flow << "\n";
+47     return 0;
+48 }
+INPUT 1
+4 5 4 3
+4 2 30
+4 3 20
+2 3 20
+2 1 30
+1 3 30
+OUTPUT 1
+50
+INPUT 2
+8 18 1 8
+2 6 20
+5 2 17
+6 7 14
+OUTPUT 2
+10
+
+=== page 3 ===
+3拓展篇  第 33 章  网络流与字符串补充
+8 4 12
+2 8 11
+7 4 15
+3 4 14
+7 4 18
+7 5 9
+4 7 16
+3 5 10
+8 7 20
+2 6 5
+5 3 11
+2 7 6
+5 3 11
+4 5 1
+1 7 14
+KEY POINT The first test is the sample of 第 1 章  (50); the second is a random graph checked against a separate
+Edmonds–Karp in Python (BFS shortest augmenting paths, the simplest correct max-flow method). Ford–
+Fulkerson = any augmenting path; Edmonds–Karp = shortest by BFS, O(nm²); Dinic and ISAP = layered,
+O(n²m).
+33.2 混合图的欧拉回路
+Orient,	parity,	flow	to	fix.
+IDEA Euler	circuit	in	a	mixed	graph ( 混合图的欧拉回路 ): some edges are directed, others may be oriented
+either way. Orient the undirected edges arbitrarily and compute xv = out(v) − in(v). Every xv must be even
+(flipping an edge changes it by 2). Then decide which undirected edges to flip with a flow: flipping u → v
+moves 2 from xu to xv.
+KEY POINT Build: each undirected edge oriented u → v gives a flow edge u → v of capacity 1 (flipping it); s → v with
+capacity xv/2 for xv > 0, v → t with capacity −xv/2 for xv < 0. A circuit exists iff the flow saturates all
+source edges (and the edges are connected). Bridges (P3511) binary-searches a limit and runs this test.
+
+=== page 4 ===
+4拓展篇  第 33 章  网络流与字符串补充
+mixed_euler.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Edge { int to, cap; };
+5 vector<Edge> e;
+6 vector<int> g[205];
+7 int S, T, level[205], it[205];
+8 void addEdge(int u, int v, int c) { g[u].push_back(e.size()); e.push_back(Edge{v, c}); 
+g[v].push_back(e.size()); e.push_back(Edge{u, 0}); }
+9 bool bfs(int n) {
+10     fill(level, level + n, -1); queue<int> q; level[S] = 0; q.push(S);
+11     while (!q.empty()) { int u = q.front(); q.pop(); for (int k = 0; k < int(g[u].size()); k++) { Edge 
+&x = e[g[u][k]]; if (x.cap > 0 && level[x.to] < 0) { level[x.to] = level[u] + 1; q.push(x.to); } } }
+12     return level[T] >= 0;
+13 }
+14 int dfs(int u, int f) {
+15     if (u == T) return f;
+16     for (int &k = it[u]; k < int(g[u].size()); k++) {
+17         int id = g[u][k]; Edge &x = e[id];
+18         if (x.cap > 0 && level[x.to] == level[u] + 1) { int got = dfs(x.to, min(f, x.cap)); if (got) { 
+x.cap -= got; e[id ^ 1].cap += got; return got; } }
+19     }
+20     return 0;
+21 }
+22  
+23 int main() {
+24     int n, m;
+25     cin >> n >> m;
+26     vector<int> x(n + 1, 0);
+27     S = 0; T = n + 1;
+28     for (int i = 0; i < m; i++) {
+29         int u, v, directed;
+30         cin >> u >> v >> directed;
+31         x[u]++; x[v]--;                            // orient u -> v for now
+32         if (!directed) addEdge(u, v, 1);           // may be flipped later
+33     }
+34     int need = 0;
+35     for (int v = 1; v <= n; v++) {
+36         if (x[v] % 2 != 0) { cout << "No\n"; return 0; }   // parity cannot be fixed
+37         if (x[v] > 0) { addEdge(S, v, x[v] / 2); need += x[v] / 2; }
+38         if (x[v] < 0) addEdge(v, T, -x[v] / 2);
+39     }
+40     int flow = 0;
+41     while (bfs(n + 2)) { fill(it, it + n + 2, 0); while (int f = dfs(S, INT_MAX)) flow += f; }
+42     cout << (flow == need ? "Yes" : "No") << "\n";
+43     return 0;
+44 }
+INPUT 1
+4 5
+1 2 0
+2 3 1
+3 1 0
+3 4 0
+4 3 1
+OUTPUT 1
+Yes
+INPUT 2
+3 3
+1 2 1
+2 3 1
+1 3 1
+OUTPUT 2
+No
+INPUT 3 OUTPUT 3
+No
+
+=== page 5 ===
+5拓展篇  第 33 章  网络流与字符串补充
+4 5
+1 2 0
+2 3 0
+3 4 0
+4 1 0
+1 3 1
+KEY POINT Three small mixed graphs (all connected), checked against trying every orientation of the undirected
+edges in Python. Connectivity of the edges must be checked separately, as for ordinary Euler circuits ( 第
+17 章 ).
+33.3 endpos	 与后缀树
+Equivalence	classes;	three	views	of	one	object.
+IDEA endpos	and	equivalence	classes: endpos(t) = the set of positions where substring t ends in s. Substrings
+with the same endpos form one class, and each class is one state of the suffix automaton ( 第 3 章 ). Within a
+class the strings are suffixes of each other with consecutive lengths len[link[v]] + 1 … len[v]; a shorter
+suffix has a larger (or equal) endpos set, which is why suffix links point to the next larger set and form a
+tree.
+KEY POINT The number of occurrences of a state = |endpos| = the number of prefix-end states in its link subtree; that
+is the counting used in 第 3 章 's sam.cpp.
+IDEA A suffix	tree ( 后缀树 ) is the trie of all suffixes of s$ with every chain of single-child nodes compressed
+into one edge labelled by a substring: at most 2n nodes. Each leaf is a suffix; the path label of an internal
+node is a substring that repeats.
+KEY POINT Three structures, one object: the suffix tree of s is the link tree of the suffix automaton of reversed s; its
+leaves read in lexicographic edge order give the suffix	array, and the string depth of the LCA of two leaves
+is their LCP (height). In contests the suffix array or SAM replaces an explicit suffix tree (Ukkonen's
+construction is long and error-prone).
+Question Suffix array Suffix automaton Suffix tree view
+distinct substrings n(n+1)/2 − Σ height Σ len[v] − len[link[v]] total edge length
+occurrences of a pattern binary search a range of sa walk, read |endpos| leaves below the locus
+longest repeated substring max height max len with cnt ≥ 2 deepest internal node
+LCP of two suffixes RMQ over height — depth of LCA
+33.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 6 ===
+6拓展篇  第 33 章  网络流与字符串补充
+Key	points	to	memorise
+1. ISAP: labels from one BFS from t; push on d[u] = d[v] + 1; relabel to min + 1.
+2. Gap: a label count drops to 0 ⇒ stop.
+3. Mixed Euler: orient arbitrarily, x = out − in must be even; flow fixes x/2.
+4. endpos classes = SAM states; lengths len[link]+1 … len.
+5. Suffix tree of s = SAM link tree of reversed s; leaves in order = SA; LCA depth = LCP.
+33.4.1 Problems
+Problem Name Section What it tests
+P3376 【模板】网络最大流 33.1 Redo with ISAP.
+P3511 MOS-Bridges 33.2 Binary search + mixed Euler circuit.
+P3804 【模板】后缀自动机
+（ SAM ）
+33.3 endpos sizes.
+P3809 【模板】后缀排序（ SA ） 33.3 Leaf order of the suffix tree.
+33.4.2 Practice	ladder
+1. Direct. P3376: ISAP (33.1).
+2. One	twist. P3804: endpos counts (33.3).
+3. Idea	hidden. P3511: mixed Euler (33.2).
+33.4.3 Experiments
+1. Time isap.cpp against dinic.cpp ( 第 1 章 ) on dense random graphs.
+2. Remove the gap rule from isap.cpp and count the extra relabels.
+3. List endpos sets of every substring of "abab" and group them into classes.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

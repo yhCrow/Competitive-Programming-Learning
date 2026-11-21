@@ -1,0 +1,114 @@
+# 拓展篇 第21章 回文自动机  (拓21)
+# source: 拓展篇 第21章 回文自动机.pdf
+
+=== page 1 ===
+1拓展篇  第 21 章  回文自动机
+第 21 章 	 回文自动机
+Palindromic tree (PAM) Luogu (verified) 3 problems C++17 · all programs run
+21.1 回文树 21.2 课后习题与实验
+21.1 回文树
+Roots	−1	and	0;	getFail;	counts	through	fail	links.
+IDEA The palindromic	tree ( 回文树 , palindromic automaton, PAM) stores every distinct	palindrome of a
+string as a node: at most n + 2 nodes. Two roots: length −1 (so that adding a character c on both sides gives
+a length-1 palindrome) and length 0. Edge c from node v leads to cvc. fail[v] = the longest proper
+palindromic suffix of v.
+KEY POINT Add characters one by one. Keep last = the longest palindromic suffix of the current prefix. To extend with
+s[i], follow fail links from last until s[i − len − 1] == s[i]; then the new node is c + that + c. Its fail link is
+found the same way, starting from the old node's fail. Amortised O(n).
+竞 赛 拓 展 专 题  · 拓 展 篇  · 字 符 串 拓 展
+Store every distinct palindrome of a string as a node with two roots and palindromic-suffix links; count
+palindromes ending at each position and occurrences of each palindrome.
+
+=== page 2 ===
+2拓展篇  第 21 章  回文自动机
+pam.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 300005;
+5 int ch[N][26], fail_[N], len_[N], num[N], cnt[N], tot, last;
+6 string s;
+7  
+8 int getFail(int v, int i) {                     // longest palindrome suffix that can be wrapped by s[i]
+9     while (i - len_[v] - 1 < 0 || s[i - len_[v] - 1] != s[i]) v = fail_[v];
+10     return v;
+11 }
+12  
+13 int main() {
+14     cin >> s;
+15     int n = s.size();
+16     len_[0] = 0; fail_[0] = 1;                  // node 0: empty palindrome
+17     len_[1] = -1; fail_[1] = 0;                 // node 1: the imaginary length -1 root
+18     tot = 1; last = 0;
+19     for (int i = 0; i < n; i++) {
+20         int c = s[i] - 'a';
+21         int p = getFail(last, i);
+22         if (!ch[p][c]) {                        // a palindrome never seen before
+23             int v = ++tot;
+24             len_[v] = len_[p] + 2;
+25             fail_[v] = ch[getFail(fail_[p], i)][c];   // 0 if none: the empty palindrome
+26             num[v] = num[fail_[v]] + 1;         // palindromic suffixes ending here
+27             ch[p][c] = v;
+28         }
+29         last = ch[p][c];
+30         cnt[last]++;                            // one more end position of this palindrome
+31         cout << (i ? " " : "") << num[last];
+32     }
+33     cout << "\n";
+34     long long best = 0;
+35     for (int v = tot; v >= 2; v--) {            // nodes are created in increasing length order
+36         cnt[fail_[v]] += cnt[v];                // occurrences pass to the palindromic suffix
+37         best = max(best, 1LL * cnt[v] * len_[v]);
+38     }
+39     cout << tot - 1 << "\n" << best << "\n";    // distinct palindromes, best occurrences x length
+40     return 0;
+41 }
+INPUT 1
+abacaba
+OUTPUT 1
+1 1 2 1 2 2 3
+7
+7
+INPUT 2
+aabbaabbaa
+OUTPUT 2
+1 2 1 2 2 3 2 3 3 4
+10
+12
+KEY POINT Line 1: how many palindromes end at each position (num[v] = depth along fail links, the P5496 quantity).
+Line 2: number of distinct palindromes (tot − 1, the two roots excluded). Line 3: the largest occurrences ×
+length (P3649 回文串 ). All three are checked by brute force in Python.
+TRAP fail of a new length-1 palindrome must be node 0 (empty), not node 1; ch[...] returns 0 when missing,
+which is exactly that. Index checks i − len − 1 ≥ 0 are needed because the string has no sentinel. Counting
+occurrences needs nodes processed from longer to shorter; creation order already is.
+
+=== page 3 ===
+3拓展篇  第 21 章  回文自动机
+KEY POINT Compare with Manacher ( 第 3 章 ): Manacher gives the longest palindrome at each centre; PAM gives the set
+of distinct palindromes with counts and suffix links, which DP on palindromes needs ( 双倍回文  P4287: a
+palindrome whose half is also a palindrome, found by walking fail links).
+21.2 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Nodes = distinct palindromes (≤ n + 2); roots: length −1 and 0.
+2. getFail: follow fail until s[i − len − 1] == s[i].
+3. New node: len + 2; fail = ch[getFail(fail[p], i)][c] (0 if none).
+4. num = depth in the fail tree = palindromic suffixes ending here.
+5. Occurrences: cnt at the end node, then add up fail links, longest first.
+21.2.1 Problems
+Problem Name Section What it tests
+P5496 【模板】回文树  / 回文自
+动机（ PAM ）
+21.1 Palindromic suffixes per position.
+P3649 回文串 21.1 Occurrences × length.
+P4287 双倍回文 21.1 Half-length palindromic suffix.
+21.2.2 Practice	ladder
+1. Direct. P5496: PAM template (21.1).
+2. One	twist. P3649: occurrence counts (21.1).
+3. Idea	hidden. P4287: walking fail links (21.1).
+21.2.3 Experiments
+1. Draw the PAM of "abacaba" with its fail links.
+2. Count PAM nodes for random strings and for "aaaa…a".
+3. Compare pam.cpp with Manacher for the longest palindrome.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

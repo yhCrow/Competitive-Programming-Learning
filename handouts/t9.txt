@@ -1,0 +1,162 @@
+# 拓展篇 第9章 莫比乌斯反演  (拓9)
+# source: 拓展篇 第09章 莫比乌斯反演.pdf
+
+=== page 1 ===
+1拓展篇  第 9 章  莫比乌斯反演
+第 9 章 	 莫比乌斯反演
+Möbius inversion Luogu (verified) 7 problems C++17 · all programs run
+9.1 莫比乌斯函数与反演 9.2 欧拉函数与  gcd 求和
+9.3 课后习题与实验
+9.1 莫比乌斯函数与反演
+Σ	μ(d)	=	[n	=	1];	coprime	pairs;	blocks.
+IDEA The Möbius	function μ(n) ( 莫比乌斯函数 ): μ(1) = 1; μ(n) = (−1)k if n is a product of k distinct primes;
+μ(n) = 0 if a square divides n. Its key property: Σd | n μ(d) = [n = 1], i.e. 1 when n = 1 and 0 otherwise. It
+comes out of the linear sieve ( 进阶篇  第 19 章 ).
+KEY POINT That property turns a condition into a sum: [gcd(i, j) = 1] = Σd | gcd(i, j) μ(d). Swap the order of summation
+(sum over d first) and the condition disappears. This is Möbius	inversion ( 莫比乌斯反演 ) as it is used
+in contests.
+Step Count pairs i ≤ a, j ≤ b with gcd(i, j) = 1
+condition as a sum Σi Σj Σd | i, d | j μ(d)
+sum over d first Σd μ(d) · (number of multiples of d up to a) · (… up to b)
+closed form Σd=1..min(a,b) μ(d) · ⌊a/d⌋ · ⌊b/d⌋
+fast division blocks ( 进阶篇  第 19 章 ) + prefix sums of μ: O(√a + √b) per query
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 学 拓 展
+Replace a gcd condition by a divisor sum with μ, or a gcd value by a divisor sum with φ, swap the order of
+summation, and finish with prefix sums and division blocks.
+
+=== page 2 ===
+2拓展篇  第 9 章  莫比乌斯反演
+zap.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 50005;
+5 int mu[N], pre[N], primes[N], cnt = 0;
+6 bool comp[N];
+7  
+8 int main() {
+9     mu[1] = 1;
+10     for (int i = 2; i < N; i++) {                      // linear sieve for mu
+11         if (!comp[i]) { primes[cnt++] = i; mu[i] = -1; }
+12         for (int j = 0; j < cnt && i * primes[j] < N; j++) {
+13             comp[i * primes[j]] = true;
+14             if (i % primes[j] == 0) { mu[i * primes[j]] = 0; break; }
+15             mu[i * primes[j]] = -mu[i];
+16         }
+17     }
+18     for (int i = 1; i < N; i++) pre[i] = pre[i - 1] + mu[i];
+19     int T;
+20     cin >> T;
+21     while (T--) {
+22         long long a, b, d;
+23         cin >> a >> b >> d;
+24         a /= d; b /= d;                                // gcd = d  <=>  gcd of (i/d, j/d) = 1
+25         long long ans = 0;
+26         for (long long l = 1, r; l <= min(a, b); l = r + 1) {
+27             r = min(a / (a / l), b / (b / l));         // both quotients constant on [l, r]
+28             ans += (pre[r] - pre[l - 1]) * (a / l) * (b / l);
+29         }
+30         cout << ans << "\n";
+31     }
+32     return 0;
+33 }
+INPUT
+2
+4 5 2
+6 4 3
+OUTPUT
+3
+2
+IDEA ZAP-Queries (P3455): pairs with gcd exactly d become coprime pairs after dividing by d. The block ends
+where either quotient changes: r = min(a/(a/l), b/(b/l)).
+KEY POINT a = 4, b = 5, d = 2: pairs (2, 2), (2, 4), (4, 2): 3. With a lower bound too (Problem b, P2522), use inclusion-
+exclusion over four such counts.
+9.2 欧拉函数与 	gcd	 求和
+gcd	as	Σ	φ(d);	the	general	recipe.
+IDEA Sums of gcds use φ instead: n = Σd | n φ(d), so gcd(i, j) = Σd | i, d | j φ(d). Summing over d first: Σi,j ≤ n gcd(i,
+j) = Σd φ(d) ⌊n/d⌋² (P2398). Same pattern: write the value as a divisor sum, swap the sums, use blocks.
+KEY POINT General recipe: (1) replace the gcd condition or value by a divisor sum (μ for "= 1", φ for "the gcd itself");
+(2) bring the divisor sum outside; (3) count multiples with ⌊n/d⌋; (4) prefix sums + division blocks. YY 的
+GCD (P2257) sums over prime gcds with precomputed Σ μ(k/p).
+
+=== page 3 ===
+3拓展篇  第 9 章  莫比乌斯反演
+gcd_sum.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 long long phi[N], pre[N];
+6 int primes[N], cnt = 0;
+7 bool comp[N];
+8  
+9 int main() {
+10     phi[1] = 1;
+11     for (int i = 2; i < N; i++) {
+12         if (!comp[i]) { primes[cnt++] = i; phi[i] = i - 1; }
+13         for (int j = 0; j < cnt && i * primes[j] < N; j++) {
+14             comp[i * primes[j]] = true;
+15             if (i % primes[j] == 0) { phi[i * primes[j]] = phi[i] * primes[j]; break; }
+16             phi[i * primes[j]] = phi[i] * (primes[j] - 1);
+17         }
+18     }
+19     for (int i = 1; i < N; i++) pre[i] = pre[i - 1] + phi[i];
+20     long long n;
+21     cin >> n;
+22     long long ans = 0;
+23     for (long long l = 1, r; l <= n; l = r + 1) {
+24         r = n / (n / l);
+25         ans += (pre[r] - pre[l - 1]) * (n / l) * (n / l);   // sum of phi(d) * floor(n/d)^2
+26     }
+27     cout << ans << "\n";
+28     return 0;
+29 }
+INPUT 1
+2
+OUTPUT 1
+5
+INPUT 2
+10
+OUTPUT 2
+189
+INPUT 3
+100
+OUTPUT 3
+31080
+IDEA n = 2: gcds 1, 1, 1, 2 sum to 5. The tests for 10 and 100 are checked against a direct double loop in Python.
+KEY POINT Products of numbers like ⌊n/d⌋² reach 10¹⁰ for n = 10⁵: keep everything in long long.
+TRAP Make the sieve range cover the largest a / d (or n) of every query, and compute the prefix sums once,
+outside the query loop: recomputing per query makes the "fast" method O(n) per query again.
+9.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 4 ===
+4拓展篇  第 9 章  莫比乌斯反演
+Key	points	to	memorise
+1. μ: (−1)^k for k distinct primes, 0 with a square factor; Σ_{d|n} μ(d) = [n = 1].
+2. [gcd = 1] = Σ_{d | gcd} μ(d); gcd = Σ_{d | gcd} φ(d).
+3. Swap sums: multiples of d up to a = ⌊a/d⌋.
+4. Coprime pairs = Σ μ(d)⌊a/d⌋⌊b/d⌋; gcd = k: divide a, b by k first.
+5. Blocks end at min(a/(a/l), b/(b/l)); prefix sums of μ or φ.
+9.3.1 Problems
+Problem Name Section What it tests
+P3455 ZAP-Queries 9.1 Pairs with gcd = d.
+P2522 Problem b 9.1 Lower bounds by inclusion-exclusion.
+P2257 YY 的 GCD 9.1 Prime gcds: precompute Σ μ(k/p).
+P2398 GCD SUM 9.2 Σ φ(d) ⌊n/d⌋².
+P3327 约数个数和 9.1 d(ij) as a sum over coprime divisor pairs.
+P1829 Crash 的数字表格  / JZPTAB 9.1 Σ lcm(i, j) with nested blocks.
+P4450 双亲数 9.1 Same as ZAP with one bound each.
+9.3.2 Practice	ladder
+1. Direct. P2398: φ form (9.2).
+2. One	twist. P3455: μ form (9.1).
+3. Idea	hidden. P2522: four corners (9.1).
+4. Two	ideas. P2257: prime gcd (9.1).
+5. Stretch. P1829: lcm sums (9.1).
+9.3.3 Experiments
+1. Check Σ_{d|n} μ(d) = [n = 1] for n ≤ 100 with the sieve.
+2. Compare zap.cpp with a double loop for a, b ≤ 300.
+3. Count the blocks in zap.cpp for a = b = 10⁵.
+4. Derive Σ lcm(i, j) on paper using lcm = ij / gcd, then check numerically.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,368 @@
+# 拓展篇 第6章 树上问题进阶  (拓6)
+# source: 拓展篇 第06章 树上问题进阶.pdf
+
+=== page 1 ===
+1拓展篇  第 6 章  树上问题进阶
+第 6 章 	 树上问题进阶
+Centroid decomposition, DSU on tree, virtual trees Luogu (verified) 13 problems C++17 · all programs run
+6.1 点分治 6.2 树上启发式合并
+6.3 虚树 6.4 课后习题与实验
+6.1 点分治
+Paths	through	the	centroid;	recursion	depth	log	n.
+1 2 3 4
+5
+6 7
+centroid 2: every path
+either passes through 2
+(thick: 1–2–5–7) or stays
+inside one piece
+IDEA Centroid	decomposition ( 点分治 )
+answers questions about all	paths of a
+tree. Take the centroid c ( 第 9 章 ): every
+path either passes through c, or lies
+completely inside one of the pieces left
+after removing c. Count the paths
+through c, then recurse into each piece
+with its own centroid.
+KEY POINT Each piece has at most half the nodes,
+so the recursion is only O(log n) deep
+and every node is handled O(log n)
+times. If paths through c take O(size)
+(or O(size log size)), the whole run is
+O(n log n) (or O(n log² n)).
+竞 赛 拓 展 专 题  · 拓 展 篇  · 图 论 拓 展
+Count all paths by splitting at centroids, answer every subtree by keeping the heavy child's data, and shrink
+the tree to a query's key nodes and their LCAs.
+
+=== page 2 ===
+2拓展篇  第 6 章  树上问题进阶
+centroid.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 10005, MAXK = 10000001;
+5 vector<pair<int, int>> g[N];
+6 int n, m, q[105], sz[N], mx[N], total, root;
+7 bool removed[N], ok[105];
+8 bool has[MAXK];                                   // distances seen from earlier pieces
+9 vector<int> dists, allDists;
+10  
+11 void findCentroid(int u, int p) {                 // root = node with the smallest largest piece
+12     sz[u] = 1; mx[u] = 0;
+13     for (int k = 0; k < int(g[u].size()); k++) {
+14         int v = g[u][k].first;
+15         if (v == p || removed[v]) continue;
+16         findCentroid(v, u);
+17         sz[u] += sz[v]; mx[u] = max(mx[u], sz[v]);
+18     }
+19     mx[u] = max(mx[u], total - sz[u]);
+20     if (mx[u] < mx[root]) root = u;
+21 }
+22 int pieceSize(int u, int p) {
+23     int s = 1;
+24     for (int k = 0; k < int(g[u].size()); k++) {
+25         int v = g[u][k].first;
+26         if (v != p && !removed[v]) s += pieceSize(v, u);
+27     }
+28     return s;
+29 }
+30 void collect(int u, int p, int d) {               // distances from the centroid in one piece
+31     if (d >= MAXK) return;
+32     dists.push_back(d);
+33     for (int k = 0; k < int(g[u].size()); k++) {
+34         int v = g[u][k].first;
+35         if (v != p && !removed[v]) collect(v, u, d + g[u][k].second);
+36     }
+37 }
+38 void solve(int c) {
+39     removed[c] = true;
+40     has[0] = true; allDists.push_back(0);         // the centroid itself
+41     for (int k = 0; k < int(g[c].size()); k++) {
+42         int v = g[c][k].first;
+43         if (removed[v]) continue;
+44         dists.clear();
+45         collect(v, c, g[c][k].second);
+46         for (int i = 0; i < int(dists.size()); i++)            // pair with earlier pieces only
+47             for (int j = 0; j < m; j++)
+48                 if (q[j] >= dists[i] && has[q[j] - dists[i]]) ok[j] = true;
+49         for (int i = 0; i < int(dists.size()); i++) { has[dists[i]] = true; 
+allDists.push_back(dists[i]); }
+50     }
+51     for (int i = 0; i < int(allDists.size()); i++) has[allDists[i]] = false;   // clean up cheaply
+52     allDists.clear();
+53     for (int k = 0; k < int(g[c].size()); k++) {
+54         int v = g[c][k].first;
+55         if (removed[v]) continue;
+56         total = pieceSize(v, c);                  // measure this piece afresh
+57         root = 0; mx[0] = INT_MAX;
+58         findCentroid(v, c);
+59         solve(root);
+60     }
+61 }
+
+=== page 3 ===
+3拓展篇  第 6 章  树上问题进阶
+62  
+63 int main() {
+64     cin >> n >> m;
+65     for (int i = 1; i < n; i++) {
+66         int a, b, w; cin >> a >> b >> w;
+67         g[a].push_back(make_pair(b, w)); g[b].push_back(make_pair(a, w));
+68     }
+69     for (int j = 0; j < m; j++) cin >> q[j];
+70     total = n; root = 0; mx[0] = INT_MAX;
+71     findCentroid(1, 0);
+72     solve(root);
+73     for (int j = 0; j < m; j++) cout << (ok[j] ? "AYE" : "NAY") << "\n";
+74     return 0;
+75 }
+INPUT
+4 4
+1 2 1
+2 3 2
+2 4 3
+3
+4
+5
+6
+OUTPUT
+AYE
+AYE
+AYE
+NAY
+KEY POINT Is there a path of length exactly k (P3806)? At centroid c, collect each piece's distances; a distance d pairs
+with an earlier piece's k − d. Pieces are added one at a time so both ends never come from the same piece.
+Clear only the entries you set, not the whole array.
+TRAP Measure each piece's size afresh (pieceSize) before searching it for a centroid: sizes left over from an
+earlier search were measured from a different root. Mark the centroid removed before collecting, or paths
+will run back through it.
+6.2 树上启发式合并
+Keep	the	heavy	child,	re-add	light	subtrees.
+IDEA DSU	on	tree ( 树上启发式合并 , small-to-large) answers a question for every	subtree, like "how many
+colours appear in the subtree of u". Visit the light children first and throw their data away; visit the heavy
+child last and keep its data; then add u and the light subtrees again on top.
+KEY POINT A node is re-added only when it sits in a light subtree of some ancestor, and there are at most log n light
+edges above it ( 第 9 章 ). So every node is added O(log n) times: O(n log n) total, with a single global count
+array.
+
+=== page 4 ===
+4拓展篇  第 6 章  树上问题进阶
+subtree_colours.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 vector<int> g[N];
+6 int n, col[N], sz[N], heavy[N], cnt[N], distinctNow = 0, ans[N];
+7  
+8 void sizes(int u, int p) {
+9     sz[u] = 1;
+10     for (int k = 0; k < int(g[u].size()); k++) {
+11         int v = g[u][k];
+12         if (v == p) continue;
+13         sizes(v, u); sz[u] += sz[v];
+14         if (sz[v] > sz[heavy[u]]) heavy[u] = v;
+15     }
+16 }
+17 void change(int u, int p, int d) {                // add (d = 1) or remove (d = -1) a whole subtree
+18     if (d == 1 && cnt[col[u]]++ == 0) distinctNow++;
+19     if (d == -1 && --cnt[col[u]] == 0) distinctNow--;
+20     for (int k = 0; k < int(g[u].size()); k++) if (g[u][k] != p) change(g[u][k], u, d);
+21 }
+22 void dfs(int u, int p, bool keep) {
+23     for (int k = 0; k < int(g[u].size()); k++) {  // light children: solve, then forget
+24         int v = g[u][k];
+25         if (v != p && v != heavy[u]) dfs(v, u, false);
+26     }
+27     if (heavy[u]) dfs(heavy[u], u, true);         // heavy child: keep its counts
+28     if (cnt[col[u]]++ == 0) distinctNow++;
+29     for (int k = 0; k < int(g[u].size()); k++) {  // add the light subtrees again
+30         int v = g[u][k];
+31         if (v != p && v != heavy[u]) change(v, u, 1);
+32     }
+33     ans[u] = distinctNow;
+34     if (!keep) change(u, p, -1);
+35 }
+36  
+37 int main() {
+38     cin >> n;
+39     for (int i = 1; i < n; i++) { int a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }
+40     for (int i = 1; i <= n; i++) cin >> col[i];
+41     sizes(1, 0);
+42     dfs(1, 0, true);
+43     for (int i = 1; i <= n; i++) cout << ans[i] << " ";
+44     cout << "\n";
+45     return 0;
+46 }
+INPUT
+5
+1 2
+1 3
+2 4
+2 5
+1 2 1 2 3
+OUTPUT
+3 2 1 1 1
+IDEA Colours 1 2 1 2 3 on nodes 1–5: subtree of 2 is {2, 4, 5} with colours 2, 2, 3: two colours. Subtree of 1 has
+all three (U41492, CF600E asks for the most frequent colour instead).
+KEY POINT The pattern "keep the biggest, merge the small ones into it" also works for sets and maps: merging small
+into large gives O(n log n) insertions ( 永无乡  P3224 in 第 4 章 ).
+
+=== page 5 ===
+5拓展篇  第 6 章  树上问题进阶
+6.3 虚树
+Key	nodes	+	LCAs	by	DFS	order	and	a	stack.
+IDEA A virtual	tree ( 虚树 ) shrinks the tree to just the k key	nodes of a query plus the LCAs between them (at
+most 2k nodes). Sort the key nodes by DFS order; the needed LCAs are those of adjacent pairs. Build it with
+a stack along the rightmost path, then run a tree DP on the small tree.
+KEY POINT With many queries whose key nodes add up to K, each query costs O(k log n) instead of O(n): total O(K
+log n). Edges of the virtual tree stand for whole paths, so store what the DP needs about the path (here: its
+cheapest edge).
+
+=== page 6 ===
+6拓展篇  第 6 章  树上问题进阶
+virtual_tree.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 250005, LOG = 19;
+5 vector<pair<int, int>> g[N];
+6 vector<int> vt[N];
+7 int n, dep[N], up[N][LOG], dfn[N], timer_ = 0;
+8 long long mn[N];                                  // cheapest edge on the path root -> v
+9 bool key_[N];
+10  
+11 void dfs(int u, int p) {
+12     dfn[u] = ++timer_;
+13     up[u][0] = p;
+14     for (int k = 1; k < LOG; k++) up[u][k] = up[up[u][k - 1]][k - 1];
+15     for (int i = 0; i < int(g[u].size()); i++) {
+16         int v = g[u][i].first;
+17         if (v == p) continue;
+18         dep[v] = dep[u] + 1;
+19         mn[v] = min(mn[u], 1LL * g[u][i].second);
+20         dfs(v, u);
+21     }
+22 }
+23 int lca(int a, int b) {
+24     if (dep[a] < dep[b]) swap(a, b);
+25     for (int k = LOG - 1; k >= 0; k--) if (dep[a] - (1 << k) >= dep[b]) a = up[a][k];
+26     if (a == b) return a;
+27     for (int k = LOG - 1; k >= 0; k--) if (up[a][k] != up[b][k]) { a = up[a][k]; b = up[b][k]; }
+28     return up[a][0];
+29 }
+30 bool byDfn(int a, int b) { return dfn[a] < dfn[b]; }
+31  
+32 long long dp(int u) {                             // cheapest way to cut all key nodes below u from the 
+root
+33     long long sub = 0;
+34     for (int i = 0; i < int(vt[u].size()); i++) sub += dp(vt[u][i]);
+35     vt[u].clear();                                // reset for the next query
+36     long long res = key_[u] ? mn[u] : min(mn[u], sub);
+37     key_[u] = false;
+38     return res;
+39 }
+40  
+41 int main() {
+42     ios::sync_with_stdio(false);
+43     cin.tie(nullptr);
+44     cin >> n;
+45     for (int i = 1; i < n; i++) {
+46         int a, b, w; cin >> a >> b >> w;
+47         g[a].push_back(make_pair(b, w)); g[b].push_back(make_pair(a, w));
+48     }
+49     mn[1] = LLONG_MAX;
+50     dfs(1, 0);
+51     int q;
+52     cin >> q;
+53     while (q--) {
+54         int k; cin >> k;
+55         vector<int> h(k);
+56         for (int i = 0; i < k; i++) { cin >> h[i]; key_[h[i]] = true; }
+57         sort(h.begin(), h.end(), byDfn);
+58         vector<int> st(1, 1);                     // stack = current root-to-leaf chain, root 1 always 
+in
+59         for (int i = 0; i < k; i++) {
+60             int v = h[i], l = lca(v, st.back());
+
+=== page 7 ===
+7拓展篇  第 6 章  树上问题进阶
+61             while (st.size() >= 2 && dep[st[st.size() - 2]] >= dep[l]) {   // close finished branches
+62                 vt[st[st.size() - 2]].push_back(st.back()); st.pop_back();
+63             }
+64             if (st.back() != l) { vt[l].push_back(st.back()); st.back() = l; }
+65             st.push_back(v);
+66         }
+67         while (st.size() >= 2) { vt[st[st.size() - 2]].push_back(st.back()); st.pop_back(); }
+68         long long ans = 0;
+69         for (int i = 0; i < int(vt[1].size()); i++) ans += dp(vt[1][i]);
+70         vt[1].clear();
+71         cout << ans << "\n";
+72     }
+73     return 0;
+74 }
+INPUT
+10
+1 5 13
+1 9 6
+2 1 19
+2 4 8
+2 3 91
+5 6 8
+7 5 4
+7 8 31
+10 7 9
+3
+2 10 6
+4 5 7 8 3
+3 9 4 6
+OUTPUT
+12
+32
+22
+KEY POINT 消耗战  (P2495): cut edges so no key node can reach node 1, at least total cost. For a node u of the virtual
+tree, either cut the cheapest edge between the root and u (mn[u]), or solve each child separately; a key
+node must be cut above itself. Clearing vt[] and key_[] inside the DP keeps each query O(k).
+TRAP The sentinel node 1 must always be on the stack bottom, and the stack loop compares depths of the
+second-to-top node with the LCA. Getting the order of those two checks wrong silently builds a wrong tree.
+6.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Centroid: every path passes through it or lies in one piece; depth O(log n).
+2. Pair each piece with earlier pieces only; clear just the entries you set.
+3. Measure each piece afresh; mark the centroid removed first.
+4. DSU on tree: light children solved and forgotten, heavy child kept, light re-added.
+5. Each node re-added O(log n) times: O(n log n).
+6. Virtual tree: key nodes sorted by dfn + LCAs of neighbours; stack on the right chain.
+7. Virtual edges stand for paths: store the path's min / sum as needed.
+
+=== page 8 ===
+8拓展篇  第 6 章  树上问题进阶
+6.4.1 Problems
+Problem Name Section What it tests
+P3806 【模板】点分治 6.1 Path of length exactly k.
+P4178 Tree 6.1 Pairs with distance ≤ k: sort + two pointers.
+P2634 聪聪可可 6.1 Path lengths mod 3.
+P4149 Race 6.1 Length k with the fewest edges.
+P2664 树上游戏 6.1 Colour counts over all paths.
+P4292 重建计划 6.1 Best average: binary search + centroid.
+U41492 树上数颜色 6.2 Distinct colours per subtree.
+P9233 颜色平衡树 6.2 Subtrees where every colour appears equally often.
+P2495 【模板】虚树  / 消耗战 6.3 Virtual tree + min-cut DP.
+P4103 大工程 6.3 Sum, min, max of pair distances on the virtual tree.
+P3233 世界树 6.3 Nearest key node for every node.
+P5903 【模板】树上  K 级祖先 6.2 Long-path decomposition (or binary lifting).
+P3241 开店 6.1 Point-centroid tree for distance sums.
+6.4.2 Practice	ladder
+1. Direct. P3806: centroid template (6.1).
+2. One	twist. P4178: count with two pointers (6.1).
+3. Idea	hidden. U41492: DSU on tree (6.2).
+4. Two	ideas. P2495: virtual tree (6.3).
+5. Stretch. P4149: centroid + best value (6.1).
+6.4.3 Experiments
+1. Print the centroid chosen at every level of centroid.cpp for a path of 15 nodes.
+2. Count how many times each node is added in subtree_colours.cpp; compare with log₂ n.
+3. Draw the virtual tree built for the query 4 5 7 8 3 in the sample.
+4. Solve P3806 by brute force from every node for n = 2000 and compare speeds.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

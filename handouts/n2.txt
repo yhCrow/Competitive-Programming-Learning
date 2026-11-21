@@ -1,0 +1,179 @@
+# NOI篇 第2章 最小树形图与斯坦纳树  (N2)
+# source: NOI篇 第02章 最小树形图与斯坦纳树.pdf
+
+=== page 1 ===
+1NOI 篇  第 2 章  最小树形图与斯坦纳树
+第 2 章 	 最小树形图与斯坦纳树
+Minimum arborescence, Steiner tree Luogu (verified) 2 problems C++17 · all programs run
+2.1 最小树形图 2.2 最小斯坦纳树
+2.3 课后习题与实验
+2.1 最小树形图
+Chu–Liu	/	Edmonds:	choose,	contract,	re-weight.
+IDEA A minimum	arborescence ( 最小树形图 ) is the cheapest set of directed edges in which every vertex
+except the root r has exactly one incoming edge and all vertices are reachable from r. Chu–Liu	/
+Edmonds: give each vertex its cheapest incoming edge. If those edges form no cycle, done. Otherwise
+contract each cycle into one vertex, and for an edge (u, v) entering the cycle at v, reduce its weight by in[v]
+(choosing it means dropping v's old incoming edge). Repeat. O(nm) (P4716).
+KEY POINT If some vertex has no incoming edge at all, there is no arborescence. The weights of the chosen cheapest
+edges are added to the answer before each contraction; the reduced weights pay the difference later.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+The cheapest directed spanning tree by contracting cycles of cheapest incoming edges, and the cheapest
+tree connecting chosen terminals by subset DP plus Dijkstra.
+
+=== page 2 ===
+2NOI 篇  第 2 章  最小树形图与斯坦纳树
+min_arborescence.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct E { int u, v; long long w; };
+5  
+6 int main() {
+7     int n, m, r;
+8     cin >> n >> m >> r;
+9     vector<E> e(m);
+10     for (int i = 0; i < m; i++) cin >> e[i].u >> e[i].v >> e[i].w;
+11     long long ans = 0;
+12     vector<long long> in(n + 1);
+13     vector<int> pre(n + 1), id(n + 1), vis(n + 1);
+14     while (true) {
+15         fill(in.begin(), in.end(), LLONG_MAX);
+16         for (int i = 0; i < m; i++)                       // cheapest incoming edge of each vertex
+17             if (e[i].u != e[i].v && e[i].w < in[e[i].v]) { in[e[i].v] = e[i].w; pre[e[i].v] = e[i].u; }
+18         for (int v = 1; v <= n; v++) if (v != r && in[v] == LLONG_MAX) { cout << -1 << "\n"; return 0; }
+19         int cnt = 0;
+20         fill(id.begin(), id.end(), 0); fill(vis.begin(), vis.end(), 0);
+21         in[r] = 0;
+22         for (int v = 1; v <= n; v++) {                    // find cycles among the chosen edges
+23             ans += in[v];
+24             int x = v;
+25             while (vis[x] != v && !id[x] && x != r) { vis[x] = v; x = pre[x]; }
+26             if (x != r && !id[x]) {                       // x is on a new cycle: label it
+27                 id[x] = ++cnt;
+28                 for (int y = pre[x]; y != x; y = pre[y]) id[y] = cnt;
+29             }
+30         }
+31         if (cnt == 0) break;                              // no cycle: done
+32         for (int v = 1; v <= n; v++) if (!id[v]) id[v] = ++cnt;
+33         for (int i = 0; i < m; i++) {                     // contract and re-weight
+34             int v = e[i].v;
+35             e[i].u = id[e[i].u]; e[i].v = id[e[i].v];
+36             if (e[i].u != e[i].v) e[i].w -= in[v];
+37         }
+38         n = cnt; r = id[r];
+39         in.assign(n + 1, 0); pre.assign(n + 1, 0); id.assign(n + 1, 0); vis.assign(n + 1, 0);
+40     }
+41     cout << ans << "\n";
+42     return 0;
+43 }
+INPUT 1
+5 11 1
+2 5 18
+2 3 20
+4 5 3
+5 1 16
+3 5 8
+2 4 18
+5 4 13
+5 4 1
+1 2 19
+1 3 1
+3 4 20
+OUTPUT 1
+29
+INPUT 2
+3 2 1
+1 2 5
+3 2 1
+OUTPUT 2
+-1
+
+=== page 3 ===
+3NOI 篇  第 2 章  最小树形图与斯坦纳树
+KEY POINT A random graph checked against trying every choice of one incoming edge per vertex in Python; the
+second graph has no edge into vertex 3, so −1.
+2.2 最小斯坦纳树
+f[S][v]:	merge	subsets,	relax	along	edges.
+IDEA The minimum	Steiner	tree ( 最小斯坦纳树 ): connect k chosen terminal vertices at the lowest total edge
+weight, using any other vertices as helpers. NP-hard in general, but fine for small k: f[S][v] = cheapest tree
+that connects the terminal set S and contains v.
+KEY POINT Two transitions: merge at v: f[S][v] = min over T ⊂ S of f[T][v] + f[S∖T][v] (O(3k n) over all S); move v
+along edges: for a fixed S, f[S][·] relaxes like Dijkstra (O(2k m log m)). Answer f[all][any terminal]
+(P6192).
+
+=== page 4 ===
+4NOI 篇  第 2 章  最小树形图与斯坦纳树
+steiner.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n, m, k;
+6     cin >> n >> m >> k;
+7     vector<vector<pair<int, int>>> g(n + 1);
+8     for (int i = 0; i < m; i++) { int u, v, w; cin >> u >> v >> w; g[u].push_back(make_pair(v, w)); 
+g[v].push_back(make_pair(u, w)); }
+9     vector<int> term(k);
+10     for (int i = 0; i < k; i++) cin >> term[i];
+11     const long long INF = LLONG_MAX / 4;
+12     vector<vector<long long>> f(1 << k, vector<long long>(n + 1, INF));
+13     for (int i = 0; i < k; i++) f[1 << i][term[i]] = 0;
+14     for (int S = 1; S < (1 << k); S++) {
+15         for (int T = (S - 1) & S; T > 0; T = (T - 1) & S)       // merge two parts at v
+16             for (int v = 1; v <= n; v++) f[S][v] = min(f[S][v], f[T][v] + f[S ^ T][v]);
+17         priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<pair<long long, 
+int>>> pq;
+18         for (int v = 1; v <= n; v++) if (f[S][v] < INF) pq.push(make_pair(f[S][v], v));
+19         while (!pq.empty()) {                                    // move along edges (Dijkstra)
+20             long long dd = pq.top().first; int u = pq.top().second; pq.pop();
+21             if (dd > f[S][u]) continue;
+22             for (int i = 0; i < int(g[u].size()); i++) {
+23                 int v = g[u][i].first; long long nd = dd + g[u][i].second;
+24                 if (nd < f[S][v]) { f[S][v] = nd; pq.push(make_pair(nd, v)); }
+25             }
+26         }
+27     }
+28     cout << f[(1 << k) - 1][term[0]] << "\n";
+29     return 0;
+30 }
+INPUT
+6 9 3
+1 2 3
+2 3 2
+1 4 4
+4 5 1
+5 6 2
+3 6 7
+2 5 2
+3 4 5
+1 6 9
+1 3 6
+OUTPUT
+9
+KEY POINT Checked against trying every subset of the 9 edges in Python. The merge loop over subsets of S is the 3ᵏ
+part ( 拓展篇  第 12 章 ); the Dijkstra part is needed because the cheapest tree may run through non-terminal
+helpers.
+2.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 5 ===
+5NOI 篇  第 2 章  最小树形图与斯坦纳树
+Key	points	to	memorise
+1. Arborescence: cheapest in-edge per vertex; no cycle ⇒ done.
+2. Cycle: contract; edge into v loses in[v]; repeat; O(nm).
+3. A vertex with no in-edge ⇒ impossible.
+4. Steiner: f[S][v]; merge f[T][v] + f[S−T][v]; Dijkstra per S.
+5. O(3^k n + 2^k m log m).
+2.3.1 Problems
+Problem Name Section What it tests
+P4716 【模板】最小树形图 2.1 Chu–Liu / Edmonds.
+P6192 【模板】最小斯坦纳树 2.2 Subset DP + Dijkstra.
+2.3.2 Practice	ladder
+1. Direct. P4716: arborescence (2.1).
+2. One	twist. P6192: Steiner tree (2.2).
+2.3.3 Experiments
+1. Trace one contraction of min_arborescence.cpp by hand.
+2. Make all terminals the full vertex set in steiner.cpp: it becomes an MST.
+3. Time steiner.cpp for k = 6, 8, 10.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,294 @@
+# 拓展篇 第4章 平衡树  (拓4)
+# source: 拓展篇 第04章 平衡树.pdf
+
+=== page 1 ===
+1拓展篇  第 4 章  平衡树
+第 4 章 	 平衡树
+Balanced binary search trees Luogu (verified) 16 problems C++17 · all programs run
+4.1 二叉搜索树与  STL 4.2 FHQ Treap
+4.3 区间操作 4.4 课后习题与实验
+4.1 二叉搜索树与 	STL
+BST	order;	set	for	predecessor	and	successor.
+IDEA A binary	search	tree (BST, 二叉搜索树 ) keeps smaller keys in the left subtree and larger in the right, so
+search, insert and delete follow one root-to-leaf path. A balanced tree ( 平衡树 ) keeps that path O(log n)
+however the keys arrive; a plain BST fed 1, 2, 3, … becomes a chain.
+KEY POINT Try	the	STL	first: set  / multiset  / map  are balanced trees (red-black) with insert, erase, lower_bound,
+predecessor and successor in O(log n). Write your own tree only when you need ranks, k-th element, or
+operations on whole ranges of a sequence.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 据 结 构 拓 展
+Use the STL set when it is enough; otherwise write an FHQ Treap from split and merge, for ranks and k-th
+by value, or for a whole sequence with range reversal by position.
+
+=== page 2 ===
+2拓展篇  第 4 章  平衡树
+turnover.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     set<long long> seen;
+8     long long total = 0;
+9     for (int i = 0; i < n; i++) {
+10         long long x;
+11         cin >> x;
+12         if (i == 0) total += x;                          // first day: the amount itself
+13         else {
+14             long long best = LLONG_MAX;
+15             auto it = seen.lower_bound(x);                // first >= x
+16             if (it != seen.end()) best = min(best, *it - x);
+17             if (it != seen.begin()) best = min(best, x - *prev(it));   // last < x
+18             total += best;
+19         }
+20         seen.insert(x);
+21     }
+22     cout << total << "\n";
+23     return 0;
+24 }
+INPUT
+6
+5
+1
+2
+5
+4
+6
+OUTPUT
+12
+IDEA Turnover (P2234): each day adds the smallest difference to any earlier value. The closest earlier values
+are the successor (lower_bound) and the predecessor (the element before it) in a sorted set.
+KEY POINT 5 + |1−5| + |2−1| + |5−5| + |4−5| + |6−5| = 12. prev(it)  is only valid when it is not begin(); check before
+using it.
+4.2 FHQ	Treap
+Random	priorities;	split	and	merge;	six	operations.
+
+=== page 3 ===
+3拓展篇  第 4 章  平衡树
+5
+3 8
+1 4 7 9
+split(root, 4): green tree ≤ 4, blue tree > 4
+only the dashed edge is cut
+IDEA The FHQ	Treap ( 无旋  Treap) gives each
+node a random priority and keeps keys
+in BST order and priorities in heap
+order. Random priorities make the
+expected depth O(log n). Everything is
+built from two operations: split(t, k)
+cuts t into keys ≤ k and keys > k;
+merge(a, b) joins two trees where every
+key of a is ≤ every key of b.
+KEY POINT Insert x: split at x, merge(merge(left,
+new node), right). Delete one x: split
+into < x, = x, > x; drop one node from the
+middle (merge its children); merge
+back. Rank, k-th, predecessor and
+successor all follow from split plus
+subtree sizes.
+
+=== page 4 ===
+4拓展篇  第 4 章  平衡树
+treap.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int ls[N], rs[N], val[N], pri[N], sz[N], cnt = 0, root = 0;
+6 mt19937 rng(20251117);
+7  
+8 int newNode(int v) { val[++cnt] = v; pri[cnt] = rng(); sz[cnt] = 1; return cnt; }
+9 void up(int t) { sz[t] = sz[ls[t]] + sz[rs[t]] + 1; }
+10  
+11 void split(int t, int k, int &a, int &b) {          // a: keys <= k, b: keys > k
+12     if (!t) { a = b = 0; return; }
+13     if (val[t] <= k) { a = t; split(rs[t], k, rs[t], b); }
+14     else { b = t; split(ls[t], k, a, ls[t]); }
+15     up(t);
+16 }
+17 int merge(int a, int b) {                            // all keys of a <= all keys of b
+18     if (!a || !b) return a | b;
+19     if (pri[a] > pri[b]) { rs[a] = merge(rs[a], b); up(a); return a; }
+20     ls[b] = merge(a, ls[b]); up(b); return b;
+21 }
+22 int kth(int t, int k) {                              // k-th smallest in t
+23     while (true) {
+24         if (k <= sz[ls[t]]) t = ls[t];
+25         else if (k == sz[ls[t]] + 1) return val[t];
+26         else { k -= sz[ls[t]] + 1; t = rs[t]; }
+27     }
+28 }
+29  
+30 int main() {
+31     int n;
+32     cin >> n;
+33     while (n--) {
+34         int op, x, a, b, c;
+35         cin >> op >> x;
+36         if (op == 1) { split(root, x, a, b); root = merge(merge(a, newNode(x)), b); }
+37         else if (op == 2) {                          // remove ONE copy of x
+38             split(root, x, a, c); split(a, x - 1, a, b);
+39             b = merge(ls[b], rs[b]);
+40             root = merge(merge(a, b), c);
+41         }
+42         else if (op == 3) { split(root, x - 1, a, b); cout << sz[a] + 1 << "\n"; root = merge(a, b); }
+43         else if (op == 4) cout << kth(root, x) << "\n";
+44         else if (op == 5) { split(root, x - 1, a, b); cout << kth(a, sz[a]) << "\n"; root = merge(a, b); 
+}
+45         else { split(root, x, a, b); cout << kth(b, 1) << "\n"; root = merge(a, b); }
+46     }
+47     return 0;
+48 }
+INPUT
+10
+1 5
+1 3
+1 8
+1 5
+3 5
+4 3
+2 5
+4 3
+5 6
+6 5
+OUTPUT
+2
+5
+8
+5
+8
+
+=== page 5 ===
+5拓展篇  第 4 章  平衡树
+KEY POINT The six operations of the normal balanced tree (P3369): insert, delete one, rank of x (how many are
+smaller, + 1), k-th smallest, predecessor (largest < x), successor (smallest > x). Every split is followed by
+a merge that puts the tree back together.
+TRAP Call up() after every change of children, inside both split and merge. When deleting, split at x and at x − 1
+so the middle tree holds only copies of x, and remove just its root.
+4.3 区间操作
+Implicit	keys;	lazy	reversal;	maintaining	a	sequence.
+IDEA Implicit	keys ( 按大小分裂 ): store a sequence in the tree, ordered by position instead of by value. split(t,
+k) now gives the first k elements and the rest, using subtree sizes. A range [l, r] is cut out with two splits,
+changed as one subtree, and glued back with two merges.
+KEY POINT Range updates use lazy tags, as in segment trees ( 第 6 章 ). To reverse a range, set a flag on the subtree root;
+when the node is visited later, swap its children and pass the flag down (P3391). Insert and delete inside
+the sequence are just more splits and merges.
+
+=== page 6 ===
+6拓展篇  第 4 章  平衡树
+reverse.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int ls[N], rs[N], pri[N], sz[N], val[N], cnt = 0;
+6 bool rev[N];
+7 mt19937 rng(7);
+8  
+9 void up(int t) { sz[t] = sz[ls[t]] + sz[rs[t]] + 1; }
+10 void down(int t) {                                   // push the reverse flag
+11     if (rev[t]) { swap(ls[t], rs[t]); rev[ls[t]] ^= 1; rev[rs[t]] ^= 1; rev[t] = false; }
+12 }
+13 void split(int t, int k, int &a, int &b) {          // a: first k elements
+14     if (!t) { a = b = 0; return; }
+15     down(t);
+16     if (sz[ls[t]] < k) { a = t; split(rs[t], k - sz[ls[t]] - 1, rs[t], b); }
+17     else { b = t; split(ls[t], k, a, ls[t]); }
+18     up(t);
+19 }
+20 int merge(int a, int b) {
+21     if (!a || !b) return a | b;
+22     if (pri[a] > pri[b]) { down(a); rs[a] = merge(rs[a], b); up(a); return a; }
+23     down(b); ls[b] = merge(a, ls[b]); up(b); return b;
+24 }
+25 void print(int t) {                                  // in-order = the sequence
+26     if (!t) return;
+27     down(t);
+28     print(ls[t]); cout << val[t] << " "; print(rs[t]);
+29 }
+30  
+31 int main() {
+32     int n, m, root = 0;
+33     cin >> n >> m;
+34     for (int i = 1; i <= n; i++) {
+35         val[++cnt] = i; pri[cnt] = rng(); sz[cnt] = 1;
+36         root = merge(root, cnt);                     // append at the end
+37     }
+38     while (m--) {
+39         int l, r, a, b, c;
+40         cin >> l >> r;
+41         split(root, r, a, c);                        // [1, r] and the rest
+42         split(a, l - 1, a, b);                       // [1, l-1] and [l, r]
+43         rev[b] ^= 1;
+44         root = merge(merge(a, b), c);
+45     }
+46     print(root);
+47     cout << "\n";
+48     return 0;
+49 }
+INPUT
+5 3
+1 3
+1 3
+1 4
+OUTPUT
+4 3 2 1 5
+IDEA Reversals: 12345 → 32145 → 12345 → 43215. Each reversal is two splits, one flag and two merges: O(log
+n) expected, however long the range.
+
+=== page 7 ===
+7拓展篇  第 4 章  平衡树
+KEY POINT Splay trees ( 伸展树 ) do the same jobs by rotating the accessed node to the root; they are needed for link-
+cut trees but are harder to write. For contest use, FHQ Treap covers almost everything a balanced tree is
+needed for, including "maintain a sequence" (P2042 维护数列 , P4008 文本编辑器 ).
+KEY POINT Other ways to get ranks without writing a tree: a Fenwick tree over discretised values when all values are
+known in advance ( 第 5 章 ), or __gnu_pbds::tree  with order_of_key  / find_by_order  when the judge
+allows it. Merging many small sets into large ones ( 永无乡  P3224) uses small-to-large merging of treaps.
+4.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. STL set / multiset / map first; own tree for ranks, k-th, or sequences.
+2. Treap: BST by key, heap by random priority ⇒ expected depth O(log n).
+3. split(t, k): ≤ k and > k; merge(a, b) with keys of a ≤ keys of b.
+4. Insert = split + merge; delete one = split at x and x − 1, merge the middle's children.
+5. Rank = size of (< x) + 1; k-th by walking with subtree sizes.
+6. Implicit key: split by size; range = two splits; lazy flags like segment trees.
+7. Reverse: flag, and swap children when pushing down.
+4.4.1 Problems
+Problem Name Section What it tests
+P5076 【深基 16. 例 7 】普通二叉树
+（简化版）
+4.1 Plain BST or set first.
+P2234 营业额统计 4.1 set: predecessor and successor.
+P3369 【模板】普通平衡树 4.2 Six operations.
+P6136 【模板】普通平衡树（数
+据加强版）
+4.2 Same, online and larger.
+P3391 【模板】文艺平衡树 4.3 Range reversal with a lazy flag.
+P1486 郁闷的出纳员 4.2 Global add with an offset, delete below a bound.
+P2286 宠物收养场 4.1 Closest value, two kinds in turn.
+P3871 中位数 4.2 k-th after inserts.
+P2073 送花 4.1 Max / min removal with a set.
+P1110 报表统计 4.1 Neighbour gaps and global closest pair.
+P3224 永无乡 4.2 Small-to-large merging of trees.
+P2596 书架 4.3 Move books: positions by implicit key.
+P3850 书架 4.3 Insert into a sequence, query by position.
+P4309 最长上升子序列 4.3 Insert positions + LIS.
+P4008 文本编辑器 4.3 Insert, delete, print ranges of text.
+P2042 维护数列 4.3 Every sequence operation at once.
+
+=== page 8 ===
+8拓展篇  第 4 章  平衡树
+4.4.2 Practice	ladder
+1. Direct. P2234: STL set (4.1).
+2. One	twist. P3369: FHQ Treap (4.2).
+3. Idea	hidden. P3391: implicit key (4.3).
+4. Two	ideas. P1486: treap with an offset (4.2).
+5. Stretch. P2042: full sequence maintenance (4.3).
+4.4.3 Experiments
+1. Insert 1, 2, …, 10⁵ into a plain BST and into treap.cpp; compare the depths.
+2. Remove the up() call in split and find an operation that gives a wrong rank.
+3. Print the tree of reverse.cpp before and after down() to see the flag move.
+4. Solve P3369 with a Fenwick tree over discretised values offline and compare the code length.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

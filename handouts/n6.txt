@@ -1,0 +1,202 @@
+# NOI篇 第6章 Min_25 筛与 Powerful Number 筛  (N6)
+# source: NOI篇 第06章 Min_25 筛与 Powerful Number 筛.pdf
+
+=== page 1 ===
+1NOI 篇  第 6 章  Min_25 筛与  Powerful Number 筛
+第 6 章 	Min_25	 筛与 	Powerful	Number	 筛
+Min_25 sieve, Powerful Number sieve Luogu (verified) 1 problems C++17 · all programs run
+6.1 Min_25 筛 6.2 Powerful Number 筛
+6.3 课后习题与实验
+6.1 Min_25	 筛
+Part	1:	prime	sums	g;	part	2:	recursion	S(v,	j).
+IDEA Min_25	sieve (Min_25 筛 ) computes Σi≤n f(i) for a multiplicative f in about O(n3/4 / log n), for n up to
+10¹⁰–10¹¹, provided f(p) is a low-degree polynomial in p and f(pk) is easy. Part	1: for every value v =
+⌊n/i⌋ compute g(v) = Σp≤v, p prime pe by a sieve that removes, prime by prime, the numbers whose
+smallest prime factor is that prime.
+KEY POINT Part 1 transition for the j-th prime pj (only for v ≥ pj²): g(v) −= pje · (g(⌊v/pj⌋) − g(pj−1)). There are only
+2√n distinct values ⌊n/i⌋, stored in two arrays indexed by v (small) or n/v (large). Start from g(v) = Σ2≤i≤v
+ie, as if every number were prime.
+IDEA Part	2: S(v, j) = Σ f(i) over 2 ≤ i ≤ v whose smallest prime factor is ≥ pj. It is (the prime part) g-values
+minus the primes below pj, plus, for each prime pk ≥ pj with pk² ≤ v and each power pke: f(pke)·S(⌊v/pke⌋,
+k + 1) + f(pke+1). Answer = S(n, 1) + f(1), computed by plain recursion without memo.
+KEY POINT For φ: f(p) = p − 1, so part 1 needs two sums: primes counted (e = 0) and primes summed (e = 1); f(pk) =
+pk−1(p − 1). P5325 has f(pk) = pk(pk − 1), which needs e = 1 and e = 2.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Sum a multiplicative function up to 10¹⁰: first sum powers of primes over every ⌊n/i⌋ by sieving out
+smallest prime factors, then recurse over smallest prime factors for the composites.
+
+=== page 2 ===
+2NOI 篇  第 6 章  Min_25 筛与  Powerful Number 筛
+min25.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 ll n, sq;
+6 vector<ll> primes, vals;                          // vals: all distinct n / i
+7 vector<ll> g0, g1;                                // prime count, prime sum, for each value
+8 vector<int> id1, id2;
+9  
+10 int idx(ll v) { return v <= sq ? id1[v] : id2[n / v]; }
+11  
+12 ll S(ll v, int j) {                               // sum of phi(i), 2 <= i <= v, smallest prime factor 
+>= primes[j]
+13     if (j < int(primes.size()) && primes[j] > v) return 0;
+14     int k = idx(v);
+15     ll res = (g1[k] - g0[k]);                     // all primes <= v: sum of (p - 1)
+16     for (int t = 0; t < j; t++) res -= primes[t] - 1;   // minus primes below primes[j]
+17     for (int t = j; t < int(primes.size()) && primes[t] * primes[t] <= v; t++) {
+18         ll p = primes[t], pe = p, phiPe = p - 1;  // p^e and phi(p^e)
+19         while (pe * p <= v) {
+20             res += phiPe * S(v / pe, t + 1) + phiPe * p;     // phi(p^e) * rest, plus phi(p^(e+1))
+21             pe *= p; phiPe *= p;
+22         }
+23     }
+24     return res;
+25 }
+26  
+27 int main() {
+28     int T;
+29     cin >> T;
+30     while (T--) {
+31         cin >> n;
+32         sq = sqrtl(n);
+33         while (sq * sq > n) sq--;
+34         while ((sq + 1) * (sq + 1) <= n) sq++;
+35         primes.clear();
+36         vector<bool> comp(sq + 2, false);
+37         for (ll i = 2; i <= sq; i++) if (!comp[i]) { primes.push_back(i); for (ll j = i * i; j <= sq; j 
++= i) comp[j] = true; }
+38         vals.clear(); g0.clear(); g1.clear();
+39         id1.assign(sq + 2, 0); id2.assign(sq + 2, 0);
+40         for (ll l = 1, r; l <= n; l = r + 1) {
+41             r = n / (n / l);
+42             ll v = n / l;
+43             vals.push_back(v);
+44             g0.push_back(v - 1);                              // pretend all of 2..v are prime
+45             g1.push_back(v * (v + 1) / 2 - 1);                // 2 + 3 + ... + v (fine for v up to ~4e9)
+46             if (v <= sq) id1[v] = vals.size() - 1; else id2[n / v] = vals.size() - 1;
+47         }
+48         for (int j = 0; j < int(primes.size()); j++) {       // part 1: sieve out composites
+49             ll p = primes[j];
+50             for (int i = 0; i < int(vals.size()) && p * p <= vals[i]; i++) {
+51                 int k = idx(vals[i] / p);
+52                 g0[i] -= g0[k] - j;                           // j = number of primes below p
+53                 ll sumBelow = 0;
+54                 for (int t = 0; t < j; t++) sumBelow += primes[t];
+55                 g1[i] -= p * (g1[k] - sumBelow);
+56             }
+57         }
+58         ll primeCount = g0[idx(n)];
+59         cout << primeCount << " " << (n >= 1 ? S(n, 0) + 1 : 0) << "\n";   // + phi(1) = 1
+60     }
+
+=== page 3 ===
+3NOI 篇  第 6 章  Min_25 筛与  Powerful Number 筛
+61     return 0;
+62 }
+INPUT
+5
+1
+10
+100
+12345
+1000000
+OUTPUT
+0 1
+4 32
+25 3044
+1474 46326398
+78498 303963552392
+KEY POINT Prints π(n) (from part 1) and Σφ(i) for i ≤ n (part 2), both checked against a plain sieve in Python up to
+10⁶. The sum of primes below each prime is recomputed in a loop here for clarity; in real use keep it as a
+prefix-sum array.
+TRAP The values in g overflow fast: Σ i up to 10¹⁰ is 5·10¹⁹, beyond long long. Real problems work modulo a
+prime; with exact sums, keep n small enough or use __int128. Precompute the prefix sums of primes, or
+the inner loop costs an extra factor.
+6.2 Powerful	Number	 筛
+f	=	g	*	h;	h	lives	on	powerful	numbers.
+IDEA The Powerful	Number	sieve (PN 筛 ) sums a multiplicative f up to n when some easy multiplicative g
+agrees with f on primes, g(p) = f(p), and its prefix sums G are known. Write f = g * h (Dirichlet
+convolution). Then h(p) = 0, so h is nonzero only on powerful	numbers (every prime exponent ≥ 2), and
+there are only O(√n) of them up to n.
+KEY POINT Σi≤n f(i) = Σd powerful h(d) · G(⌊n/d⌋). Find h(pk) from f(pk) = Σi=0..k g(pi) h(pk−i), then DFS over primes ≤
+√n with exponents ≥ 2. Below, f(pk) = k·pk with g = id, so G(m) = m(m+1)/2. When G itself needs a sieve
+( 杜教筛  or Min_25), PN wraps around it.
+
+=== page 4 ===
+4NOI 篇  第 6 章  Min_25 筛与  Powerful Number 筛
+powerful_number.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const ll MOD = 998244353;
+6 ll n, ans = 0;
+7 vector<ll> pr;
+8  
+9 ll G(ll m) { m %= MOD; return m * ((m + 1) % MOD) % MOD * ((MOD + 1) / 2) % MOD; }   // sum of g = id
+10  
+11 void dfs(int from, ll d, ll hd) {              // d powerful, hd = h(d)
+12     ans = (ans + hd * G(n / d)) % MOD;
+13     for (int j = from; j < int(pr.size()); j++) {
+14         ll p = pr[j];
+15         if (d > n / p / p) break;
+16         vector<ll> h(1, 1), pm(1, 1);          // h(p^e) and p^e mod MOD
+17         ll pe = 1;
+18         for (int e = 1; pe <= n / d / p; e++) {
+19             pe *= p;
+20             pm.push_back(pe % MOD);
+21             ll v = ll(e) % MOD * pm[e] % MOD;  // f(p^e) = e * p^e
+22             for (int t = 1; t <= e; t++) v = (v - pm[t] * h[e - t] % MOD + MOD) % MOD;
+23             h.push_back(v);
+24             if (e >= 2) dfs(j + 1, d * pe, hd * v % MOD);
+25         }
+26     }
+27 }
+28  
+29 int main() {
+30     cin >> n;
+31     ll lim = sqrtl(n) + 1;
+32     vector<bool> comp(lim + 1, false);
+33     for (ll i = 2; i <= lim; i++) {
+34         if (comp[i]) continue;
+35         pr.push_back(i);
+36         for (ll j = i * i; j <= lim; j += i) comp[j] = true;
+37     }
+38     dfs(0, 1, 1);
+39     cout << ans << "\n";
+40     return 0;
+41 }
+INPUT 1
+10
+OUTPUT 1
+84
+INPUT 2
+2000000
+OUTPUT 2
+248199459
+KEY POINT Checked against a direct sieve of f up to n in Python. The work is the number of powerful numbers, O(√n),
+plus the cost of G; for n = 10¹⁰ it runs in milliseconds.
+6.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 5 ===
+5NOI 篇  第 6 章  Min_25 筛与  Powerful Number 筛
+Key	points	to	memorise
+1. Values ⌊n/i⌋: 2√n of them; index small v directly, large by n/v.
+2. Part 1: g(v) −= p^e (g(v/p) − g(p_prev)) for v ≥ p²; start as if all were prime.
+3. Part 2: S(v, j) = primes ≥ p_j up to v + Σ f(p^e) S(v/p^e, k+1) + f(p^(e+1)).
+4. Answer S(n, 1) + f(1); about O(n^(3/4) / log n).
+5. PN: g(p) = f(p) ⇒ h = f / g is 0 off powerful numbers; Σ h(d) G(n/d).
+6.3.1 Problems
+Problem Name Section What it tests
+P5325 【模板】 Min_25 筛 6.1 f(p^k) = p^k(p^k − 1), modulo a prime.
+6.3.2 Practice	ladder
+1. Direct. P5325: Min_25 template (6.1).
+6.3.3 Experiments
+1. Print g0 for all values of n = 100 and check against π(v).
+2. Time min25.cpp for n = 10⁸, 10⁹ (with modular arithmetic).
+3. Adapt min25.cpp to Σμ(i) and compare with 杜教筛  ( 第 30 章 ).
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

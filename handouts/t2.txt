@@ -1,0 +1,294 @@
+# 拓展篇 第2章 AC 自动机  (拓2)
+# source: 拓展篇 第02章 AC 自动机.pdf
+
+=== page 1 ===
+1拓展篇  第 2 章  AC 自动机
+第 2 章 	AC	 自动机
+Aho–Corasick automaton Luogu (verified) 9 problems C++17 · all programs run
+2.1 AC 自动机的构造 2.2 多模式匹配
+2.3 AC 自动机上的动态规划 2.4 课后习题与实验
+2.1 AC	 自动机的构造
+Trie	+	fail	links	by	BFS;	the	trie	graph.
+root
+h s
+e he i h
+r s his e she
+s hers dashed: fail link
+IDEA The AC	automaton (AC 自动机 , Aho–
+Corasick) finds many patterns in one
+text at once. Put all patterns in a trie ( 第
+7 章 ). Each node gets a fail	link: the
+node for the longest	proper	suffix of
+its string that is also in the trie. It is
+KMP's nxt array spread over a trie.
+KEY POINT "she" fails to "he": after reading s-h-e,
+the longest suffix that starts some
+pattern is "he". Unmarked fail links go to
+the root. Fail links of a node only point
+to shallower nodes, so a BFS by depth
+can fill them in order.
+IDEA Build by BFS. For node u and letter c: if the child ch[u][c] exists, its fail link is ch[fail[u]][c]; if it does not
+exist, set ch[u][c] = ch[fail[u]][c] anyway. After that every node has a transition for every letter (a trie
+graph, 字典图 ), so matching never needs a while-loop of fail jumps.
+KEY POINT The children of the root fail to the root. Because fail[u] is shallower than u, its row ch[fail[u]][·] is already
+complete when u is processed. Total O(26 · total pattern length).
+2.2 多模式匹配
+Which	patterns	appear;	how	often	each	appears.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 字 符 串 拓 展
+Put many patterns in one trie, link every node to its longest suffix in the trie, and match them all in a single
+pass; count occurrences through the fail tree and run DP over the automaton states.
+
+=== page 2 ===
+2拓展篇  第 2 章  AC 自动机
+ac_count.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 1000005;
+5 int ch[N][26], fail[N], endCnt[N], tot = 0;
+6  
+7 void insert(const string &w) {
+8     int u = 0;
+9     for (int i = 0; i < int(w.size()); i++) {
+10         int c = w[i] - 'a';
+11         if (!ch[u][c]) ch[u][c] = ++tot;
+12         u = ch[u][c];
+13     }
+14     endCnt[u]++;                                    // patterns may repeat
+15 }
+16  
+17 void build() {
+18     queue<int> q;
+19     for (int c = 0; c < 26; c++) if (ch[0][c]) q.push(ch[0][c]);   // fail = root
+20     while (!q.empty()) {
+21         int u = q.front(); q.pop();
+22         for (int c = 0; c < 26; c++) {
+23             int v = ch[u][c];
+24             if (v) { fail[v] = ch[fail[u]][c]; q.push(v); }
+25             else ch[u][c] = ch[fail[u]][c];         // complete the trie graph
+26         }
+27     }
+28 }
+29  
+30 int main() {
+31     ios::sync_with_stdio(false);
+32     cin.tie(nullptr);
+33     int n;
+34     cin >> n;
+35     for (int i = 0; i < n; i++) { string w; cin >> w; insert(w); }
+36     build();
+37     string s;
+38     cin >> s;
+39     int u = 0, ans = 0;
+40     for (int i = 0; i < int(s.size()); i++) {
+41         u = ch[u][s[i] - 'a'];
+42         for (int v = u; v && endCnt[v] != -1; v = fail[v]) {   // every suffix that is a pattern
+43             ans += endCnt[v];
+44             endCnt[v] = -1;                                       // count each pattern once
+45         }
+46     }
+47     cout << ans << "\n";
+48     return 0;
+49 }
+INPUT 1
+2
+a
+aa
+aa
+OUTPUT 1
+2
+INPUT 2
+3
+he
+she
+hers
+ushers
+OUTPUT 2
+3
+
+=== page 3 ===
+3拓展篇  第 2 章  AC 自动机
+IDEA Walking the text moves u through the trie graph; at each position, the patterns ending here are u, fail[u],
+fail[fail[u]], … (the suffixes). Marking visited ends with −1 stops repeated walks, so each node is walked
+once: O(text + trie) (P3808).
+KEY POINT In "ushers": "she" and "he" end at position 4, "hers" at 6: three different patterns appear. This early-stop
+trick only works because each pattern is counted at most once.
+ac_each.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 200005;
+5 int ch[N][26], fail[N], hits[N], tot = 0, node[N];
+6 vector<int> order_;                               // BFS order of the trie
+7  
+8 int main() {
+9     int n;
+10     cin >> n;
+11     for (int i = 0; i < n; i++) {
+12         string w; cin >> w;
+13         int u = 0;
+14         for (int k = 0; k < int(w.size()); k++) {
+15             int c = w[k] - 'a';
+16             if (!ch[u][c]) ch[u][c] = ++tot;
+17             u = ch[u][c];
+18         }
+19         node[i] = u;                              // where pattern i ends (shared if equal)
+20     }
+21     queue<int> q;
+22     for (int c = 0; c < 26; c++) if (ch[0][c]) q.push(ch[0][c]);
+23     while (!q.empty()) {
+24         int u = q.front(); q.pop(); order_.push_back(u);
+25         for (int c = 0; c < 26; c++) {
+26             int v = ch[u][c];
+27             if (v) { fail[v] = ch[fail[u]][c]; q.push(v); }
+28             else ch[u][c] = ch[fail[u]][c];
+29         }
+30     }
+31     string s;
+32     cin >> s;
+33     int u = 0;
+34     for (int i = 0; i < int(s.size()); i++) { u = ch[u][s[i] - 'a']; hits[u]++; }   // one mark per 
+position
+35     for (int i = int(order_.size()) - 1; i >= 0; i--)    // deepest first: pass counts up the fail tree
+36         hits[fail[order_[i]]] += hits[order_[i]];
+37     for (int i = 0; i < n; i++) cout << hits[node[i]] << "\n";
+38     return 0;
+39 }
+INPUT
+3
+a
+aa
+ab
+aab
+OUTPUT
+2
+1
+1
+IDEA Counting every occurrence of every pattern (P5357): the fail links form a tree (the fail	tree). An
+occurrence of pattern p ends wherever the walk stands at a node in p's fail subtree. So mark one hit per text
+position, then add each node's hits to its fail parent, deepest nodes first.
+
+=== page 4 ===
+4拓展篇  第 2 章  AC 自动机
+KEY POINT Reverse BFS order is a valid "children before parents" order, because a fail link always points to a
+shallower node. This turns O(text × depth) into O(text + trie). 单词  (P3966) is the same with the patterns
+themselves as the text.
+2.3 AC	 自动机上的动态规划
+Avoid	or	collect	patterns;	dangerous	nodes.
+IDEA DP	on	the	automaton (AC 自动机上  DP): to count or optimise strings by which patterns they contain,
+use the automaton node as the DP state. f[i][u] = number of strings of length i whose walk ends at node u.
+Each step tries all letters: f[i+1][ch[u][c]] += f[i][u].
+KEY POINT Mark a node as dangerous if any pattern ends at it or	at	any	node	on	its	fail	chain (bad[v] |=
+bad[fail[v]] during the BFS). Strings that avoid all patterns are the walks that never enter a dangerous
+node.
+
+=== page 5 ===
+5拓展篇  第 2 章  AC 自动机
+text_generator.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int MOD = 10007;
+5 int ch[6005][26], fail[6005], tot = 0, f[105][6005];
+6 bool bad[6005];
+7  
+8 int main() {
+9     int n, m;
+10     cin >> n >> m;
+11     for (int i = 0; i < n; i++) {
+12         string w; cin >> w;
+13         int u = 0;
+14         for (int k = 0; k < int(w.size()); k++) {
+15             int c = w[k] - 'A';
+16             if (!ch[u][c]) ch[u][c] = ++tot;
+17             u = ch[u][c];
+18         }
+19         bad[u] = true;
+20     }
+21     queue<int> q;
+22     for (int c = 0; c < 26; c++) if (ch[0][c]) q.push(ch[0][c]);
+23     while (!q.empty()) {
+24         int u = q.front(); q.pop();
+25         bad[u] = bad[u] || bad[fail[u]];              // a pattern ends on the fail chain
+26         for (int c = 0; c < 26; c++) {
+27             int v = ch[u][c];
+28             if (v) { fail[v] = ch[fail[u]][c]; q.push(v); }
+29             else ch[u][c] = ch[fail[u]][c];
+30         }
+31     }
+32     f[0][0] = 1;
+33     for (int i = 0; i < m; i++)
+34         for (int u = 0; u <= tot; u++) {
+35             if (!f[i][u] || bad[u]) continue;
+36             for (int c = 0; c < 26; c++) {
+37                 int v = ch[u][c];
+38                 if (!bad[v]) f[i + 1][v] = (f[i + 1][v] + f[i][u]) % MOD;   // stay safe
+39             }
+40         }
+41     int safe = 0, all = 1;
+42     for (int u = 0; u <= tot; u++) safe = (safe + f[m][u]) % MOD;
+43     for (int i = 0; i < m; i++) all = all * 26 % MOD;
+44     cout << ((all - safe) % MOD + MOD) % MOD << "\n";  // contain at least one = all - none
+45     return 0;
+46 }
+INPUT 1
+2 2
+A
+B
+OUTPUT 1
+100
+INPUT 2
+1 3
+AB
+OUTPUT 2
+52
+IDEA Text generator (P4052): count length-m strings that contain at	least	one pattern. Counting "none" is the DP
+above; the answer is 26m − none (complement, 第 20 章 ). With patterns A and B: 26² − 24² = 100.
+
+=== page 6 ===
+6拓展篇  第 2 章  AC 自动机
+KEY POINT Variants: is there an infinite safe string? Look for a cycle among safe nodes (P2444 病毒 ). Maximise
+points over length k: f[i][u] = best score, adding the number of patterns ending at u (P3041 Video Game,
+with counts accumulated along fail links).
+TRAP Forgetting bad[u] |= bad[fail[u]] is the classic bug: "she" contains "he" even though the "he" end node is
+not on the "she" path in the trie. Do it inside the BFS, after fail[u] is known.
+KEY POINT Deleting patterns as they appear (P3121 Censoring): keep a stack of (character, automaton node); when a
+pattern ends, pop its length and continue from the node now on top. The typewriter (P2414) asks "how
+many times does x occur in y" for many pairs: answer it on the fail tree with DFS order and a Fenwick tree.
+2.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Fail[u] = node of the longest proper suffix of u's string that is in the trie.
+2. BFS: child exists ⇒ fail[v] = ch[fail[u]][c]; missing ⇒ ch[u][c] = ch[fail[u]][c].
+3. Patterns ending at a text position: u, fail[u], fail[fail[u]], ….
+4. Count each pattern once: walk the chain and mark visited ends.
+5. All occurrences: one hit per position, then sum up the fail tree (reverse BFS).
+6. Automaton DP: state = node; dangerous if any fail ancestor ends a pattern.
+7. At least one pattern = all − none.
+2.4.1 Problems
+Problem Name Section What it tests
+P3808 AC 自动机（简单版） 2.2 How many patterns appear.
+P3796 AC 自动机（简单版  II ） 2.2 Which patterns appear most often.
+P5357 【模板】 AC 自动机 2.2 Every occurrence count via the fail tree.
+P3966 单词 2.2 Patterns counted inside the patterns.
+P4052 文本生成器 2.3 Complement + DP on safe nodes.
+P2444 病毒 2.3 Cycle among safe nodes.
+P3041 Video Game G 2.3 Max score DP over length k.
+P3121 Censoring G 2.3 Stack of automaton nodes, delete on match.
+P2414 阿狸的打字机 2.2 Fail tree + DFS order + Fenwick tree.
+2.4.2 Practice	ladder
+1. Direct. P3808: build and match (2.2).
+2. One	twist. P3796: counts per pattern (2.2).
+3. Idea	hidden. P5357: fail tree totals (2.2).
+4. Two	ideas. P4052: DP on the automaton (2.3).
+5. Stretch. P2444: cycles of safe states (2.3).
+
+=== page 7 ===
+7拓展篇  第 2 章  AC 自动机
+2.4.3 Experiments
+1. Draw the automaton for he, she, his, hers and check every fail link against the diagram.
+2. Remove the trie-graph completion and match with while-loops of fail jumps instead; compare speed.
+3. In ac_each.cpp walk the fail chain at every position instead of the reverse BFS; time it on a = aaaa…
+4. Delete bad[u] |= bad[fail[u]] in text_generator.cpp and find a pattern set where the answer changes.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

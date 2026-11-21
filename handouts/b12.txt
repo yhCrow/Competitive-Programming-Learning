@@ -1,0 +1,464 @@
+# 基础篇 第12章 贪心  (基12)
+# source: 基础篇 第12章 贪心.pdf
+
+=== page 1 ===
+1基础篇  第 12 章  贪心
+第 12 章 	 贪心
+Greedy algorithms Luogu #110 14 problems C++17 · all programs run
+12.1 贪心与证明 12.2 哈夫曼编码
+12.3 课后习题与实验
+12.1 贪心与证明
+Greedy	rules,	the	proofs	that	justify	them,	and	the	counterexamples	that	break	them.
+IDEA A greedy algorithm builds the answer one step at a time, always taking the choice that looks best right
+now, and never undoing it. It is short and fast, but only correct when you can prove that a locally best
+choice never spoils the overall best answer.
+KEY POINT Two standard proofs. Exchange	argument: take any optimal answer that differs from the greedy one,
+swap one piece to match greedy, and show it gets no worse. Stays	ahead: after every step, greedy is at
+least as good as any other method so far.
+12.1.1 When	greedy	fails
+coins_counter.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     vector<int> coins = {4, 3, 1};       // largest first
+6     int amount;
+7     cin >> amount;
+8     int left = amount, greedy = 0;
+9     for (int i = 0; i < 3; i++) { greedy += left / coins[i]; left %= coins[i]; }
+10  
+11     vector<int> best(amount + 1, INT_MAX);   // brute force by recurrence
+12     best[0] = 0;
+13     for (int x = 1; x <= amount; x++)
+14         for (int i = 0; i < 3; i++) {
+15             int c = coins[i];
+16             if (c <= x && best[x - c] != INT_MAX) best[x] = min(best[x], best[x - c] + 1);
+17         }
+18     cout << "greedy " << greedy << ", best " << best[amount] << "\n";
+19     return 0;
+20 }
+INPUT 1
+6
+OUTPUT 1
+greedy 3, best 2
+INPUT 2
+7
+OUTPUT 2
+greedy 2, best 2
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 2 部 分  初 涉 算 法
+Take the best-looking choice at each step, and prove it is safe: exchange arguments, interval scheduling, and
+Huffman coding.
+
+=== page 2 ===
+2基础篇  第 12 章  贪心
+TRAP With coins 4, 3, 1, greedy pays 6 as 4 + 1 + 1 (three coins), but 3 + 3 needs only two. "Take the biggest
+coin" is correct for some coin systems (1, 2, 5, 10 …) and wrong for others.
+KEY POINT Before trusting a greedy rule, compare it with a slow brute force on many small random inputs (a stress
+test). One mismatch kills the rule; no mismatches is evidence, and then look for the proof.
+12.1.2 Sort	by	a	ratio:	partial	knapsack
+partial_knapsack.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Pile { int w, v; };
+5  
+6 int main() {
+7     int n, cap;
+8     cin >> n >> cap;
+9     vector<Pile> p(n);
+10     for (int i = 0; i < n; i++) cin >> p[i].w >> p[i].v;
+11     sort(p.begin(), p.end(), [](const Pile &a, const Pile &b) {
+12         return a.v * b.w > b.v * a.w;     // v/w larger first, no division
+13     });
+14     double total = 0;
+15     for (int i = 0; i < n; i++) {
+16         if (cap <= 0) break;
+17         int take = min(cap, p[i].w);
+18         total += 1.0 * p[i].v * take / p[i].w;  // a fraction of the pile
+19         cap -= take;
+20     }
+21     cout << fixed << setprecision(2) << total << "\n";
+22     return 0;
+23 }
+INPUT
+4 50
+10 60
+20 100
+30 120
+15 45
+OUTPUT
+240.00
+IDEA Gold dust can be split, so value per unit weight is all that matters: take the richest pile first, then the next,
+and cut the last one to fit (P2240).
+KEY POINT Compare ratios v₁/w₁ > v₂/w₂ as v1 * w2 > v2 * w1 : exact in integers. When items cannot be split (0/1
+knapsack), this greedy is wrong; that needs dynamic programming.
+12.1.3 Exchange	argument:	shortest	job	first
+order a b : a waits 0, b waits t_a
+order b a : b waits 0, a waits t_b
+everyone behind waits t_a + t_b either way,
+so put the shorter one first: t_a < t_b
+
+=== page 3 ===
+3基础篇  第 12 章  贪心
+water_queue.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<pair<int, int>> t(n);              // (time, person number)
+8     for (int i = 0; i < n; i++) { cin >> t[i].first; t[i].second = i + 1; }
+9     sort(t.begin(), t.end());                 // shortest first, ties by number
+10     long long wait = 0, now = 0;
+11     for (int i = 0; i < n; i++) {
+12         cout << t[i].second << " ";           // person number
+13         wait += now;                          // this person waited 'now'
+14         now += t[i].first;                    // their time
+15     }
+16     cout << "\n" << fixed << setprecision(2) << 1.0 * wait / n << "\n";
+17     return 0;
+18 }
+INPUT
+10
+56 12 1 99 1000 234 33 55 99 812
+OUTPUT
+3 2 7 8 1 4 9 6 10 5 
+291.90
+KEY POINT Swapping two neighbours changes only their own waits, so any order with a longer job before a shorter
+one can be improved by a swap. Hence sorted by time is optimal (P1223). pair  sorts by the first field,
+then the second; t[i].first  and t[i].second  read the two fields.
+12.1.4 Earliest	finish	first:	interval	scheduling
+[0,2)
+[1,3)
+[2,4)
+[3,6)
+pick the earliest finish that does not overlap
+
+=== page 4 ===
+4基础篇  第 12 章  贪心
+intervals.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<pair<int, int>> seg(n);            // (end, start): sort by end
+8     for (int i = 0; i < n; i++) cin >> seg[i].second >> seg[i].first;
+9     sort(seg.begin(), seg.end());
+10     int cnt = 0, lastEnd = INT_MIN;
+11     for (int i = 0; i < n; i++)
+12         if (seg[i].second >= lastEnd) {      // starts after the last one ends
+13             cnt++;
+14             lastEnd = seg[i].first;
+15         }
+16     cout << cnt << "\n";
+17     return 0;
+18 }
+INPUT 1
+3
+0 2
+2 4
+1 3
+OUTPUT 1
+2
+INPUT 2
+4
+0 2
+1 3
+2 4
+3 6
+OUTPUT 2
+2
+KEY POINT Taking the contest that ends first leaves the most time for the rest; any optimal plan can swap its first
+contest for this one without losing anything (P1803). Sorting by start time or by length both fail on small
+examples.
+
+=== page 5 ===
+5基础篇  第 12 章  贪心
+12.1.5 More	greedy	rules	from	this	list
+remove_digits.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string s;
+6     int k;
+7     cin >> s >> k;
+8     string st;                                 // digits kept so far
+9     for (int i = 0; i < int(s.size()); i++) {
+10         char ch = s[i];
+11         while (k > 0 && !st.empty() && st.back() > ch) {
+12             st.pop_back();                     // a bigger digit before a
+13             k--;                               // smaller one: delete it
+14         }
+15         st += ch;
+16     }
+17     st.resize(st.size() - k);                  // still k left: cut the end
+18     size_t p = 0;
+19     while (p + 1 < st.size() && st[p] == '0') p++;
+20     cout << st.substr(p) << "\n";
+21     return 0;
+22 }
+INPUT 1
+175438 4
+OUTPUT 1
+13
+INPUT 2
+10200 1
+OUTPUT 2
+200
+roads.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     long long days = 0;
+8     int prev = 0;
+9     for (int i = 0; i < n; i++) {
+10         int d;
+11         cin >> d;
+12         if (d > prev) days += d - prev;   // only the rise needs new days
+13         prev = d;
+14     }
+15     cout << days << "\n";
+16     return 0;
+17 }
+INPUT
+6
+4 3 2 5 3 5
+OUTPUT
+9
+KEY POINT Smallest number after deleting k digits: whenever a digit is larger than the one after it, deleting it helps
+most, because it sits in a higher place (P1106). Filling pits: a day of work covers one continuous stretch,
+so only each rise from the previous depth costs extra days (P5019).
+
+=== page 6 ===
+6基础篇  第 12 章  贪心
+souvenirs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int limit, n;
+6     cin >> limit >> n;
+7     vector<int> p(n);
+8     for (int i = 0; i < n; i++) cin >> p[i];
+9     sort(p.begin(), p.end());
+10     int i = 0, j = n - 1, groups = 0;
+11     while (i <= j) {
+12         if (i < j && p[i] + p[j] <= limit) i++;   // cheapest joins the dearest
+13         j--;                                       // dearest always leaves
+14         groups++;
+15     }
+16     cout << groups << "\n";
+17     return 0;
+18 }
+INPUT
+100
+9
+90 20 20 30 50 60 70 80 90
+OUTPUT
+6
+candies.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     long long x;
+7     cin >> n >> x;
+8     vector<long long> a(n);
+9     for (int i = 0; i < n; i++) cin >> a[i];
+10     long long eaten = 0;
+11     if (a[0] > x) { eaten += a[0] - x; a[0] = x; }
+12     for (int i = 1; i < n; i++)
+13         if (a[i - 1] + a[i] > x) {
+14             long long cut = a[i - 1] + a[i] - x;
+15             eaten += cut;
+16             a[i] -= cut;                 // eat from the right box:
+17         }                                // it also helps the next pair
+18     cout << eaten << "\n";
+19     return 0;
+20 }
+INPUT 1
+3 3
+2 2 2
+OUTPUT 1
+1
+INPUT 2
+6 1
+1 6 1 2 0 4
+OUTPUT 2
+11
+KEY POINT Pairing: the most expensive souvenir must leave; let it take the cheapest one with it if they fit; two pointers
+after sorting (P1094). Adjacent sums: when a pair is too large, eating from the right box also lowers the
+next pair, so it is never worse (P3817).
+
+=== page 7 ===
+7基础篇  第 12 章  贪心
+KEY POINT Biggest number from concatenation: sort with a + b > b + a  (P1012). The king's game sorts ministers
+by a × b and needs big numbers (P1080). Picking cheapest first (P1208, P1478) and alternating tallest and
+shortest jumps (P4995) are sort-then-scan greedies; prove each with an exchange of two neighbours.
+12.2 哈夫曼编码
+Always	merge	the	two	smallest:	priority	queues	and	optimal	codes.
+100
+f 45 55
+25 30
+c 12 d 13 14 e 16
+14 = a 5 + b 9 (one level lower)
+IDEA Huffman	coding gives frequent characters
+short codes and rare ones long codes. Build a
+tree: repeatedly take the two	smallest
+weights, join them under a new node whose
+weight is their sum, and put it back. Each
+character's code length is its depth.
+KEY POINT The total cost (sum of frequency × code
+length) equals the sum of all the joined
+weights. Why greedy works: the two rarest
+symbols can always be placed deepest, as
+siblings, in some optimal tree.
+merge_fruits.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     priority_queue<long long, vector<long long>, greater<long long>> pq;
+8     for (int i = 0; i < n; i++) {
+9         long long x;
+10         cin >> x;
+11         pq.push(x);                      // min-heap: top() is the smallest
+12     }
+13     long long cost = 0;
+14     while (pq.size() > 1) {
+15         long long a = pq.top(); pq.pop();
+16         long long b = pq.top(); pq.pop();
+17         cost += a + b;                   // merging costs the new heap's size
+18         pq.push(a + b);
+19     }
+20     cout << cost << "\n";
+21     return 0;
+22 }
+INPUT 1
+3
+1 2 9
+OUTPUT 1
+15
+INPUT 2
+6
+5 9 12 13 16 45
+OUTPUT 2
+224
+
+=== page 8 ===
+8基础篇  第 12 章  贪心
+KEY POINT priority_queue  keeps the largest element on top; with greater<long long>  it keeps the smallest.
+push  and pop  cost O(log n), so n merges cost O(n log n) (P1090: merging fruit heaps is exactly a
+Huffman tree).
+TRAP Sorting once is not enough: each merged heap must go back among the others, possibly in the middle. That
+is why a priority queue is used.
+huffman_lengths.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<char> ch(n);
+8     vector<long long> w;
+9     vector<int> parent;                       // tree stored by node number
+10     for (int i = 0; i < n; i++) {
+11         long long f;
+12         cin >> ch[i] >> f;
+13         w.push_back(f);
+14         parent.push_back(-1);
+15     }
+16     priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;
+17     for (int i = 0; i < n; i++) pq.push({w[i], i});
+18     long long total = 0;
+19     while (pq.size() > 1) {
+20         auto [wa, a] = pq.top(); pq.pop();
+21         auto [wb, b] = pq.top(); pq.pop();
+22         int id = w.size();                    // new internal node
+23         w.push_back(wa + wb);
+24         parent.push_back(-1);
+25         parent[a] = parent[b] = id;
+26         total += wa + wb;
+27         pq.push({wa + wb, id});
+28     }
+29     for (int i = 0; i < n; i++) {             // code length = depth
+30         int depth = 0;
+31         for (int v = i; parent[v] != -1; v = parent[v]) depth++;
+32         cout << ch[i] << ":" << depth << " ";
+33     }
+34     cout << "\ntotal bits " << total << "\n";
+35     return 0;
+36 }
+INPUT
+6
+a 5
+b 9
+c 12
+d 13
+e 16
+f 45
+OUTPUT
+a:4 b:4 c:3 d:3 e:3 f:1 
+total bits 224
+KEY POINT Store the tree as a parent  array: leaves are 0 … n − 1, each merge creates the next node number. Following
+parents up from a leaf gives its depth, which is its code length. Check: 5·4 + 9·4 + 12·3 + 13·3 + 16·3 +
+45·1 = 224.
+
+=== page 9 ===
+9基础篇  第 12 章  贪心
+12.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Greedy = best-looking choice now, never undone; it needs a proof.
+2. Exchange	argument: swap one piece of an optimal answer to match greedy, no worse.
+3. Test a greedy rule against brute force on small random inputs; one mismatch kills it.
+4. Coins 4, 3, 1 break "biggest coin first"; 0/1 knapsack breaks "best ratio first".
+5. Splittable items: best value per weight first; compare ratios by cross-multiplying.
+6. Minimise total waiting: shortest job first.
+7. Most non-overlapping intervals: sort by end, take whatever fits.
+8. Delete k digits for the smallest number: pop larger digits from a stack.
+9. Pairs under a limit: sort, dearest with cheapest, two pointers.
+10. priority_queue is a max-heap; greater<> makes a min-heap; O(log n) per operation.
+11. Huffman / merge costs: repeatedly join the two smallest; total = sum of joins.
+12.3.1 Problems
+Problem Name Section What it tests
+P2240 部分背包问题 12.1 Richest value per weight first; split the last pile.
+P1223 排队接水 12.1 Shortest job first; exchange argument.
+P1803 凌乱的 yyy / 线段覆盖 12.1 Earliest finishing contest first.
+P1090 合并果子 12.2 Merge the two smallest heaps: a Huffman tree.
+P3817 小  A 的糖果 12.1 Too-large neighbours: eat from the right box.
+P1106 删数问题 12.1 Delete a digit that is larger than the next one.
+P1478 陶陶摘苹果（升级版） 12.1 Reachable apples, cheapest effort first.
+P5019 铺设道路 12.1 Sum of the rises between neighbours.
+P1208 Mixing Milk 12.1 Buy from the cheapest farmer first.
+P1094 纪念品分组 12.1 Sort; pair dearest with cheapest by two pointers.
+P4995 跳跳！ 12.1 Alternate tallest and shortest stones.
+P4447 分组 12.1 Extend the shortest group that can take the next value.
+P1080 国王游戏 12.1 Sort by a × b; big-number products.
+P1012 拼数 12.1 Sort by a + b > b + a for the biggest join.
+12.3.2 Practice	ladder
+1. Direct. P1223: shortest job first (12.1).
+2. One	twist. P1803: earliest finish first (12.1).
+3. Idea	hidden. P1090: two smallest with a priority queue (12.2).
+4. Two	ideas. P1106: delete digits with a stack (12.1).
+5. Stretch. P1080: exchange argument plus big numbers (12.1).
+
+=== page 10 ===
+10基础篇  第 12 章  贪心
+12.3.3 Experiments
+1. Run coins_counter.cpp for every amount 1 … 30 and list where greedy loses.
+2. Sort intervals by start time instead of end time and find an input where the answer drops.
+3. Replace the priority queue in merge_fruits.cpp by sorting once at the start: find an input that breaks it.
+4. Write a brute force for souvenirs.cpp (try all pairings for n ≤ 8) and compare on random inputs.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

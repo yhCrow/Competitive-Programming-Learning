@@ -1,0 +1,208 @@
+# 拓展篇 第20章 动态规划补充  (拓20)
+# source: 拓展篇 第20章 动态规划补充.pdf
+
+=== page 1 ===
+1拓展篇  第 20 章  动态规划补充
+第 20 章 	 动态规划补充
+Bounded knapsack, wqs binary search, Knuth Luogu (verified) 4 problems C++17 · all programs run
+20.1 多重背包 20.2 wqs 二分
+20.3 四边形不等式优化 20.4 课后习题与实验
+20.1 多重背包
+Binary	splitting;	the	monotone-queue	version.
+IDEA Bounded	knapsack ( 多重背包 ): item i may be taken up to mi times. Treating each copy as its own 0/1
+item costs O(W Σ m). Binary	splitting ( 二进制拆分 ): split m into 1, 2, 4, …, 2k, rest. Every count from 0
+to m is a sum of some of these pieces, so 0/1 knapsack over the pieces is equivalent: O(W Σ log m).
+KEY POINT Even faster, O(W·n): for each item, group capacities by remainder mod w; inside a group the transition is
+"best over the last m values" of a shifted sequence, a monotone	queue ( 进阶篇  第 18 章 ). Binary splitting
+is usually enough and much shorter.
+bounded_knapsack.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n, W;
+6     cin >> n >> W;
+7     vector<int> f(W + 1, 0);
+8     for (int i = 0; i < n; i++) {
+9         int v, w, m;
+10         cin >> v >> w >> m;
+11         for (int k = 1; m > 0; k <<= 1) {           // pieces 1, 2, 4, ..., rest
+12             int take = min(k, m);
+13             m -= take;
+14             int pv = v * take, pw = w * take;        // one 0/1 item made of `take` copies
+15             for (int j = W; j >= pw; j--) f[j] = max(f[j], f[j - pw] + pv);
+16         }
+17     }
+18     cout << f[W] << "\n";
+19     return 0;
+20 }
+INPUT
+4 20
+3 9 3
+5 9 1
+9 4 2
+8 1 3
+OUTPUT
+47
+竞 赛 拓 展 专 题  · 拓 展 篇  · 动 态 规 划 拓 展
+Split counts into powers of two for bounded knapsacks, remove an "exactly k" constraint with a penalty and
+binary search, and shrink interval DP to O(n²) when split points are monotone.
+
+=== page 2 ===
+2拓展篇  第 20 章  动态规划补充
+IDEA Treasures (P1776): value, weight, count per item. Checked against the copy-by-copy DP in Python.
+KEY POINT Why it works: with pieces 1, 2, 4 and rest 3 (for m = 10) every number 0 … 10 is reachable, and no
+combination exceeds 10. Mixed problems (P1833 樱花 ): treat count 1 as 0/1, "unlimited" as complete
+knapsack, others by splitting.
+20.2 wqs	 二分
+Penalty	λ;	convexity;	ties.
+IDEA wqs	binary	search (WQS 二分 , "Aliens trick"): to find the best answer using exactly	k of something,
+when best(k) is convex in k. Add a penalty λ to each use and solve without the constraint, which is easy:
+the number of uses in the optimum moves monotonically with λ. Binary search λ until the optimum uses
+k, then remove the penalty: answer = result − λ·k.
+KEY POINT Tree I (P2619): minimum spanning tree with exactly need white edges. Add λ to every white edge's cost
+and run Kruskal (whites first on ties). Larger λ means fewer whites, so binary search λ and take the cost
+back off at the end. The exact rule for ties is what makes the answer correct.
+
+=== page 3 ===
+3拓展篇  第 20 章  动态规划补充
+wqs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, m, need, fa[50005];
+5 struct E { int u, v, c, col; };
+6 vector<E> e;
+7 long long cost; int whites;
+8 int find(int x) { return fa[x] == x ? x : fa[x] = find(fa[x]); }
+9  
+10 void run(int lambda) {                            // MST with white edges costing c + lambda
+11     vector<E> s = e;
+12     for (int i = 0; i < m; i++) if (s[i].col == 0) s[i].c += lambda;
+13     stable_sort(s.begin(), s.end(), [](const E &a, const E &b) {
+14         return a.c != b.c ? a.c < b.c : a.col < b.col;   // ties: white first (more whites)
+15     });
+16     for (int i = 0; i < n; i++) fa[i] = i;
+17     cost = 0; whites = 0;
+18     for (int i = 0; i < m; i++) {
+19         int a = find(s[i].u), b = find(s[i].v);
+20         if (a == b) continue;
+21         fa[a] = b; cost += s[i].c; whites += s[i].col == 0;
+22     }
+23 }
+24  
+25 int main() {
+26     cin >> n >> m >> need;
+27     e.resize(m);
+28     for (int i = 0; i < m; i++) cin >> e[i].u >> e[i].v >> e[i].c >> e[i].col;
+29     int lo = -105, hi = 105, best = hi;
+30     while (lo <= hi) {                            // largest whites count as lambda grows: decreasing
+31         int mid = lo + (hi - lo) / 2;
+32         run(mid);
+33         if (whites >= need) { best = mid; lo = mid + 1; } else hi = mid - 1;
+34     }
+35     run(best);
+36     cout << cost - 1LL * best * need << "\n";     // take the penalty back off
+37     return 0;
+38 }
+INPUT 1
+2 2 1
+0 1 1 1
+0 1 2 0
+OUTPUT 1
+2
+INPUT 2
+6 9 0
+0 4 19 1
+0 5 17 1
+1 2 7 1
+1 3 8 1
+1 5 16 1
+2 3 14 1
+2 5 2 1
+3 4 20 0
+4 5 12 1
+OUTPUT 2
+46
+KEY POINT The second test is a random graph checked against Python trying every spanning tree. Pick the largest λ
+that still gives ≥ need whites (with whites preferred on ties): at that λ an optimal tree with exactly need
+whites has the same cost, so cost − λ·need is right even if this run used more.
+
+=== page 4 ===
+4拓展篇  第 20 章  动态规划补充
+TRAP wqs only works when best(k) is convex (each extra unit helps less, or hurts more). Check it on small
+cases by brute force before trusting it. Penalties must be integers here because costs are integers; the
+search range must cover every possible slope.
+20.3 四边形不等式优化
+opt[l][r−1]	≤	opt[l][r]	≤	opt[l+1][r].
+IDEA Knuth's	optimisation ( 四边形不等式优化 ): in an interval DP f[l][r] = mink f[l][k] + f[k+1][r] + w(l, r),
+let opt[l][r] be the best split. When w satisfies the quadrangle inequality and is monotone on nested
+intervals (true for "sum of the segment"), opt[l][r−1] ≤ opt[l][r] ≤ opt[l+1][r]. Searching only that range
+makes the total O(n²) instead of O(n³).
+KEY POINT The ranges telescope: for a fixed length, Σ (opt[l+1][r] − opt[l][r−1] + 1) is O(n), so each length costs O(n).
+Merging stones in a line ( 进阶篇  第 15 章 ) drops from O(n³) to O(n²) with three changed lines.
+knuth.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long f[1005][1005], s[1005];
+5 int opt[1005][1005];
+6  
+7 int main() {
+8     int n;
+9     cin >> n;
+10     for (int i = 1; i <= n; i++) { long long x; cin >> x; s[i] = s[i - 1] + x; opt[i][i] = i; }
+11     for (int len = 2; len <= n; len++)
+12         for (int l = 1; l + len - 1 <= n; l++) {
+13             int r = l + len - 1;
+14             f[l][r] = LLONG_MAX;
+15             for (int k = opt[l][r - 1]; k <= min(r - 1, opt[l + 1][r]); k++) {   // narrowed range
+16                 long long v = f[l][k] + f[k + 1][r];
+17                 if (v < f[l][r]) { f[l][r] = v; opt[l][r] = k; }
+18             }
+19             f[l][r] += s[r] - s[l - 1];
+20         }
+21     cout << f[1][n] << "\n";
+22     return 0;
+23 }
+INPUT
+8
+7 3 9 2 5 8 4 6
+OUTPUT
+130
+IDEA Checked against the plain O(n³) interval DP in Python. opt[i][i] = i starts the chain; the cap min(r − 1, …)
+keeps k a valid split.
+KEY POINT The maximum version of stone merging does not satisfy the condition: there the best split is always at
+one end instead. Prove or test the monotonicity of opt by brute force before using it.
+KEY POINT Related tools: divide	and	conquer	optimisation when opt is monotone in a layered DP f[i][j] = mink
+f[i−1][k] + cost(k, j) (O(kn log n)); SMAWK	/	1D1D with a deque of candidates for f[i] = minj f[j] + w(j, i)
+with a convex w ( 诗人小 G).
+
+=== page 5 ===
+5拓展篇  第 20 章  动态规划补充
+20.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Bounded knapsack: pieces 1, 2, 4, …, rest; then 0/1; O(W Σ log m).
+2. Faster: group by remainder mod w + monotone queue; O(W n).
+3. wqs: best(k) convex ⇒ penalty λ per use, binary search λ, answer = res − λk.
+4. Tie rule decides which λ gives exactly k; take the extreme λ that still reaches k.
+5. Knuth: opt[l][r−1] ≤ opt[l][r] ≤ opt[l+1][r] ⇒ O(n²) interval DP.
+6. Check convexity / monotonicity by brute force first.
+20.4.1 Problems
+Problem Name Section What it tests
+P1776 宝物筛选 20.1 Binary splitting.
+P1833 樱花 20.1 Mixed knapsack.
+P2619 Tree I 20.2 Exactly k white edges.
+P1880 石子合并 20.3 Ring + Knuth for the minimum.
+20.4.2 Practice	ladder
+1. Direct. P1776: binary splitting (20.1).
+2. One	twist. P1880: Knuth optimisation (20.3).
+3. Idea	hidden. P2619: wqs binary search (20.2).
+20.4.3 Experiments
+1. Count the pieces binary splitting makes for m = 1 … 20.
+2. Print best(k) for k = 0 … max in wqs.cpp's random graph and check that it is convex.
+3. Print opt[l][r] in knuth.cpp and check the monotonicity by eye.
+4. Try Knuth on the maximum version of stone merging and find a case where it fails.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

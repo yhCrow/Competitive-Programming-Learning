@@ -1,0 +1,251 @@
+# NOI篇 第3章 一般图最大匹配  (N3)
+# source: NOI篇 第03章 一般图最大匹配.pdf
+
+=== page 1 ===
+1NOI 篇  第 3 章  一般图最大匹配
+第 3 章 	 一般图最大匹配
+Blossom algorithm, Tutte matrix Luogu (verified) 2 problems C++17 · all programs run
+3.1 带花树算法 3.2 Tutte 矩阵
+3.3 课后习题与实验
+3.1 带花树算法
+Outer	/	inner	colours;	LCA;	contraction	with	DSU.
+IDEA In a general	graph ( 一般图 , not bipartite) augmenting paths still decide maximum matching (Berge), but
+searching for them breaks on odd	cycles: the alternating search can reach a vertex by paths of both
+parities. Edmonds'	blossom	algorithm ( 带花树 ) contracts such an odd cycle (a "blossom") into one
+vertex, keeps searching, and expands it when an augmenting path is found. O(n³) (P6113).
+KEY POINT BFS from a free vertex, colouring vertices "outer" and "inner" alternately. An edge between two outer
+vertices closes a blossom: find their LCA in the search forest, and merge the cycle into one base vertex
+with DSU; inner vertices of the blossom become outer and join the queue. Reaching a free vertex from an
+outer one = augment along the stored pairs.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Find augmenting paths in graphs with odd cycles by contracting each odd cycle into a blossom during the
+search.
+
+=== page 2 ===
+2NOI 篇  第 3 章  一般图最大匹配
+blossom.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n;
+5 vector<int> g[505];
+6 int match_[505], pre[505], col[505], base_[505], vis[505], tick = 0;
+7 queue<int> q;
+8  
+9 int find(int x) { return base_[x] == x ? x : base_[x] = find(base_[x]); }
+10 int lca(int x, int y) {                                // meeting point of two alternating paths
+11     ++tick;
+12     while (true) {
+13         if (x) { x = find(x); if (vis[x] == tick) return x; vis[x] = tick; x = match_[x] ? 
+pre[match_[x]] : 0; }
+14         swap(x, y);
+15     }
+16 }
+17 void blossom(int x, int y, int b) {                    // contract the odd cycle into base b
+18     while (find(x) != b) {
+19         pre[x] = y; y = match_[x];
+20         if (col[y] == 2) { col[y] = 1; q.push(y); }    // inner vertex becomes outer
+21         if (find(x) == x) base_[x] = b;
+22         if (find(y) == y) base_[y] = b;
+23         x = pre[y];
+24     }
+25 }
+26 bool augment(int s) {
+27     for (int i = 1; i <= n; i++) { base_[i] = i; col[i] = 0; pre[i] = 0; }
+28     while (!q.empty()) q.pop();
+29     col[s] = 1; q.push(s);                             // 1 = outer, 2 = inner
+30     while (!q.empty()) {
+31         int u = q.front(); q.pop();
+32         for (int k = 0; k < int(g[u].size()); k++) {
+33             int v = g[u][k];
+34             if (find(u) == find(v) || col[v] == 2) continue;
+35             if (!col[v]) {
+36                 col[v] = 2; pre[v] = u;
+37                 if (!match_[v]) {                      // free vertex: flip the path
+38                     for (int x = v, last; x; x = last) { last = match_[pre[x]]; match_[x] = pre[x]; 
+match_[pre[x]] = x; }
+39                     return true;
+40                 }
+41                 col[match_[v]] = 1; q.push(match_[v]);
+42             } else {                                   // outer meets outer: a blossom
+43                 int b = lca(u, v);
+44                 blossom(u, v, b); blossom(v, u, b);
+45             }
+46         }
+47     }
+48     return false;
+49 }
+50  
+51 int main() {
+52     int m;
+53     cin >> n >> m;
+54     for (int i = 0; i < m; i++) { int u, v; cin >> u >> v; g[u].push_back(v); g[v].push_back(u); }
+55     int ans = 0;
+56     for (int v = 1; v <= n; v++) if (!match_[v] && augment(v)) ans++;
+57     cout << ans << "\n";
+58     return 0;
+59 }
+
+=== page 3 ===
+3NOI 篇  第 3 章  一般图最大匹配
+INPUT 1
+5 6
+2 4
+3 4
+1 5
+2 3
+4 5
+3 5
+OUTPUT 1
+2
+INPUT 2
+7 9
+2 7
+1 5
+5 7
+1 4
+2 3
+6 7
+4 5
+2 6
+1 3
+OUTPUT 2
+3
+INPUT 3
+9 11
+2 4
+3 4
+1 5
+4 9
+3 7
+6 8
+4 6
+1 7
+1 6
+2 5
+6 9
+OUTPUT 3
+4
+INPUT 4
+10 12
+5 8
+3 7
+1 8
+1 4
+5 10
+6 10
+3 6
+1 6
+2 5
+1 9
+7 8
+2 8
+OUTPUT 4
+4
+INPUT 5
+5 5
+1 2
+2 3
+3 4
+4 5
+5 1
+OUTPUT 5
+2
+KEY POINT Four random graphs and a 5-cycle (whose answer is 2, the classic case where plain alternating search
+fails), each checked by exhaustive search over matchings in Python.
+TRAP The lca walk must jump by pre[match[x]] (two steps of the alternating path) and compare bases;
+forgetting find() there produces wrong blossoms that only show up on graphs with nested odd cycles.
+Bipartite graphs never need any of this: use Hungarian or flow ( 拓展篇  第 1 章 ).
+
+=== page 4 ===
+4NOI 篇  第 3 章  一般图最大匹配
+3.2 Tutte	 矩阵
+Random	skew-symmetric	matrix;	rank	=	2	×	matching.
+IDEA Tutte	matrix (Tutte 矩阵 ): for an undirected graph build an n × n matrix with A[u][v] = xuv and A[v][u] =
+−xuv for every edge, 0 elsewhere. Tutte's theorem: its rank	is	twice	the	maximum	matching	size (as a
+matrix of symbols). Fill the symbols with random numbers modulo a large prime and the rank is correct
+with high probability (Schwartz–Zippel).
+KEY POINT This gives the matching size with one Gaussian elimination, O(n³), and about 30 lines, much shorter than
+blossom. Finding the matching itself is possible with more linear algebra but blossom (above) is the
+usual tool for that.
+
+=== page 5 ===
+5NOI 篇  第 3 章  一般图最大匹配
+tutte_matrix.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const ll MOD = 1000000007;
+6 ll pw(ll a, ll e) { ll r = 1; a %= MOD; while (e) { if (e & 1) r = r * a % MOD; a = a * a % MOD; e >>= 
+1; } return r; }
+7  
+8 int main() {
+9     int n, m;
+10     cin >> n >> m;
+11     vector<vector<ll>> a(n, vector<ll>(n, 0));
+12     mt19937_64 rng(20240601);
+13     for (int i = 0; i < m; i++) {
+14         int u, v; cin >> u >> v; u--; v--;
+15         ll r = rng() % (MOD - 1) + 1;              // random value for the symbol x_uv
+16         a[u][v] = r; a[v][u] = MOD - r;            // skew-symmetric
+17     }
+18     int rank = 0;
+19     for (int col = 0; col < n && rank < n; col++) {
+20         int piv = -1;
+21         for (int i = rank; i < n; i++) if (a[i][col]) { piv = i; break; }
+22         if (piv < 0) continue;
+23         swap(a[piv], a[rank]);
+24         ll inv = pw(a[rank][col], MOD - 2);
+25         for (int i = 0; i < n; i++) {
+26             if (i == rank || !a[i][col]) continue;
+27             ll f = a[i][col] * inv % MOD;
+28             for (int j = col; j < n; j++) a[i][j] = (a[i][j] - f * a[rank][j] % MOD + MOD) % MOD;
+29         }
+30         rank++;
+31     }
+32     cout << rank / 2 << "\n";
+33     return 0;
+34 }
+INPUT
+9 11
+1 3
+1 8
+2 4
+2 8
+3 9
+4 5
+4 8
+5 6
+5 9
+7 8
+8 9
+OUTPUT
+4
+KEY POINT Checked against an exact bitmask search for the maximum matching in Python. A wrong answer is
+possible only if the random values hit a root of the determinant polynomial: probability about n / 10⁹ per
+run; run twice with different seeds if in doubt.
+3.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 6 ===
+6NOI 篇  第 3 章  一般图最大匹配
+Key	points	to	memorise
+1. Berge: matching is maximum ⇔ no augmenting path.
+2. Odd cycles break bipartite search: contract them (blossoms).
+3. BFS: outer / inner colours; outer–outer edge ⇒ blossom at their LCA.
+4. Reaching a free vertex ⇒ flip the path; O(n³).
+5. Tutte matrix: random x_uv, −x_uv; rank / 2 = max matching (w.h.p.).
+3.3.1 Problems
+Problem Name Section What it tests
+P6113 【模板】一般图最大匹配 3.1 Blossom algorithm.
+P4258 挑战 NPC 3.1 Model as general matching.
+3.3.2 Practice	ladder
+1. Direct. P6113: blossom template (3.1).
+2. One	twist. P4258: modelling (3.1).
+3.3.3 Experiments
+1. Run blossom.cpp on odd cycles of length 3, 5, 7.
+2. Remove the blossom contraction and find a graph where the answer drops.
+3. Compare with Hungarian ( 第 1 章 ) on a bipartite graph.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,282 @@
+# NOI篇 第23章 建图技巧与 Johnson  (N23)
+# source: NOI篇 第23章 建图技巧与 Johnson.pdf
+
+=== page 1 ===
+1NOI 篇  第 23 章  建图技巧与  Johnson
+第 23 章 	 建图技巧与 	Johnson
+Segment-tree graphs, prefix 2-SAT, Johnson Luogu (verified) 4 problems C++17 · all programs run
+23.1 线段树优化建图 23.2 2-SAT 前缀优化
+23.3 Johnson 全源最短路 23.4 课后习题与实验
+23.1 线段树优化建图
+Out-tree	down,	in-tree	up;	ranges	=	O(log	n)	nodes.
+IDEA Segment-tree	graph	building ( 线段树优化建图 ): edges "from u to every vertex in [l, r]" (or the reverse)
+would cost O(n) edges each. Build two segment trees whose nodes are extra vertices: an out-tree with
+edges parent → child (weight 0), whose leaves are the real vertices, and an in-tree with edges child →
+parent (weight 0). Then u → [l, r] is u → the O(log n) covering nodes of the out-tree; [l, r] → u goes from
+the covering nodes of the in-tree to u.
+KEY POINT O((n + m log n)) edges in total, then any graph algorithm runs as usual (Dijkstra here, CF786B Legacy; also
+SCC and 2-SAT). The leaves of both trees must be the same real vertices (or joined by 0-edges), so paths
+can enter one tree and leave the other.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Replace range edges by O(log n) edges into segment-tree nodes, shrink "at most one" 2-SAT groups with
+prefix variables, and get all-pairs shortest paths with negative edges by reweighting.
+
+=== page 2 ===
+2NOI 篇  第 23 章  建图技巧与  Johnson
+segment_graph.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 int n, q, s, idOut[400005], idIn[400005], cntV;
+6 vector<pair<int, ll>> g[2000005];
+7  
+8 void build(int p, int l, int r) {                 // node ids: real vertices are 1..n
+9     if (l == r) { idOut[p] = idIn[p] = l; return; }
+10     idOut[p] = ++cntV; idIn[p] = ++cntV;
+11     int mid = (l + r) / 2;
+12     build(2 * p, l, mid); build(2 * p + 1, mid + 1, r);
+13     g[idOut[p]].push_back(make_pair(idOut[2 * p], 0LL)); g[idOut[p]].push_back(make_pair(idOut[2 * p + 
+1], 0LL));   // out-tree: down
+14     g[idIn[2 * p]].push_back(make_pair(idIn[p], 0LL)); g[idIn[2 * p + 1]].push_back(make_pair(idIn[p], 
+0LL));       // in-tree: up
+15 }
+16 void link(int p, int l, int r, int x, int y, int u, ll w, bool toRange) {
+17     if (y < l || r < x) return;
+18     if (x <= l && r <= y) {
+19         if (toRange) g[u].push_back(make_pair(idOut[p], w));    // u -> whole node
+20         else g[idIn[p]].push_back(make_pair(u, w));             // whole node -> u
+21         return;
+22     }
+23     int mid = (l + r) / 2;
+24     link(2 * p, l, mid, x, y, u, w, toRange); link(2 * p + 1, mid + 1, r, x, y, u, w, toRange);
+25 }
+26  
+27 int main() {
+28     cin >> n >> q >> s;
+29     cntV = n;
+30     build(1, 1, n);
+31     while (q--) {
+32         int t; cin >> t;
+33         if (t == 1) { int u, v; ll w; cin >> u >> v >> w; g[u].push_back(make_pair(v, w)); }
+34         else { int u, l, r; ll w; cin >> u >> l >> r >> w; link(1, 1, n, l, r, u, w, t == 2); }
+35     }
+36     vector<ll> dist(cntV + 1, LLONG_MAX);
+37     priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<pair<ll, int>>> pq;
+38     dist[s] = 0; pq.push(make_pair(0LL, s));
+39     while (!pq.empty()) {
+40         ll dd = pq.top().first; int u = pq.top().second; pq.pop();
+41         if (dd > dist[u]) continue;
+42         for (int k = 0; k < int(g[u].size()); k++) {
+43             int v = g[u][k].first; ll nd = dd + g[u][k].second;
+44             if (nd < dist[v]) { dist[v] = nd; pq.push(make_pair(nd, v)); }
+45         }
+46     }
+47     for (int i = 1; i <= n; i++) cout << (dist[i] == LLONG_MAX ? -1 : dist[i]) << (i < n ? " " : "");
+48     cout << "\n";
+49     return 0;
+50 }
+INPUT
+9 12 1
+2 1 1 3 18
+3 5 5 6 13
+2 4 7 7 6
+3 2 5 8 3
+2 1 4 9 14
+1 3 8 18
+3 1 8 8 19
+3 3 5 8 16
+OUTPUT
+0 17 18 14 14 14 14 14 14
+
+=== page 3 ===
+3NOI 篇  第 23 章  建图技巧与  Johnson
+3 3 3 5 14
+1 6 5 20
+1 9 7 7
+1 2 3 11
+KEY POINT Type 1: u → v; type 2: u → every vertex in [l, r]; type 3: every vertex in [l, r] → u. Checked against
+expanding every range into single edges and running Dijkstra in Python. Using the real vertex as the leaf of
+both trees joins them without extra edges.
+23.2 2-SAT	 前缀优化
+Prefix	variables	P_i;	O(k)	clauses	per	group.
+IDEA 2-SAT	with	"at	most	one"	groups: forbidding every pair inside a group of size k costs O(k²) clauses. Add
+prefix	variables Pi = "some of the first i members is true". Clauses: xi → Pi, Pi−1 → Pi, and Pi−1 → ¬xi (if an
+earlier member is true, xi must be false). O(k) clauses, the same answers (Riddle P6378).
+KEY POINT The same prefix trick (or a segment tree over the literals, 23.1) shrinks any "range of implications" in 2-
+SAT. Solve with SCCs as in 进阶篇  第 12 章 : unsatisfiable iff some x and ¬x share an SCC.
+
+=== page 4 ===
+4NOI 篇  第 23 章  建图技巧与  Johnson
+two_sat_prefix.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, m, k, V, dfn[200005], low[200005], scc[200005], timer_ = 0, sccCnt = 0;
+5 vector<int> g[200005], stk;
+6 bool onStk[200005];
+7 int lit(int v, bool val) { return 2 * v + (val ? 0 : 1); }        // node for "v == val"
+8 void imply(int a, int b) { g[a].push_back(b); g[b ^ 1].push_back(a ^ 1); }   // a -> b and not b -> not 
+a
+9 void tarjan(int u) {
+10     dfn[u] = low[u] = ++timer_; stk.push_back(u); onStk[u] = true;
+11     for (int i = 0; i < int(g[u].size()); i++) {
+12         int v = g[u][i];
+13         if (!dfn[v]) { tarjan(v); low[u] = min(low[u], low[v]); }
+14         else if (onStk[v]) low[u] = min(low[u], dfn[v]);
+15     }
+16     if (low[u] == dfn[u]) { ++sccCnt; while (true) { int x = stk.back(); stk.pop_back(); onStk[x] = 
+false; scc[x] = sccCnt; if (x == u) break; } }
+17 }
+18  
+19 int main() {
+20     cin >> n >> m >> k;
+21     V = n;                                          // variables 1..n, prefix variables after them
+22     vector<pair<int, int>> cls(m);
+23     for (int i = 0; i < m; i++) cin >> cls[i].first >> cls[i].second;
+24     vector<vector<int>> groups(k);
+25     for (int i = 0; i < k; i++) { int s; cin >> s; groups[i].resize(s); for (int j = 0; j < s; j++) cin 
+>> groups[i][j]; }
+26     for (int i = 0; i < m; i++) {                   // clause a OR b: not a -> b
+27         int a = cls[i].first, b = cls[i].second;
+28         imply(lit(abs(a), a < 0), lit(abs(b), b > 0));
+29     }
+30     for (int i = 0; i < k; i++) {
+31         int prevP = -1;
+32         for (int j = 0; j < int(groups[i].size()); j++) {
+33             int x = groups[i][j], P = ++V;          // P = some of the first j+1 is true
+34             imply(lit(x, true), lit(P, true));
+35             if (prevP > 0) { imply(lit(prevP, true), lit(P, true)); imply(lit(prevP, true), lit(x, 
+false)); }
+36             prevP = P;
+37         }
+38     }
+39     for (int u = 2; u <= 2 * V + 1; u++) if (!dfn[u]) tarjan(u);
+40     bool ok = true;
+41     for (int v = 1; v <= V; v++) if (scc[2 * v] == scc[2 * v + 1]) ok = false;
+42     cout << (ok ? "YES" : "NO") << "\n";
+43     return 0;
+44 }
+INPUT
+8 6 3
+-6 -7
+-6 3
+1 -6
+-3 2
+6 5
+7 6
+3 1 2 3
+4 4 5 6 7
+1 8
+OUTPUT
+NO
+
+=== page 5 ===
+5NOI 篇  第 23 章  建图技巧与  Johnson
+KEY POINT Random clauses (a negative number means "not") and three groups with at most one true member each;
+checked against trying all 2⁸ assignments in Python. The node for "v == true" is 2v and for "v == false" is
+2v + 1, so its negation is a single XOR with 1.
+23.3 Johnson	 全源最短路
+Potentials	from	Bellman-Ford;	Dijkstra	n	times.
+IDEA Johnson's	algorithm (Johnson 全源最短路 ) finds all-pairs shortest paths with negative edges (but no
+negative cycle) in O(nm log m), better than Floyd's O(n³) on sparse graphs. Add a virtual vertex 0 with 0-
+edges to all vertices; Bellman-Ford / SPFA gives potentials h(v) = dist(0, v). Reweight w'(u, v) = w(u, v) +
+h(u) − h(v) ≥ 0, run Dijkstra from every vertex, and undo: dist(u, v) = dist'(u, v) − h(u) + h(v).
+KEY POINT Why reweighting keeps shortest paths: along any path u → v the potentials telescope, so every path's
+length changes by the same h(u) − h(v). And w' ≥ 0 because h(v) ≤ h(u) + w(u, v) (the triangle inequality
+of shortest distances). A negative cycle shows up in the Bellman-Ford step (P5905).
+
+=== page 6 ===
+6NOI 篇  第 23 章  建图技巧与  Johnson
+johnson.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const ll INF = LLONG_MAX / 4;
+6 int main() {
+7     int n, m;
+8     cin >> n >> m;
+9     vector<array<ll, 3>> e(m);
+10     vector<vector<pair<int, ll>>> g(n + 1);
+11     for (int i = 0; i < m; i++) { cin >> e[i][0] >> e[i][1] >> e[i][2]; g[e[i]
+[0]].push_back(make_pair(int(e[i][1]), e[i][2])); }
+12     vector<ll> h(n + 1, 0);                        // Bellman-Ford from a virtual source: start all at 0
+13     for (int it = 0; it < n; it++) {
+14         bool changed = false;
+15         for (int i = 0; i < m; i++) if (h[e[i][0]] + e[i][2] < h[e[i][1]]) { h[e[i][1]] = h[e[i][0]] + 
+e[i][2]; changed = true; }
+16         if (!changed) break;
+17         if (it == n - 1) { cout << -1 << "\n"; return 0; }   // still improving: negative cycle
+18     }
+19     for (int s = 1; s <= n; s++) {
+20         vector<ll> dist(n + 1, INF);
+21         priority_queue<pair<ll, int>, vector<pair<ll, int>>, greater<pair<ll, int>>> pq;
+22         dist[s] = 0; pq.push(make_pair(0LL, s));
+23         while (!pq.empty()) {
+24             ll dd = pq.top().first; int u = pq.top().second; pq.pop();
+25             if (dd > dist[u]) continue;
+26             for (int k = 0; k < int(g[u].size()); k++) {
+27                 int v = g[u][k].first; ll w2 = g[u][k].second + h[u] - h[v];   // reweighted, >= 0
+28                 if (dd + w2 < dist[v]) { dist[v] = dd + w2; pq.push(make_pair(dist[v], v)); }
+29             }
+30         }
+31         for (int v = 1; v <= n; v++) {
+32             if (dist[v] == INF) cout << "x"; else cout << dist[v] - h[s] + h[v];   // undo the 
+potentials
+33             cout << (v < n ? " " : "");
+34         }
+35         cout << "\n";
+36     }
+37     return 0;
+38 }
+INPUT
+6 11
+6 4 2
+5 4 8
+3 2 4
+4 1 -3
+5 3 5
+5 3 5
+2 4 7
+5 3 9
+2 1 8
+3 2 -1
+2 3 10
+OUTPUT
+0 x x x x x
+4 0 10 7 x x
+3 -1 0 6 x x
+-3 x x 0 x x
+5 4 5 8 0 x
+-1 x x 2 x 0
+KEY POINT A random graph with some negative edges, checked against Floyd–Warshall in Python ("x" = unreachable,
+−1 = a negative cycle exists). Starting every h at 0 is the same as the virtual source with 0-edges.
+
+=== page 7 ===
+7NOI 篇  第 23 章  建图技巧与  Johnson
+23.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Out-tree: parent → child 0-edges; u → range = u → covering nodes.
+2. In-tree: child → parent 0-edges; range → u = covering nodes → u.
+3. At most one per group: P_i ⇐ x_i, P_i ⇐ P_(i−1), P_(i−1) ⇒ ¬x_i.
+4. Johnson: h from Bellman-Ford; w' = w + h(u) − h(v) ≥ 0; undo after Dijkstra.
+23.4.1 Problems
+Problem Name Section What it tests
+P6348 Journeys 23.1 Range-to-range edges, BFS.
+P5025 炸弹 23.1 Range edges + SCC.
+P6378 Riddle 23.2 Prefix-optimised 2-SAT.
+P5905 【模板】全源最短路
+（ Johnson ）
+23.3 Reweighting.
+23.4.2 Practice	ladder
+1. Direct. P5905: Johnson (23.3).
+2. One	twist. P6348: segment-tree graph (23.1).
+3. Idea	hidden. P6378: prefix 2-SAT (23.2).
+23.4.3 Experiments
+1. Count edges in segment_graph.cpp versus expanding every range.
+2. Write the O(k²) pairwise clauses for one group and compare the 2-SAT answers.
+3. Time johnson.cpp against Floyd for n = 2000 sparse graphs.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

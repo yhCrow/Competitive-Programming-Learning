@@ -1,0 +1,313 @@
+# NOI篇 第7章 多项式进阶与 FWT  (N7)
+# source: NOI篇 第07章 多项式进阶与 FWT.pdf
+
+=== page 1 ===
+1NOI 篇  第 7 章  多项式进阶与  FWT
+第 7 章 	 多项式进阶与 	FWT
+Polynomial inverse, ln, exp; bitwise convolution Luogu (verified) 6 problems C++17 · all programs run
+7.1 多项式求逆、 ln 与  exp 7.2 快速沃尔什变换
+7.3 多项式开根与快速幂 7.4 课后习题与实验
+7.1 多项式求逆、 ln	 与 	exp
+Newton	doubling;	ln	=	∫A'/A;	exp	by	Newton	on	ln.
+IDEA Formal power series modulo xn and a prime (998244353) can be divided, logged and exponentiated, all in
+O(n log n) with NTT ( 拓展篇  第 8 章 ) and Newton's	iteration: if B is correct mod xk, one Newton step
+makes it correct mod x2k. So log n doublings, each a few multiplications of size 2k.
+KEY POINT Inverse (P4238): B ← B(2 − AB). Logarithm (needs a0 = 1, P4725): ln A = ∫ A' / A, i.e. derivative, multiply
+by the inverse, integrate. Exponential (needs a0 = 0, P4726): B ← B(1 − ln B + A). ln and exp turn products
+into sums: e.g. counting multisets (Euler transform) or "power of a series".
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Invert, take logarithms and exponentials of power series with Newton iteration over NTT, and convolve by
+OR, AND and XOR with the fast Walsh transform.
+
+=== page 2 ===
+2NOI 篇  第 7 章  多项式进阶与  FWT
+poly_ln_exp.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 typedef vector<ll> Poly;
+6 const ll MOD = 998244353, G = 3;
+7 ll power(ll a, ll b) { ll r = 1; for (a %= MOD; b; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD; 
+return r; }
+8  
+9 void ntt(Poly &a, bool inv) {
+10     int n = a.size();
+11     for (int i = 1, j = 0; i < n; i++) { int bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= 
+bit; if (i < j) swap(a[i], a[j]); }
+12     for (int len = 2; len <= n; len <<= 1) {
+13         ll w = power(G, (MOD - 1) / len); if (inv) w = power(w, MOD - 2);
+14         for (int i = 0; i < n; i += len) { ll x = 1; for (int j = 0; j < len / 2; j++) {
+15             ll u = a[i + j], v = a[i + j + len / 2] * x % MOD;
+16             a[i + j] = (u + v) % MOD; a[i + j + len / 2] = (u - v + MOD) % MOD; x = x * w % MOD; } }
+17     }
+18     if (inv) { ll ni = power(n, MOD - 2); for (int i = 0; i < n; i++) a[i] = a[i] * ni % MOD; }
+19 }
+20 Poly mul(Poly a, Poly b, int keep) {                    // product mod x^keep
+21     int n = 1; while (n < int(a.size() + b.size())) n <<= 1;
+22     a.resize(n); b.resize(n); ntt(a, false); ntt(b, false);
+23     for (int i = 0; i < n; i++) a[i] = a[i] * b[i] % MOD;
+24     ntt(a, true); a.resize(keep); return a;
+25 }
+26 Poly inverse(const Poly &a, int n) {                   // B with A*B = 1 mod x^n
+27     Poly b(1, power(a[0], MOD - 2));
+28     for (int k = 1; k < n; k <<= 1) {                  // Newton: B <- B (2 - A B)
+29         Poly ak(a.begin(), a.begin() + min(int(a.size()), 2 * k));
+30         Poly t = mul(ak, b, 2 * k);
+31         for (int i = 0; i < int(t.size()); i++) t[i] = (MOD - t[i]) % MOD;
+32         t[0] = (t[0] + 2) % MOD;
+33         b = mul(b, t, 2 * k);
+34     }
+35     b.resize(n); return b;
+36 }
+37 Poly ln(const Poly &a, int n) {                        // needs a[0] = 1
+38     Poly da(n, 0);
+39     for (int i = 1; i < min(int(a.size()), n + 1); i++) da[i - 1] = a[i] * i % MOD;   // derivative
+40     Poly q = mul(da, inverse(a, n), n);
+41     Poly r(n, 0);
+42     for (int i = n - 1; i >= 1; i--) r[i] = q[i - 1] * power(i, MOD - 2) % MOD;         // integral
+43     return r;
+44 }
+45 Poly expo(const Poly &a, int n) {                      // needs a[0] = 0
+46     Poly b(1, 1);
+47     for (int k = 1; k < n; k <<= 1) {                  // Newton: B <- B (1 - ln B + A)
+48         Poly l = ln(b, 2 * k);
+49         for (int i = 0; i < 2 * k; i++) l[i] = ((i < int(a.size()) ? a[i] : 0) - l[i] + MOD) % MOD;
+50         l[0] = (l[0] + 1) % MOD;
+51         b = mul(b, l, 2 * k);
+52     }
+53     b.resize(n); return b;
+54 }
+55  
+56 int main() {
+57     int type, n;
+58     cin >> type >> n;
+59     Poly a(n);
+60     for (int i = 0; i < n; i++) cin >> a[i];
+
+=== page 3 ===
+3NOI 篇  第 7 章  多项式进阶与  FWT
+61     Poly r = type == 0 ? ln(a, n) : expo(a, n);
+62     for (int i = 0; i < n; i++) cout << r[i] << (i < n - 1 ? " " : "");
+63     cout << "\n";
+64     return 0;
+65 }
+INPUT 1
+0 12
+1 20 32 39 0 16 9 48 12 16 5 12
+OUTPUT 1
+0 20 998244185 665498301 998215861 418848 492708881 
+243610631 372611094 789473430 841834694 336942536
+INPUT 2
+1 12
+0 32 3 38 12 32 1 44 33 23 29 48
+OUTPUT 2
+1 32 515 332753713 166420518 466163499 323500308 
+25351726 665040073 499621236 883437554 861384668
+KEY POINT ln and exp of random series with 12 terms, checked against the O(n²) recurrences A·B' = A' (for ln) and E'
+= A'·E (for exp) computed in Python. Those slow recurrences are also fine in a contest when n is a few
+thousand.
+TRAP Newton steps must use A truncated to 2k terms and keep every product truncated to 2k; letting sizes grow
+makes it O(n log² n) or wrong. ln needs a0 = 1 and exp needs a0 = 0; scale or shift the input first otherwise.
+7.2 快速沃尔什变换
+OR	/	AND	/	XOR	butterflies;	multipoint	evaluation.
+IDEA FWT ( 快速沃尔什变换 ) computes bitwise	convolutions ck = Σi ⊕ j = k aibj for ⊕ ∈ {OR, AND, XOR} in
+O(n log n) for arrays of length n = 2k: transform both, multiply point by point, transform back, exactly like
+FFT but with a different butterfly.
+KEY POINT OR: forward a[i + half] += a[i] (sum over subsets, SOS DP of 拓展篇  第 12 章 ), inverse subtracts. AND: a[i]
++= a[i + half] (sum over supersets). XOR: (x, y) → (x + y, x − y), and the inverse divides by 2 at each level
+(or by n at the end). P4717.
+
+=== page 4 ===
+4NOI 篇  第 7 章  多项式进阶与  FWT
+fwt.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 void fwtOr(vector<ll> &a, int s) { int n = a.size(); for (int h = 1; h < n; h <<= 1) for (int i = 0; i < 
+n; i += 2 * h) for (int j = i; j < i + h; j++) a[j + h] += s * a[j]; }
+6 void fwtAnd(vector<ll> &a, int s) { int n = a.size(); for (int h = 1; h < n; h <<= 1) for (int i = 0; i 
+< n; i += 2 * h) for (int j = i; j < i + h; j++) a[j] += s * a[j + h]; }
+7 void fwtXor(vector<ll> &a, bool inv) {
+8     int n = a.size();
+9     for (int h = 1; h < n; h <<= 1) for (int i = 0; i < n; i += 2 * h) for (int j = i; j < i + h; j++) {
+10         ll x = a[j], y = a[j + h];
+11         a[j] = x + y; a[j + h] = x - y;
+12         if (inv) { a[j] /= 2; a[j + h] /= 2; }          // exact: values stay integers
+13     }
+14 }
+15 vector<ll> conv(vector<ll> a, vector<ll> b, int type) {
+16     if (type == 0) { fwtOr(a, 1); fwtOr(b, 1); } else if (type == 1) { fwtAnd(a, 1); fwtAnd(b, 1); } 
+else { fwtXor(a, false); fwtXor(b, false); }
+17     for (int i = 0; i < int(a.size()); i++) a[i] *= b[i];
+18     if (type == 0) fwtOr(a, -1); else if (type == 1) fwtAnd(a, -1); else fwtXor(a, true);
+19     return a;
+20 }
+21  
+22 int main() {
+23     int k;
+24     cin >> k;
+25     int n = 1 << k;
+26     vector<ll> a(n), b(n);
+27     for (int i = 0; i < n; i++) cin >> a[i];
+28     for (int i = 0; i < n; i++) cin >> b[i];
+29     for (int type = 0; type < 3; type++) {
+30         vector<ll> c = conv(a, b, type);
+31         for (int i = 0; i < n; i++) cout << c[i] << (i < n - 1 ? " " : "");
+32         cout << "\n";
+33     }
+34     return 0;
+35 }
+INPUT
+3
+1 9 2 5 8 9 5 4
+9 2 5 3 6 2 0 3
+OUTPUT
+9 101 33 180 126 277 152 412
+692 163 107 42 206 53 15 12
+130 199 125 155 166 194 169 152
+KEY POINT OR, AND and XOR convolutions of two random arrays of length 8, checked against the O(n²) double loop
+in Python. With a modulus, the XOR inverse multiplies by the inverse of 2 instead of dividing.
+KEY POINT Multipoint	evaluation ( 多点求值 ) evaluates a degree-n polynomial at n points in O(n log² n): a product
+tree of (x − xi) and polynomial remainders down the tree. It is rarely needed; know that it exists and that it
+needs polynomial division (inverse of the reversed divisor).
+7.3 多项式开根与快速幂
+B	←	(B	+	A/B)/2;	Aᵏ	=	exp(k	ln	A).
+IDEA Polynomial	square	root ( 多项式开根 ): find B with B² ≡ A (mod xⁿ), a0 = 1. Newton iteration doubles the
+precision each step: B	←	(B	+	A·B⁻¹)	/	2 mod x2k, using the inverse from 第 1 节 . O(n log n).
+
+=== page 5 ===
+5NOI 篇  第 7 章  多项式进阶与  FWT
+KEY POINT Polynomial	power ( 多项式快速幂 ) Ak mod xⁿ with a0 = 1: exp(k	·	ln	A) with ln and exp from 第 1 节 , and
+k may be reduced mod p (it multiplies the series). If a0 ≠ 1, divide out the lowest term c·xt first: Ak = ck xtk
+(A / (c xt))k, with ck using k mod (p − 1). When a0 is not 1 for a square root, a0 needs a modular square
+root (Cipolla, NOI 篇  第 15 章 ).
+
+=== page 6 ===
+6NOI 篇  第 7 章  多项式进阶与  FWT
+poly_sqrt.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const ll MOD = 998244353, G = 3;
+6 ll pw(ll a, ll e) { ll r = 1; a %= MOD; while (e) { if (e & 1) r = r * a % MOD; a = a * a % MOD; e >>= 
+1; } return r; }
+7  
+8 void ntt(vector<ll> &a, bool inv) {
+9     int n = a.size();
+10     for (int i = 1, j = 0; i < n; i++) {
+11         int bit = n >> 1;
+12         for (; j & bit; bit >>= 1) j ^= bit;
+13         j ^= bit;
+14         if (i < j) swap(a[i], a[j]);
+15     }
+16     for (int len = 2; len <= n; len <<= 1) {
+17         ll w = pw(G, (MOD - 1) / len);
+18         if (inv) w = pw(w, MOD - 2);
+19         for (int i = 0; i < n; i += len) {
+20             ll wn = 1;
+21             for (int j = 0; j < len / 2; j++) {
+22                 ll u = a[i + j], v = a[i + j + len / 2] * wn % MOD;
+23                 a[i + j] = (u + v) % MOD; a[i + j + len / 2] = (u - v + MOD) % MOD;
+24                 wn = wn * w % MOD;
+25             }
+26         }
+27     }
+28     if (inv) { ll ni = pw(n, MOD - 2); for (int i = 0; i < n; i++) a[i] = a[i] * ni % MOD; }
+29 }
+30 vector<ll> mul(vector<ll> a, vector<ll> b, int lim) {          // a * b mod x^lim
+31     int n = 1;
+32     while (n < int(a.size() + b.size())) n <<= 1;
+33     a.resize(n); b.resize(n);
+34     ntt(a, false); ntt(b, false);
+35     for (int i = 0; i < n; i++) a[i] = a[i] * b[i] % MOD;
+36     ntt(a, true);
+37     a.resize(lim);
+38     return a;
+39 }
+40 vector<ll> inverse(const vector<ll> &a, int n) {              // B <- B (2 - A B)
+41     vector<ll> b(1, pw(a[0], MOD - 2));
+42     for (int k = 1; k < n; k <<= 1) {
+43         int m = 2 * k;
+44         vector<ll> a2(a.begin(), a.begin() + min(m, int(a.size())));
+45         vector<ll> t = mul(mul(b, b, m), a2, m);
+46         b.resize(m);
+47         for (int i = 0; i < m; i++) b[i] = (2 * b[i] - t[i] + MOD) % MOD;
+48     }
+49     b.resize(n);
+50     return b;
+51 }
+52 vector<ll> polySqrt(const vector<ll> &a, int n) {             // B <- (B + A / B) / 2, a[0] = 1
+53     vector<ll> b(1, 1);
+54     ll inv2 = (MOD + 1) / 2;
+55     for (int k = 1; k < n; k <<= 1) {
+56         int m = 2 * k;
+57         vector<ll> a2(a.begin(), a.begin() + min(m, int(a.size())));
+58         vector<ll> t = mul(a2, inverse(b, m), m);
+59         b.resize(m);
+60         for (int i = 0; i < m; i++) b[i] = (b[i] + t[i]) % MOD * inv2 % MOD;
+61     }
+
+=== page 7 ===
+7NOI 篇  第 7 章  多项式进阶与  FWT
+62     b.resize(n);
+63     return b;
+64 }
+65  
+66 int main() {
+67     int n;
+68     cin >> n;
+69     vector<ll> a(n);
+70     for (int i = 0; i < n; i++) cin >> a[i];
+71     vector<ll> b = polySqrt(a, n);
+72     for (int i = 0; i < n; i++) cout << b[i] << (i + 1 < n ? " " : "\n");
+73     return 0;
+74 }
+INPUT
+10
+1 534386719 108800876 459224023 883111506 884589230 
+300736401 853297066 612452995 852396087
+OUTPUT
+1 766315536 447577740 8905136 844074776 360634978 
+65954767 526242044 641587901 18167517
+KEY POINT Checked against the O(n²) coefficient-by-coefficient square root in Python (bk = (ak − Σ bibk−i) / 2). The
+square root with b0 = 1 is unique, so the two must agree.
+7.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Newton: correct mod x^k ⇒ one step correct mod x^2k; log n steps.
+2. Inverse: B ← B(2 − AB). ln: ∫ A'·A⁻¹ (a0 = 1). exp: B ← B(1 − ln B + A) (a0 = 0).
+3. Truncate every product to the current 2k.
+4. FWT OR: a[j+h] += a[j]; AND: a[j] += a[j+h]; XOR: (x+y, x−y), inverse /2.
+5. Multipoint evaluation: product tree + remainders, O(n log² n).
+6. Sqrt: B ← (B + A·B⁻¹)/2; power: exp(k ln A), shift out the lowest term first.
+7.4.1 Problems
+Problem Name Section What it tests
+P4238 【模板】多项式乘法逆 7.1 Newton inverse.
+P4725 【模板】多项式对数函数
+（多项式  ln ）
+7.1 Derivative, inverse, integral.
+P4726 【模板】多项式指数函数
+（多项式  exp ）
+7.1 Newton on ln.
+P4717 【模板】快速莫比乌斯  /
+沃尔什变换  (FMT / FWT)
+7.2 OR, AND, XOR convolution.
+P5205 【模板】多项式开根 7.3 Newton with inverse.
+P5245 【模板】多项式快速幂 7.3 exp(k ln A), k mod p.
+7.4.2 Practice	ladder
+1. Direct. P4717: FWT (7.2).
+2. One	twist. P4238: inverse (7.1).
+
+=== page 8 ===
+8NOI 篇  第 7 章  多项式进阶与  FWT
+3. Idea	hidden. P4725: ln (7.1).
+4. Two	ideas. P4726: exp (7.1).
+7.4.3 Experiments
+1. Check that exp(ln(A)) = A for a random A with a0 = 1.
+2. Time poly_ln_exp.cpp against the O(n²) recurrences for n = 10⁵.
+3. Show that the OR transform of fwt.cpp is SOS DP ( 第 12 章 ).
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

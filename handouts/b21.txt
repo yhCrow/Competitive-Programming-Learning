@@ -1,0 +1,355 @@
+# 基础篇 第21章 整除理论  (基21)
+# source: 基础篇 第21章 整除理论.pdf
+
+=== page 1 ===
+1基础篇  第 21 章  整除理论
+第 21 章 	 整除理论
+Divisibility Luogu #117 (part) 14 problems C++17 · all programs run
+21.1 整除的基本知识 21.2 质数与合数
+21.3 最大公约数与最小公倍数 21.4 ( 选读 ) 算术基本定理
+21.5 课后习题与实验
+21.1 整除的基本知识
+a	|	b,	remainders,	divisor	pairs,	walking	multiples.
+Fact Meaning / rule
+a | b ("a divides
+b")
+b = a·k for some integer k; in code b %
+a == 0
+a | b and a | c then a | (b + c) and a | (b − c)
+(a + b) % m = ((a % m) + (b % m)) % m
+(a × b) % m = ((a % m) × (b % m)) % m
+(a − b) % m = ((a % m) − (b % m) + m) % m
+divisors come in
+pairs
+d and n / d; one of them ≤ √n
+IDEA Divisibility is the heart of number theory
+problems. The mod rules let you keep
+numbers small: take % m  after every
+addition and multiplication and the final
+remainder is still right. Division does not
+work this way.
+KEY POINT Divisors pair up as d and n/d, so trying d
+up to √n finds them all ( 第 4 章 ). For "how
+many numbers in a list divide x" over
+many x, turn it around and walk the
+multiples of each value instead.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 4 部 分  基 础 数 学 与 数 论
+Divisibility and remainders, primes and sieves, gcd and lcm, and the prime factorisation behind them all.
+
+=== page 2 ===
+2基础篇  第 21 章  整除理论
+patting_heads.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int MAXV = 1000000;
+5 int cnt[MAXV + 1], hits[MAXV + 1];
+6  
+7 int main() {
+8     ios::sync_with_stdio(false);
+9     cin.tie(nullptr);
+10     int n;
+11     cin >> n;
+12     vector<int> a(n);
+13     int mx = 0;
+14     for (int i = 0; i < n; i++) { cin >> a[i]; cnt[a[i]]++; mx = max(mx, a[i]); }
+15     for (int v = 1; v <= mx; v++)
+16         if (cnt[v])
+17             for (int m = v; m <= mx; m += v) hits[m] += cnt[v];  // v divides m
+18     for (int i = 0; i < n; i++) cout << hits[a[i]] - 1 << "\n";  // not itself
+19     return 0;
+20 }
+INPUT
+5
+2
+1
+2
+3
+4
+OUTPUT
+2
+0
+2
+1
+3
+divisor_sum.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     long long n;
+6     cin >> n;
+7     long long total = 0;
+8     for (long long i = 1; i <= n; i++)
+9         total += n / i;      // i divides exactly n / i numbers in 1..n
+10     cout << total << "\n";
+11     return 0;
+12 }
+INPUT 1
+3
+OUTPUT 1
+5
+INPUT 2
+1000000
+OUTPUT 2
+13970034
+KEY POINT Walking multiples v, 2v, 3v, … for every v up to M costs M/1 + M/2 + … ≈ M ln M, fast for M = 106
+(P2926). Counting divisors of every number 1 … n by "how many multiples does i have" turns into Σ ⌊n /
+i⌋ (P1403).
+21.2 质数与合数
+Primality,	the	sieve	of	Eratosthenes,	the	linear	sieve,	segmented	sieves.
+
+=== page 3 ===
+3基础篇  第 21 章  整除理论
+2 3 4 5 6 7 8 9 10 11 12 13 14 15
+cross out multiples of 2, 3, … ; green numbers are prime
+IDEA A prime has exactly two divisors, 1 and
+itself; other numbers above 1 are
+composite. Testing one number takes
+O(√n). To find all primes up to N, sieve:
+for each prime p, cross out its multiples.
+Whatever is never crossed out is prime.
+KEY POINT Linear	sieve ( 欧拉筛 ): cross out each
+composite exactly once, by its smallest
+prime factor; O(N). It also gives every
+number's smallest prime factor for free.
+linear_sieve.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100000005;
+5 vector<int> primes;
+6 vector<bool> composite(N);
+7  
+8 int main() {
+9     ios::sync_with_stdio(false);
+10     cin.tie(nullptr);
+11     int n, q;
+12     cin >> n >> q;
+13     for (int i = 2; i <= n; i++) {
+14         if (!composite[i]) primes.push_back(i);
+15         for (int j = 0; j < int(primes.size()) && 1LL * i * primes[j] <= n; j++) {
+16             composite[i * primes[j]] = true;   // crossed out by its smallest prime
+17             if (i % primes[j] == 0) break;     // larger primes are not smallest
+18         }
+19     }
+20     while (q--) {
+21         int k;
+22         cin >> k;
+23         cout << primes[k - 1] << "\n";         // the k-th prime
+24     }
+25     return 0;
+26 }
+INPUT
+100 5
+1
+2
+3
+4
+5
+OUTPUT
+2
+3
+5
+7
+11
+
+=== page 4 ===
+4基础篇  第 21 章  整除理论
+prime_density.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     long long L, R;
+6     cin >> L >> R;                        // R up to 2^31, R - L up to 10^6
+7     int lim = sqrt(double(R)) + 1;
+8     vector<bool> small(lim + 1, true);
+9     vector<bool> isPrime(R - L + 1, true);   // index x - L
+10     for (int p = 2; p <= lim; p++) {
+11         if (!small[p]) continue;
+12         for (int m = 2 * p; m <= lim; m += p) small[m] = false;
+13         long long start = max(1LL * p * p, (L + p - 1) / p * p);
+14         for (long long x = start; x <= R; x += p) isPrime[x - L] = false;
+15     }
+16     int cnt = 0;
+17     for (long long x = L; x <= R; x++)
+18         if (x >= 2 && isPrime[x - L]) cnt++;
+19     cout << cnt << "\n";
+20     return 0;
+21 }
+INPUT 1
+2 11
+OUTPUT 1
+5
+INPUT 2
+1000000000 1000001000
+OUTPUT 2
+49
+KEY POINT vector<bool>  stores one bit per entry, so 108 flags fit in about 12 MB (P3383). A huge range [L, R] that is
+short (R − L ≤ 106) is sieved with only the primes up to √R, crossing out from the first multiple ≥ L: a
+segmented	sieve (P1835). Remember that 1 is not prime.
+21.3 最大公约数与最小公倍数
+Euclid,	gcd	×	lcm	=	a	×	b,	pairs	with	a	given	gcd	and	lcm.
+IDEA The greatest	common	divisor gcd(a, b) is the largest number dividing both; the least	common
+multiple lcm(a, b) is the smallest number both divide. Euclid: gcd(a, b) = gcd(b, a mod b), ending at
+gcd(a, 0) = a, in O(log). And gcd(a, b) × lcm(a, b) = a × b.
+
+=== page 5 ===
+5基础篇  第 21 章  整除理论
+gcd_lcm_pairs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long g(long long a, long long b) { return b == 0 ? a : g(b, a % b); }
+5  
+6 int main() {
+7     long long x0, y0;
+8     cin >> x0 >> y0;                     // wanted gcd and lcm
+9     if (y0 % x0 != 0) { cout << 0 << "\n"; return 0; }
+10     long long k = y0 / x0;               // P = x0 * a, Q = x0 * b, a * b = k
+11     int cnt = 0;
+12     for (long long a = 1; a <= k; a++)
+13         if (k % a == 0 && g(a, k / a) == 1) cnt++;   // a and b coprime
+14     cout << cnt << "\n";
+15     return 0;
+16 }
+INPUT 1
+3 60
+OUTPUT 1
+4
+INPUT 2
+2 3
+OUTPUT 2
+0
+lcm_three.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long g(long long a, long long b) { return b == 0 ? a : g(b, a % b); }
+5 long long l(long long a, long long b) { return a / g(a, b) * b; }  // divide first
+6  
+7 int main() {
+8     long long a, b, c;
+9     cin >> a >> b >> c;
+10     cout << l(l(a, b), c) << "\n";       // lcm of three = lcm(lcm(a, b), c)
+11     cout << gcd(a, gcd(b, c)) << "\n";   // C++17 also has gcd / lcm
+12     return 0;
+13 }
+INPUT 1
+2 3 4
+OUTPUT 1
+12
+1
+INPUT 2
+100000 99999 99998
+OUTPUT 2
+499985000100000
+1
+KEY POINT If gcd(P, Q) = x and lcm(P, Q) = y, then P = x·a and Q = x·b with a·b = y/x and gcd(a, b) = 1, so counting
+pairs means counting coprime splits of y/x (P1029). Write a / gcd(a, b) * b , dividing first, so the lcm
+does not overflow on the way (P4057). Reducing fractions (P1572) divides top and bottom by their gcd.
+21.4 ( 选读 ) 算术基本定理
+Unique	prime	factorisation;	counting	and	summing	divisors.
+IDEA Fundamental	theorem	of	arithmetic: every integer above 1 is a product of primes in exactly one way, n
+= p₁e₁ · p₂e₂ ⋯. Factor by trial division up to √n; whatever is left above 1 is one last prime.
+
+=== page 6 ===
+6基础篇  第 21 章  整除理论
+factorize.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     long long n;
+6     cin >> n;
+7     long long orig = n, divisors = 1, sigma = 1;
+8     cout << orig << " =";
+9     bool first = true;
+10     for (long long p = 2; p * p <= n; p++) {
+11         if (n % p != 0) continue;
+12         int e = 0;
+13         long long pk = 1, sum = 1;            // sum = 1 + p + ... + p^e
+14         while (n % p == 0) { n /= p; e++; pk *= p; sum += pk; }
+15         cout << (first ? " " : " * ") << p << "^" << e;
+16         first = false;
+17         divisors *= (e + 1);
+18         sigma *= sum;
+19     }
+20     if (n > 1) {                              // one prime left over
+21         cout << (first ? " " : " * ") << n << "^1";
+22         divisors *= 2;
+23         sigma *= (1 + n);
+24     }
+25     cout << "\n" << divisors << " divisors, sum " << sigma << "\n";
+26     return 0;
+27 }
+INPUT 1
+360
+OUTPUT 1
+360 = 2^3 * 3^2 * 5^1
+24 divisors, sum 1170
+INPUT 2
+97
+OUTPUT 2
+97 = 97^1
+2 divisors, sum 98
+From n = Π pᵢ^eᵢ Formula
+number of divisors Π (eᵢ + 1)
+sum of divisors Π (1 + pᵢ + … + pᵢ^eᵢ)
+gcd(a, b) each prime to the smaller exponent
+lcm(a, b) each prime to the larger exponent
+a divides b every exponent in a ≤ the one in b
+KEY POINT A divisor of n picks each exponent from 0 to eᵢ independently, so the multiplication principle ( 第 20 章 )
+gives Π(eᵢ + 1) divisors: 360 = 2³·3²·5 has 4·3·2 = 24. "How long until cells divide evenly into tubes"
+compares exponents of the same primes (P1069); the divisor sum of ab mod 9901 uses the sum formula
+with fast powers (P1593).
+21.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 7 ===
+7基础篇  第 21 章  整除理论
+Key	points	to	memorise
+1. a | b ⇔ b	%	a	==	0; mod after every + and ×, never for ÷.
+2. Negative-safe subtraction: ((a	−	b)	%	m	+	m)	%	m.
+3. Divisors pair as d, n/d: search to √n.
+4. Many "who divides x": walk multiples, total ≈ M ln M.
+5. Σ_{i≤n} d(i) = Σ ⌊n / i⌋.
+6. Sieve of Eratosthenes O(N log log N); linear sieve O(N) with smallest prime factors.
+7. Segmented sieve: primes ≤ √R, start at max(p², first multiple ≥ L); 1 is not prime.
+8. Euclid: gcd(a, b) = gcd(b, a % b); lcm	=	a	/	gcd	·	b.
+9. n = Π pᵢ^eᵢ: Π(eᵢ+1) divisors; gcd takes min exponents, lcm max.
+21.5.1 Problems
+Problem Name Section What it tests
+P2926 Patting Heads S 21.1 Walk multiples of each value.
+P3383 【模板】线性筛素数 21.2 Linear sieve up to 10⁸, k-th prime.
+P1835 素数密度 21.2 Segmented sieve on [L, R].
+P1029 最大公约数和最小公倍数
+问题
+21.3 Coprime splits of y / x.
+P1072 Hankson 的趣味题 21.3 Try divisors of b1, check two gcd/lcm conditions.
+P1069 细胞分裂 21.4 Compare prime exponents.
+P1572 计算分数 21.3 Add fractions, reduce by gcd.
+P4057 晨跑 21.3 lcm of three; divide before multiplying.
+P1414 又是毕业季 II 21.1 Count multiples of each divisor.
+P2651 添加括号 III 21.3 Only a₂ must stay in the denominator: gcd check.
+P2660 zzc 种田 21.3 Cut squares: Euclid with quotients.
+P3601 签到题 21.4 Euler-style counting with a segmented sieve.
+P1403 约数研究 21.1 Σ ⌊n / i⌋.
+P1593 因子和 21.4 Divisor-sum formula mod 9901.
+21.5.2 Practice	ladder
+1. Direct. P1403: turn divisor counting around (21.1).
+2. One	twist. P3383: linear sieve (21.2).
+3. Idea	hidden. P1029: gcd and lcm structure (21.3).
+4. Two	ideas. P1835: segmented sieve (21.2).
+5. Stretch. P1069: prime exponents (21.4).
+21.5.3 Experiments
+1. Time trial division against the sieve for all primes below 10⁷.
+2. Print the smallest prime factor of every number up to 50 from the linear sieve.
+3. Compute lcm(10⁹, 10⁹ − 1) as a * b / gcd and as a / gcd * b in long long; compare.
+4. Use factorize.cpp on 2³¹ − 1: is it prime?
+
+=== page 8 ===
+8基础篇  第 21 章  整除理论
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

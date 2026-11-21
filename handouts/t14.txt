@@ -1,0 +1,143 @@
+# 拓展篇 第14章 动态树 LCT(选读)  (拓14)
+# source: 拓展篇 第14章 动态树 LCT(选读).pdf
+
+=== page 1 ===
+1拓展篇  第 14 章  动态树  LCT( 选读 )
+第 14 章 	 动态树 	LCT( 选读 )
+Link-cut trees Luogu (verified) 5 problems C++17 · all programs run
+14.1 LCT 的操作 14.2 课后习题与实验
+14.1 LCT	 的操作
+Splay,	access,	makeRoot,	link,	cut,	path	XOR.
+IDEA A link-cut	tree (LCT, 动态树 ) maintains a forest	that	changes: link two trees with an edge, cut an edge,
+and ask about paths (sum, XOR, max) in O(log n) amortised. It splits each tree into preferred	paths, each
+stored in a splay tree ordered by depth.
+KEY POINT Core operation access(x): make the path from the root to x one preferred path. With makeRoot(x) (access,
+then reverse that path) any path x–y becomes one splay tree: makeRoot(x), access(y), splay(y), and y's
+subtree aggregate is the path answer. Link and cut are a few lines on top.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 据 结 构 拓 展
+Keep a changing forest as preferred paths stored in splay trees: access, make-root, link and cut, with path
+aggregates in O(log n) amortised.
+
+=== page 2 ===
+2拓展篇  第 14 章  动态树  LCT( 选读 )
+lct.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int ch[N][2], fa[N], val[N], sum_[N];
+6 bool rev[N];
+7  
+8 bool isRoot(int x) { return ch[fa[x]][0] != x && ch[fa[x]][1] != x; }   // root of its splay tree
+9 void up(int x) { sum_[x] = sum_[ch[x][0]] ^ sum_[ch[x][1]] ^ val[x]; }
+10 void flip(int x) { swap(ch[x][0], ch[x][1]); rev[x] ^= 1; }
+11 void down(int x) { if (rev[x]) { if (ch[x][0]) flip(ch[x][0]); if (ch[x][1]) flip(ch[x][1]); rev[x] = 
+false; } }
+12  
+13 void rotate(int x) {
+14     int y = fa[x], z = fa[y], k = ch[y][1] == x;
+15     if (!isRoot(y)) ch[z][ch[z][1] == y] = x;
+16     fa[x] = z;
+17     ch[y][k] = ch[x][!k]; if (ch[x][!k]) fa[ch[x][!k]] = y;
+18     ch[x][!k] = y; fa[y] = x;
+19     up(y); up(x);
+20 }
+21 void pushAll(int x) { if (!isRoot(x)) pushAll(fa[x]); down(x); }
+22 void splay(int x) {
+23     pushAll(x);
+24     while (!isRoot(x)) {
+25         int y = fa[x], z = fa[y];
+26         if (!isRoot(y)) rotate((ch[y][1] == x) == (ch[z][1] == y) ? y : x);
+27         rotate(x);
+28     }
+29 }
+30 void access(int x) { for (int last = 0; x; last = x, x = fa[x]) { splay(x); ch[x][1] = last; up(x); } }
+31 void makeRoot(int x) { access(x); splay(x); flip(x); }
+32 int findRoot(int x) { access(x); splay(x); while (ch[x][0]) { down(x); x = ch[x][0]; } splay(x); return 
+x; }
+33 void link(int x, int y) { makeRoot(x); if (findRoot(y) != x) fa[x] = y; }          // ignore if already 
+connected
+34 void cut(int x, int y) {
+35     makeRoot(x);
+36     if (findRoot(y) == x && fa[y] == x && !ch[y][0]) { fa[y] = ch[x][1] = 0; up(x); }   // only a real 
+edge
+37 }
+38  
+39 int main() {
+40     int n, m;
+41     cin >> n >> m;
+42     for (int i = 1; i <= n; i++) { cin >> val[i]; sum_[i] = val[i]; }
+43     while (m--) {
+44         int op, x, y;
+45         cin >> op >> x >> y;
+46         if (op == 0) { makeRoot(x); access(y); splay(y); cout << sum_[y] << "\n"; }   // XOR on path 
+x..y
+47         else if (op == 1) link(x, y);
+48         else if (op == 2) cut(x, y);
+49         else { splay(x); val[x] = y; up(x); }
+50     }
+51     return 0;
+52 }
+INPUT 1
+3 3
+1 2 3
+1 1 2
+OUTPUT 1
+3
+1
+
+=== page 3 ===
+3拓展篇  第 14 章  动态树  LCT( 选读 )
+0 1 2
+0 1 1
+INPUT 2
+3 7
+1 2 3
+1 1 2
+1 2 3
+0 1 3
+2 1 2
+0 2 3
+3 3 5
+0 2 3
+OUTPUT 2
+0
+1
+7
+KEY POINT Template (P3690): XOR along a path, link, cut, change a value. The second test links 1–2–3 (1 ⊕ 2 ⊕ 3 =
+0), cuts 1–2, then 2 ⊕ 3 = 1, and after setting node 3 to 5: 2 ⊕ 5 = 7.
+TRAP Push reverse flags from the top of the splay tree down before splaying (pushAll); check that an edge really
+exists before cutting; and use isRoot (root of the splay tree), not "fa == 0", inside rotate and splay.
+KEY POINT When an LCT is overkill: if the forest only grows, use DSU; if the tree is fixed, use HLD ( 进阶篇  第 9 章 ); if
+queries are offline, segment-tree-on-time with a rollback DSU often works. LCT is the tool for online link
+and cut ( 洞穴勘测  P2147, 弹飞绵羊  P3203, Tree II P1501 with two lazy tags).
+14.2 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Preferred paths in splay trees keyed by depth.
+2. access(x): splay, attach the previous path as right child, go up.
+3. makeRoot(x): access, splay, reverse.
+4. Path x–y: makeRoot(x), access(y), splay(y): aggregate at y.
+5. link: makeRoot(x), fa[x] = y; cut only if the edge really exists.
+6. isRoot = not a child of its splay parent.
+14.2.1 Problems
+Problem Name Section What it tests
+P3690 【模板】动态树（ LCT ） 14.1 Path XOR, link, cut, update.
+P2147 洞穴勘测 14.1 Connectivity under link / cut.
+P3203 弹飞绵羊 14.1 Jumps as a forest, depth queries.
+P1501 Tree II 14.1 Path add and multiply tags.
+P4690 镜中的昆虫 14.1 Hard data-structure practice (very hard).
+14.2.2 Practice	ladder
+1. Direct. P2147: link / cut connectivity (14.1).
+2. One	twist. P3690: LCT template (14.1).
+3. Idea	hidden. P3203: jumps as a forest (14.1).
+
+=== page 4 ===
+4拓展篇  第 14 章  动态树  LCT( 选读 )
+4. Two	ideas. P1501: lazy tags on paths (14.1).
+14.2.3 Experiments
+1. Trace access(3) on a path 1–2–3 and draw the splay trees.
+2. Replace isRoot with fa[x] == 0 and find where it breaks.
+3. Compare lct.cpp with a brute-force forest on random small operations.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,390 @@
+# 进阶篇 第17章 状态压缩动态规划  (进17)
+# source: 进阶篇 第17章 状态压缩动态规划.pdf
+
+=== page 1 ===
+1进阶篇  第 17 章  状态压缩动态规划
+第 17 章 	 状态压缩动态规划
+Bitmask DP Luogu #215 21 problems C++17 · all programs run
+17.1 状态压缩 17.2 状态压缩的一般技巧
+17.3 状态压缩与其他算法的交叉应用 17.4 课后习题与实验
+17.1 状态压缩
+Bit	operations;	travelling	salesman;	masks	as	BFS	nodes.
+1
+bit 3
+0
+bit 2
+1
+bit 1
+1
+bit 0
+S = = 11
+set {0, 1, 3}: cities 0, 1 and 3 already visited
+IDEA State	compression ( 状态压缩 ): when a
+state is "which of n ≤ 20 things are
+used", store the set as the bits of one
+integer S, 0 … 2n − 1. Bit i is 1 when item
+i is in the set ( 基础篇  第 19 章 ). The DP
+array is indexed by S directly.
+KEY POINT 220 ≈ 10⁶ sets is fine, 225 is about the
+limit. Seeing n ≤ 15 … 20 in a problem
+about sets, orders or paths is the hint.
+Operation Code
+is i in S? S >> i & 1
+add i S | 1 << i
+remove i S & ~(1 << i)
+all n items (1 << n) - 1
+lowest set bit S & -S
+number of items __builtin_popcount(S)
+all subsets of S for (int T = S; T; T = (T - 1) & S)  (plus T = 0)
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 4 部 分  动 态 规 划
+Store a set of up to 20 items as the bits of one integer: subsets as DP states, rows of a narrow grid as masks,
+and masks mixed with BFS, inclusion-exclusion and path counting.
+
+=== page 2 ===
+2进阶篇  第 17 章  状态压缩动态规划
+tsp.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, d[20][20], f[1 << 18][18];
+5  
+6 int main() {
+7     cin >> n;
+8     for (int i = 0; i < n; i++)
+9         for (int j = 0; j < n; j++) cin >> d[i][j];
+10     for (int S = 0; S < (1 << n); S++)
+11         for (int i = 0; i < n; i++) f[S][i] = INT_MAX / 2;
+12     f[1][0] = 0;                                    // visited {0}, standing at 0
+13     for (int S = 1; S < (1 << n); S++)              // subsets before supersets: S increasing
+14         for (int i = 0; i < n; i++) {
+15             if (!(S >> i & 1) || f[S][i] >= INT_MAX / 2) continue;
+16             for (int j = 0; j < n; j++)
+17                 if (!(S >> j & 1))                  // go to a new city j
+18                     f[S | 1 << j][j] = min(f[S | 1 << j][j], f[S][i] + d[i][j]);
+19         }
+20     int best = INT_MAX;
+21     for (int i = 1; i < n; i++) best = min(best, f[(1 << n) - 1][i] + d[i][0]);   // back home
+22     cout << best << "\n";
+23     return 0;
+24 }
+INPUT
+4
+0 2 9 10
+1 0 6 4
+15 7 0 8
+6 3 12 0
+OUTPUT
+21
+IDEA Travelling	salesman: f[S][i] = shortest route that starts at city 0, visits exactly the set S, and stands at i.
+Only S and i matter for the future, not the order inside S. O(2ⁿ · n²) instead of n!.
+KEY POINT Adding a city only makes S larger as a number, so the plain loop S = 0, 1, 2, … is a valid order. Best tour
+here: 0 → 2 → 3 → 1 → 0 = 9 + 8 + 3 + 1 = 21.
+
+=== page 3 ===
+3进阶篇  第 17 章  状态压缩动态规划
+lights.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n, m;
+6     cin >> n >> m;
+7     vector<vector<int>> a(m, vector<int>(n));
+8     for (int i = 0; i < m; i++)
+9         for (int j = 0; j < n; j++) cin >> a[i][j];
+10     vector<int> dist(1 << n, -1);
+11     int start = (1 << n) - 1;                       // all lights on
+12     queue<int> q;
+13     q.push(start); dist[start] = 0;
+14     while (!q.empty()) {
+15         int S = q.front();
+16         q.pop();
+17         if (S == 0) break;
+18         for (int i = 0; i < m; i++) {               // press switch i
+19             int T = S;
+20             for (int j = 0; j < n; j++) {
+21                 if (a[i][j] == 1) T &= ~(1 << j);   // turns light j off
+22                 if (a[i][j] == -1) T |= 1 << j;     // turns light j on
+23             }
+24             if (dist[T] == -1) { dist[T] = dist[S] + 1; q.push(T); }
+25         }
+26     }
+27     cout << dist[0] << "\n";
+28     return 0;
+29 }
+INPUT
+3 2
+1 0 1
+-1 1 0
+OUTPUT
+2
+IDEA Not every bitmask problem is a DP over subsets: here the masks are nodes	of	a	graph and switches are
+edges, so a BFS finds the fewest presses (P2622). 2ⁿ nodes × m edges.
+KEY POINT Read the rule carefully: "1: turn off if on" is T &= ~(1 << j), whatever the light was; "−1: turn on if off" is T
+|= 1 << j. Press switch 2 then switch 1: 111 → 101 → 000.
+17.2 状态压缩的一般技巧
+Row-by-row	masks;	precomputed	valid	rows;	subset	enumeration.
+
+=== page 4 ===
+4进阶篇  第 17 章  状态压缩动态规划
+✓ ✓ ✓
+✓
+row 1: fertile 111
+row 2: fertile 010
+valid rows: no two
+neighbours, inside fertile
+IDEA Row	by	row ( 逐行状压 ): on a grid with
+up to about 12 columns, the state is the
+mask	of	the	current	row. f[i][S] =
+number of ways for rows 1..i with row i
+chosen as S. A row is valid alone if S &
+(S << 1) == 0 (no two neighbours) and S
+fits the fertile cells.
+KEY POINT Two rows are compatible when S & T ==
+0 (nothing directly above). Precompute
+the valid masks of a row once: for 12
+columns only 377 of the 4096 masks
+survive, which makes the double loop
+fast.
+corn_fields.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int MOD = 100000000;
+5 int f[13][1 << 12];
+6  
+7 int main() {
+8     int n, m;
+9     cin >> n >> m;
+10     vector<int> fert(n + 1, 0);
+11     for (int i = 1; i <= n; i++)
+12         for (int j = 0; j < m; j++) { int x; cin >> x; if (x) fert[i] |= 1 << j; }
+13     vector<int> ok;                                  // masks with no two neighbours
+14     for (int S = 0; S < (1 << m); S++) if (!(S & (S << 1))) ok.push_back(S);
+15     f[0][0] = 1;
+16     for (int i = 1; i <= n; i++)
+17         for (int a = 0; a < int(ok.size()); a++) {
+18             int S = ok[a];
+19             if ((S & fert[i]) != S) continue;        // planted on barren land
+20             for (int b = 0; b < int(ok.size()); b++) {
+21                 int T = ok[b];
+22                 if (S & T) continue;                 // touching the row above
+23                 f[i][S] = (f[i][S] + f[i - 1][T]) % MOD;
+24             }
+25         }
+26     int ans = 0;
+27     for (int a = 0; a < int(ok.size()); a++) ans = (ans + f[n][ok[a]]) % MOD;
+28     cout << ans << "\n";
+29     return 0;
+30 }
+INPUT
+2 3
+1 1 1
+0 1 0
+OUTPUT
+9
+IDEA Corn fields (P1879): count the ways to plant so that no two planted squares share an edge. Row 1 may be
+000, 001, 010, 100, 101 and row 2 may be 000 or 010; 010 under a row using the middle is not allowed.
+Total 9.
+
+=== page 5 ===
+5进阶篇  第 17 章  状态压缩动态规划
+KEY POINT Artillery (P2704 炮兵阵地 ) reaches two rows up, so the state holds the last two rows: f[i][S][T]. Kings
+(P1896 互不侵犯 ) also forbid diagonal neighbours and add a count of pieces as a third index.
+kings.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long f[10][1 << 9][82];
+5  
+6 int main() {
+7     int n, K;
+8     cin >> n >> K;
+9     vector<int> ok, cnt;
+10     for (int S = 0; S < (1 << n); S++)
+11         if (!(S & (S << 1))) { ok.push_back(S); cnt.push_back(__builtin_popcount(S)); }
+12     f[0][0][0] = 1;
+13     for (int i = 1; i <= n; i++)
+14         for (int a = 0; a < int(ok.size()); a++)
+15             for (int b = 0; b < int(ok.size()); b++) {
+16                 int S = ok[a], T = ok[b];
+17                 if ((S & T) || (S & (T << 1)) || (S & (T >> 1))) continue;   // attacks the row above
+18                 for (int k = cnt[a]; k <= K; k++) f[i][S][k] += f[i - 1][T][k - cnt[a]];
+19             }
+20     long long ans = 0;
+21     for (int a = 0; a < int(ok.size()); a++) ans += f[n][ok[a]][K];
+22     cout << ans << "\n";
+23     return 0;
+24 }
+INPUT
+3 2
+OUTPUT
+16
+IDEA Kings on an n × n board, exactly K of them, none attacking (P1896). Compatible rows: no overlap straight
+above (S & T) or diagonally (S & (T << 1), S & (T >> 1)). The extra index k counts kings so far.
+KEY POINT Counts reach about 10¹⁸ for n = 9, so long long. The popcount of each valid mask is stored once next to it,
+instead of recomputing it inside the triple loop.
+KEY POINT Enumerating	subsets of S: for (int T = S; T > 0; T = (T - 1) & S)  visits every non-empty
+subset T of S in decreasing order. Doing this for every S costs 3ⁿ in total (each item is in T, in S only, or
+outside). Used when a set is split into two groups, as in 宝藏  (P3959) and 愤怒的小鸟  (P2831).
+17.3 状态压缩与其他算法的交叉应用
+Inclusion-exclusion,	counting	cycles,	expectations.
+IDEA Bitmasks also mix with other techniques: inclusion-exclusion over a small set of conditions (each subset
+of "violated" conditions is a mask), counting	cycles in a small graph, and expected	values where the
+state remembers what has been collected.
+
+=== page 6 ===
+6进阶篇  第 17 章  状态压缩动态规划
+coin_shopping.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long f[100005];
+5  
+6 int main() {
+7     int c[4], q;
+8     for (int i = 0; i < 4; i++) cin >> c[i];
+9     cin >> q;
+10     f[0] = 1;                                   // unlimited coins: unordered ways
+11     for (int i = 0; i < 4; i++)
+12         for (int s = c[i]; s <= 100000; s++) f[s] += f[s - c[i]];
+13     while (q--) {
+14         int d[4], s;
+15         for (int i = 0; i < 4; i++) cin >> d[i];
+16         cin >> s;
+17         long long ans = 0;
+18         for (int S = 0; S < 16; S++) {          // S = coins forced to exceed their limit
+19             long long rest = s;
+20             for (int i = 0; i < 4; i++) if (S >> i & 1) rest -= 1LL * (d[i] + 1) * c[i];
+21             if (rest < 0) continue;
+22             ans += (__builtin_popcount(S) % 2 ? -1 : 1) * f[rest];
+23         }
+24         cout << ans << "\n";
+25     }
+26     return 0;
+27 }
+INPUT
+1 2 5 10 2
+3 2 3 1 10
+1000 2 2 2 900
+OUTPUT
+4
+27
+IDEA Coin shopping (P1450): 4 coin types, each with a limit, 1000 queries. Count with no limits once
+(unbounded knapsack). Then subtract the ways that break a limit: paying (di + 1) coins of type i up front
+forces a violation. Inclusion-exclusion over the 16 masks of violated types.
+KEY POINT Sign = (−1)popcount(S). Each query costs 16 operations after one shared DP; a bounded knapsack per query
+would be far too slow.
+
+=== page 7 ===
+7进阶篇  第 17 章  状态压缩动态规划
+simple_cycles.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long f[1 << 19][19];
+5 bool e[19][19];
+6  
+7 int main() {
+8     int n, m;
+9     cin >> n >> m;
+10     for (int i = 0; i < m; i++) {
+11         int a, b;
+12         cin >> a >> b;
+13         a--; b--;
+14         e[a][b] = e[b][a] = true;
+15     }
+16     for (int i = 0; i < n; i++) f[1 << i][i] = 1;            // a path that is just i
+17     long long ans = 0;
+18     for (int S = 1; S < (1 << n); S++)
+19         for (int v = 0; v < n; v++) {
+20             if (!f[S][v]) continue;
+21             int start = __builtin_ctz(S);                     // the smallest vertex starts the path
+22             for (int u = start; u < n; u++) {
+23                 if (!e[v][u]) continue;
+24                 if (u == start) {                             // closing a cycle
+25                     if (__builtin_popcount(S) >= 3) ans += f[S][v];
+26                 } else if (!(S >> u & 1)) f[S | 1 << u][u] += f[S][v];
+27             }
+28         }
+29     cout << ans / 2 << "\n";                                  // each cycle found in both directions
+30     return 0;
+31 }
+INPUT
+4 6
+1 2
+1 3
+1 4
+2 3
+2 4
+3 4
+OUTPUT
+7
+IDEA Counting simple cycles (CF11D): f[S][v] = paths that start at the smallest vertex of S, visit exactly S, and
+end at v. Fixing the start as the lowest bit stops counting the same cycle from every vertex; dividing by 2
+removes the two directions.
+KEY POINT In K4 there are 4 triangles and 3 four-cycles: 7. Only extend to vertices larger than the start (u > start), and
+close the cycle only with ≥ 3 vertices.
+KEY POINT Expected values with masks: in 奖励关  (P2473) each treasure needs a set of earlier treasures, so the state
+is (round, mask collected) and the DP runs backwards from the last round, taking the better of "take it"
+and "skip it". Bill's challenge (P2167) counts strings matching exactly k patterns with f[position][mask of
+patterns still matching].
+TRAP Memory is 2ⁿ × (other indices): f[1 << 19][19] long long is 80 MB. Drop a dimension when you can (keep
+only the last row of a row-by-row DP) and check the limit before choosing n-dependent sizes.
+
+=== page 8 ===
+8进阶篇  第 17 章  状态压缩动态规划
+17.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Set of n ≤ 20 items = integer S; bit i set ⇔ item i in S.
+2. Test S >> i & 1; add S | 1 << i; remove S & ~(1 << i); full (1 << n) − 1.
+3. TSP: f[S][i] = shortest visiting S, standing at i; S increasing is a valid order.
+4. Masks can be graph nodes: BFS over states.
+5. Row DP: valid row S & (S << 1) == 0; compatible rows S & T == 0; precompute valid masks.
+6. Subsets of S: T = (T − 1) & S; over all S: 3ⁿ.
+7. Inclusion-exclusion: sign (−1)^popcount(S) over violated conditions.
+8. Cycles: start at the lowest bit; divide by 2 for direction.
+17.4.1 Problems
+Problem Name Section What it tests
+P1896 互不侵犯 17.2 Kings row by row, with a piece count.
+P2622 关灯问题  II 17.1 BFS over light masks.
+CF11D A Simple Task 17.3 Count simple cycles from the lowest vertex.
+P3959 宝藏 17.2 Grow by layers; subset enumeration.
+P4484 最长上升子序列 17.3 Mask of the LIS tails over permutations.
+P4363 一双木棋  chess 17.3 Staircase shape as a mask; minimax.
+P1357 花园 17.3 Last m pots as a mask; matrix power on a ring.
+P1450 硬币购物 17.3 Inclusion-exclusion over 4 limits.
+P3694 邦邦的大合唱站队 17.1 Mask of bands already placed, prefix counts.
+P1441 砝码称重 17.2 Choose removed weights, bitset sums.
+P1879 Corn Fields G 17.2 Row masks, no neighbours.
+P2704 炮兵阵地 17.2 Two previous rows in the state.
+P2831 愤怒的小鸟 17.2 Parabola masks, cover all pigs.
+P4045 密码 17.3 Aho-Corasick state + mask of words.
+AT_agc012_e Camel and Oases 17.3 Masks over jump levels.
+CF1209E2 Rotate Columns (hard
+version)
+17.3 Best columns only, subset DP over rows.
+P5369 最大前缀和 17.3 Split into prefix part and the rest.
+P2761 软件补丁问题 17.1 Shortest path over bug masks.
+P2473 奖励关 17.3 Expected value, backwards, mask collected.
+P2167 Bill 的挑战 17.3 Mask of patterns still matching.
+P10865 Genshin Impact Startup
+Forbidden III
+17.3 Small grid, counts per cell as a state.
+
+=== page 9 ===
+9进阶篇  第 17 章  状态压缩动态规划
+17.4.2 Practice	ladder
+1. Direct. P2622: masks as BFS nodes (17.1).
+2. One	twist. P1879: row masks (17.2).
+3. Idea	hidden. P1896: row masks + count (17.2).
+4. Two	ideas. P1450: inclusion-exclusion (17.3).
+5. Stretch. CF11D: counting cycles (17.3).
+17.4.3 Experiments
+1. Print every valid row mask for m = 12 in corn_fields.cpp and count them.
+2. Count how many (S, T) pairs the subset loop visits for n = 10 and compare with 3¹⁰.
+3. Add a city to tsp.cpp one at a time and time n = 14 … 18.
+4. Check coin_shopping.cpp against a plain bounded knapsack for small random queries.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

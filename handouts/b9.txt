@@ -1,0 +1,633 @@
+# 基础篇 第9章 排序  (基9)
+# source: 基础篇 第09章 排序.pdf
+
+=== page 1 ===
+1基础篇  第 9 章  排序
+第 9 章 	 排序
+Sorting Luogu #107 12 problems C++17 · all programs run
+9.1 计数排序 9.2 选择排序、冒泡排序、插入排序
+9.3 快速排序 9.4 排序算法的应用
+9.5 课后习题与实验
+9.1 计数排序
+Tally	values	from	a	small	range,	then	print	them	in	order.
+counting_sort.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int cnt[1005];                   // values 1..1000
+5  
+6 int main() {
+7     int n, m;
+8     cin >> n >> m;               // n candidates, m votes
+9     for (int i = 0; i < m; i++) {
+10         int v;
+11         cin >> v;
+12         cnt[v]++;                // tally, no comparisons
+13     }
+14     for (int v = 1; v <= n; v++)
+15         for (int k = 0; k < cnt[v]; k++) cout << v << " ";
+16     cout << "\n";
+17     return 0;
+18 }
+INPUT
+5 10
+2 5 2 2 5 2 2 2 1 2
+OUTPUT
+1 2 2 2 2 2 2 2 5 5
+IDEA When the values come from a small range (say 1 … 1000) but there are millions of them, tally them in a
+counting array ( 入门 4) and print each value as many times as it was seen. O(n + range), no comparisons
+at all (P1271).
+TRAP Millions of numbers make input the bottleneck. With cin , turn on fast IO (fast  in your template); never
+use endl  per number.
+9.2 选择排序、冒泡排序、插入排序
+The	three	O(n²)	sorts,	and	what	bubble	sort	counts.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 2 部 分  初 涉 算 法
+Counting sort, selection/bubble/insertion sort, quicksort, and applying sorting to problems.
+
+=== page 2 ===
+2基础篇  第 9 章  排序
+9.2.1 Selection	sort
+selection.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[10005];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     for (int i = 0; i < n; i++) cin >> a[i];
+10     for (int i = 0; i < n - 1; i++) {
+11         int m = i;                       // index of the minimum so far
+12         for (int j = i + 1; j < n; j++)
+13             if (a[j] < a[m]) m = j;
+14         swap(a[i], a[m]);                // put it at position i
+15     }
+16     for (int i = 0; i < n; i++) cout << a[i] << " ";
+17     cout << "\n";
+18     return 0;
+19 }
+INPUT
+6
+5 2 4 6 1 3
+OUTPUT
+1 2 3 4 5 6
+IDEA Selection	sort: for each position from the left, find the smallest value in the rest and swap it into place. It
+does at most n − 1 swaps but always about n²/2 comparisons, whatever the input.
+Sort Comparisons Good for
+selection always ~n²/2 few swaps
+bubble up to ~n²/2 counting inversions
+insertion ~n to ~n²/2 nearly sorted data
+quick / std::sort ~n log n everything else
+4 3 2 1
+3 2 1 4
+2 1 3 4
+1 2 3 4
+start
+pass 1
+pass 2
+pass 3
+IDEA Bubble	sort: walk the array, swapping neighbours that are out
+of order. After pass k the k largest values are in place at the end
+(green). Each swap fixes exactly one inversion (a pair i < j with
+a[i] > a[j]).
+KEY POINT So the number of bubble-sort swaps = the number of inversions
+= the minimum number of adjacent swaps needed to sort
+(P1116). O(n²): fine for n up to a few thousand.
+
+=== page 3 ===
+3基础篇  第 9 章  排序
+bubble_count.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[10005];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     for (int i = 0; i < n; i++) cin >> a[i];
+10     int swaps = 0;
+11     for (int pass = 0; pass < n - 1; pass++)
+12         for (int j = 0; j + 1 < n - pass; j++)
+13             if (a[j] > a[j + 1]) {
+14                 swap(a[j], a[j + 1]);
+15                 swaps++;
+16             }
+17     cout << swaps << "\n";
+18     return 0;
+19 }
+INPUT 1
+4
+4 3 2 1
+OUTPUT 1
+6
+INPUT 2
+5
+1 2 3 5 4
+OUTPUT 2
+1
+insertion.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[10005];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     for (int i = 0; i < n; i++) cin >> a[i];
+10     for (int i = 1; i < n; i++) {
+11         int x = a[i], j = i - 1;
+12         while (j >= 0 && a[j] > x) {   // shift bigger ones right
+13             a[j + 1] = a[j];
+14             j--;
+15         }
+16         a[j + 1] = x;                  // drop x into the gap
+17     }
+18     for (int i = 0; i < n; i++) cout << a[i] << " ";
+19     cout << "\n";
+20     return 0;
+21 }
+INPUT
+6
+5 2 4 6 1 3
+OUTPUT
+1 2 3 4 5 6
+KEY POINT Insertion	sort keeps a sorted prefix and slides each new value into place: fast when the data is almost
+sorted. Selection	sort repeatedly picks the minimum of the rest. All three are O(n²); use them to
+understand or to count, use sort  to sort.
+
+=== page 4 ===
+4基础篇  第 9 章  排序
+9.3 快速排序
+Partition	around	a	pivot;	k-th	smallest;	merge	sort	for	comparison.
+3 7 1 5 9 2 6
+pivot 5: smaller to the left, bigger to the right
+3 2 1 5 9 7 6
+IDEA Quicksort: pick a pivot, move smaller values
+left and bigger values right (partition), then
+sort the two sides the same way. On average
+each level does O(n) work and there are about
+log n levels.
+KEY POINT To find only the k-th smallest you need just
+one side after each partition: average O(n).
+The standard library does this as
+nth_element .
+quicksort.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[100005];
+5  
+6 void quickSort(int l, int r) {            // sorts a[l..r]
+7     if (l >= r) return;
+8     int pivot = a[(l + r) / 2], i = l, j = r;
+9     while (i <= j) {
+10         while (a[i] < pivot) i++;         // find a big one on the left
+11         while (a[j] > pivot) j--;         // find a small one on the right
+12         if (i <= j) { swap(a[i], a[j]); i++; j--; }
+13     }
+14     quickSort(l, j);                      // left part
+15     quickSort(i, r);                      // right part
+16 }
+17  
+18 int main() {
+19     int n;
+20     cin >> n;
+21     for (int i = 0; i < n; i++) cin >> a[i];
+22     quickSort(0, n - 1);
+23     for (int i = 0; i < n; i++) cout << a[i] << " ";
+24     cout << "\n";
+25     return 0;
+26 }
+INPUT 1
+5
+4 2 4 5 1
+OUTPUT 1
+1 2 4 4 5
+INPUT 2
+6
+3 3 3 3 3 3
+OUTPUT 2
+3 3 3 3 3 3
+TRAP Taking the first element as pivot makes already-sorted data O(n²). The middle element (or a random one)
+avoids that. Contest template problems (P1177) include such data on purpose; in practice just call sort .
+
+=== page 5 ===
+5基础篇  第 9 章  排序
+kth_smallest.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[5000005];
+5  
+6 int main() {
+7     ios::sync_with_stdio(false);
+8     cin.tie(nullptr);
+9     int n, k;
+10     cin >> n >> k;                   // k is 0-based
+11     for (int i = 0; i < n; i++) cin >> a[i];
+12     nth_element(a, a + k, a + n);    // a[k] is now correct
+13     cout << a[k] << "\n";
+14     return 0;
+15 }
+INPUT
+5 1
+4 3 2 1 5
+OUTPUT
+2
+KEY POINT After nth_element(a, a + k, a + n) , a[k]  holds the value it would have after a full sort, everything
+before it is ≤ and everything after is ≥. Average O(n), faster than sorting (P1923).
+TRAP With 5 × 106 numbers, slow input alone can time out: the two fast-IO lines are required here.
+
+=== page 6 ===
+6基础篇  第 9 章  排序
+merge_inversions.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[100005], tmp[100005];
+5 long long inv = 0;
+6  
+7 void mergeSort(int l, int r) {            // sorts a[l..r]
+8     if (l >= r) return;
+9     int m = (l + r) / 2;
+10     mergeSort(l, m);
+11     mergeSort(m + 1, r);
+12     int i = l, j = m + 1, k = l;
+13     while (i <= m && j <= r) {
+14         if (a[i] <= a[j]) tmp[k++] = a[i++];
+15         else { tmp[k++] = a[j++]; inv += m - i + 1; }  // a[i..m] > a[j]
+16     }
+17     while (i <= m) tmp[k++] = a[i++];
+18     while (j <= r) tmp[k++] = a[j++];
+19     for (int t = l; t <= r; t++) a[t] = tmp[t];
+20 }
+21  
+22 int main() {
+23     int n;
+24     cin >> n;
+25     for (int i = 0; i < n; i++) cin >> a[i];
+26     mergeSort(0, n - 1);
+27     cout << inv << "\n";
+28     for (int i = 0; i < n; i++) cout << a[i] << " ";
+29     cout << "\n";
+30     return 0;
+31 }
+INPUT 1
+4
+4 3 2 1
+OUTPUT 1
+6
+1 2 3 4
+INPUT 2
+5
+2 4 1 3 5
+OUTPUT 2
+3
+1 2 3 4 5
+KEY POINT Merge	sort sorts each half, then merges two sorted lists by repeatedly taking the smaller front value:
+always O(n log n). While merging, taking from the right half jumps over all values left in the left half,
+which counts inversions in O(n log n) instead of bubble sort's O(n²).
+9.4 排序算法的应用
+std::sort,	sort-then-scan,	and	sorting	records	by	several	keys.
+9.4.1 Sorting	with	std::sort
+Order	first,	then	many	problems	become	a	single	scan.
+
+=== page 7 ===
+7基础篇  第 9 章  排序
+5 2 9 1 7
+sort(a, a + 5)
+1 2 5 7 9
+IDEA sort(a, a + n)  puts a[0] … a[n-1]  in increasing
+order in O(n log n). After sorting, equal values sit next
+to each other, the smallest is at the front, and the k-th
+smallest is at index k − 1.
+KEY POINT The range is half-open: first element included, end
+pointer excluded. For a 1-based array use sort(a + 1,
+a + n + 1) .
+sort_basics.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[105];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     for (int i = 1; i <= n; i++) cin >> a[i];   // 1-based
+10     sort(a + 1, a + n + 1);                      // increasing
+11     for (int i = 1; i <= n; i++) cout << a[i] << " ";
+12     cout << "\n";
+13     sort(a + 1, a + n + 1, greater<int>());      // decreasing
+14     for (int i = 1; i <= n; i++) cout << a[i] << " ";
+15     cout << "\n";
+16     vector<int> v(a + 1, a + n + 1);             // vector copy
+17     sort(v.begin(), v.begin() + 3);              // first 3 only
+18     for (int i = 0; i < int(v.size()); i++) cout << v[i] << " ";
+19     cout << "\n";
+20     return 0;
+21 }
+INPUT
+5
+5 2 9 1 7
+OUTPUT
+1 2 5 7 9 
+9 7 5 2 1 
+5 7 9 2 1
+Call Effect
+sort(a, a + n) a[0..n−1] increasing
+sort(a + 1, a + n + 1) a[1..n] increasing
+sort(a, a + n, greater<int>()) decreasing
+sort(v.begin(), v.end()) whole vector
+sort(s.begin(), s.end()) letters of a string
+reverse(a, a + n) flip the order
+KEY POINT Any range can be sorted. The last line copies the decreasing array 9 7 5 2 1  into a vector and sorts only
+v.begin()  to v.begin() + 3 : the first three become 5 7 9 , the rest stay put.
+n O(n²) simple sorts O(n log n) std::sort
+103 106 steps: fine about 104
+105 1010: far too slow about 1.7 × 106
+
+=== page 8 ===
+8基础篇  第 9 章  排序
+n O(n²) simple sorts O(n log n) std::sort
+106 hopeless about 2 × 107: fine
+5 × 106 hopeless fine, but read input fast
+9.4.2 Sort,	then	scan
+After	sorting,	duplicates	are	neighbours	and	greedy	choices	are	easy.
+dedup.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<int> v(n);
+8     for (int i = 0; i < n; i++) cin >> v[i];
+9     sort(v.begin(), v.end());
+10     v.erase(unique(v.begin(), v.end()), v.end());
+11     cout << v.size() << "\n";
+12     for (int i = 0; i < int(v.size()); i++) cout << v[i] << " ";
+13     cout << "\n";
+14     return 0;
+15 }
+INPUT
+10
+20 40 32 67 40 20 89 300 400 15
+OUTPUT
+8
+15 20 32 40 67 89 300 400
+IDEA unique  removes adjacent repeats, moving the kept values to the front and returning where they end;
+erase  cuts off the rest. It only works after sort , which makes all copies adjacent (P1059).
+KEY POINT Small value range? A marking array does the same: seen[x] = true , then print every marked value in
+order.
+
+=== page 9 ===
+9基础篇  第 9 章  排序
+bookshelf.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int h[20005];
+5  
+6 int main() {
+7     int n;
+8     long long b;
+9     cin >> n >> b;
+10     for (int i = 0; i < n; i++) cin >> h[i];
+11     sort(h, h + n, greater<int>());   // tallest first
+12     long long sum = 0;
+13     int used = 0;
+14     while (sum < b) sum += h[used++];
+15     cout << used << "\n";
+16     return 0;
+17 }
+INPUT
+6 40
+6
+18
+11
+13
+19
+11
+OUTPUT
+3
+jolly.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[1005];
+5 bool seen[1005];
+6  
+7 int main() {
+8     int n;
+9     cin >> n;
+10     for (int i = 0; i < n; i++) cin >> a[i];
+11     for (int i = 1; i < n; i++) {
+12         int dif = abs(a[i] - a[i - 1]);
+13         if (dif >= 1 && dif < n) seen[dif] = true;
+14     }
+15     bool ok = true;
+16     for (int k = 1; k < n; k++)
+17         if (!seen[k]) ok = false;
+18     cout << (ok ? "Jolly" : "Not jolly") << "\n";
+19     return 0;
+20 }
+INPUT 1
+4 1 4 2 3
+OUTPUT 1
+Jolly
+INPUT 2
+5 1 4 2 -1 6
+OUTPUT 2
+Not jolly
+KEY POINT Fewest items to reach a total: take the biggest first, which needs sorting in decreasing order (P2676). "Do
+the gaps cover 1 … n − 1 exactly?" is a marking array, or a sort of the gaps and a check that gap i equals i
+(P1152).
+
+=== page 10 ===
+10基础篇  第 9 章  排序
+9.4.3 Sorting	records	by	several	keys
+Main	key	first;	each	tie-break	only	when	everything	before	it	is	equal.
+scholarship.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Stu {
+5     int id, chinese, math, english, total;
+6 };
+7  
+8 bool cmp(const Stu &x, const Stu &y) {
+9     if (x.total != y.total) return x.total > y.total;        // 1. total high
+10     if (x.chinese != y.chinese) return x.chinese > y.chinese; // 2. Chinese high
+11     return x.id < y.id;                                      // 3. id small
+12 }
+13  
+14 Stu s[305];
+15  
+16 int main() {
+17     int n;
+18     cin >> n;
+19     for (int i = 0; i < n; i++) {
+20         s[i].id = i + 1;                                     // remember input order
+21         cin >> s[i].chinese >> s[i].math >> s[i].english;
+22         s[i].total = s[i].chinese + s[i].math + s[i].english;
+23     }
+24     sort(s, s + n, cmp);
+25     for (int i = 0; i < 5 && i < n; i++) cout << s[i].id << " " << s[i].total << "\n";
+26     return 0;
+27 }
+INPUT
+6
+90 67 80
+87 66 91
+78 89 91
+88 99 77
+67 89 64
+78 89 98
+OUTPUT
+6 265
+4 264
+3 258
+2 244
+1 237
+IDEA Write the comparator as a ladder: compare
+key 1; if different, return that comparison.
+Otherwise move to key 2, and so on. The
+last rung is usually the input order (an id
+you stored), which makes every order
+fully defined (P1093, P1068, P1786).
+KEY POINT Need "same keys keep input order"?
+Either add the id as the last key, or call
+stable_sort , which never reorders
+equal elements (P1104: same birthday,
+later input first → id descending as the
+last key).
+TRAP A comparator must be a strict order:
+cmp(x, x)  must be false. Using >=  or
+<=  breaks sort , sometimes with a crash.
+KEY POINT Cut-off lines: sort, take the score of the
+person at position ⌊m × 1.5⌋, then count
+everyone with score ≥ that line, because
+ties at the line all pass (P1068).
+
+=== page 11 ===
+11基础篇  第 9 章  排序
+president.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 // a beats b if its vote string is a bigger number
+5 bool bigger(const string &a, const string &b) {
+6     if (a.size() != b.size()) return a.size() > b.size();
+7     return a > b;                    // same length: letter order
+8 }
+9  
+10 int main() {
+11     int n;
+12     cin >> n;
+13     int best = 1;
+14     string bestVotes;
+15     for (int i = 1; i <= n; i++) {
+16         string v;
+17         cin >> v;
+18         if (i == 1 || bigger(v, bestVotes)) { best = i; bestVotes = v; }
+19     }
+20     cout << best << "\n" << bestVotes << "\n";
+21     return 0;
+22 }
+INPUT
+5
+98765
+12365
+87954
+1022356
+985678
+OUTPUT
+4
+1022356
+IDEA Numbers too long for long long  can still be compared without big-number arithmetic: more digits
+means bigger; same length means dictionary order on the strings (P1781).
+KEY POINT The same comparison works inside a sort comparator for big numbers kept as strings. 3D climbing
+(P5143) is a sort by height followed by summing distances between neighbours.
+C C LANGUAGE · ADDITIONAL INFORMATION
+C sorts with qsort(base, count, size, cmp)  from <stdlib.h> . The comparison receives two const void *
+pointers and returns a negative number, zero or a positive number, unlike C++'s true/false comparator.
+TRAP Writing return x - y;  can overflow for large values of opposite sign. (x > y) - (x < y)  is safe.
+
+=== page 12 ===
+12基础篇  第 9 章  排序
+qsort_struct.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Stu { int id, total; };
+5  
+6 int cmpStu(const void *p, const void *q) {
+7     const struct Stu *x = (const struct Stu *)p;
+8     const struct Stu *y = (const struct Stu *)q;
+9     if (x->total != y->total)
+10         return (y->total > x->total) - (y->total < x->total);
+11     return (x->id > y->id) - (x->id < y->id);
+12 }
+13  
+14 int main() {
+15     struct Stu s[4] = {{1, 80}, {2, 95}, {3, 80}, {4, 70}};
+16     qsort(s, 4, sizeof(struct Stu), cmpStu);
+17     for (int i = 0; i < 4; i++)
+18         printf("%d %d\n", s[i].id, s[i].total);
+19     return 0;
+20 }
+OUTPUT
+2 95
+1 80
+3 80
+4 70
+9.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. sort(a,	a	+	n) is O(n log n); 1-based: sort(a	+	1,	a	+	n	+	1); decreasing: greater<int>().
+2. After sorting: duplicates are adjacent, k-th smallest is at index k − 1.
+3. Bubble-sort swaps = inversions = fewest adjacent swaps; O(n²).
+4. Insertion sort is fast on nearly sorted data; still O(n²) in general.
+5. Small value range: counting	sort, O(n + range).
+6. Quicksort: partition around a pivot; use the middle or a random pivot.
+7. nth_element(a,	a	+	k,	a	+	n): k-th smallest in average O(n).
+8. Merge sort is always O(n log n) and counts inversions while merging.
+9. Remove duplicates: sort, then v.erase(unique(…),	v.end()).
+10. Multi-key comparator: a ladder of "if different, return"; finish with the id.
+11. Comparator must be strict: never >=; stable_sort keeps equal items in input order.
+12. Compare huge numbers as strings: length first, then dictionary order.
+13. Millions of inputs: fast IO on, no endl.
+14. (C) qsort uses a comparator returning negative / zero / positive.
+
+=== page 13 ===
+13基础篇  第 9 章  排序
+9.5.1 Problems
+Problem Name Section What it tests
+P1271 选举学生会 9.1 Millions of small votes: counting sort.
+P1177 【模板】排序 9.3 Any O(n log n) sort; beware sorted input.
+P1923 求第  k 小的数 9.3 nth_element, plus fast input.
+P1059 明明的随机数 9.4 Sort + unique, or a marking array.
+P1093 奖学金 9.4 Three-key comparator; print the top 5.
+P1781 宇宙总统 9.4 Compare long numbers as strings: length, then order.
+P2676 Bookshelf B 9.4 Sort decreasing, take until the sum is reached.
+P1116 车厢重组 9.2 Count bubble-sort swaps (inversions).
+P1152 欢乐的跳 9.4 Gaps must cover 1 … n−1: mark or sort.
+P1068 分数线划定 9.4 Sort, find the line at ⌊1.5m⌋, count ties too.
+P5143 攀爬者 9.4 Sort points by height, sum 3D distances.
+P1104 生日 9.4 Sort by date; ties: later input first.
+9.5.2 Practice	ladder
+1. Direct. P1177: sort n numbers (9.3).
+2. One	twist. P1059: sort, then remove duplicates (9.4).
+3. Idea	hidden. P1116: minimum adjacent swaps = inversions (9.2).
+4. Two	ideas. P1068: multi-key sort plus a cut-off with ties (9.4).
+5. Stretch. P1923: k-th smallest of 5 × 10⁶ numbers (9.3).
+9.5.3 Experiments
+1. Run bubble, insertion and selection sort on 10⁴ sorted numbers and on 10⁴ reversed ones; time each.
+2. Change the quicksort pivot to a[l] and time it on sorted input.
+3. Count inversions of 1..n reversed with merge_inversions.cpp: compare with n(n−1)/2.
+4. Sort strings "10", "9", "100" with sort: explain the order.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

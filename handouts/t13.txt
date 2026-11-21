@@ -1,0 +1,496 @@
+# 拓展篇 第13章 计算几何  (拓13)
+# source: 拓展篇 第13章 计算几何.pdf
+
+=== page 1 ===
+1拓展篇  第 13 章  计算几何
+第 13 章 	 计算几何
+Computational geometry Luogu (verified) 8 problems C++17 · all programs run
+13.1 向量与凸包 13.2 平面最近点对
+13.3 课后习题与实验
+13.1 向量与凸包
+Cross	product	signs;	shoelace	area;	Andrew's	algorithm.
+a
+b
+a × b > 0
+a × b = a.x·b.y − a.y·b.x
+> 0: b is to the left
+= 0: same line
+< 0: b is to the right
+IDEA Computational geometry ( 计算几何 )
+starts with vectors and two products.
+The dot	product a·b = axbx + ayby
+measures the angle (0 at right angles).
+The cross	product a × b = axby − aybx is
+twice the signed triangle area: positive
+when b turns left from a.
+KEY POINT Almost every test is a cross-product
+sign: which side of a line a point lies on,
+whether two segments cross, whether a
+polygon turns left. Polygon area = ½ |Σ
+pi × pi+1| (the shoelace formula). Use
+integers when inputs are integers; with
+doubles compare against a small EPS.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 学 拓 展
+Vectors, dot and cross products, polygon area, the convex hull by monotone chain, and the closest pair of
+points by a sweep.
+
+=== page 2 ===
+2拓展篇  第 13 章  计算几何
+convex_hull.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct P { double x, y; };
+5 P operator-(P a, P b) { return P{a.x - b.x, a.y - b.y}; }
+6 double cross(P a, P b) { return a.x * b.y - a.y * b.x; }
+7 double dist(P a, P b) { return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
+8 bool byXY(P a, P b) { return a.x < b.x || (a.x == b.x && a.y < b.y); }
+9  
+10 int main() {
+11     int n;
+12     cin >> n;
+13     vector<P> p(n);
+14     for (int i = 0; i < n; i++) cin >> p[i].x >> p[i].y;
+15     sort(p.begin(), p.end(), byXY);
+16     vector<P> h;                                       // Andrew's monotone chain
+17     for (int pass = 0; pass < 2; pass++) {             // lower hull, then upper hull
+18         int start = h.size();
+19         for (int i = 0; i < n; i++) {
+20             P c = pass == 0 ? p[i] : p[n - 1 - i];
+21             while (int(h.size()) >= start + 2 && cross(h.back() - h[h.size() - 2], c - h.back()) <= 0)
+22                 h.pop_back();                          // not a left turn: drop the middle point
+23             h.push_back(c);
+24         }
+25         h.pop_back();                                  // the last point starts the other chain
+26     }
+27     double per = 0;
+28     for (int i = 0; i < int(h.size()); i++) per += dist(h[i], h[(i + 1) % h.size()]);
+29     double area = 0;
+30     for (int i = 0; i < int(h.size()); i++) area += cross(h[i], h[(i + 1) % h.size()]);
+31     cout << fixed << setprecision(2) << per << "\n" << fabs(area) / 2 << "\n";
+32     return 0;
+33 }
+INPUT
+4
+4 8
+4 12
+5 9.3
+7 8
+OUTPUT
+12.00
+6.00
+KEY POINT Convex hull (P2742): sort points by x, build the lower chain left to right and the upper chain right to left,
+popping while the last turn is not to the left. O(n log n). The hull here is the triangle (4, 8), (7, 8), (4, 12):
+perimeter 3 + 5 + 4 = 12, area 6.
+TRAP Use ≤ 0 in the pop condition to drop collinear points (or < 0 to keep them, if the problem wants them).
+Duplicate points and n ≤ 2 are the classic edge cases.
+13.2 平面最近点对
+Sweep	with	a	set	ordered	by	y.
+IDEA Closest	pair	of	points ( 平面最近点对 ): sort by x and sweep. Keep a set of the points within the current
+best distance h to the left, ordered by y; for each new point only those with |y − yp| < h can be closer, and
+there are only a few of them. O(n log n).
+
+=== page 3 ===
+3拓展篇  第 13 章  计算几何
+KEY POINT Other classic geometry: rotating calipers on the hull for the farthest pair (P1452) and the smallest
+enclosing rectangle (P3187); half-plane intersection (P4196); minimum enclosing circle by random
+incremental construction ( 第 15 章 ).
+
+=== page 4 ===
+4拓展篇  第 13 章  计算几何
+closest_pair.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<pair<double, double>> p(n);                       // (x, y)
+8     for (int i = 0; i < n; i++) cin >> p[i].first >> p[i].second;
+9     sort(p.begin(), p.end());
+10     set<pair<double, double>> active;                        // (y, x) of points with x within h
+11     double h = 1e18;
+12     int left = 0;
+13     for (int i = 0; i < n; i++) {
+14         while (left < i && p[i].first - p[left].first >= h) {  // too far to the left
+15             active.erase(make_pair(p[left].second, p[left].first));
+16             left++;
+17         }
+18         auto it = active.lower_bound(make_pair(p[i].second - h, -1e18));
+19         for (; it != active.end() && it->first < p[i].second + h; it++) {
+20             double dx = p[i].first - it->second, dy = p[i].second - it->first;
+21             h = min(h, sqrt(dx * dx + dy * dy));
+22         }
+23         active.insert(make_pair(p[i].second, p[i].first));
+24     }
+25     cout << fixed << setprecision(4) << h << "\n";
+26     return 0;
+27 }
+INPUT 1
+3
+1 1
+1 2
+2 2
+OUTPUT 1
+1.0000
+INPUT 2
+300
+275 -477
+519 -266
+628 414
+930 723
+515 335
+888 85
+-941 721
+-47 589
+931 -490
+329 -894
+845 -679
+-769 -239
+-40 778
+-496 -221
+113 -792
+175 -490
+-974 497
+-557 -165
+-428 -628
+876 776
+568 -203
+-674 560
+632 -853
+-716 265
+264 -89
+-741 -730
+-997 991
+784 -990
+-572 584
+OUTPUT 2
+4.0000
+
+=== page 5 ===
+5拓展篇  第 13 章  计算几何
+-559 966
+-661 786
+-660 -408
+-358 969
+-593 104
+794 388
+281 -581
+-628 927
+983 414
+-597 979
+976 830
+-216 -389
+-956 -261
+-151 -661
+916 -702
+-460 -867
+-321 -383
+674 235
+200 -994
+220 388
+449 -308
+-865 -366
+-273 676
+-374 -16
+426 -354
+-622 -15
+-33 443
+-640 -884
+-476 997
+923 -954
+944 535
+-268 730
+-173 -963
+124 613
+-143 -251
+-230 184
+722 -982
+-73 -905
+449 -630
+277 956
+954 -598
+-757 547
+-497 903
+678 929
+-54 -295
+49 -274
+828 74
+-487 588
+-53 -779
+207 532
+599 632
+-248 760
+-395 -925
+-114 936
+-814 -574
+-303 50
+250 -258
+880 -697
+-304 -436
+892 438
+116 -812
+-361 404
+-352 -373
+-637 635
+-840 283
+-696 476
+411 -367
+
+=== page 6 ===
+6拓展篇  第 13 章  计算几何
+-10 -670
+474 -901
+-835 230
+92 891
+-169 -935
+-514 516
+216 -296
+692 -488
+-67 333
+-137 -702
+-886 876
+307 -933
+641 10
+-316 717
+-576 -733
+498 155
+945 -729
+291 836
+613 -153
+-782 -655
+-111 -237
+-695 -880
+730 -139
+-397 -711
+-72 888
+270 745
+-654 998
+69 -72
+966 -1
+410 494
+-350 -19
+-439 -404
+-38 -174
+847 -700
+-770 -228
+683 89
+965 -633
+284 919
+22 777
+-307 -632
+-818 7
+-443 55
+601 122
+776 29
+-261 -871
+609 628
+586 -272
+422 203
+359 -930
+555 -374
+-256 145
+442 368
+-425 710
+-6 -458
+576 414
+466 -399
+959 936
+-304 330
+-635 189
+744 -977
+-29 120
+584 -487
+-333 375
+-440 -52
+-409 672
+24 325
+379 633
+
+=== page 7 ===
+7拓展篇  第 13 章  计算几何
+-270 -288
+-440 319
+-293 511
+920 696
+-164 -284
+888 726
+-647 781
+775 409
+-79 999
+-254 958
+-316 61
+-710 84
+-660 -594
+713 -259
+919 748
+-23 -421
+416 -839
+473 373
+495 -147
+-649 263
+598 917
+189 57
+363 917
+-139 -381
+277 132
+586 775
+304 -446
+475 -944
+-600 -673
+201 -97
+278 331
+-630 -552
+554 404
+-631 292
+471 -915
+-35 -537
+-661 -890
+826 -727
+-774 -351
+982 -629
+-12 -604
+122 -927
+-150 -48
+-281 -222
+356 252
+-853 208
+-582 -513
+470 849
+-235 -999
+-283 -170
+949 -430
+752 -161
+774 -765
+410 702
+120 -235
+975 -927
+126 256
+-383 -806
+-396 116
+49 -305
+947 189
+-400 962
+-280 676
+-736 -142
+-162 665
+154 315
+102 -244
+
+=== page 8 ===
+8拓展篇  第 13 章  计算几何
+-43 -709
+-679 220
+-217 154
+-24 960
+-593 982
+-728 246
+-814 -281
+681 829
+355 -999
+-218 -779
+-333 158
+876 259
+104 -712
+-334 289
+795 825
+155 -231
+-121 -116
+1000 -537
+10 -404
+-18 991
+450 -223
+-214 968
+750 871
+-675 220
+216 -468
+517 -384
+16 -486
+-150 -960
+-347 935
+-371 7
+903 -414
+-707 -24
+-952 -751
+351 273
+967 -92
+-498 -400
+-919 600
+-721 693
+-197 -973
+-17 90
+147 -440
+-502 915
+-29 601
+-925 -497
+3 -452
+728 -684
+477 -415
+-400 8
+245 -28
+61 320
+768 236
+803 522
+832 -758
+-967 557
+-742 -385
+-422 92
+450 -312
+256 -393
+497 85
+-946 -50
+-284 -261
+396 525
+664 209
+-729 -926
+-995 -484
+133 -67
+404 877
+
+=== page 9 ===
+9拓展篇  第 13 章  计算几何
+-780 818
+407 117
+-609 -971
+IDEA P1257 / P1429. The second test has 300 random points and is checked against Python comparing all
+pairs.
+KEY POINT Duplicate points: the set stores (y, x) pairs, so two equal points would collide; then the answer is 0
+anyway. With such a case possible, check duplicates while sorting.
+13.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Dot: angle; cross a × b: twice the signed area; > 0 means b turns left.
+2. Area = ½ |Σ pᵢ × pᵢ₊₁|.
+3. Hull: sort by x, lower then upper chain, pop while not a left turn.
+4. Closest pair: sweep by x, set by y, only |dy| < h matters.
+5. Integers when possible; with doubles compare using EPS.
+13.3.1 Problems
+Problem Name Section What it tests
+P2742 【模板】二维凸包  / 圈奶
+牛 Fencing the Cows
+13.1 Monotone chain perimeter.
+P1452 Beauty Contest G 13.1 Farthest pair: rotating calipers.
+P3829 信用卡凸包 13.1 Hull of corner centres + one circle.
+P3187 最小矩形覆盖 13.1 Rotating calipers, smallest rectangle.
+P4196 【模板】半平面交  / 凸多
+边形
+13.1 Half-plane intersection area.
+P1257 平面上的最接近点对 13.2 Closest pair.
+P1429 平面最近点对（加强版） 13.2 Same, n = 2·10⁵.
+P2785 物理 1 （ phsic1 ） - 磁通量 13.1 Polygon area with cross products.
+13.3.2 Practice	ladder
+1. Direct. P2742: convex hull (13.1).
+2. One	twist. P1257: closest pair (13.2).
+3. Idea	hidden. P1452: rotating calipers (13.1).
+4. Two	ideas. P4196: half-plane intersection (13.1).
+5. Stretch. P1429: large closest pair (13.2).
+13.3.3 Experiments
+1. Add collinear points to the hull sample and compare ≤ 0 with < 0 in the pop test.
+2. Compute the area of a concave polygon with the shoelace formula and check by counting grid squares.
+
+=== page 10 ===
+10拓展篇  第 13 章  计算几何
+3. Time closest_pair.cpp against the O(n²) loop for n = 2·10⁴.
+4. Feed the hull points all on one line; what should the program print?
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,231 @@
+# 拓展篇 第25章 搜索补充  (拓25)
+# source: 拓展篇 第25章 搜索补充.pdf
+
+=== page 1 ===
+1拓展篇  第 25 章  搜索补充
+第 25 章 	 搜索补充
+Flood fill, bidirectional BFS, IDA* Luogu (verified) 4 problems C++17 · all programs run
+25.1 洪水填充 25.2 双向广搜
+25.3 IDA* 25.4 课后习题与实验
+25.1 洪水填充
+Connected	regions;	mark	on	push.
+IDEA Flood	fill ( 洪水填充 ): starting from a cell, visit every connected cell of the same kind (BFS or DFS) and
+mark it. Counting how many times a new fill has to start counts the connected	regions. "Connected"
+must be defined: 4 neighbours (edges) or 8 neighbours (edges and corners).
+KEY POINT Mark cells when they are pushed, not when they are popped, or a cell can enter the queue many times. On
+large grids prefer BFS or an explicit stack over recursion, which can overflow on a 1000 × 1000 region.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 基 础 补 充
+Count regions by flood fill, meet in the middle with bidirectional BFS, and search deep with an estimate-
+based bound using IDA*.
+
+=== page 2 ===
+2拓展篇  第 25 章  搜索补充
+flood_fill.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int R, C;
+6     cin >> R >> C;
+7     vector<string> g(R);
+8     for (int i = 0; i < R; i++) cin >> g[i];
+9     int ponds = 0;
+10     for (int i = 0; i < R; i++)
+11         for (int j = 0; j < C; j++) {
+12             if (g[i][j] != 'W') continue;
+13             ponds++;                                    // a new region starts here
+14             queue<pair<int, int>> q;
+15             q.push(make_pair(i, j)); g[i][j] = '.';     // mark on push
+16             while (!q.empty()) {
+17                 int x = q.front().first, y = q.front().second; q.pop();
+18                 for (int dx = -1; dx <= 1; dx++)
+19                     for (int dy = -1; dy <= 1; dy++) {  // 8 neighbours
+20                         int a = x + dx, b = y + dy;
+21                         if (a >= 0 && a < R && b >= 0 && b < C && g[a][b] == 'W') { g[a][b] = '.'; 
+q.push(make_pair(a, b)); }
+22                     }
+23             }
+24         }
+25     cout << ponds << "\n";
+26     return 0;
+27 }
+INPUT
+10 12
+W........WW.
+.WWW.....WWW
+....WW...WW.
+.........WW.
+.........W..
+..W......W..
+.W.W.....WW.
+W.W.W.....W.
+.W.W......W.
+..W.......W.
+OUTPUT
+3
+KEY POINT Lake Counting (P1596) uses 8-connectivity. Overwriting the grid itself is the cheapest "visited" mark
+when the grid is not needed afterwards.
+25.2 双向广搜
+Two	frontiers;	expand	the	smaller	layer.
+IDEA Bidirectional	BFS ( 双向广搜 ): when the start and the goal are both known, search from both ends at once
+and stop when the two frontiers meet. If each state has b neighbours and the answer is d, one BFS visits
+about bd states, two half-searches about 2·bd/2: the square root.
+KEY POINT Expand the smaller frontier each round, one whole layer at a time; when a newly reached state is already
+known from the other side, answer = its distance from this side + its distance from the other side. The
+moves must be reversible (or searched backwards with reversed moves).
+
+=== page 3 ===
+3拓展篇  第 25 章  搜索补充
+bidirectional_bfs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const string goal = "123804765";
+5  
+6 int main() {
+7     string start;
+8     cin >> start;
+9     if (start == goal) { cout << 0 << "\n"; return 0; }
+10     unordered_map<string, int> dist[2];                 // distances from each side
+11     queue<string> q[2];
+12     dist[0][start] = 0; q[0].push(start);
+13     dist[1][goal] = 0;  q[1].push(goal);
+14     int dx[4] = {-1, 1, 0, 0}, dy[4] = {0, 0, -1, 1};
+15     while (!q[0].empty() && !q[1].empty()) {
+16         int s = q[0].size() <= q[1].size() ? 0 : 1;     // grow the smaller side
+17         int layer = q[s].size();
+18         for (int it = 0; it < layer; it++) {            // one whole layer
+19             string u = q[s].front(); q[s].pop();
+20             int z = u.find('0');
+21             for (int k = 0; k < 4; k++) {
+22                 int x = z / 3 + dx[k], y = z % 3 + dy[k];
+23                 if (x < 0 || x > 2 || y < 0 || y > 2) continue;
+24                 string v = u;
+25                 swap(v[z], v[x * 3 + y]);
+26                 if (dist[s].count(v)) continue;
+27                 dist[s][v] = dist[s][u] + 1;
+28                 if (dist[1 - s].count(v)) { cout << dist[s][v] + dist[1 - s][v] << "\n"; return 0; }   
+// the searches meet
+29                 q[s].push(v);
+30             }
+31         }
+32     }
+33     cout << -1 << "\n";
+34     return 0;
+35 }
+INPUT 1
+283104765
+OUTPUT 1
+4
+INPUT 2
+123804765
+OUTPUT 2
+0
+KEY POINT The 8-puzzle ( 八数码难题  P1379) again (A* in 进阶篇  第 4 章 ). Each sliding move is its own reverse, so
+the backward search uses the same moves. Finishing whole layers keeps the meeting distance correct.
+25.3 IDA*
+Deepening	on	g	+	h;	search	summary.
+IDEA IDA* = iterative deepening ( 进阶篇  第 4 章 ) + an A* estimate h. Search depth-first with a bound D on g + h:
+cut any branch where moves so far + the estimate of moves still needed > D. If the search fails, raise D.
+Memory is just the recursion stack, and a good h cuts most of the tree.
+KEY POINT h must never overestimate (as in A*). For sliding or swapping puzzles, "number of misplaced pieces" (or
+that number divided by what one move can fix) is the usual choice. Also skip the move that undoes the
+previous one.
+
+=== page 4 ===
+4拓展篇  第 25 章  搜索补充
+knights_ida.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const char goal[5][6] = {"11111", "01111", "00*11", "00001", "00000"};
+5 char b[5][6];
+6 int dx[8] = {1, 1, -1, -1, 2, 2, -2, -2}, dy[8] = {2, -2, 2, -2, 1, -1, 1, -1};
+7 int limit;
+8  
+9 int h() {                                        // misplaced knights: each move fixes at most one
+10     int c = 0;
+11     for (int i = 0; i < 5; i++) for (int j = 0; j < 5; j++) if (b[i][j] != goal[i][j] && b[i][j] != '*') 
+c++;
+12     return c;
+13 }
+14 bool dfs(int g, int x, int y, int lastK) {
+15     int est = h();
+16     if (est == 0) return true;
+17     if (g + est > limit) return false;           // the IDA* cut
+18     for (int k = 0; k < 8; k++) {
+19         if (lastK >= 0 && k == (lastK ^ 1)) continue;   // do not undo the previous move
+20         int a = x + dx[k], c = y + dy[k];
+21         if (a < 0 || a > 4 || c < 0 || c > 4) continue;
+22         swap(b[x][y], b[a][c]);                  // move a knight into the empty square
+23         if (dfs(g + 1, a, c, k)) return true;
+24         swap(b[x][y], b[a][c]);
+25     }
+26     return false;
+27 }
+28  
+29 int main() {
+30     int T;
+31     cin >> T;
+32     while (T--) {
+33         int ex = 0, ey = 0;
+34         for (int i = 0; i < 5; i++) { cin >> b[i]; for (int j = 0; j < 5; j++) if (b[i][j] == '*') { ex 
+= i; ey = j; } }
+35         int ans = -1;
+36         for (limit = 0; limit <= 15; limit++) if (dfs(0, ex, ey, -1)) { ans = limit; break; }
+37         cout << ans << "\n";
+38     }
+39     return 0;
+40 }
+INPUT
+2
+10110
+01*11
+10111
+01001
+00000
+01011
+110*1
+01110
+01110
+00100
+OUTPUT
+7
+-1
+KEY POINT Knights ( 骑士精神  P2324): reach the target board in at most 15 moves, else −1. Moves k and k ^ 1 are
+opposite in the dx/dy table, which makes "do not undo" a single comparison.
+
+=== page 5 ===
+5拓展篇  第 25 章  搜索补充
+Search Order Memory Best for
+BFS by distance whole layer shortest path, unit steps
+DFS + pruning deep first path only existence, counting, small answers
+BFS + deque (0-1 BFS) by distance layer weights 0/1 ( 第 17 章 )
+BFS + priority queue by cost all reached Dijkstra, weighted steps
+A* by g + h all reached one target, good estimate
+IDA* deepening on g + h path only one target, little memory
+bidirectional BFS both ends 2 half-searches known start and goal, reversible moves
+25.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Flood fill: BFS/DFS per new region; mark on push.
+2. Bidirectional BFS: b^(d/2) per side; expand smaller frontier by whole layers.
+3. Meeting state: answer = dist from side A + dist from side B.
+4. IDA*: DFS with bound on g + h; increase the bound until success.
+5. h must not overestimate; forbid undoing the last move.
+25.4.1 Problems
+Problem Name Section What it tests
+P1596 Lake Counting S 25.1 8-connected regions.
+P1379 八数码难题 25.2 Bidirectional BFS.
+P1032 字串变换（疑似错题） 25.2 Rule-based states from both ends.
+P2324 骑士精神 25.3 IDA* with misplaced count.
+25.4.2 Practice	ladder
+1. Direct. P1596: flood fill (25.1).
+2. One	twist. P1379: bidirectional BFS (25.2).
+3. Idea	hidden. P2324: IDA* (25.3).
+25.4.3 Experiments
+1. Count states visited by one-sided BFS and by bidirectional_bfs.cpp for hard 8-puzzles.
+2. Remove the "do not undo" rule in knights_ida.cpp and time it.
+3. Switch flood_fill.cpp to 4-connectivity and see the count change.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

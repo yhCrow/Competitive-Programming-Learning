@@ -1,0 +1,136 @@
+# 拓展篇 第19章 线段树分治与可撤销并查集  (拓19)
+# source: 拓展篇 第19章 线段树分治与可撤销并查集.pdf
+
+=== page 1 ===
+1拓展篇  第 19 章  线段树分治与可撤销并查集
+第 19 章 	 线段树分治与可撤销并查集
+Segment tree on time, rollback DSU Luogu (verified) 4 problems C++17 · all programs run
+19.1 线段树分治 19.2 课后习题与实验
+19.1 线段树分治
+Rollback	DSU	with	parity;	bipartite	at	every	moment.
+IDEA A rollback	DSU ( 可撤销并查集 ) undoes its last merges in reverse order. Use union	by	size	(or	rank)
+only,	no	path	compression, so a merge changes just two values: the parent of the smaller root and the
+size of the larger. Push those changes on a stack; undo pops them. find is O(log n).
+KEY POINT Path compression rewrites many parents in one find, which cannot be undone cheaply; union by size
+alone keeps trees O(log n) deep. A DSU that also stores the parity to the root (weighted DSU) can check
+bipartiteness: joining two nodes of the same parity in the same component means an odd cycle.
+IDEA Segment	tree	on	time ( 线段树分治 ) solves offline problems where items (edges, values) exist	during
+a	time	interval and queries ask about each moment. Put each item into the O(log T) segment-tree nodes
+that cover its interval. DFS the tree: entering a node, add its items (merges in the rollback DSU); at a leaf,
+answer that moment; leaving, roll back.
+KEY POINT Deletion is the hard operation for DSU; this trick needs only "add" and "undo the last add". Total cost O(m
+log T log n). It also works with linear bases, knapsacks, or anything that can be undone in order.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 据 结 构 拓 展
+Make deletions disappear: put every item on the time-segment nodes it lives on, add while going down,
+answer at leaves, and undo in order with a DSU that never compresses paths.
+
+=== page 2 ===
+2拓展篇  第 19 章  线段树分治与可撤销并查集
+time_divide.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 200005;
+5 int n, m, k, fa[N], sz[N], par[N];               // par: parity of the edge to fa
+6 vector<pair<int, int>> seg[N * 4];               // edges living on each node
+7 struct Op { int child, root, oldSize; };
+8 vector<Op> ops;
+9  
+10 pair<int, int> find(int x) {                     // (root, parity from x to root), no compression
+11     int p = 0;
+12     while (fa[x] != x) { p ^= par[x]; x = fa[x]; }
+13     return make_pair(x, p);
+14 }
+15 bool unite(int u, int v) {                       // false if an odd cycle appears
+16     pair<int, int> a = find(u), b = find(v);
+17     if (a.first == b.first) return a.second != b.second;
+18     if (sz[a.first] < sz[b.first]) swap(a, b);
+19     fa[b.first] = a.first; par[b.first] = a.second ^ b.second ^ 1;   // u and v get different colours
+20     ops.push_back(Op{b.first, a.first, sz[a.first]});
+21     sz[a.first] += sz[b.first];
+22     return true;
+23 }
+24 void rollback(int to) {
+25     while (int(ops.size()) > to) {
+26         Op o = ops.back(); ops.pop_back();
+27         fa[o.child] = o.child; par[o.child] = 0; sz[o.root] = o.oldSize;
+28     }
+29 }
+30 void addEdge(int p, int l, int r, int x, int y, pair<int, int> e) {
+31     if (y < l || r < x) return;
+32     if (x <= l && r <= y) { seg[p].push_back(e); return; }
+33     int mid = (l + r) / 2;
+34     addEdge(2 * p, l, mid, x, y, e); addEdge(2 * p + 1, mid + 1, r, x, y, e);
+35 }
+36 void solve(int p, int l, int r, bool ok) {
+37     int mark = ops.size();
+38     for (int i = 0; ok && i < int(seg[p].size()); i++) ok = unite(seg[p][i].first, seg[p][i].second);
+39     if (l == r) cout << (ok ? "Yes" : "No") << "\n";
+40     else { int mid = (l + r) / 2; solve(2 * p, l, mid, ok); solve(2 * p + 1, mid + 1, r, ok); }
+41     rollback(mark);                              // leave the node: undo its merges
+42 }
+43  
+44 int main() {
+45     cin >> n >> m >> k;
+46     for (int i = 1; i <= n; i++) { fa[i] = i; sz[i] = 1; }
+47     for (int i = 0; i < m; i++) {
+48         int x, y, l, r;
+49         cin >> x >> y >> l >> r;                 // the edge exists at times l+1 .. r
+50         if (l + 1 <= r) addEdge(1, 1, k, l + 1, r, make_pair(x, y));
+51     }
+52     solve(1, 1, k, true);
+53     return 0;
+54 }
+INPUT
+5 7 6
+4 5 3 6
+5 2 1 6
+4 2 0 4
+3 2 0 5
+1 4 3 6
+OUTPUT
+Yes
+Yes
+Yes
+No
+Yes
+Yes
+
+=== page 3 ===
+3拓展篇  第 19 章  线段树分治与可撤销并查集
+5 2 4 5
+5 1 0 1
+KEY POINT Is the graph bipartite at each moment (P5787)? Each edge lives during (l, r]. The answers for random
+edges are checked by colouring each moment's graph in Python. Once an odd cycle appears in a node,
+every moment below it is "No", so the flag is passed down and further merges are skipped.
+TRAP Do not add path compression "for speed": it breaks rollback. Roll back to the stack size you saw on
+entering the node, not by a count of merges, because a failed or skipped merge pushes nothing.
+KEY POINT Related: a persistent	DSU (P3402) keeps every version with a persistent array ( 进阶篇  第 8 章 ) for fa and
+size, again without path compression. Offline dynamic connectivity (P2147 without LCT) is segment tree
+on time with a plain rollback DSU.
+19.2 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Rollback DSU: union by size, no path compression; stack of (child, root, old size).
+2. Undo to the stack size seen on entry.
+3. Parity DSU: same root and same parity ⇒ odd cycle.
+4. Item alive on [l, r]: add to O(log T) nodes; DFS adds, answers at leaves, rolls back.
+5. Cost O(m log T log n); needs only add + undo.
+19.2.1 Problems
+Problem Name Section What it tests
+P5787 【模板】线段树分治  / 二
+分图
+19.1 Bipartite at each time.
+P3402 【模板】可持久化并查集 19.1 Persistent fa and size arrays.
+P2147 洞穴勘测 19.1 Offline dynamic connectivity (or LCT).
+P1525 关押罪犯 19.1 Parity DSU.
+19.2.2 Practice	ladder
+1. Direct. P1525: parity DSU (19.1).
+2. One	twist. P5787: segment tree on time (19.1).
+3. Idea	hidden. P3402: persistent DSU (19.1).
+19.2.3 Experiments
+1. Add path compression to time_divide.cpp and find where rollback breaks.
+2. Count DSU operations for m random intervals and compare with m log T.
+3. Solve P2147 offline with this method and online with LCT; compare the code.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

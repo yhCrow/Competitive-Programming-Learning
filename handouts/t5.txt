@@ -1,0 +1,271 @@
+# 拓展篇 第5章 分块与莫队  (拓5)
+# source: 拓展篇 第05章 分块与莫队.pdf
+
+=== page 1 ===
+1拓展篇  第 5 章  分块与莫队
+第 5 章 	 分块与莫队
+Sqrt decomposition and Mo's algorithm Luogu (verified) 14 problems C++17 · all programs run
+5.1 分块 5.2 莫队算法
+5.3 课后习题与实验
+5.1 分块
+Partial	ends	+	whole	blocks;	lazy	adds;	sorted	blocks.
+1 2 3 4 5 6 7 8 9 10
+block 1 block 2 block 3
+query [2, 10]: ends one by one (blue),
+whole blocks by their totals (green)
+IDEA Sqrt	decomposition ( 分块 ): cut the
+array into blocks of size about √n. A
+range query or update touches at most
+two partial blocks, handled element by
+element, and the whole blocks in
+between, handled by one value per
+block (a sum, a lazy add, a sorted copy).
+Each operation costs O(√n).
+KEY POINT Segment trees are faster, but blocks are
+far more flexible: anything you can keep
+per block (sorted order, counts, a hash
+table) works, and the code is a few
+simple loops. When the information
+does not merge nicely, think of blocks.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 据 结 构 拓 展
+Cut the array into √n blocks to answer queries a segment tree cannot merge, and answer many offline
+range queries by moving a window in a clever order.
+
+=== page 2 ===
+2拓展篇  第 5 章  分块与莫队
+block_sum.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, m, B, bl[100005];
+5 long long a[100005], sum[400], add_[400];
+6  
+7 void update(int l, int r, long long v) {
+8     if (bl[l] == bl[r]) { for (int i = l; i <= r; i++) { a[i] += v; sum[bl[i]] += v; } return; }
+9     for (int i = l; bl[i] == bl[l]; i++) { a[i] += v; sum[bl[i]] += v; }        // left end
+10     for (int i = r; bl[i] == bl[r]; i--) { a[i] += v; sum[bl[i]] += v; }        // right end
+11     for (int b = bl[l] + 1; b < bl[r]; b++) add_[b] += v;                       // whole blocks
+12 }
+13 long long query(int l, int r) {
+14     long long s = 0;
+15     if (bl[l] == bl[r]) { for (int i = l; i <= r; i++) s += a[i] + add_[bl[i]]; return s; }
+16     for (int i = l; bl[i] == bl[l]; i++) s += a[i] + add_[bl[i]];
+17     for (int i = r; bl[i] == bl[r]; i--) s += a[i] + add_[bl[i]];
+18     for (int b = bl[l] + 1; b < bl[r]; b++) s += sum[b] + add_[b] * B;          // full block of size B
+19     return s;
+20 }
+21  
+22 int main() {
+23     cin >> n >> m;
+24     B = max(1, int(sqrt(n)));
+25     for (int i = 1; i <= n; i++) { cin >> a[i]; bl[i] = (i - 1) / B; sum[bl[i]] += a[i]; }
+26     while (m--) {
+27         int op, x, y;
+28         cin >> op >> x >> y;
+29         if (op == 1) { long long k; cin >> k; update(x, y, k); }
+30         else cout << query(x, y) << "\n";
+31     }
+32     return 0;
+33 }
+INPUT
+5 5
+1 5 4 2 3
+2 2 4
+1 2 3 2
+2 3 4
+1 1 5 1
+2 1 4
+OUTPUT
+11
+8
+20
+IDEA Range add + range sum (P3372, the segment tree template) with blocks. bl[i] is the block of position i.
+Whole blocks only get a lazy add_; partial blocks update elements and the block sum directly.
+KEY POINT Whole blocks lie strictly between bl[l] and bl[r], so they always have the full size B; the last, shorter
+block is only ever a partial block.
+
+=== page 3 ===
+3拓展篇  第 5 章  分块与莫队
+magic.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, q, B, bl[1000005];
+5 long long a[1000005], add_[1005];
+6 vector<long long> sorted_[1005];                 // each block, sorted (without its add_)
+7  
+8 void rebuild(int b) {
+9     sorted_[b].clear();
+10     for (int i = b * B + 1; i <= min(n, (b + 1) * B); i++) sorted_[b].push_back(a[i]);
+11     sort(sorted_[b].begin(), sorted_[b].end());
+12 }
+13  
+14 int main() {
+15     cin >> n >> q;
+16     B = max(1, int(sqrt(n)));
+17     for (int i = 1; i <= n; i++) { cin >> a[i]; bl[i] = (i - 1) / B; }
+18     for (int b = 0; b <= bl[n]; b++) rebuild(b);
+19     while (q--) {
+20         char op; int l, r; long long w;
+21         cin >> op >> l >> r >> w;
+22         if (op == 'M') {                         // add w to [l, r]
+23             if (bl[l] == bl[r]) { for (int i = l; i <= r; i++) a[i] += w; rebuild(bl[l]); continue; }
+24             for (int i = l; bl[i] == bl[l]; i++) a[i] += w;
+25             for (int i = r; bl[i] == bl[r]; i--) a[i] += w;
+26             rebuild(bl[l]); rebuild(bl[r]);
+27             for (int b = bl[l] + 1; b < bl[r]; b++) add_[b] += w;    // order inside is unchanged
+28         } else {                                 // how many in [l, r] are >= w
+29             int cnt = 0;
+30             if (bl[l] == bl[r]) { for (int i = l; i <= r; i++) cnt += a[i] + add_[bl[i]] >= w; }
+31             else {
+32                 for (int i = l; bl[i] == bl[l]; i++) cnt += a[i] + add_[bl[i]] >= w;
+33                 for (int i = r; bl[i] == bl[r]; i--) cnt += a[i] + add_[bl[i]] >= w;
+34                 for (int b = bl[l] + 1; b < bl[r]; b++)          // binary search in the sorted block
+35                     cnt += sorted_[b].end() - lower_bound(sorted_[b].begin(), sorted_[b].end(), w - 
+add_[b]);
+36             }
+37             cout << cnt << "\n";
+38         }
+39     }
+40     return 0;
+41 }
+INPUT
+5 3
+1 2 3 4 5
+A 1 5 4
+M 3 5 1
+A 1 5 4
+OUTPUT
+2
+3
+IDEA The magician (P2801): range add, and "how many in [l, r] are at least w". A segment tree cannot merge
+such counts, but a sorted	copy of each block answers it by binary search. Adding to a whole block keeps
+its order, so only the two partial blocks are re-sorted.
+KEY POINT Query cost √n · log n, update cost √n log √n. Choosing the block size to balance the two parts is part of
+the design; √n is the usual start.
+
+=== page 4 ===
+4拓展篇  第 5 章  分块与莫队
+5.2 莫队算法
+Sorted	offline	queries;	moving	window;	variants.
+IDEA Mo's	algorithm ( 莫队 ) answers many offline range queries when moving one end by one position is
+cheap (add or remove one element). Sort the queries by (block of l, then r), and move a window [L, R]
+from one query to the next, adjusting one element at a time.
+KEY POINT Inside one block of l, r only increases: O(n) per block, √n blocks. l moves at most √n per query. Total
+O((n + q)√n). It only needs add(x) and remove(x) in O(1): counts of values, number of distinct values,
+sums of squares, pairs of equal values.
+mo.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, m, k, B, a[50005], cnt[50005];
+5 long long cur = 0, ans[50005];
+6 struct Q { int l, r, id; };
+7  
+8 bool cmp(const Q &x, const Q &y) {
+9     if (x.l / B != y.l / B) return x.l / B < y.l / B;
+10     return (x.l / B) % 2 ? x.r > y.r : x.r < y.r;     // odd blocks: r goes back (fewer moves)
+11 }
+12 void add(int i) { cur += 2 * cnt[a[i]] + 1; cnt[a[i]]++; }      // (c+1)^2 - c^2
+13 void remove_(int i) { cnt[a[i]]--; cur -= 2 * cnt[a[i]] + 1; }
+14  
+15 int main() {
+16     cin >> n >> m >> k;
+17     B = max(1, int(sqrt(n)));
+18     for (int i = 1; i <= n; i++) cin >> a[i];
+19     vector<Q> qs(m);
+20     for (int i = 0; i < m; i++) { cin >> qs[i].l >> qs[i].r; qs[i].id = i; }
+21     sort(qs.begin(), qs.end(), cmp);
+22     int L = 1, R = 0;                                 // empty window
+23     for (int i = 0; i < m; i++) {
+24         while (R < qs[i].r) add(++R);                 // grow first,
+25         while (L > qs[i].l) add(--L);
+26         while (R > qs[i].r) remove_(R--);             // then shrink
+27         while (L < qs[i].l) remove_(L++);
+28         ans[qs[i].id] = cur;
+29     }
+30     for (int i = 0; i < m; i++) cout << ans[i] << "\n";
+31     return 0;
+32 }
+INPUT
+6 4 3
+1 3 2 1 1 3
+1 4
+2 6
+3 5
+5 6
+OUTPUT
+6
+9
+5
+2
+IDEA Small B's question (P2709): Σ (count of value v in [l, r])². Adding one copy of a value with count c changes
+the sum by (c + 1)² − c² = 2c + 1; removing reverses it.
+
+=== page 5 ===
+5拓展篇  第 5 章  分块与莫队
+KEY POINT Grow the window before shrinking it, so it never becomes "negative" (L > R + 1). The odd/even trick ( 奇
+偶化排序 ) on r saves about half the moves. Answers are stored by the original query index.
+Variant When Idea
+Mo with updates ( 带修
+莫队 )
+point updates between queries (P1903) add time as a third coordinate; blocks of size n2/3; total
+O(n5/3)
+rollback Mo ( 回滚莫队 ) add is easy but remove is not, e.g. a
+maximum (P5906)
+for each block of l, only grow; restore a saved state
+instead of removing
+Mo on trees path queries on a tree Euler tour (in / out times) turns a path into a range
+TRAP Mo is offline: all queries must be known in advance. If the problem forces online answers (each query
+depends on the last answer), use blocks with precomputed tables instead ( 蒲公英  P4168, 作诗  P4135).
+KEY POINT Before Mo, check for a cleaner offline trick: distinct values in a range (HH 的项链  P1972) is solved faster
+by sorting queries by r and keeping only the last occurrence of each value in a Fenwick tree.
+5.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Blocks of about √n: two partial ends element by element, whole blocks by stored values.
+2. Whole blocks can keep sums, lazy adds, sorted copies, counts …
+3. Adding to a whole block keeps its sorted order; re-sort only partial blocks.
+4. Mo: sort by (block of l, r); move L and R one step at a time; O((n + q)√n).
+5. Grow before shrink; store answers by original index.
+6. Updates: time as a 3rd coordinate, block n^(2/3). Hard remove: rollback Mo.
+7. Mo is offline; forced-online problems need precomputed block tables.
+5.3.1 Problems
+Problem Name Section What it tests
+P3372 【模板】线段树  1 5.1 Redo with blocks.
+P2801 教主的魔法 5.1 Sorted blocks + binary search.
+P3203 弹飞绵羊 5.1 Per position: steps to leave the block, where it lands.
+P3396 哈希冲突 5.1 Small moduli precomputed, large ones brute force.
+P2709 【模板】莫队  / 小  B 的询
+问
+5.2 Sum of squared counts.
+P1494 小  Z 的袜子 5.2 Pairs of equal colours, as a fraction.
+P1903 【模板】带修莫队  / 数颜
+色  / 维护队列
+5.2 Mo with a time dimension.
+P5906 【模板】回滚莫队 & 不删除
+莫队
+5.2 Only grow, roll back.
+P4462 异或序列 5.2 Prefix xors, count pairs equal to k.
+
+=== page 6 ===
+6拓展篇  第 5 章  分块与莫队
+Problem Name Section What it tests
+P4137 Rmq Problem / mex 5.2 Mex of a range (Mo + value blocks).
+P4396 作业 5.2 Mo + value blocks for counts in [a, b].
+P1972 HH 的项链 5.2 Offline by r + Fenwick (faster than Mo).
+P4168 蒲公英 5.1 Online mode of a range: block tables.
+P4135 作诗 5.1 Online even-count values: block tables.
+5.3.2 Practice	ladder
+1. Direct. P3372: basic blocks (5.1).
+2. One	twist. P2709: basic Mo (5.2).
+3. Idea	hidden. P2801: sorted blocks (5.1).
+4. Two	ideas. P1494: Mo with a fraction (5.2).
+5. Stretch. P1903: Mo with updates (5.2).
+5.3.3 Experiments
+1. Try block sizes √n / 4, √n, 4√n in magic.cpp on random data and time each.
+2. Remove the odd/even sort in mo.cpp and count the total pointer moves.
+3. Shrink before growing in mo.cpp and find a query order that breaks the counts.
+4. Solve P1972 both with Mo and with the Fenwick trick; time both for n = q = 10⁶.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,118 @@
+# NOI篇 第8章 单纯形法  (N8)
+# source: NOI篇 第08章 单纯形法.pdf
+
+=== page 1 ===
+1NOI 篇  第 8 章  单纯形法
+第 8 章 	 单纯形法
+Simplex method for linear programming Luogu (verified) 1 problems C++17 · all programs run
+8.1 线性规划与单纯形 8.2 课后习题与实验
+8.1 线性规划与单纯形
+Tableau,	entering	and	leaving	variables,	pivots.
+IDEA A linear	program ( 线性规划 ): maximise c·x subject to Ax ≤ b and x ≥ 0. The optimum, if finite, is attained
+at a vertex of the feasible polytope. The simplex	method ( 单纯形法 ) walks from vertex to better
+neighbouring vertex: pick a variable with positive objective coefficient (entering), find the constraint that
+limits it first (minimum ratio test: leaving), and pivot. When no coefficient is positive, the current vertex
+is optimal.
+KEY POINT If the entering column has no positive entry, the objective can grow forever: unbounded. If some bi < 0
+the origin is not feasible, and an initialisation phase (an auxiliary LP) is needed first. Bland's rule
+(smallest index) avoids cycling. Exponential in theory, fast in practice.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Maximise a linear objective under linear constraints by pivoting from vertex to better vertex, detect
+unboundedness, and know when duality helps.
+
+=== page 2 ===
+2NOI 篇  第 8 章  单纯形法
+simplex.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const double EPS = 1e-9;
+5 int n, m;
+6 vector<vector<double>> a;                     // a[0][1..n]: objective; a[i][0]: b_i; a[i][1..n]: row i
+7  
+8 void pivot(int l, int e) {                    // row l leaves, column e enters
+9     double t = a[l][e];
+10     a[l][e] = 1;
+11     for (int j = 0; j <= n; j++) a[l][j] /= t;
+12     for (int i = 0; i <= m; i++) {
+13         if (i == l || fabs(a[i][e]) < EPS) continue;
+14         double f = a[i][e];
+15         a[i][e] = 0;
+16         for (int j = 0; j <= n; j++) a[i][j] -= f * a[l][j];
+17     }
+18 }
+19  
+20 int main() {
+21     cin >> n >> m;
+22     a.assign(m + 1, vector<double>(n + 1, 0));
+23     for (int j = 1; j <= n; j++) cin >> a[0][j];
+24     for (int i = 1; i <= m; i++) { for (int j = 1; j <= n; j++) cin >> a[i][j]; cin >> a[i][0]; }   // 
+b_i >= 0 here
+25     while (true) {
+26         int e = 0;
+27         for (int j = 1; j <= n; j++) if (a[0][j] > EPS && (!e || j < e)) { e = j; break; }   // Bland: 
+first positive
+28         if (!e) break;                                    // optimal
+29         int l = 0; double best = 1e18;
+30         for (int i = 1; i <= m; i++)
+31             if (a[i][e] > EPS && a[i][0] / a[i][e] < best - EPS) { best = a[i][0] / a[i][e]; l = i; }   
+// ratio test
+32         if (!l) { cout << "Unbounded\n"; return 0; }
+33         pivot(l, e);
+34     }
+35     cout << fixed << setprecision(6) << -a[0][0] << "\n";   // the objective is stored negated
+36     return 0;
+37 }
+INPUT 1
+2 3
+3 2
+1 1 4
+1 3 6
+2 1 6
+OUTPUT 1
+9.600000
+INPUT 2
+3 3
+2 3 4
+3 2 1 10
+2 5 3 15
+1 1 2 8
+OUTPUT 2
+16.857143
+INPUT 3
+2 1
+1 1
+1 -1 2
+OUTPUT 3
+Unbounded
+
+=== page 3 ===
+3NOI 篇  第 8 章  单纯形法
+KEY POINT Each column stands for a variable that is currently non-basic (0); pivoting swaps a basic and a non-basic
+variable. The first two LPs are checked against trying every vertex (every choice of n tight constraints)
+with exact fractions in Python; the third, x − y ≤ 2 maximising x + y, is unbounded.
+KEY POINT Contest uses: some flow / cut problems are LPs ( 志愿者招募  P3980 is solved both by min-cost flow and
+by the simplex method on its dual); duality (max c·x, Ax ≤ b ⇔ min b·y, Aᵀy ≥ c) turns covering problems
+into packing problems with the same optimum.
+TRAP Floating-point pivots accumulate error: compare with EPS everywhere and prefer the largest-ratio rule
+only if cycling is impossible. This version assumes b ≥ 0; with negative b, run the initialisation phase
+first.
+8.2 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. LP optimum at a vertex; simplex walks to better neighbours.
+2. Entering: positive objective coefficient (Bland: smallest index).
+3. Leaving: minimum ratio b_i / a_ie over a_ie > 0; none ⇒ unbounded.
+4. b < 0 ⇒ initialisation phase first.
+5. Duality: max cx, Ax ≤ b ⇔ min by, Aᵀy ≥ c.
+8.2.1 Problems
+Problem Name Section What it tests
+P3980 志愿者招募 8.1 LP on the dual, or min-cost flow.
+8.2.2 Practice	ladder
+1. Direct. P3980: simplex / duality (8.1).
+8.2.3 Experiments
+1. Print the tableau after each pivot for LP1.
+2. Write the dual of LP1 and solve it with simplex.cpp: same optimum?
+3. Add a constraint with negative b and see why an initialisation phase is needed.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

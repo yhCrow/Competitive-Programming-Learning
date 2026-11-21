@@ -1,0 +1,185 @@
+# 拓展篇 第29章 动态规划补充二  (拓29)
+# source: 拓展篇 第29章 动态规划补充二.pdf
+
+=== page 1 ===
+1拓展篇  第 29 章  动态规划补充二
+第 29 章 	 动态规划补充二
+Rolling arrays, base-3 states, 2D interval DP Luogu (verified) 3 problems C++17 · all programs run
+29.1 滚动数组 29.2 三进制状态压缩
+29.3 二维区间  DP 29.4 课后习题与实验
+29.1 滚动数组
+Two	rows	with	i	&	1;	one	row	when	the	order	allows.
+IDEA Rolling	arrays ( 滚动数组 ): when row i of a DP only reads row i − 1, keep two rows and alternate with i &
+1 (or i % 2). Memory drops from O(nm) to O(m). If row i reads only row i − 1 at positions ≤ j and the
+update order allows it, a single row is enough (0/1 knapsack loops j downward for exactly this reason, 进
+阶篇  第 13 章 ).
+KEY POINT What is lost: you can no longer reconstruct the choices from the table. Keep the full table (or store
+decisions separately) when the problem asks for the actual solution, not just its value.
+rolling_lcs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int f[2][5005];
+5  
+6 int main() {
+7     string a, b;
+8     cin >> a >> b;
+9     int n = a.size(), m = b.size();
+10     for (int i = 1; i <= n; i++) {
+11         int cur = i & 1, pre = cur ^ 1;               // two rows, alternating
+12         for (int j = 1; j <= m; j++)
+13             f[cur][j] = a[i - 1] == b[j - 1] ? f[pre][j - 1] + 1 : max(f[pre][j], f[cur][j - 1]);
+14     }
+15     cout << f[n & 1][m] << "\n";
+16     return 0;
+17 }
+INPUT
+acbdabcbad
+abcadbcdab
+OUTPUT
+6
+IDEA LCS of two strings of length up to 5000 in 40 KB instead of 100 MB. Checked against the full-table LCS in
+Python.
+KEY POINT f[cur][0] stays 0 for every row because column 0 is never written: no reset is needed. In general, reset the
+row you are about to overwrite if some entries are not assigned.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 动 态 规 划 拓 展
+Keep only the rows a DP still needs, encode three-way states in base 3, and run interval DP over rectangles.
+
+=== page 2 ===
+2拓展篇  第 29 章  动态规划补充二
+29.2 三进制状态压缩
+Digits	0/1/2;	pow3	tables.
+IDEA Base-3	state	compression ( 三进制状压 ): when each item has three states (unused / used once / used
+twice, or empty / white / black), encode the state as a number in base 3: digit i is item i's state. There are
+3ⁿ states; precompute pow3[i] and, if needed, the digit table digit[s][i] for every state.
+KEY POINT Bits do not work here because a digit needs values 0, 1, 2. Reading digit i: s / pow3[i] % 3; changing it
+from d to d + 1: s + pow3[i]. With n = 10 there are 59 049 states, fine for O(3ⁿ · n²).
+ternary_tsp.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, w[10][10], pw[11], f[59049][10];
+5  
+6 int main() {
+7     cin >> n;
+8     for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) cin >> w[i][j];
+9     pw[0] = 1;
+10     for (int i = 1; i <= n; i++) pw[i] = pw[i - 1] * 3;
+11     for (int s = 0; s < pw[n]; s++) for (int i = 0; i < n; i++) f[s][i] = INT_MAX / 2;
+12     for (int i = 0; i < n; i++) f[pw[i]][i] = 0;          // start anywhere: city i visited once
+13     int ans = INT_MAX;
+14     for (int s = 1; s < pw[n]; s++)
+15         for (int i = 0; i < n; i++) {
+16             if (f[s][i] >= INT_MAX / 2) continue;
+17             bool all = true;
+18             for (int j = 0; j < n; j++) if (s / pw[j] % 3 == 0) all = false;
+19             if (all) ans = min(ans, f[s][i]);                 // every city visited at least once
+20             for (int j = 0; j < n; j++) {
+21                 if (j == i || s / pw[j] % 3 == 2) continue;   // at most twice
+22                 int t = s + pw[j];                           // digit j goes up by one
+23                 f[t][j] = min(f[t][j], f[s][i] + w[i][j]);
+24             }
+25         }
+26     cout << ans << "\n";
+27     return 0;
+28 }
+INPUT
+4
+0 4 9 2
+4 0 3 7
+9 3 0 5
+2 7 5 0
+OUTPUT
+9
+IDEA Visit every city at least once and at most twice, starting anywhere, with the smallest total cost. Adding
+pw[j] always makes a larger number, so increasing s is a valid order. Checked against a Python Dijkstra
+over (city, visit counts).
+KEY POINT Count-based states are another way to avoid big masks: 中国象棋  (P2051) only needs how many columns
+hold 0, 1 or 2 pieces, not which ones.
+
+=== page 3 ===
+3拓展篇  第 29 章  动态规划补充二
+29.3 二维区间 	DP
+Rectangles	as	states;	board	splitting.
+IDEA Two-dimensional	interval	DP ( 二维区间  DP): the state is a rectangle f[k][x1][y1][x2][y2], built from
+smaller rectangles. Board splitting ( 棋盘分割  P5752): cut the board straight across, keep one side, and
+continue cutting the other; after n − 1 cuts minimise the variance of the n pieces' sums.
+KEY POINT Variance = (Σ (sᵢ − avg)²) / n with avg fixed (total / n), so minimising Σ (sᵢ − avg)² is enough. Each cut is
+horizontal or vertical, and either side may be the one cut further: 4 choices per cut position. Rectangle
+sums come from 2D prefix sums.
+board_split.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, s[9][9];
+5 double avg, f[16][9][9][9][9];
+6 bool vis[16][9][9][9][9];
+7  
+8 double piece(int a, int b, int c, int d) {        // (sum of the rectangle - avg)^2
+9     double x = s[c][d] - s[a - 1][d] - s[c][b - 1] + s[a - 1][b - 1] - avg;
+10     return x * x;
+11 }
+12 double solve(int k, int a, int b, int c, int d) { // best for cutting this rectangle into k pieces
+13     if (k == 1) return piece(a, b, c, d);
+14     if (vis[k][a][b][c][d]) return f[k][a][b][c][d];
+15     double r = 1e18;
+16     for (int x = a; x < c; x++)                   // horizontal cut after row x
+17         r = min(r, min(solve(k - 1, a, b, x, d) + piece(x + 1, b, c, d), piece(a, b, x, d) + solve(k - 
+1, x + 1, b, c, d)));
+18     for (int y = b; y < d; y++)                   // vertical cut after column y
+19         r = min(r, min(solve(k - 1, a, b, c, y) + piece(a, y + 1, c, d), piece(a, b, c, y) + solve(k - 
+1, a, y + 1, c, d)));
+20     vis[k][a][b][c][d] = true;
+21     return f[k][a][b][c][d] = r;
+22 }
+23  
+24 int main() {
+25     cin >> n;
+26     for (int i = 1; i <= 8; i++)
+27         for (int j = 1; j <= 8; j++) { int v; cin >> v; s[i][j] = s[i - 1][j] + s[i][j - 1] - s[i - 1][j 
+- 1] + v; }
+28     avg = double(s[8][8]) / n;
+29     cout << fixed << setprecision(3) << sqrt(solve(n, 1, 1, 8, 8) / n) << "\n";
+30     return 0;
+31 }
+INPUT
+3
+1 1 1 1 1 1 1 3
+1 1 1 1 1 1 1 1
+1 1 1 1 1 1 1 1
+1 1 1 1 1 1 1 1
+1 1 1 1 1 1 1 1
+1 1 1 1 1 1 1 1
+1 1 1 1 1 1 1 0
+1 1 1 1 1 1 0 3
+OUTPUT
+1.633
+
+=== page 4 ===
+4拓展篇  第 29 章  动态规划补充二
+IDEA P5752 asks for the standard deviation, the square root of the variance. Checked against the same
+recurrence memoised independently in Python. States: n · 8⁴ ≈ 60 000, each with up to 28 transitions.
+KEY POINT Memoised search keeps a 5-dimensional DP readable: no loop order to get wrong.
+29.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Row i reads only row i − 1 ⇒ two rows with i & 1 (or one row with the right order).
+2. Rolling arrays lose the path: keep decisions if you must print it.
+3. Base 3: digit = s / 3^i % 3; increment = s + 3^i; 3^10 ≈ 6·10⁴.
+4. 2D interval DP: f[k][x1][y1][x2][y2]; cut across, 4 choices per cut position.
+5. Variance with fixed mean: minimise Σ (s − avg)².
+29.4.1 Problems
+Problem Name Section What it tests
+P1048 采药 29.1 One-row 0/1 knapsack.
+P2051 中国象棋 29.2 Counts of 0/1/2 columns as the state.
+P5752 棋盘分割 29.3 Rectangle DP with variance.
+29.4.2 Practice	ladder
+1. Direct. P1048: rolling array (29.1).
+2. One	twist. P2051: count states (29.2).
+3. Idea	hidden. P5752: 2D interval DP (29.3).
+29.4.3 Experiments
+1. Print memory use of rolling_lcs.cpp and the full-table version for n = 5000.
+2. Print the base-3 digits of a few states in ternary_tsp.cpp.
+3. Count the reachable states of board_split.cpp for n = 15.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,422 @@
+# 进阶篇 第16章 树与图上的动态规划  (进16)
+# source: 进阶篇 第16章 树与图上的动态规划.pdf
+
+=== page 1 ===
+1进阶篇  第 16 章  树与图上的动态规划
+第 16 章 	 树与图上的动态规划
+DP on trees and graphs Luogu #214 17 problems C++17 · all programs run
+16.1 树上动态规划 16.2 图上动态规划
+16.3 课后习题与实验
+16.1 树上动态规划
+Chosen	/	not	chosen,	best	piece,	tree	knapsack,	rerooting.
+5 5 / 4
+31 / 2 4 1 / 2
+1
+1 / 0
+2
+1 / 0
+6
+1 / 0
+7
+1 / 0
+labels: f[u][1] / f[u][0] · green: invited
+IDEA Tree	DP ( 树形动态规划 ): the state is a
+subtree, f[u][…] = the best answer
+inside u's subtree given some fact about
+u. A DFS computes the children first
+(post-order), then combines them at u.
+Dance party (P1352): nobody comes
+together with their direct boss.
+KEY POINT f[u][1] = happiness of u + Σ f[v][0] (u
+comes, so no child comes). f[u][0] = Σ
+max(f[v][0], f[v][1]) (u stays away,
+each child is free). Answer max(f[root]
+[0], f[root][1]). O(n).
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 4 部 分  动 态 规 划
+Subtrees as states, combined after the children in post-order; tree knapsacks and rerooting; and on graphs,
+DP over a DAG, expected values backwards, and doubling.
+
+=== page 2 ===
+2进阶篇  第 16 章  树与图上的动态规划
+party.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 6005;
+5 int n, r[N], f[N][2];
+6 bool hasBoss[N];
+7 vector<int> kids[N];
+8  
+9 void dfs(int u) {
+10     f[u][1] = r[u];                    // u comes
+11     f[u][0] = 0;                       // u does not come
+12     for (int k = 0; k < int(kids[u].size()); k++) {
+13         int v = kids[u][k];
+14         dfs(v);                        // children first
+15         f[u][1] += f[v][0];
+16         f[u][0] += max(f[v][0], f[v][1]);
+17     }
+18 }
+19  
+20 int main() {
+21     cin >> n;
+22     for (int i = 1; i <= n; i++) cin >> r[i];
+23     for (int i = 1; i < n; i++) {
+24         int l, k;
+25         cin >> l >> k;                 // k is the boss of l
+26         kids[k].push_back(l);
+27         hasBoss[l] = true;
+28     }
+29     int root = 1;
+30     while (hasBoss[root]) root++;      // the one without a boss
+31     dfs(root);
+32     cout << max(f[root][0], f[root][1]) << "\n";
+33     return 0;
+34 }
+INPUT
+7
+1
+1
+1
+1
+1
+1
+1
+1 3
+2 3
+6 4
+7 4
+4 5
+3 5
+OUTPUT
+5
+IDEA The extra index is the fact	about	u that the parent needs: here, "does u come?". Choose it by asking what
+the parent's rule depends on.
+KEY POINT Same shape: fewest guards so that every edge has a guard at one end (P2016 战略游戏 ): f[u][1] = 1 + Σ
+min(f[v][0], f[v][1]), f[u][0] = Σ f[v][1]. Colouring a binary tree with rules (P2585) uses three states per
+node.
+
+=== page 3 ===
+3进阶篇  第 16 章  树与图上的动态规划
+max_subtree.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 16005;
+5 vector<int> g[N];
+6 long long w[N], f[N], best = LLONG_MIN;
+7  
+8 void dfs(int u, int parent) {
+9     f[u] = w[u];                                   // a connected piece containing u, inside u's subtree
+10     for (int k = 0; k < int(g[u].size()); k++) {
+11         int v = g[u][k];
+12         if (v == parent) continue;
+13         dfs(v, u);
+14         if (f[v] > 0) f[u] += f[v];                // keep a child's piece only if it helps
+15     }
+16     best = max(best, f[u]);
+17 }
+18  
+19 int main() {
+20     int n;
+21     cin >> n;
+22     for (int i = 1; i <= n; i++) cin >> w[i];
+23     for (int i = 1; i < n; i++) {
+24         int a, b;
+25         cin >> a >> b;
+26         g[a].push_back(b);
+27         g[b].push_back(a);
+28     }
+29     dfs(1, 0);
+30     cout << best << "\n";
+31     return 0;
+32 }
+INPUT
+7
+-1 -1 -1 1 1 1 0
+1 4
+2 5
+3 6
+4 7
+5 7
+6 7
+OUTPUT
+3
+IDEA Best connected piece (P1122 最大子树和 ): every piece has a highest node u, so let f[u] = the best piece
+whose highest node is u. Each child subtree is either attached (if its best piece is positive) or cut off.
+KEY POINT This is the tree version of "best block ending here" ( 第 13 章 ): extend when it helps, otherwise start fresh.
+The answer is max f[u] over all u, not f[root].
+16.1.1 Tree	knapsack
+IDEA Choose m nodes with the most value, where a node may only be chosen if its parent is (P2014 选课 : a
+course needs its prerequisite). f[u][j] = the best value using j nodes inside u's subtree, with	u	chosen.
+Merging a child is a group knapsack: give the child t of the j slots.
+KEY POINT Loop j downward while merging a child (each child used once, like 0/1), and keep slot 1 for u itself.
+Bounding j by the sizes merged so far makes the whole DP O(n · m) instead of O(n · m²).
+
+=== page 4 ===
+4进阶篇  第 16 章  树与图上的动态规划
+courses.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 305;
+5 int n, m, s[N], sz[N], f[N][N];
+6 vector<int> kids[N];
+7  
+8 void dfs(int u) {
+9     sz[u] = 1;
+10     f[u][1] = s[u];                                // just u
+11     for (int k = 0; k < int(kids[u].size()); k++) {
+12         int v = kids[u][k];
+13         dfs(v);
+14         for (int j = min(sz[u] + sz[v], m + 1); j >= 1; j--)     // downward: v used once
+15             for (int t = 1; t <= sz[v] && t < j; t++)            // t slots go to v's subtree
+16                 if (j - t <= sz[u]) f[u][j] = max(f[u][j], f[u][j - t] + f[v][t]);
+17         sz[u] += sz[v];
+18     }
+19 }
+20  
+21 int main() {
+22     cin >> n >> m;
+23     for (int i = 1; i <= n; i++) {
+24         int k;
+25         cin >> k >> s[i];
+26         kids[k].push_back(i);                      // k = 0: no prerequisite
+27     }
+28     dfs(0);                                        // virtual root 0, worth 0 credits
+29     cout << f[0][m + 1] << "\n";                   // +1 for the root itself
+30     return 0;
+31 }
+INPUT
+7 4
+2 2
+0 1
+0 4
+2 1
+7 1
+7 6
+2 2
+OUTPUT
+13
+IDEA Courses without a prerequisite hang below a virtual	root	0, so the forest becomes one tree. The root itself
+always takes one slot, hence f[0][m + 1].
+KEY POINT Edge version: keep q branches of an apple tree (P2015 二叉苹果树 ): count edges instead of nodes. Budget
+version: TV network (P1273) maximises users with total profit ≥ 0, f[u][j] = best profit with j users.
+
+=== page 5 ===
+5进阶篇  第 16 章  树与图上的动态规划
+16.1.2 Rerooting
+gathering.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int n;
+6 long long c[N], cnt[N], down[N], all[N], total = 0;
+7 vector<pair<int, int>> g[N];
+8  
+9 void dfs1(int u, int p) {                        // cnt: cows in subtree; down: cost to bring them to u
+10     cnt[u] = c[u];
+11     for (int k = 0; k < int(g[u].size()); k++) {
+12         int v = g[u][k].first, w = g[u][k].second;
+13         if (v == p) continue;
+14         dfs1(v, u);
+15         cnt[u] += cnt[v];
+16         down[u] += down[v] + cnt[v] * w;
+17     }
+18 }
+19  
+20 void dfs2(int u, int p) {                        // move the meeting point from u to each child v
+21     for (int k = 0; k < int(g[u].size()); k++) {
+22         int v = g[u][k].first, w = g[u][k].second;
+23         if (v == p) continue;
+24         all[v] = all[u] + (total - 2 * cnt[v]) * w;   // cnt[v] cows get closer, the rest farther
+25         dfs2(v, u);
+26     }
+27 }
+28  
+29 int main() {
+30     cin >> n;
+31     for (int i = 1; i <= n; i++) { cin >> c[i]; total += c[i]; }
+32     for (int i = 1; i < n; i++) {
+33         int a, b, w;
+34         cin >> a >> b >> w;
+35         g[a].push_back(make_pair(b, w));
+36         g[b].push_back(make_pair(a, w));
+37     }
+38     dfs1(1, 0);
+39     all[1] = down[1];
+40     dfs2(1, 0);
+41     long long best = all[1];
+42     for (int i = 2; i <= n; i++) best = min(best, all[i]);
+43     cout << best << "\n";
+44     return 0;
+45 }
+INPUT
+5
+1
+1
+0
+0
+2
+1 3 1
+2 3 2
+3 4 3
+4 5 3
+OUTPUT
+15
+
+=== page 6 ===
+6进阶篇  第 16 章  树与图上的动态规划
+IDEA Rerooting ( 换根  DP): the answer is needed with every node as the root. Compute it once for root 1 (first
+DFS), then move the root across each edge u → v and fix the answer in O(1) (second DFS). Total O(n)
+instead of O(n²) (P2986).
+KEY POINT Moving the meeting point from u to v over an edge of length w: the cnt[v] cows on v's side each walk w
+less, the other total − cnt[v] cows each walk w more. The centroid distance sum of 第 9 章  is the same trick
+with all weights 1.
+16.2 图上动态规划
+Expected	values	on	a	DAG;	doubling	then	shortest	paths.
+IDEA On a general graph, DP works when the states form a DAG: process them in topological order. If the graph
+has cycles, first shrink the strongly connected components ( 第 12 章 ), or find a quantity that only grows
+(time, distance, a counter) and make it part of the state.
+KEY POINT Expected	value on a DAG: f[u] = expected remaining length from u. From u each of the d out-edges is
+equally likely, so f[u] = Σ (w + f[v]) / d. The end has f = 0; fill f backwards (reverse topological order, or
+memoised search).
+frog.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 vector<pair<int, int>> g[N];
+6 double f[N];
+7 bool seen[N];
+8  
+9 double solve(int u) {                         // expected remaining length from u
+10     if (seen[u]) return f[u];
+11     seen[u] = true;
+12     int d = g[u].size();
+13     f[u] = 0;
+14     for (int k = 0; k < d; k++)
+15         f[u] += (g[u][k].second + solve(g[u][k].first)) / d;
+16     return f[u];                              // d = 0 at the end: 0
+17 }
+18  
+19 int main() {
+20     int n, m;
+21     cin >> n >> m;
+22     for (int i = 0; i < m; i++) {
+23         int a, b, c;
+24         cin >> a >> b >> c;
+25         g[a].push_back(make_pair(b, c));
+26     }
+27     cout << fixed << setprecision(2) << solve(1) << "\n";
+28     return 0;
+29 }
+INPUT
+4 4
+1 2 1
+1 3 2
+2 3 3
+3 4 4
+OUTPUT
+7.00
+
+=== page 7 ===
+7进阶篇  第 16 章  树与图上的动态规划
+IDEA The frog (P4316) chooses each outgoing road with equal probability. Linearity of expectation: the expected
+length is the average of (road + expected rest). Here f[3] = 4, f[2] = 7, f[1] = ((1 + 7) + (2 + 4)) / 2 = 7.
+KEY POINT Go backwards from the end: the forward probability of reaching each node is harder to combine.
+Memoised search gives the reverse topological order for free.
+runner.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 bool can[65][55][55];             // can[k][i][j]: a walk of exactly 2^k steps from i to j
+5 int d[55][55];
+6  
+7 int main() {
+8     int n, m;
+9     cin >> n >> m;
+10     for (int i = 0; i < m; i++) { int u, v; cin >> u >> v; can[0][u][v] = true; }
+11     for (int k = 1; k < 64; k++)                       // 2^k = 2^(k-1) + 2^(k-1)
+12         for (int t = 1; t <= n; t++)
+13             for (int i = 1; i <= n; i++)
+14                 for (int j = 1; j <= n; j++)
+15                     if (can[k - 1][i][t] && can[k - 1][t][j]) can[k][i][j] = true;
+16     for (int i = 1; i <= n; i++)
+17         for (int j = 1; j <= n; j++) {
+18             d[i][j] = (i == j ? 0 : 1000000);
+19             for (int k = 0; k < 64; k++) if (can[k][i][j]) { d[i][j] = 1; break; }   // one second
+20         }
+21     for (int t = 1; t <= n; t++)                       // Floyd on "seconds"
+22         for (int i = 1; i <= n; i++)
+23             for (int j = 1; j <= n; j++) d[i][j] = min(d[i][j], d[i][t] + d[t][j]);
+24     cout << d[1][n] << "\n";
+25     return 0;
+26 }
+INPUT
+4 4
+1 1
+1 2
+2 3
+3 4
+OUTPUT
+1
+IDEA The runner (P1613) covers 2k km in one second. A DP over powers of two (doubling, 第 3 章 ) finds every
+pair joined by a walk of exactly 2k edges; each such pair is one second apart; Floyd then gives the fewest
+seconds.
+KEY POINT The loop "2k = 2k−1 + 2k−1 through some middle t" is the DP; the result is a new graph on which an
+ordinary shortest path runs. Here the loop at 1 makes 1 → 1 → 2 → 3 → 4 exactly 4 = 2² steps.
+KEY POINT More graph DP shapes: collect mushrooms on a graph with cycles (P2656): shrink SCCs, sum each one's
+repeated picks, then longest path on the DAG. Count shortest-ish routes in a park (P3953 逛公园 ): state
+(node, extra length ≤ K) with memoised search, and a zero-weight cycle in the reachable part means
+infinitely many.
+
+=== page 8 ===
+8进阶篇  第 16 章  树与图上的动态规划
+16.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Tree DP: children first (post-order), then combine at u.
+2. Extra index = the fact about u the parent needs (chosen or not, colour, …).
+3. Party: f[u][1] = r[u] + Σ f[v][0]; f[u][0] = Σ max(f[v][0], f[v][1]).
+4. Best piece: f[u] = w[u] + Σ max(f[v], 0); answer max f[u].
+5. Tree knapsack: merge children as groups, j downward, bound by sizes ⇒ O(nm).
+6. Rerooting: answer for root 1, then all[v] = all[u] + (total − 2·cnt[v])·w.
+7. Graph DP needs a DAG: shrink SCCs or add a growing quantity to the state.
+8. Expectation: f[u] = average of (w + f[v]); fill backwards from the end.
+16.3.1 Problems
+Problem Name Section What it tests
+P1352 没有上司的舞会 16.1 f[u][0/1]: does u come?
+P2015 二叉苹果树 16.1 Tree knapsack over edges.
+P2014 选课 16.1 Tree knapsack, virtual root.
+P1613 跑路 16.2 Powers-of-two walks, then Floyd.
+P6772 美食家 16.2 Matrix power in (max, +) with festivals.
+P4316 绿豆蛙的归宿 16.2 Expected length backwards.
+P2656 采蘑菇 16.2 SCC shrink, then longest path.
+P1040 加分二叉树 16.1 Interval DP for the in-order tree, print the root order.
+P1122 最大子树和 16.1 Attach positive child pieces.
+P2016 战略游戏 16.1 Vertex cover on a tree.
+P2585 三色二叉树 16.1 Three colour states per node.
+P1273 有线电视网 16.1 Users vs profit knapsack.
+P2515 软件安装 16.1 SCC shrink, then tree knapsack.
+P2986 Great Cow Gathering G 16.1 Rerooting the distance sum.
+P3953 逛公园 16.2 (node, extra length) states; zero cycles.
+P7077 函数调用 16.2 Topological order on the call DAG.
+P7516 图函数 16.2 Floyd-like order on reachability.
+16.3.2 Practice	ladder
+1. Direct. P1352: first tree DP (16.1).
+2. One	twist. P1122: best piece (16.1).
+3. Idea	hidden. P2014: tree knapsack (16.1).
+4. Two	ideas. P2986: rerooting (16.1).
+5. Stretch. P4316: expectation on a DAG (16.2).
+
+=== page 9 ===
+9进阶篇  第 16 章  树与图上的动态规划
+16.3.3 Experiments
+1. Print f[u][0] and f[u][1] in party.cpp and compare with the diagram.
+2. Remove the sz bounds in courses.cpp and time it for a path-shaped tree with n = m = 300.
+3. Compute gathering.cpp by running dfs1 from every node; check both methods agree on random trees.
+4. Simulate the frog 10⁶ times on the sample and compare the average with 7.00.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

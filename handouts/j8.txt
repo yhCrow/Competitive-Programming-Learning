@@ -1,0 +1,338 @@
+# 进阶篇 第8章 线段树的进阶用法  (进8)
+# source: 进阶篇 第08章 线段树的进阶用法.pdf
+
+=== page 1 ===
+1进阶篇  第 8 章  线段树的进阶用法
+第 8 章 	 线段树的进阶用法
+Persistent and nested segment trees Luogu #221 13 problems C++17 · all programs run
+8.1 可持久化线段树 8.2 树状数组套权值线段树
+8.3 课后习题与实验
+8.1 可持久化线段树
+Path	copying,	persistent	arrays,	static	range	k-th.
+1
+2 3
+4 5 6 7
+1'
+3'
+6'
+version 0 version 1: leaf 6 changed
+IDEA A persistent ( 可持久化 ) segment tree
+keeps every	old	version. A point
+update only changes the log n nodes on
+one root-to-leaf path, so copy just those
+nodes and point the copies at the old,
+unchanged children. Each version is one
+root; versions share everything else.
+KEY POINT Memory: n nodes for the first tree, plus
+about log₂ n + 1 new nodes per update.
+Children can no longer be 2p and 2p + 1:
+store ls[p] and rs[p] explicitly and
+hand out node numbers with ++tot.
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 2 部 分  进 阶 数 据 结 构
+Keep every old version of a segment tree by copying one path per update, and put value trees inside a
+Fenwick tree when the array keeps changing.
+
+=== page 2 ===
+2进阶篇  第 8 章  线段树的进阶用法
+persistent_array.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 1000005;
+5 int n, m, a[N], root[N];
+6 int ls[N * 24], rs[N * 24], val[N * 24], tot = 0;
+7  
+8 int build(int l, int r) {
+9     int p = ++tot;
+10     if (l == r) { val[p] = a[l]; return p; }
+11     int mid = (l + r) / 2;
+12     ls[p] = build(l, mid);
+13     rs[p] = build(mid + 1, r);
+14     return p;
+15 }
+16  
+17 // a copy of tree `pre` with position pos set to v; returns the new root
+18 int modify(int pre, int l, int r, int pos, int v) {
+19     int p = ++tot;
+20     ls[p] = ls[pre]; rs[p] = rs[pre]; val[p] = val[pre];   // copy the node
+21     if (l == r) { val[p] = v; return p; }
+22     int mid = (l + r) / 2;
+23     if (pos <= mid) ls[p] = modify(ls[pre], l, mid, pos, v);
+24     else rs[p] = modify(rs[pre], mid + 1, r, pos, v);
+25     return p;
+26 }
+27  
+28 int query(int p, int l, int r, int pos) {
+29     if (l == r) return val[p];
+30     int mid = (l + r) / 2;
+31     if (pos <= mid) return query(ls[p], l, mid, pos);
+32     return query(rs[p], mid + 1, r, pos);
+33 }
+34  
+35 int main() {
+36     ios::sync_with_stdio(false);
+37     cin.tie(nullptr);
+38     cin >> n >> m;
+39     for (int i = 1; i <= n; i++) cin >> a[i];
+40     root[0] = build(1, n);
+41     for (int i = 1; i <= m; i++) {
+42         int v, op, pos;
+43         cin >> v >> op >> pos;
+44         if (op == 1) {
+45             int x;
+46             cin >> x;
+47             root[i] = modify(root[v], 1, n, pos, x);      // version i: v with a change
+48         } else {
+49             cout << query(root[v], 1, n, pos) << "\n";
+50             root[i] = root[v];                            // version i: same as v
+51         }
+52     }
+53     return 0;
+54 }
+INPUT
+3 6
+1 2 3
+0 1 1 9
+0 2 1
+1 2 1
+1 1 3 7
+OUTPUT
+1
+9
+7
+3
+
+=== page 3 ===
+3进阶篇  第 8 章  线段树的进阶用法
+4 2 3
+0 2 3
+KEY POINT "Version i is based on version v" is just root[i] = modify(root[v], …) . A query never copies anything,
+so it can share the root. This is a persistent	array: any old version can be read or branched from (P3919
+is the template).
+8.1.1 Static	range	k-th	smallest
+IDEA Build a value segment tree ( 权值线段树 , 第 6 章 ) for every prefix: version i = version i − 1 with a[i]
+inserted. The counts are additive, so cnt in version r minus cnt in version l − 1 is the value tree of a[l..r].
+Walk both trees down together, exactly like the k-th query of 6.3.
+KEY POINT Node 0 is the empty tree: ls[0] = rs[0] = cnt[0] = 0, so version 0 needs no build at all, and missing
+children read as count 0.
+
+=== page 4 ===
+4进阶篇  第 8 章  线段树的进阶用法
+range_kth.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 200005;
+5 int n, m, a[N], root[N];
+6 int ls[N * 20], rs[N * 20], cnt[N * 20], tot = 0;
+7 vector<int> v;                                    // sorted distinct values
+8  
+9 int insert(int pre, int l, int r, int x) {
+10     int p = ++tot;
+11     ls[p] = ls[pre]; rs[p] = rs[pre]; cnt[p] = cnt[pre] + 1;
+12     if (l < r) {
+13         int mid = (l + r) / 2;
+14         if (x <= mid) ls[p] = insert(ls[pre], l, mid, x);
+15         else rs[p] = insert(rs[pre], mid + 1, r, x);
+16     }
+17     return p;
+18 }
+19  
+20 // k-th smallest of the values in version u's tree "minus" version w's tree
+21 int kth(int w, int u, int l, int r, int k) {
+22     if (l == r) return l;
+23     int mid = (l + r) / 2;
+24     int left = cnt[ls[u]] - cnt[ls[w]];           // how many go left in a[l..r]
+25     if (k <= left) return kth(ls[w], ls[u], l, mid, k);
+26     return kth(rs[w], rs[u], mid + 1, r, k - left);
+27 }
+28  
+29 int main() {
+30     ios::sync_with_stdio(false);
+31     cin.tie(nullptr);
+32     cin >> n >> m;
+33     for (int i = 1; i <= n; i++) { cin >> a[i]; v.push_back(a[i]); }
+34     sort(v.begin(), v.end());
+35     v.erase(unique(v.begin(), v.end()), v.end());
+36     int K = v.size();
+37     for (int i = 1; i <= n; i++) {
+38         int x = lower_bound(v.begin(), v.end(), a[i]) - v.begin() + 1;
+39         root[i] = insert(root[i - 1], 1, K, x);   // prefix version i
+40     }
+41     while (m--) {
+42         int l, r, k;
+43         cin >> l >> r >> k;
+44         cout << v[kth(root[l - 1], root[r], 1, K, k) - 1] << "\n";
+45     }
+46     return 0;
+47 }
+INPUT
+5 4
+3 1 4 1 5
+1 5 2
+2 4 2
+3 5 3
+1 3 3
+OUTPUT
+1
+1
+5
+4
+KEY POINT O((n + m) log n) time, about n · (log₂ n + 1) nodes (P3834). The same "prefix versions subtracted" idea
+answers: how many values in a[l..r] lie in [x, y]; the best xor with a value in a range (P3293 美味 , bits
+walked from the top as in the 0-1 trie of 第 7 章 ); and with versions over time instead of positions, queries
+at a moment (P3168 任务查询系统 ).
+
+=== page 5 ===
+5进阶篇  第 8 章  线段树的进阶用法
+TRAP Size the pools for all versions: n log n nodes for the prefix trees, plus log n per update in the persistent
+array. Recursion depth is only log n, but forgetting to copy ls / rs / val into the new node silently drops
+half of the old tree.
+8.2 树状数组套权值线段树
+Range	k-th	with	point	changes	in	O(log²	n).
+IDEA A persistent tree is built once; it cannot take a point	change at position i, because every later prefix
+version would change too. Fix: replace "prefix versions" by a Fenwick	tree	whose	cells	are	value
+segment	trees ( 树状数组套权值线段树 ). Cell i holds the value tree of the block (i − lowbit(i), i] of
+positions.
+KEY POINT Changing a[i] updates the log n cells that contain i, each in log n steps. A query for a[l..r] collects the log n
+cells of prefix r and of prefix l − 1, and walks all	of	them	down	at	once, adding and subtracting their left-
+child counts: O(log² n) per operation.
+Question about a[l..r] k-th / rank Array changes? Tool
+many queries, no changes no persistent segment tree (8.1), O(log n)
+queries mixed with point changes yes Fenwick tree of value trees (8.2), O(log² n)
+only answers needed, all known in advance yes offline: CDQ divide and conquer / overall binary search ( 选读 )
+
+=== page 6 ===
+6进阶篇  第 8 章  线段树的进阶用法
+dynamic_rankings.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 200005;
+5 int n, m, K, a[N], rt[N];
+6 const int POOL = 20000000;                             // about (n + 2m)·log n·log K nodes
+7 int ls[POOL], rs[POOL], cnt[POOL], tot = 0;
+8 char op[N];
+9 int qa[N], qb[N], qc[N];
+10 vector<int> v, A, B;
+11  
+12 int id(int x) { return lower_bound(v.begin(), v.end(), x) - v.begin() + 1; }
+13  
+14 void upd(int &p, int l, int r, int x, int d) {          // created on demand
+15     if (!p) p = ++tot;
+16     cnt[p] += d;
+17     if (l == r) return;
+18     int mid = (l + r) / 2;
+19     if (x <= mid) upd(ls[p], l, mid, x, d);
+20     else upd(rs[p], mid + 1, r, x, d);
+21 }
+22  
+23 void change(int i, int x, int d) { for (; i <= n; i += i & -i) upd(rt[i], 1, K, x, d); }
+24  
+25 int kth(int l, int r, int k) {
+26     A.clear(); B.clear();
+27     for (int i = r; i > 0; i -= i & -i) A.push_back(rt[i]);       // + these trees
+28     for (int i = l - 1; i > 0; i -= i & -i) B.push_back(rt[i]);   // - these trees
+29     int lo = 1, hi = K;
+30     while (lo < hi) {
+31         int mid = (lo + hi) / 2, left = 0;
+32         for (int j = 0; j < int(A.size()); j++) left += cnt[ls[A[j]]];
+33         for (int j = 0; j < int(B.size()); j++) left -= cnt[ls[B[j]]];
+34         bool goLeft = k <= left;
+35         if (!goLeft) k -= left;
+36         for (int j = 0; j < int(A.size()); j++) A[j] = goLeft ? ls[A[j]] : rs[A[j]];
+37         for (int j = 0; j < int(B.size()); j++) B[j] = goLeft ? ls[B[j]] : rs[B[j]];
+38         if (goLeft) hi = mid; else lo = mid + 1;
+39     }
+40     return lo;
+41 }
+42  
+43 int main() {
+44     ios::sync_with_stdio(false);
+45     cin.tie(nullptr);
+46     cin >> n >> m;
+47     for (int i = 1; i <= n; i++) { cin >> a[i]; v.push_back(a[i]); }
+48     for (int i = 1; i <= m; i++) {                       // read all first: new values too
+49         cin >> op[i];
+50         if (op[i] == 'Q') cin >> qa[i] >> qb[i] >> qc[i];
+51         else { cin >> qa[i] >> qb[i]; v.push_back(qb[i]); }
+52     }
+53     sort(v.begin(), v.end());
+54     v.erase(unique(v.begin(), v.end()), v.end());
+55     K = v.size();
+56     for (int i = 1; i <= n; i++) change(i, id(a[i]), 1);
+57     for (int i = 1; i <= m; i++) {
+58         if (op[i] == 'Q') cout << v[kth(qa[i], qb[i], qc[i]) - 1] << "\n";
+59         else {
+60             change(qa[i], id(a[qa[i]]), -1);             // remove the old value
+61             a[qa[i]] = qb[i];
+62             change(qa[i], id(a[qa[i]]), 1);              // add the new one
+
+=== page 7 ===
+7进阶篇  第 8 章  线段树的进阶用法
+63         }
+64     }
+65     return 0;
+66 }
+INPUT
+5 3
+3 2 1 4 7
+Q 1 4 3
+C 2 6
+Q 2 5 3
+OUTPUT
+3
+6
+KEY POINT The value trees are created	on	demand ( 动态开点 ): upd(int &p, …)  makes a node only when a count
+first reaches it, so the total is O((n + m) log² n) nodes instead of n separate full trees. All values, including
+those that appear only in changes, are read first and discretised together (P2617).
+KEY POINT Same structure, other questions: rank of x, predecessor, successor in a range (P3380 树套树 ); inversions
+while deleting elements, counting pairs with a Fenwick tree over positions and value trees inside (P3157
+动态逆序对 ); three-dimensional partial order, sort by the first key and use a Fenwick tree of value trees
+for the other two (P3810).
+TRAP Memory is the danger: with n = 10⁵ the pool needs tens of millions of ints. Count nodes as (initial values +
+2 × changes) × log₂ n × log₂ K before choosing the array size, and prefer the offline methods when the limit
+is tight.
+8.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Persistent: copy only the changed root-to-leaf path; old children are shared.
+2. Explicit children ls[p], rs[p]; new node = ++tot; node 0 = empty tree.
+3. Version i based on v: root[i] = modify(root[v], …); a read shares root[v].
+4. Range k-th: prefix versions; count = cnt[r-version] − cnt[(l−1)-version]; walk down.
+5. Nodes: n·(log₂ n + 1) for prefix versions.
+6. Point changes: Fenwick tree of value trees, nodes created on demand.
+7. Query: collect log n roots for r and for l − 1, move all of them left or right together.
+8. Discretise every value, including those that only appear in changes, before building.
+8.3.1 Problems
+Problem Name Section What it tests
+P3834 【模板】可持久化线段树  2 8.1 Static range k-th: prefix versions subtracted.
+P4587 神秘数 8.1 Range sums of values ≤ x from prefix versions, repeated.
+P3380 【模板】树套树 8.2 Rank, k-th, predecessor, successor with changes.
+P3810 三维偏序  / 陌上花开 8.2 Sort one key, nested tree (or CDQ) for two.
+P4093 序列 8.2 LIS-style DP with 2D max queries.
+P3157 动态逆序对 8.2 Inversions lost per deletion.
+
+=== page 8 ===
+8进阶篇  第 8 章  线段树的进阶用法
+Problem Name Section What it tests
+P3293 美味 8.1 Best xor in a range, bits from the top.
+CF960F Pathwalks 8.2 DP on edges in input order, per-node value trees.
+P2617 Dynamic Rankings 8.2 Range k-th with point changes.
+P3168 任务查询系统 8.1 Versions over time, sum of the k smallest.
+P2839 middle 8.1 Binary search the median; persistent trees over ±1.
+P4602 混合果汁 8.1 Binary search on quality; cheapest k litres.
+P5445 路灯 8.2 Intervals over time as 2D range adds.
+8.3.2 Practice	ladder
+1. Direct. P3834: prefix versions (8.1).
+2. One	twist. P3293: walk bits in a range (8.1).
+3. Idea	hidden. P2617: Fenwick of value trees (8.2).
+4. Two	ideas. P3810: three keys (8.2).
+5. Stretch. P3168: versions over time (8.1).
+8.3.3 Experiments
+1. Print tot after each update in persistent_array.cpp and check it grows by log₂ n + 1.
+2. In range_kth.cpp forget to copy ls[pre] into the new node and see which answers break.
+3. Answer the queries of range_kth.cpp by sorting each range; time both for n = m = 10⁵.
+4. Print tot at the end of dynamic_rankings.cpp for random data and compare with the estimate.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

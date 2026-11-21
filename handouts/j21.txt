@@ -1,0 +1,269 @@
+# 进阶篇 第21章 概率与统计  (进21)
+# source: 进阶篇 第21章 概率与统计.pdf
+
+=== page 1 ===
+1进阶篇  第 21 章  概率与统计
+第 21 章 	 概率与统计
+Probability and expectation Luogu #218 9 problems C++17 · all programs run
+21.1 事件 21.2 概率模型
+21.3 数学期望 21.4 课后习题与实验
+21.1 事件
+Complements,	independence,	conditional	probability.
+IDEA An event ( 事件 ) is a set of outcomes. P(A) is its probability; P(not A) = 1 − P(A); for disjoint events
+probabilities add; for independent events they multiply. The conditional	probability P(A | B) = P(A and
+B) / P(B) is the probability of A once we know B happened.
+KEY POINT Conditional problems become counting: restrict to the outcomes where B holds, and measure how much
+of that weight also has A. With n ≤ 20 independent people you can simply enumerate all 2ⁿ outcomes as
+bitmasks ( 第 17 章 ).
+given.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n, r, tc = 0;
+6     while (cin >> n >> r && n) {
+7         vector<double> p(n), bought(n, 0);
+8         for (int i = 0; i < n; i++) cin >> p[i];
+9         double total = 0;                                    // P(exactly r people buy)
+10         for (int S = 0; S < (1 << n); S++) {
+11             if (__builtin_popcount(S) != r) continue;        // only outcomes where B holds
+12             double w = 1;
+13             for (int i = 0; i < n; i++) w *= (S >> i & 1) ? p[i] : 1 - p[i];
+14             total += w;
+15             for (int i = 0; i < n; i++) if (S >> i & 1) bought[i] += w;   // A_i and B
+16         }
+17         cout << "Case " << ++tc << ":\n";
+18         for (int i = 0; i < n; i++) cout << fixed << setprecision(6) << bought[i] / total << "\n";
+19     }
+20     return 0;
+21 }
+INPUT
+3 2
+0.10
+0.20
+0.30
+0 0
+OUTPUT
+Case 1:
+0.413043
+0.739130
+0.847826
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 5 部 分  数 学 专 题 选 讲
+Events and conditional probability by enumeration, choosing the right model, and expected values: split
+into indicators by linearity, or carry E[L] and E[L²] along a sequence.
+
+=== page 2 ===
+2进阶篇  第 21 章  概率与统计
+IDEA Probability | Given (UVA11181): each friend buys independently with probability pi; we are told exactly r
+bought. P(i bought | r bought) = P(i bought and exactly r bought) / P(exactly r bought).
+KEY POINT Exactly two of three buy with weight 0.1·0.2·0.7 + 0.1·0.8·0.3 + 0.9·0.2·0.3 = 0.092; friend 1 is in the first
+two: (0.014 + 0.024) / 0.092 ≈ 0.413.
+21.2 概率模型
+Classical	model;	write	it	down	first.
+IDEA A probability	model ( 概率模型 ) fixes what is random and how. Classical: finitely many equally likely
+outcomes, P = good / all. Geometric: a point uniform in a region, P = good area / total area. Most contest
+problems are classical: count, then divide.
+KEY POINT Write the model down before computing: "question i is answered with the correct answer of question i −
+1, which is uniform among ai−1 options". A wrong model gives a confident wrong answer.
+shifted_answers.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<int> a(n);
+8     for (int i = 0; i < n; i++) cin >> a[i];        // number of options per question
+9     double expected = 0;
+10     for (int i = 0; i < n; i++) {
+11         int prev = a[(i - 1 + n) % n];              // answer copied from the previous question
+12         expected += 1.0 / max(a[i], prev);          // P(both uniform answers agree)
+13     }
+14     cout << fixed << setprecision(3) << expected << "\n";
+15     return 0;
+16 }
+INPUT
+3
+2 3 1
+OUTPUT
+1.167
+IDEA Shifted answers (P1297): question i has ai options and its true answer is uniform; the written answer is
+the true answer of question i − 1. Both are uniform and independent, and they can only agree on the
+smaller range: P = min / (ai·ai−1) = 1 / max(ai, ai−1).
+KEY POINT Expected number correct = Σ P(question i correct): linearity of expectation (21.3) lets you add the per-
+question probabilities even though the questions are not independent. The real problem generates a with a
+formula; the idea is unchanged.
+21.3 数学期望
+Linearity	and	indicators;	expected	powers	of	a	combo.
+
+=== page 3 ===
+3进阶篇  第 21 章  概率与统计
+1
+2 3
+4
+node 4 is removed by itself
+iff it is picked before
+its ancestors 3 and 1:
+probability 1 / depth = 1/3
+IDEA The expected	value ( 数学期望 ) E[X] =
+Σ x·P(X = x). Its most useful property:
+linearity, E[X + Y] = E[X] + E[Y] for any
+X, Y, even dependent ones. So split the
+quantity into small pieces (indicators: 1
+if something happens, 0 otherwise) and
+add the probabilities.
+KEY POINT Game on a tree (CF280C): each step
+removes a random remaining node with
+its subtree; expected number of steps?
+Steps = Σ [node i is picked itself]. Node i
+is picked itself exactly when it is the
+first chosen among its depth(i)
+ancestors-or-self, each equally likely: E
+= Σ 1 / depth(i).
+tree_game.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 vector<int> g[N];
+6 int dep[N];
+7  
+8 int main() {
+9     int n;
+10     cin >> n;
+11     for (int i = 1; i < n; i++) {
+12         int a, b;
+13         cin >> a >> b;
+14         g[a].push_back(b);
+15         g[b].push_back(a);
+16     }
+17     queue<int> q;                         // BFS for depths: no deep recursion
+18     dep[1] = 1; q.push(1);
+19     double ans = 0;
+20     while (!q.empty()) {
+21         int u = q.front();
+22         q.pop();
+23         ans += 1.0 / dep[u];              // indicator: u is picked before its ancestors
+24         for (int k = 0; k < int(g[u].size()); k++) {
+25             int v = g[u][k];
+26             if (!dep[v]) { dep[v] = dep[u] + 1; q.push(v); }
+27         }
+28     }
+29     cout << fixed << setprecision(6) << ans << "\n";
+30     return 0;
+31 }
+INPUT 1
+2
+1 2
+OUTPUT 1
+1.500000
+INPUT 2
+3
+1 2
+1 3
+OUTPUT 2
+2.000000
+
+=== page 4 ===
+4进阶篇  第 21 章  概率与统计
+IDEA Two nodes in a line: the root is always picked itself (1), the child only if picked first (1/2): 1.5. A root with
+two leaves: 1 + 1/2 + 1/2 = 2.
+KEY POINT No probability of "the game lasts k steps" was ever computed: linearity skips the whole distribution. That
+is the usual way to solve expectation problems.
+21.3.1 Expectations	that	need	more	than	linearity
+osu_easy.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     string s;
+7     cin >> n >> s;
+8     double len = 0, ans = 0;                  // len = E[current combo length]
+9     for (int i = 0; i < n; i++) {
+10         if (s[i] == 'o') { ans += 2 * len + 1; len += 1; }          // (L+1)^2 - L^2 = 2L + 1
+11         else if (s[i] == 'x') len = 0;
+12         else { ans += (2 * len + 1) / 2; len = (len + 1) / 2; }    // '?': each half the time
+13     }
+14     cout << fixed << setprecision(4) << ans << "\n";
+15     return 0;
+16 }
+INPUT
+4
+????
+OUTPUT
+4.1250
+osu_cubic.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     double x1 = 0, x2 = 0, ans = 0;           // E[L], E[L^2]
+8     for (int i = 0; i < n; i++) {
+9         double p;
+10         cin >> p;
+11         ans += (3 * x2 + 3 * x1 + 1) * p;     // (L+1)^3 - L^3 = 3L^2 + 3L + 1
+12         x2 = (x2 + 2 * x1 + 1) * p;           // (L+1)^2 if hit, 0 if miss
+13         x1 = (x1 + 1) * p;
+14     }
+15     cout << fixed << setprecision(1) << ans << "\n";
+16     return 0;
+17 }
+INPUT
+3
+0.5
+0.5
+0.5
+OUTPUT
+6.0
+KEY POINT Score = Σ (combo length)²: add the increase each click makes, (L + 1)² − L² = 2L + 1, which is linear in L,
+so only E[L] is needed (P1365). For L³ the increase 3L² + 3L + 1 needs E[L²] too, which is kept with the
+same trick one level down (P1654 OSU!).
+
+=== page 5 ===
+5进阶篇  第 21 章  概率与统计
+TRAP E[L²] ≠ (E[L])². Squares and products of random variables need their own expectations; only sums split
+freely.
+KEY POINT Expectation DPs: the frog on a DAG (P4316, 第 16 章 ) fills f backwards from the end; changing classrooms
+(P1850) is a DP over (class, requests used, last request made?) where each step adds expected walking
+distances from Floyd. Write E as a recurrence over what is still to come, not over what has happened.
+21.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. P(not A) = 1 − P(A); independent: multiply; disjoint: add.
+2. P(A | B) = P(A and B) / P(B): restrict to B, then measure A.
+3. Classical model: good / all; write the model down first.
+4. Linearity: E[X + Y] = E[X] + E[Y], always. Split into indicators.
+5. Tree game: node removed itself with probability 1 / depth.
+6. Combo²: add 2L + 1 per hit; keep E[L].
+7. Combo³: add 3L² + 3L + 1; keep E[L] and E[L²].
+8. E[L²] ≠ E[L]²; expectation DPs run backwards over what is still to come.
+21.4.1 Problems
+Problem Name Section What it tests
+P2719 搞笑世界杯 21.2 DP over tickets left of each kind.
+P1654 OSU! 21.3 Keep E[L] and E[L²] for the cube.
+CF280C Game on Tree 21.3 Σ 1 / depth.
+UVA11181 条件概率  Probability|Given 21.1 Enumerate outcomes, divide.
+P1365 WJMZBMR 打 osu! / Easy 21.3 Increase 2L + 1 per hit.
+P4316 绿豆蛙的归宿 21.3 Expected length backwards on a DAG.
+P1297 单选错位 21.2 Σ 1 / max(aᵢ, aᵢ₋₁).
+P2111 考场奇遇 21.2 Sum over how many answers are copied right.
+P1850 换教室 21.3 DP with expected distances from Floyd.
+21.4.2 Practice	ladder
+1. Direct. P1297: model then sum (21.2).
+2. One	twist. CF280C: indicators (21.3).
+3. Idea	hidden. P1365: expected combo (21.3).
+4. Two	ideas. P1654: E[L²] as well (21.3).
+5. Stretch. P1850: expectation DP (21.3).
+21.4.3 Experiments
+1. Simulate tree_game.cpp's game 10⁶ times on a random tree and compare with Σ 1 / depth.
+
+=== page 6 ===
+6进阶篇  第 21 章  概率与统计
+2. Compute E[L²] wrongly as (E[L])² in osu_cubic.cpp and compare on 0.5 0.5 0.5.
+3. Check given.cpp: the answers for all friends should add up to r.
+4. Enumerate all 2⁴ strings for "????" by hand to confirm 4.125.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

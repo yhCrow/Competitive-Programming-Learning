@@ -1,0 +1,447 @@
+# 基础篇 第16章 二叉树  (基16)
+# source: 基础篇 第16章 二叉树.pdf
+
+=== page 1 ===
+1基础篇  第 16 章  二叉树
+第 16 章 	 二叉树
+Binary trees Luogu #114 10 problems C++17 · all programs run
+16.1 二叉树的概念和建立 16.2 二叉树的遍历
+16.3 二叉树的综合应用 16.4 课后习题与实验
+16.1 二叉树的概念和建立
+Root,	children,	leaves,	depth;	array	storage	and	child	arrays.
+1
+2 3
+4 5 6 7
+node i: children 2i and 2i + 1, parent i / 2
+IDEA A binary	tree starts at one root; every node has at
+most two children, a left and a right. Nodes without
+children are leaves (green). The depth of a node
+counts the levels from the root; the tree's depth is the
+deepest level.
+KEY POINT A complete binary tree fills every level from left to
+right, so it fits in an array with no pointers: root at 1,
+children of i at 2i and 2i	+	1, parent at i	/	2.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 3 部 分  简 单 数 据 结 构
+Binary trees: storing them, the four traversal orders, rebuilding a tree from two orders, search trees and
+distances.
+
+=== page 2 ===
+2基础篇  第 16 章  二叉树
+16.1.1 A	tree	stored	in	an	array:	knockout	tournament
+knockout.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int power[300], who[300];              // node i: winner's ability and index
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     int leaves = 1 << n;               // 2^n countries
+10     for (int i = 0; i < leaves; i++) {
+11         cin >> power[leaves + i];      // leaves sit at leaves .. 2*leaves-1
+12         who[leaves + i] = i + 1;
+13     }
+14     for (int i = leaves - 1; i >= 2; i--) {   // play matches bottom-up
+15         int a = 2 * i, b = 2 * i + 1;
+16         int w = power[a] > power[b] ? a : b;
+17         power[i] = power[w];
+18         who[i] = who[w];
+19     }
+20     // node 1 would be the final: its two players are nodes 2 and 3
+21     cout << (power[2] < power[3] ? who[2] : who[3]) << "\n";   // the loser
+22     return 0;
+23 }
+INPUT
+3
+4 2 3 1 10 5 9 7
+OUTPUT
+1
+IDEA A knockout bracket is a complete binary tree: countries are leaves, every match is an internal node holding
+its winner. Fill the nodes from the bottom up; the runner-up is the loser of the final, the weaker of nodes 2
+and 3 (P4715).
+
+=== page 3 ===
+3基础篇  第 16 章  二叉树
+16.1.2 Trees	stored	by	child	arrays
+tree_depth.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int lc[1000005], rc[1000005];          // 0 means "no child"
+5  
+6 int depth(int u) {
+7     if (u == 0) return 0;              // empty tree
+8     return 1 + max(depth(lc[u]), depth(rc[u]));
+9 }
+10  
+11 int main() {
+12     int n;
+13     cin >> n;
+14     for (int i = 1; i <= n; i++) cin >> lc[i] >> rc[i];
+15     cout << depth(1) << "\n";          // node 1 is the root
+16     return 0;
+17 }
+INPUT
+7
+2 7
+3 6
+4 5
+0 0
+0 0
+0 0
+0 0
+OUTPUT
+4
+
+=== page 4 ===
+4基础篇  第 16 章  二叉树
+char_tree.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int L[128], R[128];                   // children, indexed by the letter
+5  
+6 void preorder(int u) {
+7     if (u == '*') return;             // '*' marks a missing child
+8     cout << char(u);
+9     preorder(L[u]);
+10     preorder(R[u]);
+11 }
+12  
+13 int main() {
+14     int n;
+15     cin >> n;
+16     char root = 0;
+17     for (int i = 0; i < n; i++) {
+18         string s;
+19         cin >> s;                      // node, left child, right child
+20         if (i == 0) root = s[0];
+21         L[int(s[0])] = s[1];
+22         R[int(s[0])] = s[2];
+23     }
+24     preorder(root);
+25     cout << "\n";
+26     return 0;
+27 }
+INPUT
+6
+abc
+bdi
+cj*
+d**
+i**
+j**
+OUTPUT
+abdicj
+KEY POINT For a general tree, store each node's children in two arrays lc[u]  and rc[u] , with 0 (or a symbol such as
+'*' ) for "none". Depth is recursive: an empty tree has depth 0, otherwise 1 + the deeper subtree (P4913).
+Letters can index arrays directly, since a char is a number (P1305).
+16.2 二叉树的遍历
+Pre-,	in-,	post-	and	level	order;	rebuilding	a	tree	from	two	orders.
+A
+B C
+D E F
+Order Rule This tree
+pre-order ( 先序 ) root, left, right A B D E C F
+in-order ( 中序 ) left, root, right D B E A C F
+post-order ( 后序 ) left, right, root D E B F C A
+level order ( 层序 ) level by level (BFS) A B C D E F
+IDEA The three depth-first orders differ only in when the root is printed: before, between or after its two
+subtrees. Each is a three-line recursive function.
+
+=== page 5 ===
+5基础篇  第 16 章  二叉树
+traversals.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, lc[105], rc[105];
+5  
+6 void pre(int u)  { if (!u) return; cout << u << " "; pre(lc[u]); pre(rc[u]); }
+7 void in(int u)   { if (!u) return; in(lc[u]); cout << u << " "; in(rc[u]); }
+8 void post(int u) { if (!u) return; post(lc[u]); post(rc[u]); cout << u << " "; }
+9  
+10 int main() {
+11     cin >> n;
+12     for (int i = 1; i <= n; i++) cin >> lc[i] >> rc[i];
+13     pre(1);  cout << "\n";
+14     in(1);   cout << "\n";
+15     post(1); cout << "\n";
+16     queue<int> q;                      // level order is BFS
+17     q.push(1);
+18     while (!q.empty()) {
+19         int u = q.front();
+20         q.pop();
+21         cout << u << " ";
+22         if (lc[u]) q.push(lc[u]);
+23         if (rc[u]) q.push(rc[u]);
+24     }
+25     cout << "\n";
+26     return 0;
+27 }
+INPUT
+7
+2 7
+3 6
+4 5
+0 0
+0 0
+0 0
+0 0
+OUTPUT
+1 2 3 4 5 6 7 
+4 3 5 2 6 1 7 
+4 5 3 6 2 7 1 
+1 2 7 3 6 4 5
+
+=== page 6 ===
+6基础篇  第 16 章  二叉树
+16.2.1 Rebuilding	a	tree	from	two	orders
+pre_from_in_post.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 string in, post;
+5  
+6 // in[l1..r1] and post[l2..r2] describe the same subtree
+7 void build(int l1, int r1, int l2, int r2) {
+8     if (l1 > r1) return;
+9     char root = post[r2];               // post-order ends with the root
+10     int k = in.find(root);              // root splits the in-order
+11     int leftSize = k - l1;
+12     cout << root;                       // pre-order: root first
+13     build(l1, k - 1, l2, l2 + leftSize - 1);   // left subtree
+14     build(k + 1, r1, l2 + leftSize, r2 - 1);   // right subtree
+15 }
+16  
+17 int main() {
+18     cin >> in >> post;
+19     int n = in.size();
+20     build(0, n - 1, 0, n - 1);
+21     cout << "\n";
+22     return 0;
+23 }
+INPUT
+BADC
+BDCA
+OUTPUT
+ABCD
+post_from_in_pre.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 string in, pre;
+5  
+6 void build(int l1, int r1, int l2, int r2) {
+7     if (l1 > r1) return;
+8     char root = pre[l2];                // pre-order starts with the root
+9     int k = in.find(root);
+10     int leftSize = k - l1;
+11     build(l1, k - 1, l2 + 1, l2 + leftSize);
+12     build(k + 1, r1, l2 + leftSize + 1, r2);
+13     cout << root;                       // post-order: root last
+14 }
+15  
+16 int main() {
+17     cin >> in >> pre;
+18     int n = in.size();
+19     build(0, n - 1, 0, n - 1);
+20     cout << "\n";
+21     return 0;
+22 }
+INPUT
+ABEDFCHG
+CBADEFGH
+OUTPUT
+AEFDBHGC
+
+=== page 7 ===
+7基础篇  第 16 章  二叉树
+KEY POINT Pre-order gives the root first, post-order gives it last; the root's position in the in-order splits the
+remaining letters into the left and right subtrees, and their sizes split the other order the same way.
+Recurse on both halves (P1030, P1827).
+count_trees.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string pre, post;
+6     cin >> pre >> post;
+7     int n = pre.size();
+8     long long ways = 1;
+9     for (int i = 0; i + 1 < n; i++)
+10         for (int j = 1; j < n; j++)
+11             if (pre[i] == post[j] && pre[i + 1] == post[j - 1])
+12                 ways *= 2;            // a node with exactly one child
+13     cout << ways << "\n";
+14     return 0;
+15 }
+INPUT
+abc
+cba
+OUTPUT
+4
+TRAP Pre-order and post-order without in-order do not fix the tree: a node with only one child could have it on
+the left or the right. Such a node shows up as a pair "x y" in pre-order that appears as "y x" in post-order;
+each one doubles the count (P1229).
+16.3 二叉树的综合应用
+Binary	search	trees,	and	trees	treated	as	graphs.
+16.3.1 Binary	search	tree
+8
+3 10
+1 6 14
+left subtree < node < right subtree
+IDEA In a binary	search	tree (BST) every value in a
+node's left subtree is smaller and every value in its
+right subtree is larger. Searching or inserting walks
+one path from the root: left if smaller, right if larger.
+An in-order walk lists the values sorted.
+TRAP Inserting already sorted values makes the tree a long
+chain, and every operation becomes O(n). The
+library set  keeps itself balanced ( 第 17 章 ); write
+your own BST to learn the idea.
+
+=== page 8 ===
+8基础篇  第 16 章  二叉树
+bst.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int val[10005], lc[10005], rc[10005], cnt = 0;   // node 0 = empty
+5  
+6 int insert(int u, int x) {             // returns the (new) subtree root
+7     if (u == 0) { val[++cnt] = x; return cnt; }
+8     if (x < val[u]) lc[u] = insert(lc[u], x);
+9     else rc[u] = insert(rc[u], x);
+10     return u;
+11 }
+12  
+13 bool contains(int u, int x) {
+14     while (u != 0 && val[u] != x) u = (x < val[u]) ? lc[u] : rc[u];
+15     return u != 0;
+16 }
+17  
+18 void inorder(int u) {
+19     if (!u) return;
+20     inorder(lc[u]); cout << val[u] << " "; inorder(rc[u]);
+21 }
+22  
+23 int main() {
+24     int n;
+25     cin >> n;
+26     int root = 0;
+27     for (int i = 0; i < n; i++) {
+28         int x;
+29         cin >> x;
+30         root = insert(root, x);
+31     }
+32     inorder(root);
+33     cout << "\n" << contains(root, 6) << " " << contains(root, 7) << "\n";
+34     return 0;
+35 }
+INPUT
+6
+8 3 10 1 6 14
+OUTPUT
+1 3 6 8 10 14 
+1 0
+KEY POINT Rank, k-th smallest, predecessor and successor are all one walk down the tree once each node also stores
+its subtree size (P5076).
+
+=== page 9 ===
+9基础篇  第 16 章  二叉树
+16.3.2 Trees	as	graphs:	distances
+hospital.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, people[105];
+5 vector<int> adj[105];                  // neighbours, both directions
+6  
+7 int main() {
+8     cin >> n;
+9     for (int i = 1; i <= n; i++) {
+10         int l, r;
+11         cin >> people[i] >> l >> r;
+12         if (l) { adj[i].push_back(l); adj[l].push_back(i); }
+13         if (r) { adj[i].push_back(r); adj[r].push_back(i); }
+14     }
+15     long long best = LLONG_MAX;
+16     for (int s = 1; s <= n; s++) {     // try the hospital at every node
+17         vector<int> dist(n + 1, -1);
+18         queue<int> q;
+19         dist[s] = 0;
+20         q.push(s);
+21         long long cost = 0;
+22         while (!q.empty()) {
+23             int u = q.front();
+24             q.pop();
+25             cost += 1LL * people[u] * dist[u];
+26             for (int k = 0; k < int(adj[u].size()); k++) {
+27                 int v = adj[u][k];
+28                 if (dist[v] == -1) { dist[v] = dist[u] + 1; q.push(v); }
+29             }
+30         }
+31         best = min(best, cost);
+32     }
+33     cout << best << "\n";
+34     return 0;
+35 }
+INPUT
+5
+13 2 3
+4 0 0
+12 4 5
+20 0 0
+40 0 0
+OUTPUT
+81
+IDEA Walking from a child back to its parent is allowed here, so treat the tree as an undirected graph: store every
+edge in both directions with vector<int> adj[N] . With n ≤ 100, run a BFS from every node and keep the
+cheapest total (P1364).
+KEY POINT Depth, width (the most nodes on one level) and the distance between two nodes (up to their lowest
+common ancestor and down again) come from one BFS that records depth and parent (P3884). Drawing a
+tree in text (P1185) places each node by its depth and in-order position.
+16.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 10 ===
+10基础篇  第 16 章  二叉树
+Key	points	to	memorise
+1. Binary tree: root, at most two children, leaves have none; depth counts levels.
+2. Complete tree in an array: children 2i, 2i	+	1; parent i	/	2.
+3. General tree: lc[u], rc[u] with 0 for "none".
+4. Depth(u) = 0 if empty, else 1 + max(depth(lc), depth(rc)).
+5. Pre: root L R. In: L root R. Post: L R root. Level order: BFS with a queue.
+6. Rebuild: root from pre (first) or post (last); split the in-order at the root.
+7. Pre + post alone: each one-child node doubles the number of trees.
+8. BST: left < node < right; in-order is sorted; sorted inserts make a chain.
+9. Moving up and down a tree: store edges both ways in vector<int>	adj[N] and BFS.
+16.4.1 Problems
+Problem Name Section What it tests
+P4715 淘汰赛 16.1 Bracket as a complete tree in an array; loser of the final.
+P4913 二叉树深度 16.1 Depth = 1 + deeper subtree.
+P1827 美国血统  American
+Heritage
+16.2 In-order + pre-order → post-order.
+P5076 普通二叉树（简化版） 16.3 BST with rank, k-th, predecessor, successor.
+P1364 医院设置 16.3 BFS from every node, weighted distance sum.
+P1229 遍历问题 16.2 Count trees from pre- and post-order: 2^(one-child nodes).
+P1305 新二叉树 16.1 Letters as indices; print pre-order.
+P1030 求先序排列 16.2 In-order + post-order → pre-order.
+P3884 二叉树问题 16.3 Depth, width, and distance through the common ancestor.
+P1185 绘制二叉树 16.3 Place nodes by depth and order to draw the tree.
+16.4.2 Practice	ladder
+1. Direct. P4913: depth by recursion (16.1).
+2. One	twist. P1305: pre-order traversal (16.1).
+3. Idea	hidden. P1030: rebuild from in- and post-order (16.2).
+4. Two	ideas. P1364: tree as an undirected graph (16.3).
+5. Stretch. P5076: search tree operations (16.3).
+16.4.3 Experiments
+1. Draw the tree from tree_depth.cpp's input and check the four orders printed by traversals.cpp by hand.
+2. Insert 1, 2, 3, …, 1000 into bst.cpp and measure the depth of the result.
+3. Give pre_from_in_post.cpp two orders that do not belong to the same tree: what happens?
+4. Change knockout.cpp to print the whole bracket level by level.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

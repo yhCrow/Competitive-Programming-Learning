@@ -1,0 +1,304 @@
+# 进阶篇 第15章 区间与环形动态规划  (进15)
+# source: 进阶篇 第15章 区间与环形动态规划.pdf
+
+=== page 1 ===
+1进阶篇  第 15 章  区间与环形动态规划
+第 15 章 	 区间与环形动态规划
+Interval and ring DP Luogu #213 12 problems C++17 · all programs run
+15.1 区间动态规划 15.2 环形动态规划
+15.3 课后习题与实验
+15.1 区间动态规划
+Merging	stones,	palindromes,	painting.
+0
+0
+0
+0
+7
+8
+4
+17
+13
+22
+r=1
+l=1
+r=2
+l=2
+r=3
+l=3
+r=4
+l=4
+stones 2 5 3 1
+fill by length:
+diagonal 1, 2, 3, 4
+answer f[1][4] = 22
+IDEA Interval	DP ( 区间动态规划 ): the state
+is a segment, f[l][r] = the best answer
+for a[l..r]. A segment is built from two
+shorter segments, so compute by
+increasing	length. Merging stones in a
+line (P1775): f[l][r] = min over split k of
+f[l][k] + f[k+1][r] + (sum of a[l..r]).
+KEY POINT The last merge joins a[l..k] and
+a[k+1..r]; whatever happened before,
+that merge costs the whole sum, which
+a prefix sum gives in O(1). n² states × n
+splits = O(n³).
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 4 部 分  动 态 规 划
+The state is a segment [l, r], built from shorter segments by splitting or by looking at its two ends; a ring
+becomes a doubled line with every window of length n tried.
+
+=== page 2 ===
+2进阶篇  第 15 章  区间与环形动态规划
+stones.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[305], s[305], f[305][305];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     for (int i = 1; i <= n; i++) { cin >> a[i]; s[i] = s[i - 1] + a[i]; }
+10     for (int len = 2; len <= n; len++)               // shorter segments first
+11         for (int l = 1; l + len - 1 <= n; l++) {
+12             int r = l + len - 1;
+13             f[l][r] = INT_MAX;
+14             for (int k = l; k < r; k++)              // last merge: [l, k] + [k+1, r]
+15                 f[l][r] = min(f[l][r], f[l][k] + f[k + 1][r] + s[r] - s[l - 1]);
+16         }
+17     cout << f[1][n] << "\n";
+18     return 0;
+19 }
+INPUT
+4
+2 5 3 1
+OUTPUT
+22
+KEY POINT Loop order: length	outside, left end inside. Looping l from 1 to n and r upward would read f[k+1][r]
+before it is ready. A safe alternative is l from n down to 1 and r from l up.
+TRAP f[l][l] = 0 (a single pile costs nothing), and only segments of length ≥ 2 take the minimum. Initialise those
+to a large value, not 0, or the min stays 0.
+palindrome.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int f[1005][1005];                 // f[l][r]: fewest insertions to make s[l..r] a palindrome
+5  
+6 int main() {
+7     string s;
+8     cin >> s;
+9     int n = s.size();
+10     for (int len = 2; len <= n; len++)
+11         for (int l = 0; l + len - 1 < n; l++) {
+12             int r = l + len - 1;
+13             if (s[l] == s[r]) f[l][r] = f[l + 1][r - 1];          // ends match: keep both
+14             else f[l][r] = min(f[l + 1][r], f[l][r - 1]) + 1;     // add a copy of one end
+15         }
+16     cout << f[0][n - 1] << "\n";
+17     return 0;
+18 }
+INPUT 1
+Ab3bd
+OUTPUT 1
+2
+INPUT 2
+abcba
+OUTPUT 2
+0
+IDEA Palindromes are naturally interval problems: look at the two ends. If they match, they pair up and the
+inside remains. If not, one end must be matched by an inserted character (P1435).
+
+=== page 3 ===
+3进阶篇  第 15 章  区间与环形动态规划
+KEY POINT Equivalently: answer = n − (longest palindromic subsequence) = n − LCS(s, reverse s). For length 2, f[l+1]
+[r−1] is an empty segment (l+1 > r−1), whose value 0 is already in the array.
+painting.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int f[55][55];
+5  
+6 int main() {
+7     string s;
+8     cin >> s;
+9     int n = s.size();
+10     for (int i = 0; i < n; i++) f[i][i] = 1;          // one stroke per single cell
+11     for (int len = 2; len <= n; len++)
+12         for (int l = 0; l + len - 1 < n; l++) {
+13             int r = l + len - 1;
+14             if (s[l] == s[r]) f[l][r] = min(f[l + 1][r], f[l][r - 1]);   // one stroke covers both ends
+15             else {
+16                 f[l][r] = INT_MAX;
+17                 for (int k = l; k < r; k++) f[l][r] = min(f[l][r], f[l][k] + f[k + 1][r]);
+18             }
+19         }
+20     cout << f[0][n - 1] << "\n";
+21     return 0;
+22 }
+INPUT 1
+AAAAA
+OUTPUT 1
+1
+INPUT 2
+RGBGR
+OUTPUT 2
+3
+IDEA Painting a strip (P4170 涂色 ): each stroke paints a segment one colour; later strokes cover earlier ones. If
+both ends have the same colour, the first stroke can be stretched to cover both, so the end costs nothing
+extra. Otherwise the strip splits into two independent parts.
+KEY POINT RGBGR: one R stroke over everything, then G over the middle three, then B in the centre: 3. Interval DPs
+often combine "the ends are special" with "split somewhere".
+15.2 环形动态规划
+Doubling	the	array;	min	and	max;	the	energy	necklace.
+
+=== page 4 ===
+4进阶篇  第 15 章  区间与环形动态规划
+4
+1
+5
+2
+9
+3
+4
+4
+4
+5
+5
+6
+9
+7
+4
+8
+a ring of n becomes a line of 2n;
+each window of length n is one place to cut
+IDEA Ring	DP ( 环形动态规划 ): piles on a
+circle can also merge pile n with pile 1.
+Break the circle by copying	the	array
+after itself: a[n+i] = a[i]. Every way to
+merge the circle never merges across
+one gap, so it is a line of n consecutive
+piles, a window [i, i + n − 1] of the
+doubled array.
+KEY POINT Run the line DP on the doubled array of
+length 2n (segments up to length n
+only), then answer = best f[i][i + n − 1]
+over i = 1 … n. Still O(n³), with a factor
+of about 8.
+stones_ring.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[205], s[205], mn[205][205], mx[205][205];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     for (int i = 1; i <= n; i++) { cin >> a[i]; a[i + n] = a[i]; }   // copy the ring
+10     for (int i = 1; i <= 2 * n; i++) s[i] = s[i - 1] + a[i];
+11     for (int len = 2; len <= n; len++)
+12         for (int l = 1; l + len - 1 <= 2 * n; l++) {
+13             int r = l + len - 1;
+14             mn[l][r] = INT_MAX; mx[l][r] = 0;
+15             for (int k = l; k < r; k++) {
+16                 mn[l][r] = min(mn[l][r], mn[l][k] + mn[k + 1][r]);
+17                 mx[l][r] = max(mx[l][r], mx[l][k] + mx[k + 1][r]);
+18             }
+19             mn[l][r] += s[r] - s[l - 1];
+20             mx[l][r] += s[r] - s[l - 1];
+21         }
+22     int best = INT_MAX, worst = 0;
+23     for (int i = 1; i <= n; i++) {                       // every place to cut the ring
+24         best = min(best, mn[i][i + n - 1]);
+25         worst = max(worst, mx[i][i + n - 1]);
+26     }
+27     cout << best << "\n" << worst << "\n";
+28     return 0;
+29 }
+INPUT
+4
+4 5 9 4
+OUTPUT
+43
+54
+IDEA Stones on a circle, both the minimum and the maximum total cost (P1880). The sum of the segment is
+added once after the split loop, since it does not depend on k.
+KEY POINT The maximum is not "the minimum turned around": each needs its own table. For n = 4 piles 4 5 9 4 the
+best cut gives 43 and the worst gives 54.
+
+=== page 5 ===
+5进阶篇  第 15 章  区间与环形动态规划
+necklace.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long e[205], f[205][205];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     for (int i = 1; i <= n; i++) { cin >> e[i]; e[i + n] = e[i]; }
+10     // bead i has head e[i] and tail e[i+1]; merging beads l..k and k+1..r releases e[l]*e[k+1]*e[r+1]
+11     long long best = 0;
+12     for (int len = 2; len <= n; len++)
+13         for (int l = 1; l + len - 1 < 2 * n; l++) {
+14             int r = l + len - 1;
+15             for (int k = l; k < r; k++)
+16                 f[l][r] = max(f[l][r], f[l][k] + f[k + 1][r] + e[l] * e[k + 1] * e[r + 1]);
+17         }
+18     for (int i = 1; i <= n; i++) best = max(best, f[i][i + n - 1]);
+19     cout << best << "\n";
+20     return 0;
+21 }
+INPUT
+4
+2 3 5 10
+OUTPUT
+710
+IDEA Energy necklace (P1063): each bead is (head, tail) and neighbours share a value, like matrix-chain
+multiplication on a ring. Merging two blocks releases head × middle × tail. The tail of bead r is e[r + 1], so
+the doubled array needs index 2n as well.
+KEY POINT Polygon (P4342) adds negative numbers and × edges: a maximum can come from two minima multiplied
+(−3 × −4), so keep both min and max for every segment and combine all four products.
+KEY POINT Other shapes of interval DP: 关路灯  (P1220) walks out from a starting point, state [l, r] plus "standing at
+the left or right end"; 合唱队  (P3205) builds a queue by adding to either end, again "which end was last";
+Zuma (CF607B) removes palindromes with f[l][r] and the ends-match rule.
+15.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Interval DP: f[l][r] from shorter segments; loop length outside.
+2. Split: f[l][r] = min over k of f[l][k] + f[k+1][r] + cost(l, r); O(n³).
+3. Segment sums from prefix sums; f[l][l] boundary; others start at ±∞.
+4. Ends rule: s[l] == s[r] ⇒ use the inside; else drop one end.
+5. Ring: copy a[i + n] = a[i]; answer = best f[i][i + n − 1].
+6. Min and max need separate tables; with negatives keep both and combine.
+7. Extra state for "which end": walking or building from both sides.
+
+=== page 6 ===
+6进阶篇  第 15 章  区间与环形动态规划
+15.3.1 Problems
+Problem Name Section What it tests
+P1435 回文字串 15.1 Insertions to a palindrome: ends rule.
+P1775 石子合并（弱化版） 15.1 Line merge, O(n³).
+CF607B Zuma 15.1 Remove palindromes; ends-match rule.
+P3205 合唱队 15.1 [l, r] + which end came last.
+P1880 石子合并 15.2 Ring: doubled array, min and max.
+P1140 相似基因 15.1 Alignment with a score table (two sequences).
+P4170 涂色 15.1 Same-colour ends share a stroke.
+P4290 玩具取名 15.1 Which letters can produce s[l..r].
+P1063 能量项链 15.2 Matrix chain on a ring.
+P1070 道路游戏 15.2 Robots on a circular road over time.
+P4342 Polygon 15.2 Keep min and max for negatives.
+P1220 关路灯 15.1 [l, r] + standing left or right.
+15.3.2 Practice	ladder
+1. Direct. P1775: first interval DP (15.1).
+2. One	twist. P1435: ends rule (15.1).
+3. Idea	hidden. P1880: ring by doubling (15.2).
+4. Two	ideas. P1063: matrix-chain style (15.2).
+5. Stretch. P1220: extra end state (15.1).
+15.3.3 Experiments
+1. Fill the f table of stones.cpp by hand for 2 5 3 1 and compare with the diagram.
+2. Loop l from 1 to n and r from l to n in stones.cpp (no length loop) and see the answer break.
+3. Print the best cut position i for stones_ring.cpp: is it unique?
+4. Solve palindrome.cpp with LCS(s, reverse s) instead and check both agree on random strings.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

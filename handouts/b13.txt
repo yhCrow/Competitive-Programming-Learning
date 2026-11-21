@@ -1,0 +1,415 @@
+# 基础篇 第13章 二分查找与二分答案  (基13)
+# source: 基础篇 第13章 二分查找与二分答案.pdf
+
+=== page 1 ===
+1基础篇  第 13 章  二分查找与二分答案
+第 13 章 	 二分查找与二分答案
+Binary search Luogu #111 11 problems C++17 · all programs run
+13.1 二分查找 13.2 二分答案
+13.3 课后习题与实验
+13.1 二分查找
+One	template	with	an	invariant;	lower_bound	and	upper_bound;	real-number	bisection.
+1
+0
+3
+1
+3
+2
+3
+3
+5
+4
+7
+5
+9
+6
+lo hi
+x = 3: bad (a[i] < 3) | good (a[i] >= 3)
+invariant: a[lo] bad, a[hi] good; stop when hi = lo + 1
+answer: hi = 1, the first good index
+IDEA In a sorted array the test "a[i] ≥ x" is false
+for a prefix and true for the rest. Binary
+search finds the boundary by halving the
+range: look at the middle, keep the half
+that still contains the boundary. log₂ 10⁶ ≈
+20 steps instead of 10⁶.
+KEY POINT Use one	template and its invariant
+always: lo  is always bad (or −1), hi  is
+always good (or n). The loop ends when
+they are neighbours, and hi  is the first
+good index.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 2 部 分  初 涉 算 法
+Halve the range: find a boundary in a sorted array, a root of a function, or the best answer whose check is
+monotone.
+
+=== page 2 ===
+2基础篇  第 13 章  二分查找与二分答案
+first_occurrence.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[1000005];
+5  
+6 int main() {
+7     ios::sync_with_stdio(false);
+8     cin.tie(nullptr);
+9     int n, m;
+10     cin >> n >> m;
+11     for (int i = 0; i < n; i++) cin >> a[i];   // sorted, increasing
+12     while (m--) {
+13         int x;
+14         cin >> x;
+15         int lo = -1, hi = n;                   // a[lo] < x, a[hi] >= x
+16         while (hi - lo > 1) {
+17             int mid = lo + (hi - lo) / 2;
+18             if (a[mid] >= x) hi = mid;         // mid is good
+19             else lo = mid;                     // mid is bad
+20         }
+21         cout << (hi < n && a[hi] == x ? hi + 1 : -1) << " ";  // 1-based
+22     }
+23     cout << "\n";
+24     return 0;
+25 }
+INPUT
+11 3
+1 3 3 3 5 7 9 11 13 15 15
+1 3 6
+OUTPUT
+1 2 -1
+Question Good means Answer
+first index with a[i] ≥ x a[mid] >= x hi
+first index with a[i] > x a[mid] > x hi
+last index with a[i] ≤ x a[mid] > x hi - 1
+is x present? a[mid] >= x hi < n && a[hi] == x
+TRAP Templates mixing lo <= hi , mid + 1  and mid - 1  loop forever or miss by one when you change one
+detail. The hi - lo > 1  form never does: mid is always strictly between lo and hi.
+
+=== page 3 ===
+3基础篇  第 13 章  二分查找与二分答案
+13.1.1 The	library	versions:	lower_bound	and	upper_bound
+pairs_difference.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     long long c;
+7     cin >> n >> c;
+8     vector<long long> a(n);
+9     for (int i = 0; i < n; i++) cin >> a[i];
+10     sort(a.begin(), a.end());
+11     long long cnt = 0;
+12     for (int i = 0; i < n; i++) {
+13         long long x = a[i];                  // pairs with a - b = c: b = x - c
+14         auto lo = lower_bound(a.begin(), a.end(), x - c);
+15         auto hi = upper_bound(a.begin(), a.end(), x - c);
+16         cnt += hi - lo;                      // how many equal x - c
+17     }
+18     cout << cnt << "\n";
+19     return 0;
+20 }
+INPUT
+4 1
+1 1 2 3
+OUTPUT
+3
+closest_school.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int m, n;
+6     cin >> m >> n;
+7     vector<long long> s(m);
+8     for (int i = 0; i < m; i++) cin >> s[i];
+9     sort(s.begin(), s.end());
+10     long long total = 0;
+11     while (n--) {
+12         long long g;
+13         cin >> g;
+14         int i = lower_bound(s.begin(), s.end(), g) - s.begin();
+15         long long best = LLONG_MAX;
+16         if (i < m) best = min(best, s[i] - g);        // first >= g
+17         if (i > 0) best = min(best, g - s[i - 1]);    // last < g
+18         total += best;
+19     }
+20     cout << total << "\n";
+21     return 0;
+22 }
+INPUT
+4 3
+513 598 567 689
+500 600 550
+OUTPUT
+32
+KEY POINT lower_bound(b, e, x)  points to the first element ≥ x, upper_bound  to the first element > x; both need
+sorted data and run in O(log n). Their difference counts the copies of x (P1102). The closest value to g is
+the element at lower_bound  or the one just before it (P1678).
+
+=== page 4 ===
+4基础篇  第 13 章  二分查找与二分答案
+13.1.2 Binary	search	on	real	numbers
+cubic_roots.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 double a, b, c, d;
+5 double f(double x) { return ((a * x + b) * x + c) * x + d; }
+6  
+7 int main() {
+8     cin >> a >> b >> c >> d;
+9     cout << fixed << setprecision(2);
+10     for (int i = -100; i <= 100; i++) {         // roots are >= 1 apart
+11         double lo = i, hi = i + 1;
+12         if (f(lo) == 0) { cout << lo << " "; continue; }   // root at i
+13         if (i == 100 || f(lo) * f(hi) >= 0) continue;     // no root inside
+14         for (int it = 0; it < 60; it++) {       // halve 60 times
+15             double mid = (lo + hi) / 2;
+16             if (f(lo) * f(mid) <= 0) hi = mid;
+17             else lo = mid;
+18         }
+19         cout << lo << " ";
+20     }
+21     cout << "\n";
+22     return 0;
+23 }
+INPUT
+1 -5 -4 20
+OUTPUT
+-2.00 2.00 5.00
+IDEA A continuous function that changes sign on [lo, hi] has a root there. Halving keeps the half where the sign
+still changes. Roots at least 1 apart means each unit interval holds at most one (P1024).
+KEY POINT For real numbers, loop a fixed number of times (60 halvings shrink any range far below 10−9) instead of
+comparing with an epsilon. Interest rates (P1163) and times (P3743) are searched the same way.
+13.2 二分答案
+Binary	search	over	the	answer	with	a	check	function.
+10 11 12 13 14 15 16 17 18 19
+check(H): green = enough wood, orange = not enough
+answer = the last green value, found in O(log range) checks
+IDEA Binary	search	on	the	answer: when the
+question is "the largest (or smallest) x
+that works", and works(x) is monotone
+(if x works, every smaller x works too),
+search over x instead of over an array.
+Each step costs one call to a check(x)
+function.
+KEY POINT Recipe: (1) say what x is; (2) prove
+monotonicity in one sentence; (3) write
+check(x) , usually a greedy O(n) scan;
+(4) pick lo (surely works) and hi (surely
+fails) and run the template.
+
+=== page 5 ===
+5基础篇  第 13 章  二分查找与二分答案
+saw_height.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n;
+5 long long need;
+6 vector<long long> h;
+7  
+8 bool check(long long H) {               // saw at H: enough wood?
+9     long long got = 0;
+10     for (int i = 0; i < n; i++)
+11         if (h[i] > H) got += h[i] - H;
+12     return got >= need;
+13 }
+14  
+15 int main() {
+16     cin >> n >> need;
+17     h.resize(n);
+18     for (int i = 0; i < n; i++) cin >> h[i];
+19     long long lo = 0, hi = *max_element(h.begin(), h.end()) + 1;
+20     // invariant: check(lo) true, check(hi) false
+21     while (hi - lo > 1) {
+22         long long mid = lo + (hi - lo) / 2;
+23         if (check(mid)) lo = mid;
+24         else hi = mid;
+25     }
+26     cout << lo << "\n";
+27     return 0;
+28 }
+INPUT 1
+4 7
+20 15 10 17
+OUTPUT 1
+15
+INPUT 2
+5 20
+4 42 40 26 46
+OUTPUT 2
+36
+
+=== page 6 ===
+6基础篇  第 13 章  二分查找与二分答案
+wood_pieces.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n;
+5 long long k;
+6 vector<long long> a;
+7  
+8 bool check(long long L) {               // pieces of length L: at least k?
+9     long long cnt = 0;
+10     for (int i = 0; i < n; i++) cnt += a[i] / L;
+11     return cnt >= k;
+12 }
+13  
+14 int main() {
+15     cin >> n >> k;
+16     a.resize(n);
+17     for (int i = 0; i < n; i++) cin >> a[i];
+18     long long lo = 0, hi = 100000001;   // check(lo) treated as true
+19     while (hi - lo > 1) {
+20         long long mid = lo + (hi - lo) / 2;
+21         if (check(mid)) lo = mid;
+22         else hi = mid;
+23     }
+24     cout << lo << "\n";                 // 0 if even length 1 fails
+25     return 0;
+26 }
+INPUT
+3 7
+232
+124
+456
+OUTPUT
+114
+KEY POINT A higher saw gives less wood, so "enough wood" holds up to some height and fails above it (P1873).
+Longer pieces give fewer pieces (P2440). Both checks are one O(n) loop; with about 30 halvings the whole
+solution is O(n log range).
+
+=== page 7 ===
+7基础篇  第 13 章  二分查找与二分答案
+13.2.1 Maximise	the	minimum,	minimise	the	maximum
+jump_stones.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long L;
+5 int n, m;
+6 vector<long long> d;
+7  
+8 bool check(long long gap) {          // can every jump be >= gap?
+9     int removed = 0;
+10     long long last = 0;
+11     for (int i = 0; i < n; i++) {
+12         if (d[i] - last < gap) removed++;   // too close: remove this stone
+13         else last = d[i];                   // keep it
+14     }
+15     if (L - last < gap) removed++;       // last jump to the bank
+16     return removed <= m;
+17 }
+18  
+19 int main() {
+20     cin >> L >> n >> m;
+21     d.resize(n);
+22     for (int i = 0; i < n; i++) cin >> d[i];
+23     long long lo = 0, hi = L + 1;
+24     while (hi - lo > 1) {
+25         long long mid = lo + (hi - lo) / 2;
+26         if (check(mid)) lo = mid;
+27         else hi = mid;
+28     }
+29     cout << lo << "\n";
+30     return 0;
+31 }
+INPUT
+25 5 2
+2
+11
+14
+17
+21
+OUTPUT
+4
+
+=== page 8 ===
+8基础篇  第 13 章  二分查找与二分答案
+split_array.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, m;
+5 vector<long long> a;
+6  
+7 bool check(long long cap) {          // at most m parts, each sum <= cap?
+8     int parts = 1;
+9     long long sum = 0;
+10     for (int i = 0; i < n; i++) {
+11         long long x = a[i];
+12         if (x > cap) return false;
+13         if (sum + x > cap) { parts++; sum = 0; }   // start a new part
+14         sum += x;
+15     }
+16     return parts <= m;
+17 }
+18  
+19 int main() {
+20     cin >> n >> m;
+21     a.resize(n);
+22     for (int i = 0; i < n; i++) cin >> a[i];
+23     long long lo = 0, hi = 0;           // check(lo) false, check(hi) true
+24     for (int i = 0; i < n; i++) hi += a[i];
+25     while (hi - lo > 1) {
+26         long long mid = lo + (hi - lo) / 2;
+27         if (check(mid)) hi = mid;
+28         else lo = mid;
+29     }
+30     cout << hi << "\n";
+31     return 0;
+32 }
+INPUT
+5 3
+4 2 4 5 1
+OUTPUT
+6
+KEY POINT "Make the smallest jump as large as possible" and "make the largest part as small as possible" are the
+classic signals for binary search on the answer. The check is a greedy pass: keep a stone only if it is far
+enough (P2678); start a new part only when the sum would exceed the cap (P1182). Road signs that shrink
+the longest gap (P3853) follow the same pattern.
+TRAP Note which side is good in each problem: maximising keeps lo  good and outputs lo ; minimising keeps
+hi  good and outputs hi . Pick the starting lo and hi so the invariant is already true before the loop.
+13.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 9 ===
+9基础篇  第 13 章  二分查找与二分答案
+Key	points	to	memorise
+1. Binary search needs a monotone test: false … false, true … true.
+2. Template: lo always bad, hi always good; while	(hi	−	lo	>	1); answer hi (or lo).
+3. mid = lo	+	(hi	−	lo)	/	2 avoids overflow; mid is always strictly between lo and hi.
+4. lower_bound: first ≥ x; upper_bound: first > x; difference = count of x.
+5. Closest value: the lower_bound element or the one before it.
+6. Real numbers: halve a fixed number of times (about 60), no epsilon needed.
+7. Binary search on the answer: define x, prove monotone, write check(x), choose lo/hi.
+8. "Maximise the minimum" / "minimise the maximum" → binary search on the answer.
+9. The check is usually a greedy O(n) pass; total O(n log range).
+13.3.1 Problems
+Problem Name Section What it tests
+P2249 查找 13.1 First occurrence in a sorted array, or −1.
+P1102 A-B 数对 13.1 Count copies of x − c with lower/upper_bound.
+P1873 EKO / 砍树 13.2 Highest saw height that still gives enough wood.
+P1024 一元三次方程求解 13.1 Bisect each unit interval with a sign change.
+P1678 烦恼的高考志愿 13.1 Closest value: lower_bound and its left neighbour.
+P2440 木材加工 13.2 Longest piece length giving at least k pieces.
+P2678 跳石头 13.2 Maximise the shortest jump; greedy removal check.
+P3853 路标设置 13.2 Minimise the longest gap with k extra signs.
+P1182 数列分段  Section II 13.2 Minimise the largest part sum; greedy split check.
+P1163 银行贷款 13.1 Real binary search on the monthly interest rate.
+P3743 小鸟的设备 13.2 Real binary search on how long the devices last.
+13.3.2 Practice	ladder
+1. Direct. P2249: the basic template (13.1).
+2. One	twist. P1102: lower_bound and upper_bound (13.1).
+3. Idea	hidden. P1873: binary search on the answer (13.2).
+4. Two	ideas. P2678: maximise the minimum with a greedy check (13.2).
+5. Stretch. P1024: bisection on real numbers (13.1).
+13.3.3 Experiments
+1. Change first_occurrence.cpp to print the last occurrence instead; test with many equal values.
+2. Use mid = (lo + hi) / 2 with lo and hi near 2·10⁹ in int: what happens?
+3. Print every mid tried by saw_height.cpp and count the steps.
+4. Run cubic_roots.cpp with 20 and with 100 halvings and compare the digits.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

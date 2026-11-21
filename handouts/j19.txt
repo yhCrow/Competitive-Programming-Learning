@@ -1,0 +1,478 @@
+# 进阶篇 第19章 进阶数论  (进19)
+# source: 进阶篇 第19章 进阶数论.pdf
+
+=== page 1 ===
+1进阶篇  第 19 章  进阶数论
+第 19 章 	 进阶数论
+Further number theory Luogu #216 22 problems C++17 · all programs run
+19.1 模意义下的数和运算 19.2 乘法逆元
+19.3 同余方程与中国剩余定理 19.4 线性筛与积性函数 ( 选读 )
+19.5 欧拉函数 ( 选读 ) 19.6 课后习题与实验
+19.1 模意义下的数和运算
+Rules	mod	m;	digit	sums	mod	9;	division	blocks.
+IDEA Working modulo	m ( 模意义下 ) keeps numbers small: replace every intermediate result by its remainder.
+Addition, subtraction and multiplication can be reduced at any moment; division	cannot (that needs an
+inverse, 19.2).
+KEY POINT a ≡ b (mod m) means m divides a − b. In C++ the % of a negative number is negative, so write (a - b) %
+m + m) % m  when a − b may be below 0. A product of two numbers below 10⁹ fits in long long; below
+10¹⁸ it needs __int128 .
+Rule Formula Note
+add (a + b) mod m = ((a mod m) + (b mod m)) mod m reduce first, then add
+subtract (a − b) mod m = ((a mod m) − (b mod m) + m) mod m add m to stay ≥ 0
+multiply (a·b) mod m = ((a mod m)·(b mod m)) mod m watch the product size
+power aᵇ mod m by repeated squaring O(log b), 第 3 章
+divide a / b mod m = a · b⁻¹ mod m only if gcd(b, m) = 1
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 5 部 分  数 学 专 题 选 讲
+Arithmetic modulo m, inverses three ways, linear congruences and the Chinese remainder theorem, the
+linear sieve for multiplicative functions, and Euler's function with its theorem.
+
+=== page 2 ===
+2进阶篇  第 19 章  进阶数论
+kai_digits.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int q;
+6     cin >> q;
+7     while (q--) {
+8         long long l, r;
+9         cin >> l >> r;
+10         // concatenation l, l+1, ..., r  is congruent to  l + (l+1) + ... + r  (mod 9)
+11         long long a = l + r, b = r - l + 1;        // sum = a * b / 2
+12         if (a % 2 == 0) a /= 2; else b /= 2;       // divide BEFORE reducing
+13         cout << (a % 9) * (b % 9) % 9 << "\n";
+14     }
+15     return 0;
+16 }
+INPUT
+2
+2 5
+1 10
+OUTPUT
+5
+1
+IDEA Every power of 10 is ≡ 1 (mod 9), so a number is ≡ its digit sum, and gluing numbers together is ≡
+adding them (P4942). The sum l + … + r has a formula; with l, r up to 10¹² the product (l + r)(r − l + 1)
+would overflow, so halve the even factor first and reduce each factor mod 9.
+KEY POINT Halving is a division: do it on the exact value, before taking the remainder. Afterwards only +, −, × are safe.
+remainder_sum.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     long long n, k;
+6     cin >> n >> k;
+7     long long ans = n * k;                        // k mod i = k - i * floor(k / i)
+8     for (long long l = 1, r; l <= min(n, k); l = r + 1) {
+9         long long q = k / l;
+10         r = min(n, k / q);                        // every i in [l, r] has the same k / i
+11         ans -= q * (l + r) * (r - l + 1) / 2;     // subtract q * (l + ... + r)
+12     }
+13     cout << ans << "\n";
+14     return 0;
+15 }
+INPUT
+10 5
+OUTPUT
+29
+IDEA Σi=1..n (k mod i) (P2261): rewrite k mod i = k − i·⌊k/i⌋. The value ⌊k/i⌋ takes only about 2√k different
+values, and the i with the same value form a block [l, r] with r = ⌊k / ⌊k/l⌋⌋. Add each block at once:
+division	blocks ( 整除分块 ), O(√k).
+KEY POINT For i > k the quotient is 0, so the loop stops at min(n, k). The same blocks appear in P2568, P6583 and any
+sum with ⌊n/i⌋ inside.
+
+=== page 3 ===
+3进阶篇  第 19 章  进阶数论
+19.2 乘法逆元
+Fermat,	extended	Euclid,	the	linear	table.
+IDEA The inverse ( 乘法逆元 ) of a modulo m is x with a·x ≡ 1 (mod m), written a⁻¹. It exists exactly when
+gcd(a, m) = 1. Then "divide by a" means "multiply by a⁻¹", so fractions like p / q mod m make sense
+(P2613).
+Method How When
+Fermat a⁻¹ = ap−2 mod p p prime, one inverse, O(log p)
+extended Euclid solve a·x + m·y = 1 any m with gcd(a, m) = 1, O(log m)
+linear table inv[i] = −⌊p/i⌋ · inv[p mod i] mod p all of 1 … n, p prime, O(n)
+factorial trick inv(n!) by Fermat, then inv(i!) = inv((i+1)!) · (i+1) binomials, O(n + log p)
+inverses.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long inv[3000005];
+5  
+6 int main() {
+7     ios::sync_with_stdio(false);
+8     cin.tie(nullptr);
+9     int n;
+10     long long p;
+11     cin >> n >> p;
+12     inv[1] = 1;
+13     for (int i = 2; i <= n; i++)
+14         inv[i] = (p - p / i) * inv[p % i] % p;      // -(p / i) * inv[p mod i], kept positive
+15     for (int i = 1; i <= n; i++) cout << inv[i] << "\n";
+16     return 0;
+17 }
+INPUT
+10 13
+OUTPUT
+1
+7
+9
+10
+8
+11
+2
+5
+3
+4
+IDEA Why the table works: write p = q·i + r with q = ⌊p/i⌋, r = p mod i. Then q·i + r ≡ 0, so i ≡ −r / q, and i⁻¹ ≡
+−q · r⁻¹ (mod p). Since r < i, inv[r] is already known (P3811).
+KEY POINT Check one: 2 × 7 = 14 ≡ 1 (mod 13), so inv[2] = 7. Writing (p − p / i) instead of −(p / i) keeps everything
+non-negative.
+TRAP Fermat needs p prime and a not divisible by p. For a composite modulus use extended Euclid, and first
+check that gcd(a, m) = 1.
+
+=== page 4 ===
+4进阶篇  第 19 章  进阶数论
+19.3 同余方程与中国剩余定理
+exgcd,	Bézout,	congruences,	CRT.
+IDEA Extended	Euclid ( 扩展欧几里得 ): besides g = gcd(a, b) it finds x, y with a·x + b·y = g. From gcd(a, b) =
+gcd(b, a mod b): if b·x′ + (a mod b)·y′ = g, then x = y′ and y = x′ − ⌊a/b⌋·y′. Bézout: a·x + b·y = c has integer
+solutions exactly when g divides c (P4549).
+KEY POINT Linear congruence a·x ≡ c (mod m) is a·x + m·y = c. Solve a·x₀ + m·y₀ = g, require g | c, then x = x₀·(c / g);
+all solutions differ by m / g, so the smallest non-negative one is x mod (m / g).
+congruence.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long exgcd(long long a, long long b, long long &x, long long &y) {
+5     if (b == 0) { x = 1; y = 0; return a; }
+6     long long x1, y1;
+7     long long g = exgcd(b, a % b, x1, y1);
+8     x = y1;
+9     y = x1 - (a / b) * y1;
+10     return g;
+11 }
+12  
+13 int main() {
+14     long long a, b;
+15     cin >> a >> b;                      // smallest positive x with a*x = 1 (mod b)
+16     long long x, y;
+17     exgcd(a, b, x, y);                  // a*x + b*y = 1 (guaranteed solvable)
+18     cout << (x % b + b) % b << "\n";
+19     return 0;
+20 }
+INPUT
+3 10
+OUTPUT
+7
+
+=== page 5 ===
+5进阶篇  第 19 章  进阶数论
+frogs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long exgcd(long long a, long long b, long long &x, long long &y) {
+5     if (b == 0) { x = 1; y = 0; return a; }
+6     long long g = exgcd(b, a % b, y, x);   // swapped: x, y get y1, x1
+7     y -= (a / b) * x;
+8     return g;
+9 }
+10  
+11 int main() {
+12     long long x, y, m, n, L;
+13     cin >> x >> y >> m >> n >> L;
+14     long long a = m - n, c = y - x;        // (m - n) t = y - x  (mod L)
+15     if (a < 0) { a = -a; c = -c; }
+16     long long t, k;
+17     long long g = exgcd(a, L, t, k);
+18     if (c % g != 0) { cout << "Impossible\n"; return 0; }
+19     long long mod = L / g;
+20     t = (t % mod) * ((c / g) % mod) % mod;  // reduce first: no overflow
+21     cout << (t % mod + mod) % mod << "\n";
+22     return 0;
+23 }
+INPUT 1
+1 2 3 4 5
+OUTPUT 1
+4
+INPUT 2
+1 2 3 3 5
+OUTPUT 2
+Impossible
+KEY POINT The frogs (P1516) meet after t jumps when x + m·t ≡ y + n·t (mod L): a linear congruence in t. Make the
+coefficient positive first; reduce t and c / g modulo L / g before multiplying. P1082 is the same with c = 1
+and g = 1 guaranteed.
+
+=== page 6 ===
+6进阶篇  第 19 章  进阶数论
+19.3.1 Chinese	remainder	theorem
+crt.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long exgcd(long long a, long long b, long long &x, long long &y) {
+5     if (b == 0) { x = 1; y = 0; return a; }
+6     long long g = exgcd(b, a % b, y, x);
+7     y -= (a / b) * x;
+8     return g;
+9 }
+10  
+11 int main() {
+12     int n;
+13     cin >> n;
+14     vector<long long> m(n), r(n);
+15     long long M = 1;
+16     for (int i = 0; i < n; i++) { cin >> m[i] >> r[i]; M *= m[i]; }   // moduli pairwise coprime
+17     __int128 ans = 0;
+18     for (int i = 0; i < n; i++) {
+19         long long Mi = M / m[i], x, y;
+20         exgcd(Mi % m[i], m[i], x, y);                     // x = Mi^-1 mod m[i]
+21         x = (x % m[i] + m[i]) % m[i];
+22         ans = (ans + __int128(r[i]) * Mi % M * x) % M;   // 1 in place i, 0 elsewhere
+23     }
+24     cout << static_cast<long long>(ans) << "\n";
+25     return 0;
+26 }
+INPUT
+3
+3 1
+5 1
+7 2
+OUTPUT
+16
+IDEA CRT ( 中国剩余定理 ): x ≡ ri (mod mi) with pairwise coprime mi has exactly one solution modulo M = Π
+mi. Build it from pieces: Mi·(Mi⁻¹ mod mi) is 1 mod mi and 0 mod every other modulus; multiply by ri
+and add (P1495).
+KEY POINT 16 = 1 mod 3, 1 mod 5, 2 mod 7. Products reach M ≈ 10¹⁸, so multiply in __int128. If the moduli are not
+coprime, merge the equations two at a time with extended Euclid (excrt); 荒岛野人  (P2421) tries each
+answer and checks pairs with a congruence.
+TRAP That one static_cast<long long>(ans)  is needed: cout cannot print __int128 directly, and ans < M fits
+in long long.
+19.4 线性筛与积性函数 ( 选读 )
+Each	composite	crossed	once;	φ	and	μ	on	the	way.
+
+=== page 7 ===
+7进阶篇  第 19 章  进阶数论
+2 3 4 5 6 7 8 9 10 11
+12 13 14 15 16 17 18 19 20 21
+22 23 24 25 26 27 28 29 30 31
+green: primes; others crossed once each
+IDEA The linear	sieve ( 线性筛 , 欧拉筛 )
+finds all primes up to n in O(n): for each
+i, cross out i·p for primes p ≤ (smallest
+prime factor of i). Then every composite
+is crossed exactly once, by its smallest
+prime factor, unlike the Eratosthenes
+sieve.
+KEY POINT The rule "stop when p divides i" is what
+makes it linear: if p | i then i·p′ for a
+larger prime p′ has smallest prime p, so
+it will be crossed later from a different i.
+IDEA A function is multiplicative ( 积性函数 ) if f(ab) = f(a)·f(b) whenever gcd(a, b) = 1: Euler φ, the Möbius μ,
+the number of divisors d. The sieve computes them for free, because it meets each n as i·p and knows
+whether p already divides i.
+Case in the sieve φ μ
+i is a new prime φ(i) = i − 1 μ(i) = −1
+p does not divide i φ(i·p) = φ(i)·(p − 1) μ(i·p) = −μ(i)
+p divides i φ(i·p) = φ(i)·p μ(i·p) = 0
+
+=== page 8 ===
+8进阶篇  第 19 章  进阶数论
+sieve_phi.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 40005;
+5 int phi[N], primes[N], cnt = 0;
+6 bool composite[N];
+7  
+8 int main() {
+9     int n;
+10     cin >> n;
+11     phi[1] = 1;
+12     for (int i = 2; i < N; i++) {
+13         if (!composite[i]) { primes[cnt++] = i; phi[i] = i - 1; }
+14         for (int j = 0; j < cnt && 1LL * i * primes[j] < N; j++) {
+15             int p = primes[j];
+16             composite[i * p] = true;
+17             if (i % p == 0) { phi[i * p] = phi[i] * p; break; }   // p already in i: stop here
+18             phi[i * p] = phi[i] * (p - 1);
+19         }
+20     }
+21     // guard of honour: visible students = 1 + 2 * (number of coprime pairs)
+22     if (n == 1) { cout << 0 << "\n"; return 0; }
+23     long long ans = 3;                          // (0,1), (1,0), (1,1)
+24     for (int i = 2; i < n; i++) ans += 2 * phi[i];
+25     cout << ans << "\n";
+26     return 0;
+27 }
+INPUT 1
+4
+OUTPUT 1
+9
+INPUT 2
+1
+OUTPUT 2
+0
+IDEA Guard of honour (P2158): standing at a corner of an n × n grid, you see (x, y) exactly when gcd(x, y) = 1.
+Counting coprime pairs row by row gives φ, so the answer is 3 + 2·Σi=2..n−1 φ(i).
+KEY POINT The break  when p | i is the whole trick: both the linear time and the "p divides i" formula depend on it.
+19.5 欧拉函数 ( 选读 )
+φ(n),	gcd	sums,	the	extended	Euler	theorem.
+IDEA Euler's	function φ(n) ( 欧拉函数 ) counts 1 ≤ k ≤ n with gcd(k, n) = 1. From the factorisation n = Π pe:
+φ(n) = n · Π (1 − 1/p). One value costs O(√n) by trial division; many values come from the sieve (19.4).
+KEY POINT Euler's	theorem: if gcd(a, m) = 1 then aφ(m) ≡ 1 (mod m); for prime m this is Fermat. Extended version
+( 扩展欧拉定理 ) for any a: if b ≥ φ(m), then ab ≡ a(b mod φ(m)) + φ(m) (mod m). It shrinks huge exponents
+(P5091, P4139).
+
+=== page 9 ===
+9进阶篇  第 19 章  进阶数论
+longge.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long phi(long long n) {                     // O(sqrt n) by trial division
+5     long long r = n;
+6     for (long long p = 2; p * p <= n; p++)
+7         if (n % p == 0) {
+8             r = r / p * (p - 1);                 // multiply by (1 - 1/p), divide first
+9             while (n % p == 0) n /= p;
+10         }
+11     if (n > 1) r = r / n * (n - 1);              // one prime factor > sqrt(n) left
+12     return r;
+13 }
+14  
+15 int main() {
+16     long long n;
+17     cin >> n;
+18     long long ans = 0;
+19     for (long long d = 1; d * d <= n; d++)
+20         if (n % d == 0) {
+21             ans += d * phi(n / d);               // gcd(i, n) = d for phi(n/d) values of i
+22             if (d * d != n) ans += (n / d) * phi(d);
+23         }
+24     cout << ans << "\n";
+25     return 0;
+26 }
+INPUT 1
+6
+OUTPUT 1
+15
+INPUT 2
+12
+OUTPUT 2
+40
+IDEA Σi=1..n gcd(i, n) (P2303): group i by d = gcd(i, n). gcd(i, n) = d ⇔ i = d·k with gcd(k, n/d) = 1, so there are
+φ(n/d) of them. Answer = Σd | n d·φ(n/d).
+KEY POINT For n = 6: 1·φ(6) + 2·φ(3) + 3·φ(2) + 6·φ(1) = 2 + 4 + 3 + 6 = 15. Grouping by the gcd is the standard first
+step for every gcd sum (P2568 counts prime gcds the same way).
+
+=== page 10 ===
+10进阶篇  第 19 章  进阶数论
+ext_euler.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long phi(long long n) {
+5     long long r = n;
+6     for (long long p = 2; p * p <= n; p++)
+7         if (n % p == 0) { r = r / p * (p - 1); while (n % p == 0) n /= p; }
+8     if (n > 1) r = r / n * (n - 1);
+9     return r;
+10 }
+11  
+12 long long power(long long a, long long b, long long m) {
+13     long long r = 1 % m;
+14     a %= m;
+15     for (; b > 0; b >>= 1, a = a * a % m) if (b & 1) r = r * a % m;
+16     return r;
+17 }
+18  
+19 int main() {
+20     long long a, m;
+21     string b;                                   // the exponent can have 2*10^7 digits
+22     cin >> a >> m >> b;
+23     long long ph = phi(m), e = 0;
+24     bool big = false;
+25     for (int i = 0; i < int(b.size()); i++) {
+26         e = e * 10 + (b[i] - '0');
+27         if (e >= ph) { big = true; e %= ph; }   // remember that b >= phi(m)
+28     }
+29     if (big) e += ph;
+30     cout << power(a, e, m) << "\n";
+31     return 0;
+32 }
+INPUT 1
+2 7 4
+OUTPUT 1
+2
+INPUT 2
+2 10 1000000000000000000000
+OUTPUT 2
+6
+IDEA Read the exponent as a string, reduce it mod φ(m) digit by digit, and remember whether it ever reached
+φ(m). Only then add φ(m) back: for small b the plain exponent must be used, because the extended rule
+needs b ≥ φ(m).
+KEY POINT 210²¹ mod 10: φ(10) = 4, 10²¹ mod 4 = 0, so the exponent becomes 4 and 2⁴ = 16 ≡ 6. Here gcd(2, 10) = 2,
+and plain Euler would wrongly give 2⁰ = 1.
+19.6 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 11 ===
+11进阶篇  第 19 章  进阶数论
+Key	points	to	memorise
+1. +, −, × can be reduced anytime; ÷ needs an inverse; (a − b) % m + m.
+2. Division blocks: r = k / (k / l); about 2√k blocks.
+3. Inverse: Fermat a^(p−2); exgcd for any coprime m; table inv[i] = (p − p/i)·inv[p % i] % p.
+4. exgcd: x = y′, y = x′ − (a/b)·y′; a·x + b·y = c solvable ⇔ gcd | c.
+5. a·x ≡ c (mod m): x = x₀·(c/g) mod (m/g).
+6. CRT: Σ rᵢ·Mᵢ·(Mᵢ⁻¹ mod mᵢ) mod M; __int128 for the products.
+7. Linear sieve: break when p | i; φ(ip) = φ(i)·p or φ(i)·(p − 1).
+8. φ(n) = n·Π(1 − 1/p); Σ gcd(i, n) = Σ_{d|n} d·φ(n/d).
+9. b ≥ φ(m): aᵇ ≡ a^(b mod φ(m) + φ(m)) (mod m), for any a.
+19.6.1 Problems
+Problem Name Section What it tests
+P1516 青蛙的约会 19.3 Linear congruence in the number of jumps.
+P4942 小凯的数字 19.1 Concatenation ≡ sum (mod 9).
+P3811 【模板】模意义下的乘法
+逆元
+19.2 Linear inverse table.
+P1495 【模板】中国剩余定理
+（ CRT ） / 曹冲养猪
+19.3 CRT with __int128.
+P3861 拆分 19.4 Ways to split n into distinct factors > 1, over divisors.
+P5091 【模板】扩展欧拉定理 19.5 Huge exponent mod φ(m).
+P2568 GCD 19.4 Pairs with prime gcd: prefix sums of φ.
+P2303 Longge 的问题 19.5 Σ d·φ(n/d).
+P1082 同余方程 19.3 Inverse by exgcd.
+P4549 【模板】裴蜀定理 19.3 Smallest positive Σ aᵢxᵢ = gcd.
+P2421 荒岛野人 19.3 Try the answer, check pairs by congruence.
+P2613 【模板】有理数取余 19.2 Big numbers mod p, then an inverse.
+CF757B Bash's Big Day 19.4 Most numbers sharing a prime factor.
+CF776B Sherlock and his girlfriend 19.4 Primes one colour, composites another.
+P2152 SuperGCD 19.1 gcd of huge numbers (binary gcd).
+CF632D Longest Subsequence 19.4 Count by multiples for each lcm.
+CF582A GCD Table 19.3 Largest remaining value is always next.
+CF687B Remainders Game 19.3 k divides lcm of the cᵢ.
+P2261 余数求和 19.1 Division blocks.
+P2158 仪仗队 19.4 Coprime pairs: Σ φ.
+P6583 回首过去 19.1 Finite decimals; division blocks.
+P4139 上帝与集合的正确用法 19.5 Tower of 2s: recurse on φ.
+19.6.2 Practice	ladder
+1. Direct. P3811: inverse table (19.2).
+
+=== page 12 ===
+12进阶篇  第 19 章  进阶数论
+2. One	twist. P1082: exgcd (19.3).
+3. Idea	hidden. P1495: CRT (19.3).
+4. Two	ideas. P2158: sieve φ (19.4).
+5. Stretch. P5091: extended Euler (19.5).
+19.6.3 Experiments
+1. Check inverses.cpp by multiplying each i by inv[i] mod p.
+2. Count how many times the Eratosthenes sieve and the linear sieve cross out numbers up to 10⁶.
+3. Print the blocks [l, r] of remainder_sum.cpp for k = 100 and count them.
+4. Try ext_euler.cpp with b < φ(m) but forgetting the "big" flag: find a wrong case.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

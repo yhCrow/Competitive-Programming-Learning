@@ -1,0 +1,365 @@
+# 进阶篇 第20章 组合数学与计数  (进20)
+# source: 进阶篇 第20章 组合数学与计数.pdf
+
+=== page 1 ===
+1进阶篇  第 20 章  组合数学与计数
+第 20 章 	 组合数学与计数
+Combinatorics and counting Luogu #217 19 problems C++17 · all programs run
+20.1 集合与容斥原理 20.2 常见的组合计数方法
+20.3 二项式定理 20.4 卡特兰数与斯特林数
+20.5 课后习题与实验
+20.1 集合与容斥原理
+Complements,	inclusion-exclusion,	derangements.
+A B
+C
+|A ∪  B ∪  C| =
+|A| + |B| + |C|
+− |A∩B| − |A∩C|
+− |B∩C|
++ |A∩B∩C|
+IDEA Inclusion-exclusion ( 容斥原理 ): to
+count objects with at least one bad
+property, add the single properties,
+subtract the pairs (counted twice), add
+the triples back, and so on: Σ over non-
+empty sets S of properties, (−1)|S|+1 ·
+(number having all of S).
+KEY POINT Usually you want the objects with no
+bad property: total − |A ∪ B ∪ …| = Σ
+over all S (including ∅) of (−1)|S| · N(S).
+The art is choosing properties whose
+intersections are easy to count. Often
+the simplest form is the complement
+with a single property.
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 5 部 分  数 学 专 题 选 讲
+Count by complements and inclusion-exclusion, choose with combinations computed three ways, expand
+with the binomial theorem, and meet the Catalan and Stirling numbers.
+
+=== page 2 ===
+2进阶篇  第 20 章  组合数学与计数
+jail.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long MOD = 100003;
+5  
+6 long long power(long long a, long long b) {
+7     long long r = 1;
+8     a %= MOD;
+9     for (; b > 0; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD;
+10     return r;
+11 }
+12  
+13 int main() {
+14     long long m, n;
+15     cin >> m >> n;                                   // m religions, n cells in a row
+16     long long all = power(m, n);                     // any assignment
+17     long long safe = m % MOD * power(m - 1, n - 1) % MOD;   // no two neighbours equal
+18     cout << ((all - safe) % MOD + MOD) % MOD << "\n";
+19     return 0;
+20 }
+INPUT
+2 3
+OUTPUT
+6
+IDEA Prison break (P3197): count rows of n cells, each with one of m religions, where some two neighbours
+share a religion. Counting "some" directly is messy; its complement "no two neighbours equal" is m·(m −
+1)n−1 (the first cell is free, every later one avoids its left neighbour).
+KEY POINT Subtract under a modulus with + MOD. n, m reach 10¹², so reduce m before multiplying and use fast
+power.
+
+=== page 3 ===
+3进阶篇  第 20 章  组合数学与计数
+derangements.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long MOD = 1000000007;
+5 const int N = 1000005;
+6 long long fact[N], inv[N], D[N];
+7  
+8 long long power(long long a, long long b) {
+9     long long r = 1;
+10     for (a %= MOD; b > 0; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD;
+11     return r;
+12 }
+13  
+14 long long C(int n, int m) { return m < 0 || m > n ? 0 : fact[n] * inv[m] % MOD * inv[n - m] % MOD; }
+15  
+16 int main() {
+17     fact[0] = 1;
+18     for (int i = 1; i < N; i++) fact[i] = fact[i - 1] * i % MOD;
+19     inv[N - 1] = power(fact[N - 1], MOD - 2);
+20     for (int i = N - 1; i > 0; i--) inv[i - 1] = inv[i] * i % MOD;    // inverse factorials
+21     D[0] = 1; D[1] = 0;
+22     for (int i = 2; i < N; i++) D[i] = (i - 1) * (D[i - 1] + D[i - 2]) % MOD;
+23     int T;
+24     cin >> T;
+25     while (T--) {
+26         int n, m;
+27         cin >> n >> m;                               // exactly m fixed points
+28         cout << C(n, m) * D[n - m] % MOD << "\n";
+29     }
+30     return 0;
+31 }
+INPUT
+4
+1 0
+1 1
+5 2
+4 0
+OUTPUT
+0
+1
+20
+9
+IDEA A derangement ( 错排 ) moves every element. By inclusion-exclusion over "i stays put": D(n) = Σk (−1)k
+C(n, k)(n − k)!. The same numbers satisfy D(n) = (n − 1)(D(n − 1) + D(n − 2)), which is faster to fill.
+KEY POINT Exactly m fixed points (P4071): choose them, C(n, m), and derange the rest: D(n − m). 1, 0, 1, 2, 9, 44 are
+D(0) … D(5). Inverse factorials are filled backwards from one Fermat inverse ( 第 19 章 ).
+20.2 常见的组合计数方法
+Pascal,	factorials,	models;	counting	mod	k.
+
+=== page 4 ===
+4进阶篇  第 20 章  组合数学与计数
+1
+1 1
+1 2 1
+1 3 3 1
+1 4 6 4 1
+C(4, 2) = C(3, 1) + C(3, 2) = 6
+IDEA Combinations C(n, m) ( 组合数 ) count
+ways to choose m of n items. Three
+ways to get them: Pascal's	rule C(n, m)
+= C(n−1, m−1) + C(n−1, m) for a whole
+table up to about 2000 (any modulus,
+even none); factorials n! / (m!(n−m)!)
+with inverse factorials for n up to 10⁶
+and a prime modulus; Lucas when n is
+huge and the prime p is small.
+KEY POINT Pascal's rule reads: either the last item
+is chosen (choose m − 1 from the rest)
+or it is not (choose m from the rest).
+This "last item" argument is the start of
+most counting recurrences.
+Model Count Example
+ordered, no repeats n! / (n − m)! podium of m from n runners
+unordered, no repeats C(n, m) committee of m
+n identical balls into m boxes, empty allowed C(n + m − 1, m − 1) stars and bars ( 插板法 )
+same, every box non-empty C(n − 1, m − 1) cuts between n balls
+keep some items apart arrange the others, insert into the gaps 插空法  (P3223 排队 )
+multiset permutations n! / (a! b! …) arrangements of a word
+
+=== page 5 ===
+5进阶篇  第 20 章  组合数学与计数
+pascal_count.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int c[2005][2005], s[2005][2005];
+5  
+6 int main() {
+7     int t, k;
+8     cin >> t >> k;
+9     for (int i = 0; i <= 2000; i++) {
+10         c[i][0] = 1 % k;
+11         for (int j = 1; j <= i; j++) c[i][j] = (c[i - 1][j - 1] + c[i - 1][j]) % k;   // values mod k 
+only
+12     }
+13     for (int i = 0; i <= 2000; i++)                  // 2D prefix sums of "c[i][j] == 0"
+14         for (int j = 0; j <= 2000; j++) {
+15             int hit = (j <= i && c[i][j] == 0) ? 1 : 0;
+16             s[i][j] = hit + (i ? s[i - 1][j] : 0) + (j ? s[i][j - 1] : 0) - (i && j ? s[i - 1][j - 1] : 
+0);
+17         }
+18     while (t--) {
+19         int n, m;
+20         cin >> n >> m;
+21         cout << s[n][min(n, m)] << "\n";             // pairs 0 <= j <= min(i, m), i <= n
+22     }
+23     return 0;
+24 }
+INPUT 1
+1 2
+3 3
+OUTPUT 1
+1
+INPUT 2
+2 5
+4 5
+6 7
+OUTPUT 2
+0
+7
+IDEA Combination problem (P2822): for many (n, m), count pairs 0 ≤ j ≤ i ≤ n, j ≤ m with k | C(i, j). C(i, j) is
+huge, but divisibility by k only needs it mod	k, and Pascal's rule works mod anything. Then a 2D prefix
+sum answers each query in O(1).
+KEY POINT For k = 2, n = m = 3 the rows are 1; 1 1; 1 2 1; 1 3 3 1, and only C(2, 1) = 2 is even: answer 1. Store only
+remainders: the real values overflow long long by row 70.
+TRAP Query column min(n, m): there are no C(i, j) with j > i, and the prefix sums already count those cells as 0.
+20.3 二项式定理
+Coefficients	of	(ax	+	by)^k.
+IDEA Binomial	theorem ( 二项式定理 ): (a + b)n = Σk=0..n C(n, k) ak bn−k. Each of the n brackets gives either a
+or b; choosing which k brackets give a is C(n, k). Setting a = b = 1 gives Σ C(n, k) = 2ⁿ; a = 1, b = −1 gives the
+alternating sum 0.
+KEY POINT Coefficients of polynomials are counting problems in disguise: the coefficient of xk in a product counts
+ways to pick one term from each factor with exponents adding to k.
+
+=== page 6 ===
+6进阶篇  第 20 章  组合数学与计数
+coefficient.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int MOD = 10007;
+5 int C[1005][1005];
+6  
+7 long long power(long long a, int b) {
+8     long long r = 1;
+9     for (a %= MOD; b > 0; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD;
+10     return r;
+11 }
+12  
+13 int main() {
+14     int a, b, k, n, m;
+15     cin >> a >> b >> k >> n >> m;           // coefficient of x^n y^m in (ax + by)^k, n + m = k
+16     for (int i = 0; i <= k; i++) {
+17         C[i][0] = 1;
+18         for (int j = 1; j <= i; j++) C[i][j] = (C[i - 1][j - 1] + C[i - 1][j]) % MOD;
+19     }
+20     cout << C[k][n] * power(a, n) % MOD * power(b, m) % MOD << "\n";
+21     return 0;
+22 }
+INPUT 1
+1 1 3 1 2
+OUTPUT 1
+3
+INPUT 2
+2 3 4 2 2
+OUTPUT 2
+216
+IDEA Calculate the coefficient (P1313): pick n brackets to give ax and the other m to give by: C(k, n)·aⁿ·bᵐ. (2x +
+3y)⁴ has x²y² coefficient C(4, 2)·4·9 = 216.
+KEY POINT k ≤ 1000, so Pascal's table is simplest. With k up to 10⁶ switch to factorials and inverse factorials (20.1).
+20.4 卡特兰数与斯特林数
+Stack	orders;	balls	into	boxes.
+IDEA Catalan	numbers ( 卡特兰数 ) 1, 1, 2, 5, 14, 42, … count: push/pop orders of a stack (P1044), balanced
+bracket strings, binary trees with n nodes, monotone lattice paths that never cross the diagonal, ways to
+triangulate a polygon. Cat(n) = C(2n, n) / (n + 1) = C(2n, n) − C(2n, n − 1).
+KEY POINT Recurrence by the first	return: the first element pushed is popped after k others were pushed and popped
+inside it: Cat(n) = Σk=0..n−1 Cat(k)·Cat(n − 1 − k). The subtraction form comes from reflecting the bad
+paths at the first crossing.
+
+=== page 7 ===
+7进阶篇  第 20 章  组合数学与计数
+stack_orders.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long cat[20];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     cat[0] = 1;
+10     for (int i = 1; i <= n; i++)
+11         for (int k = 0; k < i; k++) cat[i] += cat[k] * cat[i - 1 - k];   // split at the first return
+12     cout << cat[n] << "\n";
+13     return 0;
+14 }
+INPUT 1
+3
+OUTPUT 1
+5
+INPUT 2
+10
+OUTPUT 2
+16796
+boxes_balls.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long S[15][15];
+5  
+6 int main() {
+7     int n, r;
+8     cin >> n >> r;                          // n distinct balls, r distinct boxes, none empty
+9     S[0][0] = 1;
+10     for (int i = 1; i <= n; i++)
+11         for (int j = 1; j <= i; j++)
+12             S[i][j] = S[i - 1][j - 1] + j * S[i - 1][j];   // ball i alone, or joins one of j groups
+13     long long ways = S[n][r];
+14     for (int i = 2; i <= r; i++) ways *= i;  // boxes are distinct: r! orders of the groups
+15     cout << ways << "\n";
+16     return 0;
+17 }
+INPUT 1
+3 2
+OUTPUT 1
+6
+INPUT 2
+4 2
+OUTPUT 2
+14
+KEY POINT Stirling	numbers	of	the	second	kind ( 第二类斯特林数 ) S(n, k) count ways to split n distinct items into
+k non-empty unlabelled groups: the last item either forms its own group, S(n−1, k−1), or joins one of the
+k groups, k·S(n−1, k). Labelled boxes multiply by k! (P1287 盒子与球 ).
+Number Counts Recurrence
+Catalan Cat(n) stack orders, bracket strings, binary trees Σ Cat(k)·Cat(n−1−k); C(2n, n)/(n+1)
+Stirling 2nd S(n, k) n items into k non-empty unlabelled groups S(n−1, k−1) + k·S(n−1, k)
+Stirling 1st s(n, k) permutations of n with k cycles s(n−1, k−1) + (n−1)·s(n−1, k)
+Bell B(n) all partitions of n items Σk S(n, k)
+
+=== page 8 ===
+8进阶篇  第 20 章  组合数学与计数
+KEY POINT Catalan under a non-prime modulus ( 有趣的数列  P3200): factor C(2n, n)/(n + 1) into primes with a sieve,
+count each prime's exponent, then multiply, avoiding inverses. Staircases (P2532 树屋阶梯 ) are Catalan
+numbers with big integers.
+20.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Complement first: bad = all − good.
+2. Inclusion-exclusion: Σ over sets S of (−1)^|S| · N(S).
+3. Derangements: D(n) = (n − 1)(D(n − 1) + D(n − 2)); exactly m fixed: C(n, m)·D(n − m).
+4. C(n, m): Pascal (any mod), factorials + inverse factorials (prime mod), Lucas (huge n).
+5. Stars and bars: C(n + m − 1, m − 1); non-empty C(n − 1, m − 1).
+6. (a + b)ⁿ = Σ C(n, k) aᵏ bⁿ⁻ᵏ.
+7. Catalan: Σ Cat(k) Cat(n−1−k) = C(2n, n)/(n + 1).
+8. Stirling 2nd: S(n, k) = S(n−1, k−1) + k·S(n−1, k); labelled boxes × k!.
+20.5.1 Problems
+Problem Name Section What it tests
+P3197 越狱 20.1 Complement: no equal neighbours.
+P5664 Emiya 家今天的饭 20.1 Total minus one overused column, DP on the difference.
+P1287 盒子与球 20.4 r!·S(n, r).
+P1450 硬币购物 20.1 Inclusion-exclusion over 4 limits.
+P5520 青原樱 20.2 Insert into gaps ( 插空法 ).
+P4071 排列计数 20.1 C(n, m)·D(n − m).
+P1313 计算系数 20.3 C(k, n)·aⁿ·bᵐ.
+CF1332E Height All the Same 20.3 Half the grids by parity; (x+y)ⁿ ± (x−y)ⁿ.
+P1044 栈 20.4 Catalan.
+P2567 幸运数字 20.1 Inclusion-exclusion over lucky numbers by lcm.
+P5505 分特产 20.1 Exclude people who get nothing; stars and bars.
+P3223 排队 20.2 Gaps for the teachers and girls; big numbers.
+P2822 组合数问题 20.2 Pascal mod k + 2D prefix sums.
+P3214 卡农 20.1 Ordered then unordered sets of masks.
+P2532 树屋阶梯 20.4 Catalan with big integers.
+P3200 有趣的数列 20.4 Catalan mod a non-prime.
+CF1278F Cards 20.4 xᵏ via Stirling numbers.
+P3228 数列 20.2 Sum over the first value and differences.
+CF961G Partitions 20.4 Weight sum via Stirling numbers.
+
+=== page 9 ===
+9进阶篇  第 20 章  组合数学与计数
+20.5.2 Practice	ladder
+1. Direct. P1044: Catalan (20.4).
+2. One	twist. P3197: complement (20.1).
+3. Idea	hidden. P1313: binomial theorem (20.3).
+4. Two	ideas. P2822: Pascal mod k (20.2).
+5. Stretch. P4071: derangements (20.1).
+20.5.3 Experiments
+1. Check D(n) from the recurrence against the inclusion-exclusion sum for n ≤ 10.
+2. List all 5 stack orders for n = 3 by hand and match them with bracket strings.
+3. Compute C(60, 30) exactly with Pascal's rule in long long; when does it overflow?
+4. Print S(n, k) for n ≤ 6 and check that each row sums to the Bell numbers 1, 2, 5, 15, 52, 203.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

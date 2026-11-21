@@ -1,0 +1,127 @@
+# NOI篇 第4章 支配树  (N4)
+# source: NOI篇 第04章 支配树.pdf
+
+=== page 1 ===
+1NOI 篇  第 4 章  支配树
+第 4 章 	 支配树
+Dominator trees Luogu (verified) 2 problems C++17 · all programs run
+4.1 支配树 4.2 课后习题与实验
+4.1 支配树
+Dominators,	idom,	semidominators,	Lengauer–Tarjan.
+IDEA In a directed graph with start vertex 1, vertex d dominates u if every path from 1 to u passes through d.
+Every reachable u ≠ 1 has an immediate	dominator idom(u), the closest strict dominator, and the edges
+idom(u) → u form the dominator	tree ( 支配树 ): d dominates u exactly when d is an ancestor of u in it.
+KEY POINT Uses: "which single vertex removal cuts u off from the source" ( 灾难  P2597 on a food DAG), critical points
+in control-flow graphs. On a DAG, process vertices in topological order: idom(u) = LCA in the tree built so
+far of all u's predecessors. General graphs need Lengauer–Tarjan (below), O(m α(m)).
+IDEA Lengauer–Tarjan: number vertices by DFS order. The semidominator sdom(w) = the smallest-
+numbered v from which a path reaches w using only vertices numbered above w in between. Compute
+sdom in reverse DFS order with a DSU-with-minimum ("eval"); then idom(w) = sdom(w) if the vertex
+with minimum sdom on the tree path sdom(w) → w is w itself, otherwise idom(w) = idom of that vertex.
+A final pass in DFS order fixes the deferred ones.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Find, for every vertex, which vertices every path from the source must pass through: the DAG version by
+LCA and the general Lengauer–Tarjan algorithm.
+
+=== page 2 ===
+2NOI 篇  第 4 章  支配树
+dominator.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 200005;
+5 int n, m, dfn[N], ord_[N], par[N], sdom[N], idom[N], fa[N], mn[N], timer_ = 0;
+6 vector<int> g[N], rg[N], bucket[N], tr[N];
+7 long long sz[N];
+8  
+9 void dfs(int u) {
+10     dfn[u] = ++timer_; ord_[timer_] = u;
+11     for (int k = 0; k < int(g[u].size()); k++) { int v = g[u][k]; if (!dfn[v]) { par[v] = u; dfs(v); } }
+12 }
+13 int find(int x) {                               // DSU that keeps the vertex with minimum sdom on the 
+path
+14     if (fa[x] == x) return x;
+15     int r = find(fa[x]);
+16     if (dfn[sdom[mn[fa[x]]]] < dfn[sdom[mn[x]]]) mn[x] = mn[fa[x]];
+17     return fa[x] = r;
+18 }
+19 void count_(int u) { sz[u] = 1; for (int k = 0; k < int(tr[u].size()); k++) { count_(tr[u][k]); sz[u] += 
+sz[tr[u][k]]; } }
+20  
+21 int main() {
+22     cin >> n >> m;
+23     for (int i = 0; i < m; i++) { int u, v; cin >> u >> v; g[u].push_back(v); rg[v].push_back(u); }
+24     dfs(1);
+25     for (int i = 1; i <= n; i++) { fa[i] = mn[i] = sdom[i] = i; }
+26     for (int i = timer_; i >= 2; i--) {           // reverse DFS order
+27         int w = ord_[i];
+28         for (int k = 0; k < int(rg[w].size()); k++) {
+29             int v = rg[w][k];
+30             if (!dfn[v]) continue;                // unreachable predecessor
+31             find(v);
+32             if (dfn[sdom[mn[v]]] < dfn[sdom[w]]) sdom[w] = sdom[mn[v]];
+33         }
+34         bucket[sdom[w]].push_back(w);
+35         fa[w] = par[w];
+36         int p = par[w];
+37         for (int k = 0; k < int(bucket[p].size()); k++) {   // vertices whose sdom is p
+38             int v = bucket[p][k];
+39             find(v);
+40             idom[v] = (sdom[mn[v]] == p) ? p : mn[v];       // mn[v] stands for "use idom of it" (fixed 
+below)
+41         }
+42         bucket[p].clear();
+43     }
+44     for (int i = 2; i <= timer_; i++) {           // DFS order: resolve the deferred ones
+45         int w = ord_[i];
+46         if (idom[w] != sdom[w]) idom[w] = idom[idom[w]];
+47         tr[idom[w]].push_back(w);
+48     }
+49     count_(1);
+50     for (int v = 1; v <= n; v++) cout << (dfn[v] ? sz[v] : 0) << (v < n ? " " : "");
+51     cout << "\n";
+52     return 0;
+53 }
+INPUT
+9 12
+3 4
+1 5
+5 8
+8 1
+OUTPUT
+9 2 1 1 5 1 1 2 1
+
+=== page 3 ===
+3NOI 篇  第 4 章  支配树
+9 6
+8 7
+1 4
+7 6
+1 6
+1 9
+5 2
+2 3
+KEY POINT For every vertex: how many vertices it dominates, itself included (P5180). Checked in Python by deleting
+each vertex and testing which vertices become unreachable from 1, the definition itself.
+TRAP Compare semidominators by their DFS	numbers, not by vertex labels. Unreachable vertices have no
+dominator; skip them as predecessors and print 0 for them.
+4.2 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. d dominates u: every path 1 → u passes d.
+2. Dominator tree: idom(u) → u; dominators = ancestors.
+3. DAG: topological order, idom = LCA of predecessors.
+4. Lengauer–Tarjan: sdom in reverse DFS order with DSU-min; idom fixed in DFS order.
+4.2.1 Problems
+Problem Name Section What it tests
+P5180 【模板】支配树 4.1 Lengauer–Tarjan, subtree sizes.
+P2597 灾难 4.1 DAG: idom = LCA of predecessors.
+4.2.2 Practice	ladder
+1. Direct. P2597: DAG dominators (4.1).
+2. One	twist. P5180: Lengauer–Tarjan (4.1).
+4.2.3 Experiments
+1. Solve P2597 with the DAG + LCA method and with dominator.cpp.
+2. Print sdom and idom for a small graph and compare.
+3. Delete each vertex of a random graph and check the dominated sets.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

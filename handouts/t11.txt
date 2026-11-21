@@ -1,0 +1,142 @@
+# 拓展篇 第11章 线性基  (拓11)
+# source: 拓展篇 第11章 线性基.pdf
+
+=== page 1 ===
+1拓展篇  第 11 章  线性基
+第 11 章 	 线性基
+XOR linear basis Luogu (verified) 7 problems C++17 · all programs run
+11.1 线性基的构造 11.2 线性基的应用
+11.3 课后习题与实验
+11.1 线性基的构造
+Insert	from	the	top	bit;	maximum	XOR.
+IDEA A linear	basis ( 线性基 , XOR basis) of a set of numbers is a small set with the same XOR	span: every XOR
+of chosen numbers from the original set can be made from the basis, and vice versa. Keep b[i] = a basis
+number whose highest bit is i (or 0). At most 64 numbers for 64-bit values.
+KEY POINT Insert x: from the top bit down, if bit i of x is set: if b[i] is empty, store x there and stop; otherwise x ^= b[i]
+and continue. If x becomes 0, it was already in the span (it adds nothing new). Each insert is O(log V).
+xor_basis.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 unsigned long long b[64];
+5  
+6 bool insert(unsigned long long x) {              // true if x adds a new dimension
+7     for (int i = 63; i >= 0; i--) {
+8         if (!(x >> i & 1)) continue;
+9         if (!b[i]) { b[i] = x; return true; }
+10         x ^= b[i];
+11     }
+12     return false;                                 // x was already a XOR of earlier numbers
+13 }
+14  
+15 int main() {
+16     int n;
+17     cin >> n;
+18     for (int i = 0; i < n; i++) { unsigned long long x; cin >> x; insert(x); }
+19     unsigned long long best = 0;
+20     for (int i = 63; i >= 0; i--)                // greedy from the top bit
+21         if ((best ^ b[i]) > best) best ^= b[i];
+22     cout << best << "\n";
+23     return 0;
+24 }
+INPUT
+3
+5 2 8
+OUTPUT
+15
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 学 拓 展
+Keep one number per highest bit to describe every XOR you can make; maximise XOR greedily from the top,
+and pick the most valuable independent set by inserting in value order.
+
+=== page 2 ===
+2拓展篇  第 11 章  线性基
+IDEA Maximum XOR of a subset (P3812): go from the highest basis vector down and take it if it makes the result
+larger. Because b[i] has its top bit at i, deciding bit i never disturbs higher bits: the greedy is exact. 5 ⊕ 2
+⊕ 8 = 15.
+KEY POINT Minimum non-zero XOR, the k-th smallest XOR, and "can x be formed?" (insert returns false) all come
+from the same basis. The number of different XOR values is 2(basis size).
+11.2 线性基的应用
+Greedy	independent	sets;	cycles	in	graphs.
+IDEA Greedy	with	a	basis: the sets of numbers with no XOR-dependent subset (no non-empty subset XOR-ing
+to 0) form a matroid, so "pick an independent set of largest total weight" is solved by taking items in
+order of weight and keeping each one that inserts successfully.
+KEY POINT Elements (P4570): each ore has a number and a magic value; you may not keep a group of ores whose
+numbers XOR to 0. Sort by magic value descending and insert; keep the value when insert succeeds.
+elements.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 unsigned long long b[64];
+5  
+6 bool insert(unsigned long long x) {
+7     for (int i = 63; i >= 0; i--) {
+8         if (!(x >> i & 1)) continue;
+9         if (!b[i]) { b[i] = x; return true; }
+10         x ^= b[i];
+11     }
+12     return false;
+13 }
+14  
+15 int main() {
+16     int n;
+17     cin >> n;
+18     vector<pair<long long, unsigned long long>> ore(n);   // (magic value, number)
+19     for (int i = 0; i < n; i++) cin >> ore[i].second >> ore[i].first;
+20     sort(ore.rbegin(), ore.rend());                         // most valuable first
+21     long long total = 0;
+22     for (int i = 0; i < n; i++)
+23         if (insert(ore[i].second)) total += ore[i].first;  // independent: keep it
+24     cout << total << "\n";
+25     return 0;
+26 }
+INPUT
+3
+1 10
+2 20
+3 30
+OUTPUT
+50
+IDEA Numbers 1, 2, 3 with values 10, 20, 30: keep 3 (30) and 2 (20); then 1 = 3 ⊕ 2 is dependent and is
+skipped: 50.
+
+=== page 3 ===
+3拓展篇  第 11 章  线性基
+KEY POINT Maximum XOR path in a graph (P4151): any path's XOR = one fixed path's XOR ⊕ some cycles' XORs.
+Collect every cycle's XOR from a DFS into a basis, then maximise starting from the path value. A Nim-
+flavoured variant: 新 Nim 游戏  (P4301).
+TRAP Use unsigned long long (or long long with care) and loop bits from 63 (or 62) down. Basis greedy for the
+maximum must start from the top bit; starting from the bottom is wrong.
+11.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. b[i]: basis number with top bit i; insert from bit 63 down, x ^= b[i].
+2. x reduces to 0 ⇔ x is already a XOR of earlier numbers.
+3. Max XOR: from the top, take b[i] if it increases the result.
+4. Span size = 2^(number of basis vectors).
+5. Matroid greedy: sort by value, keep items that insert.
+6. Graph path XOR = a path ⊕ any cycles; put cycle XORs in a basis.
+11.3.1 Problems
+Problem Name Section What it tests
+P3812 【模板】线性基 11.1 Maximum subset XOR.
+P4570 元素 11.2 Value-sorted insertion.
+P3857 彩灯 11.1 Number of reachable patterns = 2^size.
+P4151 最大  XOR 和路径 11.2 Path XOR ⊕ cycle basis.
+P4869 albus 就是要第一个出场 11.1 Rank of a value among all subset XORs.
+P3292 幸运数字 11.2 Bases merged along tree paths.
+P4301 新 Nim 游戏 11.2 Keep the largest independent piles.
+11.3.2 Practice	ladder
+1. Direct. P3812: build and maximise (11.1).
+2. One	twist. P3857: count the span (11.1).
+3. Idea	hidden. P4570: greedy by value (11.2).
+4. Two	ideas. P4151: cycle basis (11.2).
+5. Stretch. P4869: rank in the span (11.1).
+11.3.3 Experiments
+1. Insert 1…20 into a basis and print it; how many numbers stay?
+2. Check xor_basis.cpp against trying all subsets for n ≤ 15.
+3. Sort elements.cpp ascending instead and find a case that gets a worse total.
+4. Print the cycle XORs found for a small graph and verify P4151 by hand.
+
+=== page 4 ===
+4拓展篇  第 11 章  线性基
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

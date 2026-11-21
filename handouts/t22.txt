@@ -1,0 +1,269 @@
+# 拓展篇 第22章 数论补充  (拓22)
+# source: 拓展篇 第22章 数论补充.pdf
+
+=== page 1 ===
+1拓展篇  第 22 章  数论补充
+第 22 章 	 数论补充
+Lucas, BSGS, Miller–Rabin, Pollard's rho Luogu (verified) 5 problems C++17 · all programs run
+22.1 Lucas 定理 22.2 BSGS
+22.3 Miller–Rabin 与  Pollard-Rho 22.4 课后习题与实验
+22.1 Lucas	 定理
+C(n,	m)	mod	p	digit	by	digit.
+IDEA Lucas's	theorem ( 卢卡斯定理 ): for a prime p, C(n, m) ≡ C(n mod p, m mod p) · C(⌊n/p⌋, ⌊m/p⌋) (mod p).
+It handles n, m far larger than p, as long as p is small enough to precompute factorials up to p. Each step
+strips one base-p digit: O(p + logp n).
+KEY POINT The plain factorial formula fails when n ≥ p, because n! then contains the factor p and has no inverse.
+Lucas works digit by digit, where every number is below p. For a non-prime modulus, split it into prime
+powers (exLucas, P4720) and combine with CRT ( 进阶篇  第 19 章 ).
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 学 拓 展
+Binomials modulo a small prime by base-p digits, discrete logarithms in √p, and primality testing plus
+factorisation of 64-bit numbers.
+
+=== page 2 ===
+2拓展篇  第 22 章  数论补充
+lucas.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long fact[200005], p;
+5  
+6 long long power(long long a, long long b) {
+7     long long r = 1;
+8     for (a %= p; b > 0; b >>= 1, a = a * a % p) if (b & 1) r = r * a % p;
+9     return r;
+10 }
+11 long long C(long long n, long long m) {          // n, m < p: plain formula
+12     if (m < 0 || m > n) return 0;
+13     return fact[n] * power(fact[m], p - 2) % p * power(fact[n - m], p - 2) % p;
+14 }
+15 long long lucas(long long n, long long m) {
+16     if (m == 0) return 1;
+17     return C(n % p, m % p) * lucas(n / p, m / p) % p;   // last digit times the rest
+18 }
+19  
+20 int main() {
+21     int T;
+22     cin >> T;
+23     while (T--) {
+24         long long n, m;
+25         cin >> n >> m >> p;
+26         fact[0] = 1;
+27         for (int i = 1; i < p; i++) fact[i] = fact[i - 1] * i % p;
+28         cout << lucas(n + m, n) << "\n";           // P3807 asks for C(n + m, n)
+29     }
+30     return 0;
+31 }
+INPUT
+4
+5 3 7
+10 10 13
+100 50 101
+20 15 3
+OUTPUT
+0
+0
+0
+0
+IDEA Checked against Python's exact binomials. The factorial table is rebuilt per query because p changes; with
+a fixed p, build it once.
+KEY POINT Digits view: C(n, m) mod p is the product of C(ni, mi) over the base-p digits; it is 0 exactly when some
+digit of m exceeds the digit of n (for p = 2: when m is not a "submask" of n).
+22.2 BSGS
+Baby	steps	in	a	hash	table,	giant	steps.
+IDEA Baby-step	giant-step (BSGS): solve ax ≡ b (mod p), p prime, gcd(a, p) = 1. Write x = i·t − j with t = ⌈√p⌉, 0
+≤ j < t. Then ai·t ≡ b·aj. Store all baby steps b·aj in a hash table, then try giant steps at, a2t, …: O(√p).
+KEY POINT Using x = i·t − j (minus) avoids computing an inverse of a. For the smallest x, keep the largest j for each
+baby-step value and take the first giant step that matches. When gcd(a, p) ≠ 1, exBSGS first divides out
+common factors (P4195).
+
+=== page 3 ===
+3拓展篇  第 22 章  数论补充
+bsgs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long power(long long a, long long b, long long p) {
+5     long long r = 1 % p;
+6     for (a %= p; b > 0; b >>= 1, a = a * a % p) if (b & 1) r = r * a % p;
+7     return r;
+8 }
+9  
+10 long long bsgs(long long a, long long b, long long p) {   // smallest x >= 0 with a^x = b (mod p)
+11     a %= p; b %= p;
+12     if (b == 1 % p) return 0;
+13     long long t = ceil(sqrt(double(p)));
+14     unordered_map<long long, long long> baby;
+15     long long cur = b;
+16     for (long long j = 0; j < t; j++) { baby[cur] = j; cur = cur * a % p; }   // later j overwrite: keep 
+largest
+17     long long giant = power(a, t, p), g = 1;
+18     for (long long i = 1; i <= t; i++) {
+19         g = g * giant % p;                                 // a^(i t)
+20         auto it = baby.find(g);
+21         if (it != baby.end()) return i * t - it->second;
+22     }
+23     return -1;
+24 }
+25  
+26 int main() {
+27     int T;
+28     cin >> T;
+29     while (T--) {
+30         long long p, a, b;
+31         cin >> p >> a >> b;
+32         long long x = bsgs(a, b, p);
+33         if (x < 0) cout << "no solution\n"; else cout << x << "\n";
+34     }
+35     return 0;
+36 }
+INPUT
+4
+5 2 3
+13 3 1
+1000003 7 123456
+11 4 3
+OUTPUT
+3
+0
+672992
+4
+IDEA Checked against trying every exponent in Python. The template (P3846) reads p, b, n for bx ≡ n.
+KEY POINT Since ap−1 ≡ 1, a smallest answer is below p − 1 < t², so t giant steps are enough. Discrete logarithms also
+appear when turning "multiply" into "add" ( 序列统计  P3321 in 第 8 章 ).
+22.3 Miller–Rabin	 与 	Pollard-Rho
+Deterministic	bases;	rho	with	gcd.
+IDEA Miller–Rabin tests whether n < 264 is prime in O(k log n): write n − 1 = d·2s; for a base a, a prime n must
+give ad ≡ 1 or reach −1 while squaring s times. The fixed bases 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37 are
+proven enough for every 64-bit n.
+
+=== page 4 ===
+4拓展篇  第 22 章  数论补充
+KEY POINT Pollard's	rho finds a factor of a composite n in about n1/4 steps: iterate x → x² + c mod n; values repeat
+modulo the unknown smallest prime factor long before modulo n, and gcd(|x − y|, n) catches that
+moment. Recursing with Miller–Rabin factorises 64-bit numbers.
+
+=== page 5 ===
+5拓展篇  第 22 章  数论补充
+pollard_rho.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef unsigned long long ull;
+5 typedef __int128 i128;
+6 ull mulmod(ull a, ull b, ull m) { return ull(i128(a) * b % m); }
+7 ull powmod(ull a, ull e, ull m) { ull r = 1; a %= m; for (; e; e >>= 1, a = mulmod(a, a, m)) if (e & 1) 
+r = mulmod(r, a, m); return r; }
+8  
+9 bool isPrime(ull n) {
+10     if (n < 2) return false;
+11     ull bases[12] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37};
+12     for (int i = 0; i < 12; i++) if (n % bases[i] == 0) return n == bases[i];
+13     ull d = n - 1; int s = 0;
+14     while (d % 2 == 0) { d /= 2; s++; }
+15     for (int i = 0; i < 12; i++) {
+16         ull x = powmod(bases[i], d, n);
+17         if (x == 1 || x == n - 1) continue;
+18         bool comp = true;
+19         for (int r = 1; r < s && comp; r++) { x = mulmod(x, x, n); if (x == n - 1) comp = false; }
+20         if (comp) return false;                       // base proves n composite
+21     }
+22     return true;
+23 }
+24  
+25 mt19937_64 rng(12345);
+26 ull rho(ull n) {                                      // some non-trivial factor of composite n
+27     if (n % 2 == 0) return 2;
+28     while (true) {
+29         ull c = rng() % (n - 1) + 1, x = rng() % n, y = x, g = 1;
+30         while (g == 1) {
+31             x = (mulmod(x, x, n) + c) % n;            // tortoise
+32             y = (mulmod(y, y, n) + c) % n;            // hare: two steps
+33             y = (mulmod(y, y, n) + c) % n;
+34             g = __gcd(x > y ? x - y : y - x, n);
+35         }
+36         if (g != n) return g;                          // else retry with a new c
+37     }
+38 }
+39 ull best;
+40 void factor(ull n) {
+41     if (n <= best) return;                             // cannot beat the current answer
+42     if (isPrime(n)) { best = max(best, n); return; }
+43     ull f = rho(n);
+44     factor(f); factor(n / f);
+45 }
+46  
+47 int main() {
+48     int T;
+49     cin >> T;
+50     while (T--) {
+51         ull n;
+52         cin >> n;
+53         if (isPrime(n)) { cout << "Prime\n"; continue; }
+54         best = 1;
+55         factor(n);
+56         cout << best << "\n";                          // largest prime factor (P4718)
+57     }
+58     return 0;
+59 }
+INPUT OUTPUT
+
+=== page 6 ===
+6拓展篇  第 22 章  数论补充
+7
+2
+97
+1000000007
+600851475143
+999999866000004473
+1000000016000000063
+4611686014132420609
+Prime
+Prime
+Prime
+6857
+999999937
+1000000009
+2147483647
+KEY POINT Tests include a 12-digit composite (checked by trial division in Python) and three 18–19-digit
+semiprimes and squares whose factors are known exactly. Products use __int128 so a·b mod n never
+overflows.
+TRAP Pollard's rho on a prime loops forever: always test with Miller–Rabin first. A random seed per run is fine
+here because the answer does not depend on it, only the running time does.
+22.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Lucas: C(n, m) ≡ C(n mod p, m mod p)·C(n/p, m/p) (mod p).
+2. n ≥ p breaks n!/(m!(n−m)!) mod p; exLucas for composite moduli.
+3. BSGS: x = i·t − j, t = ⌈√p⌉; baby b·a^j in a hash map; giant a^(it).
+4. Miller–Rabin: n − 1 = d·2^s; 12 fixed bases cover all 64-bit n.
+5. Pollard rho: x → x² + c; gcd(|x − y|, n); test primality first.
+22.4.1 Problems
+Problem Name Section What it tests
+P3807 【模板】卢卡斯定理  /
+Lucas 定理
+22.1 C(n + m, n) mod p.
+P4720 【模板】扩展卢卡斯定理  /
+exLucas
+22.1 Prime powers + CRT.
+P3846 【模板】 BSGS / 可爱的质
+数
+22.2 Discrete logarithm.
+P4195 【模板】扩展  BSGS /
+exBSGS
+22.2 gcd(a, p) ≠ 1.
+P4718 【模板】 Pollard-Rho 22.3 Largest prime factor.
+22.4.2 Practice	ladder
+1. Direct. P3807: Lucas (22.1).
+2. One	twist. P3846: BSGS (22.2).
+3. Idea	hidden. P4718: Pollard's rho (22.3).
+4. Two	ideas. P4720: exLucas (22.1).
+22.4.3 Experiments
+1. Print C(n, m) mod 2 for n, m < 16 as a grid and spot the Sierpiński pattern.
+
+=== page 7 ===
+7拓展篇  第 22 章  数论补充
+2. Time BSGS against a brute-force exponent search for p ≈ 10⁹.
+3. Find a composite that fools Miller–Rabin with base 2 only (a strong pseudoprime).
+4. Count rho iterations for semiprimes of growing size.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

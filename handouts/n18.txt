@@ -1,0 +1,276 @@
+# NOI篇 第18章 根号分治、哈希与 bitset  (N18)
+# source: NOI篇 第18章 根号分治、哈希与 bitset.pdf
+
+=== page 1 ===
+1NOI 篇  第 18 章  根号分治、哈希与  bitset
+第 18 章 	 根号分治、哈希与 	bitset
+Threshold splitting, random hashing, bitsets Luogu (verified) 4 problems C++17 · all programs run
+18.1 根号分治 18.2 集合哈希
+18.3 bitset 优化 18.4 树分块
+18.5 课后习题与实验
+18.1 根号分治
+Table	for	small	x,	direct	loop	for	large	x.
+IDEA Square-root	splitting	by	a	threshold ( 根号分治 ): when a parameter x makes one approach cheap for
+small x and another cheap for large x, pick B ≈ √n and use each where it is fast. Example ( 哈希冲突
+P3396): sum of ai over i ≡ y (mod x). For x ≤ B keep a table s[x][y] (n·B memory, each update touches B
+entries); for x > B there are only n/x < √n terms, so add them directly.
+KEY POINT The same split by degree: in a graph, "heavy" vertices (degree > √m) are few (at most 2√m), so
+precompute for them and brute-force light ones; triangle counting in O(m√m) works this way. Both halves
+cost O(√n) per operation.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Treat small and large parameters differently around √n, summarise multisets by random weights, and
+divide boolean work by 64 with bitsets.
+
+=== page 2 ===
+2NOI 篇  第 18 章  根号分治、哈希与  bitset
+sqrt_threshold.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, m, B;
+5 long long a[150005];
+6 long long small[400][400];                     // small[x][y]: sum of a_i with i mod x == y, for x <= B
+7  
+8 int main() {
+9     cin >> n >> m;
+10     B = max(1, int(sqrt(n)));
+11     for (int i = 1; i <= n; i++) {
+12         cin >> a[i];
+13         for (int x = 1; x <= B; x++) small[x][i % x] += a[i];
+14     }
+15     while (m--) {
+16         char op; int x, y;
+17         cin >> op >> x >> y;
+18         if (op == 'A') {
+19             if (x <= B) cout << small[x][y] << "\n";          // table lookup
+20             else {                                             // few terms: add directly
+21                 long long s = 0;
+22                 for (int i = y; i <= n; i += x) if (i >= 1) s += a[i];
+23                 cout << s << "\n";
+24             }
+25         } else {
+26             for (int k = 1; k <= B; k++) small[k][x % k] += y - a[x];   // fix every small modulus
+27             a[x] = y;
+28         }
+29     }
+30     return 0;
+31 }
+INPUT
+20 14
+37 23 48 16 2 21 41 36 42 40 22 37 38 44 42 9 27 46 
+28 39
+A 20 5
+A 17 6
+A 12 8
+C 15 9
+A 6 5
+A 17 2
+A 11 3
+C 13 31
+A 10 2
+A 10 8
+C 8 38
+A 10 8
+A 9 8
+A 16 7
+OUTPUT
+2
+21
+75
+51
+51
+92
+60
+82
+84
+65
+41
+KEY POINT Random queries and changes checked against summing directly in Python. Index 0 is skipped in the direct
+loop because positions start at 1.
+18.2 集合哈希
+Random	weights;	XOR	and	sum	hashing.
+
+=== page 3 ===
+3NOI 篇  第 18 章  根号分治、哈希与  bitset
+IDEA Hashing	sets	with	random	weights: give every value v a random 64-bit weight r(v). Then the multiset of
+a segment is summarised by Σ r(ai) (sum hashing) or ⊕ r(ai) (XOR hashing), both available from prefix
+sums in O(1). XOR cancels pairs, so "every value appears an even number of times" ⇔ prefix XORs are
+equal at both ends.
+KEY POINT Sum hashing checks "is this segment a permutation of 1 … k" (compare with Σ r(1..k)), "do two segments
+contain the same multiset", and graph conditions like "every vertex has exactly one outgoing edge" ( 星战
+P8819). Collisions have probability about 2⁻⁶⁴ per comparison; draw the weights at run time on
+Codeforces.
+xor_hash.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef unsigned long long ull;
+5 int main() {
+6     int n;
+7     cin >> n;
+8     mt19937_64 rng(123456789);                  // use a time seed on Codeforces
+9     map<int, ull> w;                            // random weight per value
+10     map<ull, long long> seen;                   // how many prefixes had each XOR
+11     ull pre = 0;
+12     seen[0] = 1;
+13     long long ans = 0;
+14     for (int i = 0; i < n; i++) {
+15         int x; cin >> x;
+16         if (!w.count(x)) w[x] = rng();
+17         pre ^= w[x];
+18         ans += seen[pre];                       // equal prefix XORs: every value even in between
+19         seen[pre]++;
+20     }
+21     cout << ans << "\n";
+22     return 0;
+23 }
+INPUT
+16
+4 5 1 5 1 3 5 2 2 1 3 2 5 3 2 1
+OUTPUT
+4
+IDEA Counts subarrays in which every value occurs an even number of times; checked by testing every subarray
+in Python.
+KEY POINT With plain values instead of random weights, 1 ⊕ 2 ⊕ 3 = 0 would wrongly look "even". Random weights
+make such accidents practically impossible.
+18.3 bitset	 优化
+Shifts	and	ORs	64	at	a	time.
+IDEA Bitset	optimisation: a std::bitset packs 64 booleans per machine word, so shifts, OR, AND and counting
+run 64 times faster than a bool loop. Subset-sum feasibility: reach |= reach << w for each weight, O(n·S /
+64). Transitive closure: if i reaches k then row i |= row k, O(n³ / 64). Gaussian elimination mod 2 XORs
+whole rows.
+
+=== page 4 ===
+4NOI 篇  第 18 章  根号分治、哈希与  bitset
+KEY POINT The size of a bitset must be a compile-time constant: declare it for the maximum S. Combining bitsets
+with Mo's algorithm answers "are there two values in the range with difference / sum / product d" ( 小清
+新人渣的本愿  P3674).
+bitset_subset.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int MAXS = 100005;
+5 bitset<MAXS> reach;
+6  
+7 int main() {
+8     int n, S;
+9     cin >> n >> S;
+10     reach[0] = 1;
+11     for (int i = 0; i < n; i++) {
+12         int w; cin >> w;
+13         reach |= reach << w;                       // every reachable sum + w is reachable
+14     }
+15     int cnt = 0;
+16     for (int s = 0; s <= S; s++) cnt += reach[s];
+17     cout << cnt << "\n";                           // reachable sums in 0..S
+18     return 0;
+19 }
+INPUT
+15 400
+10 27 15 19 2 13 27 35 33 59 20 11 23 28 34
+OUTPUT
+335
+IDEA How many totals from 0 to S can be formed by a subset of the weights; checked with a Python set of
+reachable sums.
+KEY POINT reach.count() counts all set bits at once; (reach >> k)._Find_first() style tricks find the next reachable
+value. With weights up to 10⁵ and n = 10⁴ this is about 1.5·10⁷ word operations.
+18.4 树分块
+Stack	DFS;	blocks	of	size	B..3B	with	capitals.
+IDEA Tree	blocking ( 树分块 , 王室联邦  P2325): cut a tree into blocks of size between B and 3B, each with a
+"capital" such that every block vertex reaches the capital inside the block (the capital itself may lie
+outside). DFS with a stack: after each child returns, if more than B vertices were pushed since entering u,
+pop them as one block with capital u. Push u last; leftovers (fewer than B) join the last block.
+KEY POINT With B = √n this gives O(√n) blocks of size O(√n) and short paths between capitals: the base of Mo's
+algorithm	on	trees with a block order, and of "precompute answers between capitals" methods for path
+queries.
+
+=== page 5 ===
+5NOI 篇  第 18 章  根号分治、哈希与  bitset
+tree_block.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int n, B, stk[N], top = 0, bel[N], cap[N], K = 0;
+6 vector<int> g[N];
+7  
+8 void dfs(int u, int fa) {
+9     int base = top;
+10     for (int i = 0; i < int(g[u].size()); i++) {
+11         int v = g[u][i];
+12         if (v == fa) continue;
+13         dfs(v, u);
+14         if (top - base >= B) {                     // enough vertices below u: one block, capital u
+15             cap[++K] = u;
+16             while (top > base) bel[stk[top--]] = K;
+17         }
+18     }
+19     stk[++top] = u;
+20 }
+21  
+22 int main() {
+23     cin >> n >> B;
+24     for (int i = 1; i < n; i++) { int u, v; cin >> u >> v; g[u].push_back(v); g[v].push_back(u); }
+25     dfs(1, 0);
+26     if (!K) cap[++K] = 1;
+27     while (top) bel[stk[top--]] = K;               // leftovers join the last block
+28     cout << K << "\n";
+29     for (int i = 1; i <= n; i++) cout << bel[i] << (i < n ? " " : "\n");
+30     for (int i = 1; i <= K; i++) cout << cap[i] << (i < K ? " " : "\n");
+31     return 0;
+32 }
+INPUT
+20 3
+1 2
+2 3
+1 4
+2 5
+3 6
+6 7
+6 8
+8 9
+3 10
+9 11
+9 12
+7 13
+12 14
+12 15
+15 16
+12 17
+13 18
+5 19
+4 20
+OUTPUT
+6
+6 6 5 6 5 4 1 4 4 5 3 3 1 2 2 2 3 1 5 6
+6 12 9 3 2 1
+KEY POINT The answer is not unique, so the output is checked by a validator in Python: every block has between B
+and 3B vertices, and block ∪ {capital} is connected in the tree.
+18.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 6 ===
+6NOI 篇  第 18 章  根号分治、哈希与  bitset
+Key	points	to	memorise
+1. 根号分治 : x ≤ √n ⇒ precomputed table; x > √n ⇒ ≤ √n direct terms.
+2. Degree split: few heavy vertices (deg > √m), many cheap light ones.
+3. Set hash: random 64-bit weight per value; XOR for parity, sum for multisets.
+4. bitset: reach |= reach << w; closure row |= row; n/64 speed-up.
+5. Tree blocking: pop ≥ B stacked vertices after a child; capital = current vertex.
+18.5.1 Problems
+Problem Name Section What it tests
+P3396 哈希冲突 18.1 Threshold √n.
+P8819 星战 18.2 Sum hashing of out-degrees.
+P3674 小清新人渣的本愿 18.3 Mo + bitset.
+P2325 王室联邦 18.4 Tree blocking construction.
+18.5.2 Practice	ladder
+1. Direct. P3396: threshold split (18.1).
+2. One	twist. P8819: set hashing (18.2).
+3. Idea	hidden. P3674: bitset + Mo (18.3).
+4. Two	ideas. P2325: tree blocking (18.4).
+18.5.3 Experiments
+1. Try thresholds √n/4 and 4√n in sqrt_threshold.cpp and time them.
+2. Replace random weights by the values themselves in xor_hash.cpp and find a wrong count.
+3. Time bitset_subset.cpp against a bool array for S = 10⁵.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

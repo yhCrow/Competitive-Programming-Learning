@@ -1,0 +1,458 @@
+# 拓展篇 第32章 计算几何补充  (拓32)
+# source: 拓展篇 第32章 计算几何补充.pdf
+
+=== page 1 ===
+1拓展篇  第 32 章  计算几何补充
+第 32 章 	 计算几何补充
+Segments, polygons, calipers, half-planes, circles, 3D Luogu (verified) 6 problems C++17 · all programs run
+32.1 点、线与线段 32.2 多边形
+32.3 旋转卡壳 32.4 半平面交
+32.5 圆与三维几何 32.6 课后习题与实验
+32.1 点、线与线段
+Orientation;	intersection	with	all	edge	cases.
+IDEA Points,	lines	and	segments ( 点和线 ) are all answered with cross products ( 第 13 章 ). orient(a, b, c) = (b
+− a) × (c − a) tells whether c is left of, on, or right of the line ab. Two segments AB and CD properly	cross
+when C, D lie on opposite sides of AB and A, B on opposite sides of CD; touching or collinear overlaps
+happen when an orientation is 0 and the point lies inside the other segment's bounding box.
+KEY POINT Distance from a point P to a line AB = |(B − A) × (P − A)| / |B − A|. To a segment: if the projection falls
+outside [A, B] (dot products have the wrong sign), the answer is the distance to the nearer endpoint.
+Intersection point of two lines: A + t(B − A) with t = ((C − A) × (D − C)) / ((B − A) × (D − C)).
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 学 拓 展
+Test segment intersection and point-in-polygon exactly with cross products, sweep the hull with rotating
+calipers, intersect half-planes with a deque, and extend the products to circles and three dimensions.
+
+=== page 2 ===
+2拓展篇  第 32 章  计算几何补充
+segment_intersect.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 struct P { ll x, y; };
+6 ll cross(P o, P a, P b) { return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x); }   // 
+orientation
+7 int sgn(ll v) { return (v > 0) - (v < 0); }
+8 bool onSeg(P a, P b, P c) {                     // c on segment ab, given collinear
+9     return min(a.x, b.x) <= c.x && c.x <= max(a.x, b.x) && min(a.y, b.y) <= c.y && c.y <= max(a.y, b.y);
+10 }
+11 bool intersect(P a, P b, P c, P d) {
+12     int d1 = sgn(cross(a, b, c)), d2 = sgn(cross(a, b, d)), d3 = sgn(cross(c, d, a)), d4 = sgn(cross(c, 
+d, b));
+13     if (d1 * d2 < 0 && d3 * d4 < 0) return true;             // proper crossing
+14     if (d1 == 0 && onSeg(a, b, c)) return true;              // touching / overlapping cases
+15     if (d2 == 0 && onSeg(a, b, d)) return true;
+16     if (d3 == 0 && onSeg(c, d, a)) return true;
+17     if (d4 == 0 && onSeg(c, d, b)) return true;
+18     return false;
+19 }
+20  
+21 int main() {
+22     int T;
+23     cin >> T;
+24     while (T--) {
+25         P a, b, c, d;
+26         cin >> a.x >> a.y >> b.x >> b.y >> c.x >> c.y >> d.x >> d.y;
+27         cout << (intersect(a, b, c, d) ? "Yes" : "No") << "\n";
+28     }
+29     return 0;
+30 }
+INPUT
+15
+0 0 4 4 0 4 4 0
+0 0 2 2 3 3 5 5
+0 0 3 3 2 2 5 5
+0 0 2 0 2 0 2 3
+0 0 1 1 2 0 3 5
+2 -1 5 3 5 0 -3 1
+-5 0 2 -1 5 2 4 -2
+3 -5 5 4 -3 2 0 -3
+0 -2 -5 4 -2 -4 3 5
+0 5 1 -4 -5 -5 5 3
+-2 -4 1 2 -4 5 1 -3
+3 0 4 3 -3 -5 3 -3
+3 -4 1 4 1 5 4 2
+2 4 1 3 -5 5 -4 -2
+5 -1 0 0 1 5 -1 -4
+OUTPUT
+Yes
+No
+Yes
+Yes
+No
+Yes
+No
+No
+Yes
+Yes
+Yes
+No
+No
+No
+No
+KEY POINT Hand-made edge cases (crossing, disjoint collinear, overlapping collinear, touching at an endpoint) plus
+random segments, checked against a Python version that solves for the intersection parameters with exact
+fractions.
+32.2 多边形
+Ray	casting;	boundary	first.
+
+=== page 3 ===
+3拓展篇  第 32 章  计算几何补充
+IDEA Polygons ( 多边形 ): area by the shoelace formula ( 第 13 章 ); point	in	polygon by ray casting: shoot a ray
+to the right from the point and count how many edges it crosses; odd = inside. Check "on the boundary"
+first. Count an edge only if exactly one endpoint is strictly above the ray's line (half-open rule), so a vertex
+on the ray is not counted twice.
+KEY POINT For a convex polygon, binary search over the fan of triangles from vertex 0 answers in O(log n). The
+polygon may be concave for ray casting.
+point_in_polygon.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 struct P { ll x, y; };
+6 ll cross(P o, P a, P b) { return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x); }
+7  
+8 int main() {
+9     int n, q;
+10     cin >> n;
+11     vector<P> poly(n);
+12     for (int i = 0; i < n; i++) cin >> poly[i].x >> poly[i].y;
+13     cin >> q;
+14     while (q--) {
+15         P p; cin >> p.x >> p.y;
+16         bool on = false, inside = false;
+17         for (int i = 0; i < n; i++) {
+18             P a = poly[i], b = poly[(i + 1) % n];
+19             if (cross(a, b, p) == 0 && min(a.x, b.x) <= p.x && p.x <= max(a.x, b.x) && min(a.y, b.y) <= 
+p.y && p.y <= max(a.y, b.y)) on = true;
+20             if ((a.y > p.y) != (b.y > p.y)) {                   // edge straddles the horizontal line
+21                 // x of the crossing > p.x ?  compare without division
+22                 ll lhs = (b.x - a.x) * (p.y - a.y), rhs = (p.x - a.x) * (b.y - a.y);
+23                 if ((b.y > a.y) ? lhs > rhs : lhs < rhs) inside = !inside;
+24             }
+25         }
+26         cout << (on ? "on" : inside ? "in" : "out") << "\n";
+27     }
+28     return 0;
+29 }
+INPUT
+5
+0 0
+6 0
+6 4
+3 2
+0 4
+8
+1 1
+3 3
+3 2
+6 2
+7 1
+5 3
+0 0
+2 3
+OUTPUT
+in
+out
+on
+on
+out
+in
+on
+out
+
+=== page 4 ===
+4拓展篇  第 32 章  计算几何补充
+KEY POINT A concave pentagon (notch at (3, 2)) with points inside, outside, on edges and on vertices; checked against
+a winding-number test in Python. The crossing test multiplies instead of dividing, so it stays exact with
+integers.
+32.3 旋转卡壳
+Two	pointers	around	the	hull;	diameter.
+IDEA Rotating	calipers ( 旋转卡壳 ): on a convex hull, walk two pointers around it together. For each edge i →
+i+1, advance the opposite pointer j while the triangle (i, i+1, j+1) is larger than (i, i+1, j); then j is the
+farthest vertex from that edge. Every pointer goes around once: O(n) after the hull.
+KEY POINT It gives the diameter (farthest pair, P1452), the minimum width, and the minimum-area enclosing
+rectangle (P3187): the rectangle always has a side on a hull edge, so try every edge with three pointers (far
+side, left, right).
+
+=== page 5 ===
+5拓展篇  第 32 章  计算几何补充
+calipers.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 struct P { ll x, y; };
+6 P operator-(P a, P b) { return P{a.x - b.x, a.y - b.y}; }
+7 ll cross(P a, P b) { return a.x * b.y - a.y * b.x; }
+8 ll dist2(P a, P b) { return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y); }
+9 bool byXY(P a, P b) { return a.x < b.x || (a.x == b.x && a.y < b.y); }
+10  
+11 int main() {
+12     int n;
+13     cin >> n;
+14     vector<P> p(n);
+15     for (int i = 0; i < n; i++) cin >> p[i].x >> p[i].y;
+16     sort(p.begin(), p.end(), byXY);
+17     vector<P> h;
+18     for (int pass = 0; pass < 2; pass++) {               // monotone chain ( 第 13 章 )
+19         int start = h.size();
+20         for (int i = 0; i < n; i++) {
+21             P c = pass == 0 ? p[i] : p[n - 1 - i];
+22             while (int(h.size()) >= start + 2 && cross(h.back() - h[h.size() - 2], c - h.back()) <= 0) 
+h.pop_back();
+23             h.push_back(c);
+24         }
+25         h.pop_back();
+26     }
+27     int m = h.size();
+28     ll best = 0;
+29     if (m <= 2) { for (int i = 0; i < m; i++) for (int j = 0; j < m; j++) best = max(best, dist2(h[i], 
+h[j])); }
+30     else {
+31         for (int i = 0, j = 1; i < m; i++) {
+32             P e = h[(i + 1) % m] - h[i];
+33             while (cross(e, h[(j + 1) % m] - h[i]) > cross(e, h[j] - h[i])) j = (j + 1) % m;   // area 
+grows: move on
+34             best = max(best, max(dist2(h[i], h[j]), dist2(h[(i + 1) % m], h[j])));
+35         }
+36     }
+37     cout << best << "\n";                                // squared diameter
+38     return 0;
+39 }
+INPUT
+60
+73 -89
+100 33
+-70 30
+-49 0
+-12 35
+-26 49
+-63 52
+-34 -73
+-34 5
+-17 -32
+-73 97
+-17 -21
+-95 45
+58 -49
+-82 -49
+-71 38
+16 -1
+87 -82
+OUTPUT
+62820
+
+=== page 6 ===
+6拓展篇  第 32 章  计算几何补充
+-75 6
+-96 -75
+48 86
+8 93
+1 12
+68 -24
+46 28
+-60 63
+4 -41
+98 39
+47 87
+-73 -47
+-1 -51
+-65 -66
+60 26
+-74 40
+80 17
+-99 16
+22 52
+-70 33
+22 28
+26 -6
+9 38
+-54 -100
+-38 -77
+-94 19
+-4 15
+-71 73
+80 67
+-33 -68
+21 -28
+15 3
+-25 88
+-57 18
+12 -23
+-22 73
+95 -89
+-81 -47
+-21 75
+92 7
+-75 18
+-83 19
+KEY POINT 60 random points; the squared diameter is checked against all pairs in Python. Comparing triangle areas
+(cross products) instead of distances keeps the pointer movement monotone.
+32.4 半平面交
+Sort	by	angle;	deque;	convex	polygon	intersection.
+IDEA Half-plane	intersection ( 半平面交 ): each directed line keeps the region on its left. Sort lines by angle
+(keep the innermost of parallel lines), then sweep with a deque: before adding a line, pop lines from the
+back (and front) whose last intersection point falls outside it. At the end, trim the back and front against
+each other. The remaining lines form the intersection polygon: O(n log n).
+KEY POINT Intersection of convex polygons (P4196) = half-plane intersection of all their edges (counter-clockwise, so
+the inside is on the left). Use doubles with an EPS for "outside", and be ready for an empty or unbounded
+result (add a big bounding box to keep it bounded).
+
+=== page 7 ===
+7拓展篇  第 32 章  计算几何补充
+half_plane.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const double EPS = 1e-9;
+5 struct V { double x, y; };
+6 V operator+(V a, V b) { return V{a.x + b.x, a.y + b.y}; }
+7 V operator-(V a, V b) { return V{a.x - b.x, a.y - b.y}; }
+8 V operator*(V a, double t) { return V{a.x * t, a.y * t}; }
+9 double cross(V a, V b) { return a.x * b.y - a.y * b.x; }
+10 struct L { V p, d; double ang; };                 // keeps the left side of p + t*d
+11 V meet(L a, L b) { return a.p + a.d * (cross(b.d, a.p - b.p) / cross(a.d, b.d)); }
+12 bool outside(L l, V q) { return cross(l.d, q - l.p) < -EPS; }   // q strictly right of l
+13 bool byAngle(const L &a, const L &b) {
+14     if (fabs(a.ang - b.ang) > EPS) return a.ang < b.ang;
+15     return cross(a.d, b.p - a.p) > 0;             // same direction: inner (more left) line first
+16 }
+17  
+18 int main() {
+19     int k;
+20     cin >> k;
+21     vector<L> ls;
+22     for (int t = 0; t < k; t++) {
+23         int m; cin >> m;
+24         vector<V> poly(m);
+25         for (int i = 0; i < m; i++) cin >> poly[i].x >> poly[i].y;
+26         for (int i = 0; i < m; i++) {             // counter-clockwise edges
+27             V d = poly[(i + 1) % m] - poly[i];
+28             ls.push_back(L{poly[i], d, atan2(d.y, d.x)});
+29         }
+30     }
+31     sort(ls.begin(), ls.end(), byAngle);
+32     vector<L> u;
+33     for (int i = 0; i < int(ls.size()); i++)      // drop the outer copies of parallel lines
+34         if (i == 0 || fabs(ls[i].ang - ls[i - 1].ang) > EPS) u.push_back(ls[i]);
+35     deque<L> q;
+36     for (int i = 0; i < int(u.size()); i++) {
+37         while (q.size() >= 2 && outside(u[i], meet(q[q.size() - 1], q[q.size() - 2]))) q.pop_back();
+38         while (q.size() >= 2 && outside(u[i], meet(q[0], q[1]))) q.pop_front();
+39         q.push_back(u[i]);
+40     }
+41     while (q.size() >= 3 && outside(q[0], meet(q[q.size() - 1], q[q.size() - 2]))) q.pop_back();
+42     while (q.size() >= 3 && outside(q[q.size() - 1], meet(q[0], q[1]))) q.pop_front();
+43     double area = 0;
+44     if (q.size() >= 3) {
+45         vector<V> pts;
+46         for (int i = 0; i < int(q.size()); i++) pts.push_back(meet(q[i], q[(i + 1) % q.size()]));
+47         for (int i = 0; i < int(pts.size()); i++) area += cross(pts[i], pts[(i + 1) % pts.size()]);
+48     }
+49     cout << fixed << setprecision(3) << fabs(area) / 2 << "\n";
+50     return 0;
+51 }
+INPUT
+3
+4
+0 0
+4 0
+4 4
+0 4
+4
+2 -1
+6 1
+5 5
+OUTPUT
+9.875
+
+=== page 8 ===
+8拓展篇  第 32 章  计算几何补充
+1 3
+4
+-1 2
+3 -2
+6 2
+2 6
+KEY POINT Three overlapping convex quadrilaterals; the area is checked against clipping one polygon by the others
+edge by edge (Sutherland–Hodgman) in Python with exact fractions, an independent method.
+32.5 圆与三维几何
+Circle–line;	3D	cross;	triple	product.
+IDEA Circles ( 圆 ): a point is inside when its distance to the centre is ≤ r; a line meets a circle when its distance
+to the centre ≤ r, and the two points come from the foot of the perpendicular ± √(r² − d²) along the line.
+The circumcircle of three points and the minimum enclosing circle were in 第 15 章 .
+KEY POINT 3D	geometry ( 三维几何 ): the dot product is a·b = axbx + ayby + azbz; the cross product a × b is a vector
+perpendicular to both, with length = the parallelogram area. The triple product (a × b)·c is six times the
+signed volume of a tetrahedron, and its sign says which side of the plane through a, b a point lies on: the
+3D "orientation" test. The 3D convex hull (P4724) is built from it incrementally; the minimum enclosing
+sphere extends the random incremental circle.
+tetra_volume.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct V3 { long long x, y, z; };
+5 V3 operator-(V3 a, V3 b) { return V3{a.x - b.x, a.y - b.y, a.z - b.z}; }
+6 V3 cross(V3 a, V3 b) { return V3{a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x}; }
+7 long long dot(V3 a, V3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+8  
+9 int main() {
+10     int T;
+11     cin >> T;
+12     while (T--) {
+13         V3 p[4];
+14         for (int i = 0; i < 4; i++) cin >> p[i].x >> p[i].y >> p[i].z;
+15         long long six = dot(cross(p[1] - p[0], p[2] - p[0]), p[3] - p[0]);   // triple product
+16         if (six < 0) six = -six;
+17         cout << six << "\n";                     // 6 x volume (integer)
+18     }
+19     return 0;
+20 }
+INPUT
+2
+0 0 0
+3 0 0
+0 4 0
+0 0 5
+1 2 3
+4 0 1
+2 5 2
+3 3 6
+OUTPUT
+60
+50
+
+=== page 9 ===
+9拓展篇  第 32 章  计算几何补充
+KEY POINT Printing 6 × volume keeps the answer an exact integer; the first tetrahedron is the corner of a 3 × 4 × 5 box,
+volume 10, so it prints 60. Checked with the determinant expanded independently in Python.
+32.6 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. orient(a, b, c) = (b − a) × (c − a): left / on / right.
+2. Segments cross: opposite sides both ways, plus collinear-on-segment cases.
+3. Point in polygon: boundary first; ray crossings with half-open edges; odd = in.
+4. Calipers: advance j while the triangle area grows; O(n) diameter.
+5. Half-planes: sort by angle, inner parallel first; deque pops back and front.
+6. 3D: cross is a vector; (a × b)·c = 6 × signed tetrahedron volume.
+32.6.1 Problems
+Problem Name Section What it tests
+P1355 神秘大三角 32.2 Point in / on / out of a triangle.
+P1452 Beauty Contest G 32.3 Diameter by calipers.
+P3187 最小矩形覆盖 32.3 Three pointers per edge.
+P4196 【模板】半平面交  / 凸多
+边形
+32.4 Intersection area.
+P1742 最小圆覆盖 32.5 Random incremental circle.
+P4724 【模板】三维凸包 32.5 3D hull surface area.
+32.6.2 Practice	ladder
+1. Direct. P1355: point in triangle (32.2).
+2. One	twist. P1452: rotating calipers (32.3).
+3. Idea	hidden. P4196: half-plane intersection (32.4).
+4. Two	ideas. P4724: 3D hull (32.5).
+32.6.3 Experiments
+1. Feed segment_intersect.cpp overlapping collinear segments in every order.
+2. Put a query point exactly on a polygon vertex at the ray height and check the half-open rule.
+3. Count pointer moves in calipers.cpp; compare with 2m.
+4. Add a polygon disjoint from the others to half_plane.cpp: the area should be 0.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

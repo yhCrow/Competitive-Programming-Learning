@@ -1,0 +1,191 @@
+# NOI篇 第21章 动态 DP  (N21)
+# source: NOI篇 第21章 动态 DP.pdf
+
+=== page 1 ===
+1NOI 篇  第 21 章  动态  DP
+第 21 章 	 动态 	DP
+Dynamic DP with (max,+) matrices Luogu (verified) 2 problems C++17 · all programs run
+21.1 动态  DP 21.2 全局平衡二叉树
+21.3 课后习题与实验
+21.1 动态 	DP
+Light	parts	in	g;	heavy	steps	as	matrices;	climb	chains.
+IDEA Dynamic	DP ( 动态  DP): a tree DP must be answered again after each point change. Maximum-weight
+independent set: f[u][0] = Σ max(f[v][0], f[v][1]), f[u][1] = w[u] + Σ f[v][0]. Split the children into the
+heavy child s and light children, and collect the light part in g[u][0] = Σlight max(f[v][0], f[v][1]), g[u][1] =
+w[u] + Σlight f[v][0]. Then the step along the heavy edge is a (max,	+)	matrix	product: (f[u][0], f[u][1]) =
+[[g0, g0], [g1, −∞]] ⊗ (f[s][0], f[s][1]).
+KEY POINT Keep these 2 × 2 matrices in a segment tree over HLD order ( 拓展篇  / 进阶篇  第 9 章 ). A chain's product
+gives the f values of its top. A change at x updates x's matrix, then climbs: each chain top's new f changes
+its parent's g (a light edge), so O(log n) chains × O(log n) segment tree = O(log² n) per change (P4719).
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Re-answer a tree DP after point changes by writing each heavy-edge step as a (max, +) matrix product kept
+in a segment tree over heavy-light order.
+
+=== page 2 ===
+2NOI 篇  第 21 章  动态  DP
+dynamic_dp.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const ll NEG = LLONG_MIN / 4;
+6 const int N = 100005;
+7 struct M { ll a[2][2]; };
+8 M mul(const M &x, const M &y) {                       // (max, +) product
+9     M r;
+10     for (int i = 0; i < 2; i++) for (int j = 0; j < 2; j++) r.a[i][j] = max(x.a[i][0] + y.a[0][j], 
+x.a[i][1] + y.a[1][j]);
+11     return r;
+12 }
+13 int n, q, fa[N], son[N], sz[N], top[N], dfn[N], rk[N], endPos[N], cnt = 0;
+14 ll w[N], g[N][2], f[N][2];
+15 vector<int> adj[N];
+16 M tr[N * 4];
+17  
+18 void dfs1(int u, int p) {
+19     fa[u] = p; sz[u] = 1;
+20     for (int k = 0; k < int(adj[u].size()); k++) { int v = adj[u][k]; if (v == p) continue; dfs1(v, u); 
+sz[u] += sz[v]; if (sz[v] > sz[son[u]]) son[u] = v; }
+21 }
+22 void dfs2(int u, int t) {
+23     top[u] = t; dfn[u] = ++cnt; rk[cnt] = u; endPos[t] = cnt;
+24     if (son[u]) dfs2(son[u], t);
+25     for (int k = 0; k < int(adj[u].size()); k++) { int v = adj[u][k]; if (v != fa[u] && v != son[u]) 
+dfs2(v, v); }
+26 }
+27 void dp(int u) {                                      // initial f and g
+28     f[u][0] = 0; f[u][1] = w[u]; g[u][0] = 0; g[u][1] = w[u];
+29     for (int k = 0; k < int(adj[u].size()); k++) {
+30         int v = adj[u][k]; if (v == fa[u]) continue;
+31         dp(v);
+32         f[u][0] += max(f[v][0], f[v][1]); f[u][1] += f[v][0];
+33         if (v != son[u]) { g[u][0] += max(f[v][0], f[v][1]); g[u][1] += f[v][0]; }
+34     }
+35 }
+36 M leafMat(int u) { M m; m.a[0][0] = m.a[0][1] = g[u][0]; m.a[1][0] = g[u][1]; m.a[1][1] = NEG; return m; 
+}
+37 void build(int p, int l, int r) {
+38     if (l == r) { tr[p] = leafMat(rk[l]); return; }
+39     int mid = (l + r) / 2; build(2 * p, l, mid); build(2 * p + 1, mid + 1, r); tr[p] = mul(tr[2 * p], 
+tr[2 * p + 1]);
+40 }
+41 void update(int p, int l, int r, int x) {
+42     if (l == r) { tr[p] = leafMat(rk[l]); return; }
+43     int mid = (l + r) / 2;
+44     if (x <= mid) update(2 * p, l, mid, x); else update(2 * p + 1, mid + 1, r, x);
+45     tr[p] = mul(tr[2 * p], tr[2 * p + 1]);
+46 }
+47 M query(int p, int l, int r, int x, int y) {
+48     if (x <= l && r <= y) return tr[p];
+49     int mid = (l + r) / 2;
+50     if (y <= mid) return query(2 * p, l, mid, x, y);
+51     if (x > mid) return query(2 * p + 1, mid + 1, r, x, y);
+52     return mul(query(2 * p, l, mid, x, y), query(2 * p + 1, mid + 1, r, x, y));
+53 }
+54 void topValues(int t, ll &f0, ll &f1) {               // chain product applied to (0, -inf)
+55     M m = query(1, 1, n, dfn[t], endPos[t]);
+56     f0 = m.a[0][0]; f1 = m.a[1][0];
+57 }
+
+=== page 3 ===
+3NOI 篇  第 21 章  动态  DP
+58 void change(int x, ll y) {
+59     g[x][1] += y - w[x]; w[x] = y;
+60     while (x) {
+61         int t = top[x];
+62         ll o0, o1; topValues(t, o0, o1);
+63         update(1, 1, n, dfn[x]);
+64         ll n0, n1; topValues(t, n0, n1);
+65         int p = fa[t];
+66         if (p) { g[p][0] += max(n0, n1) - max(o0, o1); g[p][1] += n0 - o0; }   // light edge into p
+67         x = p;
+68     }
+69 }
+70  
+71 int main() {
+72     cin >> n >> q;
+73     for (int i = 1; i <= n; i++) cin >> w[i];
+74     for (int i = 1; i < n; i++) { int a, b; cin >> a >> b; adj[a].push_back(b); adj[b].push_back(a); }
+75     dfs1(1, 0); dfs2(1, 1); dp(1); build(1, 1, n);
+76     while (q--) {
+77         int x; ll y; cin >> x >> y;
+78         change(x, y);
+79         ll f0, f1; topValues(1, f0, f1);
+80         cout << max(f0, f1) << "\n";
+81     }
+82     return 0;
+83 }
+INPUT
+10 8
+3 18 6 18 -1 15 -5 0 17 14
+1 2
+2 3
+3 4
+1 5
+2 6
+5 7
+6 8
+3 9
+5 10
+4 11
+9 13
+4 12
+6 0
+1 14
+2 -1
+3 -1
+6 0
+OUTPUT
+60
+56
+57
+57
+57
+53
+53
+53
+KEY POINT Random weights (some negative) and point changes; after each change the answer is checked against
+recomputing the whole tree DP in Python. The chain's last vertex is applied to the vector (0, −∞), so the
+top's f values are just the first column of the product.
+TRAP Update g of the parent with the difference between the chain top's new and old f, computed before and
+after the segment tree update; recomputing g from scratch would cost O(degree). The product order must
+follow the chain from top to bottom.
+21.2 全局平衡二叉树
+Weighted	BST	per	chain;	depth	O(log	n).
+
+=== page 4 ===
+4NOI 篇  第 21 章  动态  DP
+IDEA A global	balanced	binary	tree ( 全局平衡二叉树 ) replaces the segment trees of heavy-light
+decomposition. For each heavy chain build a binary search tree over the chain, choosing as root the vertex
+that splits the chain by weight, where a vertex's weight is 1 + the sizes of its light subtrees. Light edges
+hang the chain trees together into one tree of depth O(log	n) in total, not O(log² n).
+KEY POINT In dynamic DP ( 第 1 节 ) every update walks from a vertex to the root and fixes one matrix per node: with
+HLD that is O(log² n) segment-tree work, with the global balanced tree it is O(log n). Each node stores the
+product of the matrices in its BST subtree (its own light-child matrix in the middle); a light-edge step
+updates the parent chain's light matrix, exactly as in the HLD version. Used for the " 加强版 "
+(strengthened) dynamic DP problem P4751, where O(log² n) is too slow.
+TRAP Build by weight, not by count: choosing the middle vertex by count gives O(log² n) depth again. The tree is
+static: it does not support link / cut (use LCT for that).
+21.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Split children: heavy son vs light; g holds the light contributions.
+2. f(u) = [[g0, g0], [g1, −∞]] ⊗ f(son) in (max, +).
+3. Segment tree over HLD order; chain product = top's f.
+4. Change x: update matrix, climb chain tops, adjust parent g by differences; O(log² n).
+5. Global balanced tree: chain BST rooted at the weighted middle; total depth O(log n).
+21.3.1 Problems
+Problem Name Section What it tests
+P4719 【模板】动态  DP 21.1 Max independent set with changes.
+P4751 【模板】动态  DP （加强
+版）
+21.2 Needs O(log n) per update.
+21.3.2 Practice	ladder
+1. Direct. P4719: dynamic DP (21.1).
+2. One	twist. P4751: global balanced tree (21.2).
+21.3.3 Experiments
+1. Write the 2 × 2 matrix for a single vertex and check one product by hand.
+2. Compare dynamic_dp.cpp with recomputing the DP for n = 10⁵ random changes.
+3. Adapt it to maximum-weight independent set on a path (one chain only).
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

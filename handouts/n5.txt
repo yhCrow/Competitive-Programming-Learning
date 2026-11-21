@@ -1,0 +1,520 @@
+# NOI篇 第5章 数据结构进阶  (N5)
+# source: NOI篇 第05章 数据结构进阶.pdf
+
+=== page 1 ===
+1NOI 篇  第 5 章  数据结构进阶
+第 5 章 	 数据结构进阶
+Tree chairman trees, segment tree beats, long-path decomposition, leftist heaps Luogu (verified) 7 problems
+C++17 · all programs run
+5.1 树上主席树 5.2 吉司机线段树
+5.3 长链剖分 5.4 左偏树
+5.5 边分治 5.6 课后习题与实验
+5.1 树上主席树
+Root-path	versions;	u	+	v	−	lca	−	parent(lca).
+IDEA Persistent	segment	trees	on	a	tree ( 树上主席树 ): give every vertex the value tree of its whole root
+path, built from its parent's version plus its own value ( 进阶篇  第 8 章  did the same along an array). Then
+the multiset of values on the path u–v is version(u) + version(v) − version(lca) − version(parent(lca)),
+and the k-th smallest is found by walking those four trees together (Count on a tree, P2633).
+KEY POINT Memory n log n nodes; each query O(log n) after an LCA. Forests that merge ( 森林  P3302) rebuild the
+smaller tree's versions on top of the other one (small-to-large).
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Path k-th smallest with persistent trees on root paths, range chmin with sums by keeping the top two
+values, and depth-indexed tree DP in O(n) by reusing the long child's memory.
+
+=== page 2 ===
+2NOI 篇  第 5 章  数据结构进阶
+tree_kth.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005, LOG = 17;
+5 int n, q, a[N], root[N], ls[N * 20], rs[N * 20], cnt[N * 20], tot = 0, K;
+6 int up[N][LOG], dep[N];
+7 vector<int> g[N], vals;
+8  
+9 int insert(int pre, int l, int r, int x) {
+10     int p = ++tot; ls[p] = ls[pre]; rs[p] = rs[pre]; cnt[p] = cnt[pre] + 1;
+11     if (l < r) { int mid = (l + r) / 2; if (x <= mid) ls[p] = insert(ls[pre], l, mid, x); else rs[p] = 
+insert(rs[pre], mid + 1, r, x); }
+12     return p;
+13 }
+14 void dfs(int u, int p) {
+15     up[u][0] = p;
+16     for (int k = 1; k < LOG; k++) up[u][k] = up[up[u][k - 1]][k - 1];
+17     root[u] = insert(root[p], 1, K, a[u]);           // parent's version + own value
+18     for (int i = 0; i < int(g[u].size()); i++) { int v = g[u][i]; if (v != p) { dep[v] = dep[u] + 1; 
+dfs(v, u); } }
+19 }
+20 int lca(int x, int y) {
+21     if (dep[x] < dep[y]) swap(x, y);
+22     for (int k = LOG - 1; k >= 0; k--) if (dep[x] - (1 << k) >= dep[y]) x = up[x][k];
+23     if (x == y) return x;
+24     for (int k = LOG - 1; k >= 0; k--) if (up[x][k] != up[y][k]) { x = up[x][k]; y = up[y][k]; }
+25     return up[x][0];
+26 }
+27 int kth(int u, int v, int w, int z, int l, int r, int k) {     // trees u + v - w - z
+28     if (l == r) return l;
+29     int mid = (l + r) / 2, c = cnt[ls[u]] + cnt[ls[v]] - cnt[ls[w]] - cnt[ls[z]];
+30     if (k <= c) return kth(ls[u], ls[v], ls[w], ls[z], l, mid, k);
+31     return kth(rs[u], rs[v], rs[w], rs[z], mid + 1, r, k - c);
+32 }
+33  
+34 int main() {
+35     cin >> n >> q;
+36     for (int i = 1; i <= n; i++) { cin >> a[i]; vals.push_back(a[i]); }
+37     sort(vals.begin(), vals.end()); vals.erase(unique(vals.begin(), vals.end()), vals.end());
+38     K = vals.size();
+39     for (int i = 1; i <= n; i++) a[i] = lower_bound(vals.begin(), vals.end(), a[i]) - vals.begin() + 1;
+40     for (int i = 1; i < n; i++) { int x, y; cin >> x >> y; g[x].push_back(y); g[y].push_back(x); }
+41     dfs(1, 0);                                         // root[0] = 0: the empty tree
+42     while (q--) {
+43         int u, v, k; cin >> u >> v >> k;
+44         int l = lca(u, v);
+45         cout << vals[kth(root[u], root[v], root[l], root[up[l][0]], 1, K, k) - 1] << "\n";
+46     }
+47     return 0;
+48 }
+INPUT
+10 6
+12 12 3 13 15 11 6 11 1 17
+1 2
+1 3
+3 4
+2 5
+3 6
+3 7
+3 8
+1 9
+8 10
+OUTPUT
+12
+3
+6
+12
+11
+11
+
+=== page 3 ===
+3NOI 篇  第 5 章  数据结构进阶
+2 3 2
+1 7 1
+3 7 2
+5 6 4
+6 10 3
+3 10 2
+KEY POINT Random tree and path queries, checked against listing the path's values and sorting them in Python.
+Subtracting version(lca) and version(parent(lca)) removes the shared root part but keeps the LCA itself
+exactly once.
+5.2 吉司机线段树
+Max,	strict	second	max,	count;	amortised	chmin.
+IDEA Segment	tree	beats ( 吉司机线段树 ) supports the "range chmin" update ai = min(ai, x) together with
+range sums. Each node stores the maximum mx, the strict	second	maximum se, and how many times
+the maximum occurs, cnt. For an update with x: if x ≥ mx, nothing changes; if se < x < mx, only the
+maximums change, so sum −= cnt·(mx − x) and mx = x right here (a lazy tag); otherwise recurse into the
+children.
+KEY POINT The "otherwise" case looks slow, but it merges the two largest distinct values of the node, which can only
+happen O(log n) times per value: amortised O((n + q) log n) for chmin with sums. Historic maxima (CPU
+监控  P4314, P6242) add more tags on the same idea.
+
+=== page 4 ===
+4NOI 篇  第 5 章  数据结构进阶
+beats.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int n, q;
+6 long long a[N], mx[N * 4], se[N * 4], cntmx[N * 4], sum[N * 4];
+7  
+8 void pull(int p) {
+9     int L = 2 * p, R = 2 * p + 1;
+10     sum[p] = sum[L] + sum[R];
+11     if (mx[L] == mx[R]) { mx[p] = mx[L]; cntmx[p] = cntmx[L] + cntmx[R]; se[p] = max(se[L], se[R]); }
+12     else if (mx[L] > mx[R]) { mx[p] = mx[L]; cntmx[p] = cntmx[L]; se[p] = max(se[L], mx[R]); }
+13     else { mx[p] = mx[R]; cntmx[p] = cntmx[R]; se[p] = max(mx[L], se[R]); }
+14 }
+15 void applyMin(int p, long long x) {                  // only the maximums are above x
+16     if (x >= mx[p]) return;
+17     sum[p] -= cntmx[p] * (mx[p] - x); mx[p] = x;
+18 }
+19 void push(int p) { applyMin(2 * p, mx[p]); applyMin(2 * p + 1, mx[p]); }
+20 void build(int p, int l, int r) {
+21     if (l == r) { mx[p] = sum[p] = a[l]; se[p] = LLONG_MIN; cntmx[p] = 1; return; }
+22     int mid = (l + r) / 2; build(2 * p, l, mid); build(2 * p + 1, mid + 1, r); pull(p);
+23 }
+24 void chmin(int p, int l, int r, int x, int y, long long v) {
+25     if (y < l || r < x || v >= mx[p]) return;          // nothing to change
+26     if (x <= l && r <= y && v > se[p]) { applyMin(p, v); return; }   // only the max changes: tag here
+27     push(p);
+28     int mid = (l + r) / 2;
+29     chmin(2 * p, l, mid, x, y, v); chmin(2 * p + 1, mid + 1, r, x, y, v);
+30     pull(p);
+31 }
+32 long long qsum(int p, int l, int r, int x, int y) {
+33     if (y < l || r < x) return 0;
+34     if (x <= l && r <= y) return sum[p];
+35     push(p); int mid = (l + r) / 2;
+36     return qsum(2 * p, l, mid, x, y) + qsum(2 * p + 1, mid + 1, r, x, y);
+37 }
+38 long long qmax(int p, int l, int r, int x, int y) {
+39     if (y < l || r < x) return LLONG_MIN;
+40     if (x <= l && r <= y) return mx[p];
+41     push(p); int mid = (l + r) / 2;
+42     return max(qmax(2 * p, l, mid, x, y), qmax(2 * p + 1, mid + 1, r, x, y));
+43 }
+44  
+45 int main() {
+46     cin >> n >> q;
+47     for (int i = 1; i <= n; i++) cin >> a[i];
+48     build(1, 1, n);
+49     while (q--) {
+50         int t, l, r; cin >> t >> l >> r;
+51         if (t == 1) { long long x; cin >> x; chmin(1, 1, n, l, r, x); }
+52         else if (t == 2) cout << qsum(1, 1, n, l, r) << "\n";
+53         else cout << qmax(1, 1, n, l, r) << "\n";
+54     }
+55     return 0;
+56 }
+INPUT
+12 14
+37 12 5 16 30 20 43 23 11 33 12 11
+1 1 5 8
+3 1 8
+2 9 9
+OUTPUT
+43
+11
+16
+77
+1
+
+=== page 5 ===
+5NOI 篇  第 5 章  数据结构进阶
+1 10 12 45
+2 4 5
+1 9 12 40
+2 7 9
+1 6 9 20
+1 5 11 45
+1 10 11 12
+1 10 12 37
+1 10 12 1
+1 3 6 7
+3 11 12
+KEY POINT Random chmin, sum and max operations checked against a plain array in Python. The push uses the
+parent's mx as a "chmin tag": a child can only be above it in its maximum.
+5.3 长链剖分
+Deepest	child;	shifted	arrays;	O(n)	merges.
+IDEA Long-path	decomposition ( 长链剖分 ): like heavy-light, but the "long" child is the one with the deepest
+subtree. For DP indexed by depth (f[u][j] = number of vertices j levels below u), the long child's array can
+be reused by shifting it one place (f[u][j + 1] = f[long][j]) with a shared memory pool, and only short
+children are merged element by element.
+KEY POINT Every vertex is the top of exactly one long chain, and a short child's array has length = its chain length, so
+all merges together cost O(n). Uses: depth-indexed tree DP (CF1009F Dominant Indices), k-th ancestor in
+O(1) after O(n log n) preprocessing (P5903).
+
+=== page 6 ===
+6NOI 篇  第 5 章  数据结构进阶
+long_path.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 1000005;
+5 vector<int> g[N];
+6 int n, len_[N], son[N], ans[N];
+7 int pool[N], *f[N], *ptr = pool;                    // shared memory: long chains are contiguous
+8  
+9 void dfs1(int u, int p) {
+10     for (int k = 0; k < int(g[u].size()); k++) {
+11         int v = g[u][k]; if (v == p) continue;
+12         dfs1(v, u);
+13         if (len_[v] > len_[son[u]]) son[u] = v;
+14     }
+15     len_[u] = len_[son[u]] + 1;                     // vertices on the longest downward chain
+16 }
+17 void dfs2(int u, int p) {
+18     f[u][0] = 1; ans[u] = 0;
+19     if (son[u]) {
+20         f[son[u]] = f[u] + 1;                       // long child: shifted view of the same memory
+21         dfs2(son[u], u);
+22         if (f[u][ans[son[u]] + 1] > f[u][ans[u]]) ans[u] = ans[son[u]] + 1;
+23     }
+24     for (int k = 0; k < int(g[u].size()); k++) {
+25         int v = g[u][k]; if (v == p || v == son[u]) continue;
+26         f[v] = ptr; ptr += len_[v];                 // short child: its own block
+27         dfs2(v, u);
+28         for (int j = 0; j < len_[v]; j++) {         // merge, cost = short chain length
+29             f[u][j + 1] += f[v][j];
+30             if (f[u][j + 1] > f[u][ans[u]] || (f[u][j + 1] == f[u][ans[u]] && j + 1 < ans[u])) ans[u] = 
+j + 1;
+31         }
+32     }
+33     if (f[u][ans[u]] == 1) ans[u] = 0;              // all depths have one vertex: smallest depth 0
+34 }
+35  
+36 int main() {
+37     cin >> n;
+38     for (int i = 1; i < n; i++) { int x, y; cin >> x >> y; g[x].push_back(y); g[y].push_back(x); }
+39     dfs1(1, 0);
+40     f[1] = ptr; ptr += len_[1];
+41     dfs2(1, 0);
+42     for (int i = 1; i <= n; i++) cout << ans[i] << (i < n ? " " : "");
+43     cout << "\n";
+44     return 0;
+45 }
+INPUT
+14
+1 2
+2 3
+2 4
+3 5
+4 6
+6 7
+5 8
+7 9
+9 10
+8 11
+9 12
+12 13
+11 14
+OUTPUT
+6 5 0 4 0 3 2 0 1 0 0 0 0 0
+
+=== page 7 ===
+7NOI 篇  第 5 章  数据结构进阶
+KEY POINT For every vertex: the smallest depth j (below it) with the most vertices at that depth in its subtree. Checked
+in Python by walking each subtree layer by layer.
+TRAP Ties matter: when the long child's best depth ties with a smaller depth, the smaller one must win. Here a
+full tie (every depth has one vertex) resets the answer to 0, and short-chain merges prefer smaller j on
+equal counts.
+5.4 左偏树
+dist;	merge	down	right	spines;	delete-min	with	DSU.
+IDEA A leftist	heap ( 左偏树 , a mergeable heap 可并堆 ) is a binary heap-ordered tree where each node stores
+dist = length of the shortest path down to a missing child. The rule dist(left)	≥	dist(right) keeps the right
+spine O(log n) long, so two heaps merge in O(log n) by walking down right spines: keep the smaller root,
+merge its right child with the other heap, swap children if the rule breaks.
+KEY POINT Push = merge with a one-node heap; pop = merge the two children of the root. Together with a DSU that
+maps each element to its heap root this solves "merge the heaps of x and y / delete the minimum of x's
+heap" (P3377). Its persistent version (copy nodes on the merge path) gives the fast k-th shortest path
+algorithm (NOI 篇  第 11 章 ).
+
+=== page 8 ===
+8NOI 篇  第 5 章  数据结构进阶
+leftist_heap.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int ls[N], rs[N], dis[N], val[N], rt[N];
+6 bool del[N];
+7  
+8 int merge(int x, int y) {
+9     if (!x || !y) return x | y;
+10     if (val[x] > val[y] || (val[x] == val[y] && x > y)) swap(x, y);   // x = smaller root
+11     rs[x] = merge(rs[x], y);
+12     if (dis[ls[x]] < dis[rs[x]]) swap(ls[x], rs[x]);                   // keep it leftist
+13     dis[x] = dis[rs[x]] + 1;
+14     return x;
+15 }
+16 int find(int x) { return rt[x] == x ? x : rt[x] = find(rt[x]); }
+17  
+18 int main() {
+19     int n, m;
+20     cin >> n >> m;
+21     dis[0] = -1;
+22     for (int i = 1; i <= n; i++) { cin >> val[i]; rt[i] = i; }
+23     for (int i = 0; i < m; i++) {
+24         int op, x, y;
+25         cin >> op >> x;
+26         if (op == 1) {
+27             cin >> y;
+28             if (del[x] || del[y]) continue;
+29             x = find(x); y = find(y);
+30             if (x != y) rt[x] = rt[y] = merge(x, y);
+31         } else {
+32             if (del[x]) { cout << -1 << "\n"; continue; }
+33             x = find(x);
+34             cout << val[x] << "\n";
+35             del[x] = true;
+36             rt[x] = rt[ls[x]] = rt[rs[x]] = merge(ls[x], rs[x]);   // old root points to the new root
+37         }
+38     }
+39     return 0;
+40 }
+INPUT
+10 18
+18 18 18 14 16 7 2 13 13 7
+1 7 6
+2 2
+2 9
+1 4 10
+1 1 9
+1 6 7
+2 8
+1 8 7
+2 5
+2 2
+1 5 4
+1 4 5
+1 7 4
+1 4 1
+1 8 7
+2 9
+2 8
+1 1 8
+OUTPUT
+18
+13
+13
+16
+-1
+-1
+-1
+
+=== page 9 ===
+9NOI 篇  第 5 章  数据结构进阶
+KEY POINT Random merges and delete-mins (ties broken by the smaller index, as in P3377), checked against plain
+Python sets. The deleted root keeps pointing to the new root, so path compression still finds the right
+heap for every element.
+5.5 边分治
+Binarise;	split	at	the	most	balanced	edge.
+IDEA Edge	divide	and	conquer ( 边分治 ): like centroid decomposition ( 点分治 ), but split the tree at the edge
+whose removal leaves the most balanced two parts. Every path through that edge is "a path in the left part
+ending at its end + the edge + a path in the right part", so each step combines exactly two sides, which is
+easier than merging many subtrees of a centroid.
+KEY POINT A star breaks it (every edge leaves a part of size n − 1), so first binarise the tree: replace each vertex's
+children by a chain of virtual vertices joined by weight-0 edges. Degrees become ≤ 3 and the best edge
+always leaves parts of size ≥ about n/3, so the depth is O(log n). Virtual vertices are not counted. Used
+when the two-sided merge matters (P4220 通道 , and many "maximise f(path) over pairs" problems).
+
+=== page 10 ===
+10NOI 篇  第 5 章  数据结构进阶
+edge_divide.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const int N = 400005;
+6 int n, cnt, head[N], to[2 * N], nx[2 * N], ec = 0, sz[N], tot, bestE, bestV;
+7 ll wt[2 * N], K, ans = 0;
+8 bool rem[2 * N], isReal[N];
+9 vector<pair<int, ll>> g[N];
+10  
+11 void addE(int u, int v, ll w) {
+12     to[ec] = v; wt[ec] = w; nx[ec] = head[u]; head[u] = ec++;
+13     to[ec] = u; wt[ec] = w; nx[ec] = head[v]; head[v] = ec++;
+14 }
+15 void rebuild(int u, int fa) {                    // chain of virtual vertices: degree <= 3
+16     int tmp = u;
+17     for (int i = 0; i < int(g[u].size()); i++) {
+18         int v = g[u][i].first;
+19         if (v == fa) continue;
+20         int nn = ++cnt;
+21         addE(tmp, nn, 0); addE(nn, v, g[u][i].second);
+22         tmp = nn;
+23         rebuild(v, u);
+24     }
+25 }
+26 void getSize(int u, int fa) {
+27     sz[u] = 1;
+28     for (int e = head[u]; e != -1; e = nx[e]) if (!rem[e] && to[e] != fa) { getSize(to[e], u); sz[u] += 
+sz[to[e]]; }
+29 }
+30 void findEdge(int u, int fa) {
+31     for (int e = head[u]; e != -1; e = nx[e]) if (!rem[e] && to[e] != fa) {
+32         int v = to[e], val = max(sz[v], tot - sz[v]);
+33         if (val < bestV) { bestV = val; bestE = e; }
+34         findEdge(v, u);
+35     }
+36 }
+37 void collect(int u, int fa, ll dist, vector<ll> &vec) {
+38     if (isReal[u]) vec.push_back(dist);
+39     for (int e = head[u]; e != -1; e = nx[e]) if (!rem[e] && to[e] != fa) collect(to[e], u, dist + 
+wt[e], vec);
+40 }
+41 void solve(int u) {
+42     getSize(u, 0);
+43     tot = sz[u];
+44     if (tot <= 1) return;
+45     bestV = INT_MAX; bestE = -1;
+46     findEdge(u, 0);
+47     int e = bestE, a = to[e ^ 1], b = to[e];
+48     rem[e] = rem[e ^ 1] = true;
+49     vector<ll> A, B;
+50     collect(a, 0, 0, A); collect(b, 0, wt[e], B);
+51     sort(B.begin(), B.end());
+52     for (int i = 0; i < int(A.size()); i++) ans += upper_bound(B.begin(), B.end(), K - A[i]) - 
+B.begin();
+53     solve(a); solve(b);
+54 }
+55  
+56 int main() {
+57     cin >> n >> K;
+58     for (int i = 1; i < n; i++) { int u, v; ll w; cin >> u >> v >> w; g[u].push_back({v, w}); 
+g[v].push_back({u, w}); }
+
+=== page 11 ===
+11NOI 篇  第 5 章  数据结构进阶
+59     for (int i = 0; i < 2 * n + 5; i++) head[i] = -1;
+60     for (int i = 1; i <= n; i++) isReal[i] = true;
+61     cnt = n;
+62     rebuild(1, 0);
+63     solve(1);
+64     cout << ans << "\n";                         // pairs u < v with dist(u, v) <= K
+65     return 0;
+66 }
+INPUT
+14 12
+1 2 1
+2 3 4
+2 4 5
+4 5 4
+5 6 4
+6 7 6
+6 8 6
+3 9 1
+8 10 5
+8 11 2
+3 12 6
+5 13 4
+2 14 2
+OUTPUT
+40
+KEY POINT Counts pairs of real vertices at distance ≤ K, checked against all-pairs DFS in Python. Each pair is counted
+exactly once: at the first chosen edge that separates the two vertices.
+5.6 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Tree chairman: version(u) = version(parent) + a[u]; path = u + v − lca − fa(lca).
+2. Beats node: max, strict second max, count of max, sum.
+3. chmin x: x ≥ max ⇒ stop; se < x < max ⇒ tag here; else recurse.
+4. Long-path: child with the deepest subtree; reuse its array shifted by one.
+5. Merging short chains costs their lengths: O(n) total.
+6. Leftist heap: dist(left) ≥ dist(right); merge along right spines, O(log n).
+7. Edge D&C: binarise (degree ≤ 3), cut the balanced edge, merge exactly two sides.
+5.6.1 Problems
+Problem Name Section What it tests
+P2633 Count on a tree 5.1 Path k-th smallest.
+P3302 森林 5.1 With merging forests.
+P6242 【模板】线段树  3 （区间最
+值操作、区间历史最值）
+5.2 Beats + historic maxima.
+P4314 CPU 监控 5.2 Assign, add, historic max.
+P5903 【模板】树上  K 级祖先 5.3 Long-path k-th ancestor.
+P3377 【模板】可并堆  1 5.4 Merge heaps, delete the minimum.
+
+=== page 12 ===
+12NOI 篇  第 5 章  数据结构进阶
+Problem Name Section What it tests
+P4220 通道 5.5 Edge D&C with two sides (hard).
+5.6.2 Practice	ladder
+1. Direct. P3377: leftist heap (5.4).
+2. One	twist. P2633: tree chairman (5.1).
+3. Idea	hidden. P6242: segment tree beats (5.2).
+4. Two	ideas. P5903: long-path (5.3).
+5.6.3 Experiments
+1. Count nodes created by tree_kth.cpp and compare with n log n.
+2. Count the "recurse" cases in beats.cpp over many random chmins.
+3. Compare long_path.cpp with a small-to-large map merge on a path-shaped tree.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

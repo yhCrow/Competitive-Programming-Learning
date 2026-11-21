@@ -1,0 +1,296 @@
+# 拓展篇 第17章 图论补充  (拓17)
+# source: 拓展篇 第17章 图论补充.pdf
+
+=== page 1 ===
+1拓展篇  第 17 章  图论补充
+第 17 章 	 图论补充
+Euler paths, 0-1 BFS, Kruskal tree, bipartite graphs Luogu (verified) 8 problems C++17 · all programs run
+17.1 欧拉路径 17.2 0-1 BFS
+17.3 Kruskal 重构树 17.4 二分图判定
+17.5 课后习题与实验
+17.1 欧拉路径
+Degree	conditions;	Hierholzer.
+IDEA An Euler	path ( 欧拉路径 ) uses every edge exactly once; an Euler	circuit also ends where it started.
+Undirected graph: a circuit exists iff all degrees are even (and the edges are connected); a path iff exactly 0
+or 2 vertices have odd degree, starting at one of them. Directed: in = out everywhere for a circuit; for a
+path, one vertex has out = in + 1 (the start) and one has in = out + 1.
+KEY POINT Hierholzer's	algorithm: DFS along unused edges; when a vertex has no unused edge left, push it onto the
+answer. The answer read backwards is the Euler path. Each edge is used once: O(m), with a pointer per
+vertex to the next unused edge.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 图 论 拓 展
+Use every edge once with Hierholzer, run Dijkstra with a deque when weights are 0 or 1, turn Kruskal into a
+tree for bottleneck queries, and test bipartiteness by colouring.
+
+=== page 2 ===
+2拓展篇  第 17 章  图论补充
+euler.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 vector<int> g[N];
+6 int ptr_[N], in_[N], out_[N];
+7 vector<int> path;
+8  
+9 void dfs(int u) {
+10     while (ptr_[u] < int(g[u].size())) {
+11         int v = g[u][ptr_[u]++];                    // use the edge once
+12         dfs(v);
+13     }
+14     path.push_back(u);                              // finished: add on the way back
+15 }
+16  
+17 int main() {
+18     int n, m;
+19     cin >> n >> m;
+20     for (int i = 0; i < m; i++) { int u, v; cin >> u >> v; g[u].push_back(v); out_[u]++; in_[v]++; }
+21     for (int i = 1; i <= n; i++) sort(g[i].begin(), g[i].end());   // smallest order first
+22     int start = 1, plus = 0, minus = 0;
+23     for (int i = 1; i <= n; i++) {
+24         if (out_[i] == in_[i] + 1) { start = i; plus++; }
+25         else if (in_[i] == out_[i] + 1) minus++;
+26         else if (in_[i] != out_[i]) { cout << "No\n"; return 0; }
+27     }
+28     if (!((plus == 0 && minus == 0) || (plus == 1 && minus == 1))) { cout << "No\n"; return 0; }
+29     dfs(start);
+30     if (int(path.size()) != m + 1) { cout << "No\n"; return 0; }  // some edges unreachable
+31     for (int i = int(path.size()) - 1; i >= 0; i--) cout << path[i] << " ";
+32     cout << "\n";
+33     return 0;
+34 }
+INPUT
+4 6
+1 3
+2 1
+4 2
+3 3
+1 2
+3 4
+OUTPUT
+1 2 1 3 3 4 2
+KEY POINT Lexicographically smallest directed Euler path (P7771): sort each adjacency list and start at the vertex
+with out = in + 1 (or vertex 1). Checking path.size() == m + 1 catches graphs whose edges are not all
+connected.
+TRAP Recursion depth can reach m; for m ≈ 10⁶ write the DFS with an explicit stack. For undirected graphs, mark
+each edge used by its id, because it appears in two adjacency lists (P2731 Riding the Fences, P1341).
+17.2 0-1	BFS
+Deque:	0	edges	front,	1	edges	back.
+
+=== page 3 ===
+3拓展篇  第 17 章  图论补充
+IDEA 0-1	BFS: when every edge weight is 0 or 1, use a deque instead of Dijkstra's heap. A 0-edge puts the
+neighbour at the front (same distance), a 1-edge at the back. The deque stays sorted by distance, so it is
+Dijkstra in O(n + m).
+KEY POINT Typical: grids where some moves are free and others cost one (break a wall, turn, change colour), and
+"minimum number of special edges" on any graph.
+zero_one_bfs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int R, C;
+6     cin >> R >> C;
+7     vector<string> g(R);
+8     for (int i = 0; i < R; i++) cin >> g[i];
+9     vector<vector<int>> dist(R, vector<int>(C, INT_MAX));
+10     deque<pair<int, int>> dq;
+11     dist[0][0] = 0; dq.push_back(make_pair(0, 0));
+12     int dx[4] = {1, -1, 0, 0}, dy[4] = {0, 0, 1, -1};
+13     while (!dq.empty()) {
+14         int x = dq.front().first, y = dq.front().second;
+15         dq.pop_front();
+16         for (int k = 0; k < 4; k++) {
+17             int a = x + dx[k], b = y + dy[k];
+18             if (a < 0 || a >= R || b < 0 || b >= C) continue;
+19             int w = g[a][b] == '#' ? 1 : 0;              // entering a wall costs one
+20             if (dist[x][y] + w < dist[a][b]) {
+21                 dist[a][b] = dist[x][y] + w;
+22                 if (w == 0) dq.push_front(make_pair(a, b)); else dq.push_back(make_pair(a, b));
+23             }
+24         }
+25     }
+26     cout << dist[R - 1][C - 1] << "\n";
+27     return 0;
+28 }
+INPUT
+4 4
+..#.
+.##.
+..#.
+#...
+OUTPUT
+0
+IDEA Fewest walls to break from the top-left to the bottom-right corner. Checked against Dijkstra written in
+Python.
+KEY POINT Unlike plain BFS, a cell can be improved after it was first reached, so check dist again (as above) instead of
+a visited flag (P4554).
+17.3 Kruskal	 重构树
+Merge	nodes;	bottleneck	=	LCA	value.
+
+=== page 4 ===
+4拓展篇  第 17 章  图论补充
+IDEA The Kruskal	reconstruction	tree (Kruskal 重构树 ): run Kruskal, but whenever an edge of weight w joins
+two components, create a new	node with value w and make both component roots its children. The result
+is a binary tree whose leaves are the original vertices, and values grow towards the root.
+KEY POINT The smallest possible "largest edge" on a path between a and b equals the value of LCA(a, b) in this tree.
+All vertices reachable from v using only edges ≤ x form one subtree: climb from v while the parent's
+value ≤ x (binary lifting). That makes "reachable within a limit" queries online ( 归程  P4768).
+
+=== page 5 ===
+5拓展篇  第 17 章  图论补充
+kruskal_tree.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 200005, LOG = 19;
+5 int fa[N], val[N], up[N][LOG], dep[N];
+6 vector<int> kids[N];
+7 int find(int x) { return fa[x] == x ? x : fa[x] = find(fa[x]); }
+8  
+9 void dfs(int u, int p) {
+10     up[u][0] = p;
+11     for (int k = 1; k < LOG; k++) up[u][k] = up[up[u][k - 1]][k - 1];
+12     for (int i = 0; i < int(kids[u].size()); i++) { dep[kids[u][i]] = dep[u] + 1; dfs(kids[u][i], u); }
+13 }
+14 int lca(int a, int b) {
+15     if (dep[a] < dep[b]) swap(a, b);
+16     for (int k = LOG - 1; k >= 0; k--) if (dep[a] - (1 << k) >= dep[b]) a = up[a][k];
+17     if (a == b) return a;
+18     for (int k = LOG - 1; k >= 0; k--) if (up[a][k] != up[b][k]) { a = up[a][k]; b = up[b][k]; }
+19     return up[a][0];
+20 }
+21  
+22 int main() {
+23     int n, m, q;
+24     cin >> n >> m >> q;
+25     vector<array<int, 3>> e(m);
+26     for (int i = 0; i < m; i++) cin >> e[i][1] >> e[i][2] >> e[i][0];   // (w, u, v)
+27     sort(e.begin(), e.end());
+28     for (int i = 1; i < 2 * n; i++) fa[i] = i;
+29     int cnt = n;
+30     for (int i = 0; i < m; i++) {
+31         int a = find(e[i][1]), b = find(e[i][2]);
+32         if (a == b) continue;
+33         val[++cnt] = e[i][0];                       // new node for this merge
+34         kids[cnt].push_back(a); kids[cnt].push_back(b);
+35         fa[a] = fa[b] = cnt;
+36     }
+37     dfs(cnt, 0);                                    // the last node is the root (graph connected)
+38     while (q--) { int a, b; cin >> a >> b; cout << val[lca(a, b)] << "\n"; }
+39     return 0;
+40 }
+INPUT
+6 7 4
+1 2 4
+2 3 2
+1 3 7
+3 4 5
+4 5 1
+2 5 9
+5 6 3
+1 3
+1 6
+4 6
+2 4
+OUTPUT
+4
+5
+3
+5
+IDEA Answers checked in Python by adding edges in weight order until a and b connect. The tree has 2n − 1
+nodes; leaves have value 0.
+KEY POINT Compared with 货车运输  ( 进阶篇  第 11 章 ), which stored the bottleneck on binary-lifting jumps, this
+turns the bottleneck into a single LCA value and also gives the whole reachable set as a subtree.
+
+=== page 6 ===
+6拓展篇  第 17 章  图论补充
+17.4 二分图判定
+Two-colouring;	odd	cycles.
+IDEA A graph is bipartite ( 二分图 ) iff it can be 2-coloured so every edge joins different colours, iff it has no
+odd	cycle. Check by BFS or DFS colouring each component: a conflict (an edge inside one colour) proves
+an odd cycle.
+KEY POINT Each component can be coloured in exactly two ways (swap the colours). Problems often ask for the
+better of the two per component (P1330: guard the fewest nodes so every edge has exactly one guard).
+bipartite.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n, m;
+6     cin >> n >> m;
+7     vector<vector<int>> g(n + 1);
+8     for (int i = 0; i < m; i++) { int u, v; cin >> u >> v; g[u].push_back(v); g[v].push_back(u); }
+9     vector<int> col(n + 1, -1);
+10     int total = 0;
+11     for (int s = 1; s <= n; s++) {
+12         if (col[s] != -1) continue;
+13         int cnt[2] = {0, 0};
+14         queue<int> q; col[s] = 0; q.push(s);
+15         while (!q.empty()) {
+16             int u = q.front(); q.pop(); cnt[col[u]]++;
+17             for (int k = 0; k < int(g[u].size()); k++) {
+18                 int v = g[u][k];
+19                 if (col[v] == -1) { col[v] = col[u] ^ 1; q.push(v); }
+20                 else if (col[v] == col[u]) { cout << "Impossible\n"; return 0; }   // odd cycle
+21             }
+22         }
+23         total += min(cnt[0], cnt[1]);              // the cheaper side of this component
+24     }
+25     cout << total << "\n";
+26     return 0;
+27 }
+INPUT 1
+3 3
+1 2
+1 3
+2 3
+OUTPUT 1
+Impossible
+INPUT 2
+3 2
+1 2
+2 3
+OUTPUT 2
+1
+IDEA A triangle is an odd cycle: Impossible. The path 1–2–3 colours as 0, 1, 0: guarding {2} (one node) or {1, 3}
+(two); take 1.
+KEY POINT Alternatives: DSU with "enemy" copies ( 关押罪犯  P1525 binary searches the answer and checks
+bipartiteness); weighted DSU storing parity to the root, which also handles edges arriving one by one.
+
+=== page 7 ===
+7拓展篇  第 17 章  图论补充
+17.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Undirected: circuit ⇔ all even; path ⇔ 0 or 2 odd vertices. Directed: in/out balance.
+2. Hierholzer: DFS unused edges, push vertex when stuck, reverse.
+3. Check path length m + 1 for connectivity of the edges.
+4. 0-1 BFS: 0-edge to the front, 1-edge to the back; O(n + m).
+5. Kruskal tree: each merge makes a node with the edge weight; bottleneck = LCA value.
+6. Reachable with edges ≤ x: climb while parent value ≤ x; the subtree is the set.
+7. Bipartite ⇔ no odd cycle; colour by BFS per component.
+17.5.1 Problems
+Problem Name Section What it tests
+P7771 【模板】欧拉路径 17.1 Directed, smallest order.
+P2731 骑马修栅栏  Riding the
+Fences
+17.1 Undirected, multi-edges.
+P1341 无序字母对 17.1 Letters as vertices, pairs as edges.
+P4554 小明的游戏 17.2 0-1 BFS on a grid.
+P4768 归程 17.3 Kruskal tree + Dijkstra, online.
+P1967 货车运输 17.3 Maximum spanning tree / Kruskal tree.
+P1330 封锁阳光大学 17.4 Cheaper colour per component.
+P1525 关押罪犯 17.4 Binary search + bipartite check.
+17.5.2 Practice	ladder
+1. Direct. P1330: two-colouring (17.4).
+2. One	twist. P4554: 0-1 BFS (17.2).
+3. Idea	hidden. P7771: Hierholzer (17.1).
+4. Two	ideas. P1525: bipartite + binary search (17.4).
+5. Stretch. P4768: Kruskal tree (17.3).
+17.5.3 Experiments
+1. Build a graph with two odd-degree vertices and trace Hierholzer by hand.
+2. Replace the deque in zero_one_bfs.cpp by a plain queue and find a grid where it fails.
+3. Draw the Kruskal tree for the sample graph and read each answer off an LCA.
+4. Count the odd cycles found by bipartite.cpp in random graphs.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

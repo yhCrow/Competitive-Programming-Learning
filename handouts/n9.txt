@@ -1,0 +1,128 @@
+# NOI篇 第9章 广义后缀自动机  (N9)
+# source: NOI篇 第09章 广义后缀自动机.pdf
+
+=== page 1 ===
+1NOI 篇  第 9 章  广义后缀自动机
+第 9 章 	 广义后缀自动机
+General suffix automaton Luogu (verified) 2 problems C++17 · all programs run
+9.1 广义  SAM 9.2 课后习题与实验
+9.1 广义 	SAM
+Reuse	/	clone	on	existing	transitions;	distinct	substrings.
+IDEA A general	suffix	automaton ( 广义后缀自动机 ) accepts every substring of several strings at once. Insert
+the strings one after another, restarting from the root each time; but when the transition for the next
+character already	exists, do not create a new state: reuse it, or clone it if its length is wrong. Without that
+check the automaton gets duplicate, unreachable states and counts go wrong (P6139).
+KEY POINT Equivalent safe construction: build a trie of all strings, then add trie nodes to the SAM in BFS order, each
+extending from its parent's state. Distinct substrings of all strings = Σ (len[v] − len[link[v]]), as for one
+string ( 拓展篇  第 3 章 ). Keeping, per state, which strings reach it answers "substrings common to k
+strings".
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+One suffix automaton for many strings: restart from the root for each string and reuse or clone existing
+transitions instead of creating duplicate states.
+
+=== page 2 ===
+2NOI 篇  第 9 章  广义后缀自动机
+general_sam.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 2000005;
+5 int len_[N], link_[N], nxt[N][26], sz = 1;
+6  
+7 int extend(int last, int c) {                    // returns the state for "last + c"
+8     if (nxt[last][c]) {                          // already exists: reuse or clone
+9         int q = nxt[last][c];
+10         if (len_[q] == len_[last] + 1) return q;
+11         int cl = sz++;
+12         len_[cl] = len_[last] + 1;
+13         memcpy(nxt[cl], nxt[q], sizeof(nxt[q]));
+14         link_[cl] = link_[q];
+15         for (int p = last; p != -1 && nxt[p][c] == q; p = link_[p]) nxt[p][c] = cl;
+16         link_[q] = cl;
+17         return cl;
+18     }
+19     int cur = sz++;
+20     len_[cur] = len_[last] + 1;
+21     int p = last;
+22     while (p != -1 && !nxt[p][c]) { nxt[p][c] = cur; p = link_[p]; }
+23     if (p == -1) link_[cur] = 0;
+24     else {
+25         int q = nxt[p][c];
+26         if (len_[p] + 1 == len_[q]) link_[cur] = q;
+27         else {
+28             int cl = sz++;
+29             len_[cl] = len_[p] + 1;
+30             memcpy(nxt[cl], nxt[q], sizeof(nxt[q]));
+31             link_[cl] = link_[q];
+32             while (p != -1 && nxt[p][c] == q) { nxt[p][c] = cl; p = link_[p]; }
+33             link_[q] = link_[cur] = cl;
+34         }
+35     }
+36     return cur;
+37 }
+38  
+39 int main() {
+40     int k;
+41     cin >> k;
+42     link_[0] = -1;
+43     for (int t = 0; t < k; t++) {
+44         string s; cin >> s;
+45         int last = 0;                            // every string starts at the root
+46         for (int i = 0; i < int(s.size()); i++) last = extend(last, s[i] - 'a');
+47     }
+48     long long distinct = 0;
+49     for (int v = 1; v < sz; v++) distinct += len_[v] - len_[link_[v]];
+50     cout << distinct << "\n";
+51     return 0;
+52 }
+INPUT 1
+5
+abab
+baba
+abc
+cab
+aaab
+OUTPUT 1
+17
+INPUT 2 OUTPUT 2
+47
+
+=== page 3 ===
+3NOI 篇  第 9 章  广义后缀自动机
+6
+bbbbaaa
+abbbab
+aaababab
+baba
+bbbbbba
+abbb
+KEY POINT Distinct substrings over all strings, checked against putting every substring of every string into a Python
+set. Strings that are prefixes of each other ("abab" and "ab…") are where the reuse branch matters.
+TRAP The bug to avoid: plain extend after resetting last = 0 creates a fresh state even when the transition exists,
+so a string seen before gets a second, disconnected state. That is exactly what the first branch of extend()
+prevents.
+KEY POINT Typical problems: count substrings that occur in at least k of the strings (mark each state with the strings
+that reach it while walking each string); 诸神眷顾的幻想乡  (P3346) builds the general SAM of all root-to-
+leaf paths of a tree with at most 20 leaves.
+9.2 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Insert each string from the root.
+2. Transition exists: same length + 1 ⇒ reuse; otherwise clone it.
+3. Distinct substrings: Σ len[v] − len[link[v]].
+4. Alternative: trie of all strings, extend in BFS order.
+9.2.1 Problems
+Problem Name Section What it tests
+P6139 【模板】广义后缀自动机
+（广义  SAM ）
+9.1 Distinct substrings of many strings.
+P3346 诸神眷顾的幻想乡 9.1 Root-to-leaf paths of a tree.
+9.2.2 Practice	ladder
+1. Direct. P6139: general SAM (9.1).
+2. One	twist. P3346: SAM over a tree (9.1).
+9.2.3 Experiments
+1. Remove the reuse branch and find inputs where the count goes wrong.
+2. Build the trie + BFS version and compare state counts.
+3. Count substrings common to all strings by marking states per string.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

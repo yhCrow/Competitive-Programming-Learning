@@ -1,0 +1,149 @@
+# NOI篇 第1章 上下界网络流  (N1)
+# source: NOI篇 第01章 上下界网络流.pdf
+
+=== page 1 ===
+1NOI 篇  第 1 章  上下界网络流
+第 1 章 	 上下界网络流
+Flows with lower bounds Luogu (verified) 3 problems C++17 · all programs run
+1.1 上下界网络流 1.2 课后习题与实验
+1.1 上下界网络流
+Circulations,	s–t	feasibility,	max	and	min	flow.
+IDEA Flows	with	lower	bounds ( 上下界网络流 ): every edge needs low ≤ f ≤ high. Force the minimum first:
+send low on every edge unconditionally. That leaves an imbalance at the vertices: ex[v] = (lows coming
+in) − (lows going out). Keep the edge with capacity high − low for the free part, and fix the imbalance with
+a new super source S' → v (capacity ex[v] > 0) and v → super sink T' (capacity −ex[v]).
+KEY POINT Feasible	circulation ( 无源汇 ): feasible iff max flow S' → T' saturates every S' edge. With	source	s	and
+sink	t ( 有源汇 ): first add t → s with capacity ∞, so the s–t flow can circulate; check feasibility the same
+way; the flow on t → s is then one feasible flow value f₀.
+Question After a feasible flow is found (edge t → s removed) Answer
+feasible? S' → T' max flow saturates all S' edges yes / no
+maximum s–t flow (P5192) run max flow s → t in the residual graph f₀ + that flow
+minimum s–t flow (P4843) run max flow t → s in the residual graph f₀ − that flow
+minimum cost (P4043) cost flow from S' to T' with costs, plus Σ low·cost cost of the forced part + extra
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Force every lower bound first, repair the imbalance with a super source and sink, and then push the flow
+up or down for the maximum or minimum feasible s–t flow.
+
+=== page 2 ===
+2NOI 篇  第 1 章  上下界网络流
+lower_bound_flow.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long INF = 1e18;
+5 struct Edge { int to; long long cap; };
+6 struct Flow {
+7     vector<Edge> e; vector<vector<int>> g; vector<int> level, it; int n;
+8     Flow(int n) : g(n), level(n), it(n), n(n) {}
+9     int add(int u, int v, long long c) { g[u].push_back(e.size()); e.push_back(Edge{v, c}); 
+g[v].push_back(e.size()); e.push_back(Edge{u, 0}); return e.size() - 2; }
+10     bool bfs(int s, int t) {
+11         fill(level.begin(), level.end(), -1); queue<int> q; level[s] = 0; q.push(s);
+12         while (!q.empty()) { int u = q.front(); q.pop(); for (int k = 0; k < int(g[u].size()); k++) { 
+Edge &x = e[g[u][k]]; if (x.cap > 0 && level[x.to] < 0) { level[x.to] = level[u] + 1; q.push(x.to); } } 
+}
+13         return level[t] >= 0;
+14     }
+15     long long dfs(int u, int t, long long f) {
+16         if (u == t) return f;
+17         for (int &k = it[u]; k < int(g[u].size()); k++) {
+18             int id = g[u][k]; Edge &x = e[id];
+19             if (x.cap > 0 && level[x.to] == level[u] + 1) { long long got = dfs(x.to, t, min(f, x.cap)); 
+if (got) { x.cap -= got; e[id ^ 1].cap += got; return got; } }
+20         }
+21         return 0;
+22     }
+23     long long maxflow(int s, int t) { long long r = 0; while (bfs(s, t)) { fill(it.begin(), it.end(), 
+0); while (long long f = dfs(s, t, INF)) r += f; } return r; }
+24 };
+25  
+26 int main() {
+27     int n, m, s, t;
+28     cin >> n >> m >> s >> t;
+29     Flow F(n + 3);
+30     int SS = n + 1, TT = n + 2;
+31     vector<long long> ex(n + 1, 0);
+32     for (int i = 0; i < m; i++) {
+33         int u, v; long long lo, hi;
+34         cin >> u >> v >> lo >> hi;
+35         F.add(u, v, hi - lo);                       // the free part
+36         ex[v] += lo; ex[u] -= lo;                   // the forced part
+37     }
+38     int ts = F.add(t, s, INF);                      // let the s-t flow circulate
+39     long long need = 0;
+40     for (int v = 1; v <= n; v++) {
+41         if (ex[v] > 0) { F.add(SS, v, ex[v]); need += ex[v]; }
+42         if (ex[v] < 0) F.add(v, TT, -ex[v]);
+43     }
+44     if (F.maxflow(SS, TT) != need) { cout << "no feasible flow\n"; return 0; }
+45     long long f0 = F.e[ts ^ 1].cap;                 // flow on t -> s = a feasible value
+46     F.e[ts].cap = F.e[ts ^ 1].cap = 0;              // remove the t -> s edge
+47     Flow G = F;                                     // copy for the minimum
+48     long long mx = f0 + F.maxflow(s, t);
+49     long long mn = f0 - G.maxflow(t, s);
+50     cout << mx << " " << mn << "\n";
+51     return 0;
+52 }
+INPUT 1
+4 6 1 4
+1 2 1 3
+1 3 0 2
+2 3 1 2
+OUTPUT 1
+5 2
+
+=== page 3 ===
+3NOI 篇  第 1 章  上下界网络流
+2 4 0 3
+3 4 2 3
+3 2 0 1
+INPUT 2
+3 2 1 3
+1 2 0 1
+2 3 2 3
+OUTPUT 2
+no feasible flow
+INPUT 3
+5 7 1 5
+1 2 0 3
+1 3 1 2
+2 4 1 3
+3 4 0 2
+4 5 2 3
+2 5 0 1
+3 2 0 2
+OUTPUT 3
+4 2
+KEY POINT Prints the maximum and minimum s–t flow, or that none is feasible. All three tests are checked in Python
+by trying every flow value on every edge (they are small on purpose); the second network is infeasible
+because 2–3 needs at least 2 but 1–2 can bring at most 1.
+TRAP Removing t → s means zeroing both directions of that edge pair before the second max flow; otherwise the
+flow just runs around it. The super source and sink must not be confused with s and t.
+1.2 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Send low on every edge; ex[v] = lows in − lows out.
+2. Free part: capacity high − low; S' → v (ex > 0), v → T' (−ex).
+3. Feasible ⇔ S'–T' max flow saturates every S' edge.
+4. With s, t: add t → s ∞ first; f0 = flow on it.
+5. Remove t → s; max = f0 + flow(s→t); min = f0 − flow(t→s).
+1.2.1 Problems
+Problem Name Section What it tests
+P5192 Shoot the Bullet | 东方文花
+帖
+1.1 Max flow with lower bounds.
+P4843 清理雪道 1.1 Min flow with lower bound 1 per edge.
+P4043 支线剧情 1.1 Min cost with lower bounds.
+1.2.2 Practice	ladder
+1. Direct. P4843: minimum flow (1.1).
+2. One	twist. P5192: maximum flow (1.1).
+3. Idea	hidden. P4043: with costs (1.1).
+
+=== page 4 ===
+4NOI 篇  第 1 章  上下界网络流
+1.2.3 Experiments
+1. Make LB2 feasible by changing one bound and check the program agrees.
+2. Print f0 and the extra flow separately for LB1.
+3. Build the circulation version (no s, t) and test it on a cycle with lower bounds.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

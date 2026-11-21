@@ -1,0 +1,202 @@
+# 拓展篇 第12章 数位 DP 与 SOS DP  (拓12)
+# source: 拓展篇 第12章 数位 DP 与 SOS DP.pdf
+
+=== page 1 ===
+1拓展篇  第 12 章  数位  DP 与  SOS DP
+第 12 章 	 数位 	DP	 与 	SOS	DP
+Digit DP and sum over subsets Luogu (verified) 7 problems C++17 · all programs run
+12.1 数位  DP 12.2 SOS DP
+12.3 课后习题与实验
+12.1 数位 	DP
+f(R)	−	f(L	−	1);	memoised	DFS	with	limit	and	lead.
+IDEA Digit	DP ( 数位  DP) counts numbers in [L, R] with a property of their digits. Count f(R) − f(L − 1), where
+f(N) counts 0 … N. Walk the digits of N from the top with a memoised DFS: state (position, whatever the
+property needs), plus two flags: limit (all digits so far equal N's, so the next one is capped) and lead (only
+leading zeros so far).
+KEY POINT Memoise only states with limit = false (and lead = false when it matters): those are shared by many
+prefixes. States with limit = true occur once per position, so they need no memo. Total work: positions ×
+states × 10.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 动 态 规 划 拓 展
+Count numbers in a range by walking their digits with limit and leading-zero flags, and sum over all subsets
+of every mask in n·2ⁿ.
+
+=== page 2 ===
+2拓展篇  第 12 章  数位  DP 与  SOS DP
+digit_count.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int dig[20], len_;
+5 long long memo[20][20];
+6 bool vis[20][20];
+7 int target;
+8  
+9 // count occurrences of `target` in all numbers formed from position pos downward
+10 long long dfs(int pos, int cnt, bool limit, bool lead) {
+11     if (pos == 0) return cnt;
+12     if (!limit && !lead && vis[pos][cnt]) return memo[pos][cnt];
+13     long long res = 0;
+14     int up = limit ? dig[pos] : 9;
+15     for (int x = 0; x <= up; x++) {
+16         bool nowLead = lead && x == 0;
+17         int add = (x == target && !nowLead) ? 1 : 0;   // leading zeros are not digits
+18         res += dfs(pos - 1, cnt + add, limit && x == up, nowLead);
+19     }
+20     if (!limit && !lead) { vis[pos][cnt] = true; memo[pos][cnt] = res; }
+21     return res;
+22 }
+23 long long countUpTo(long long n) {
+24     if (n < 0) return 0;
+25     len_ = 0;
+26     while (n > 0) { dig[++len_] = n % 10; n /= 10; }
+27     if (len_ == 0) dig[++len_] = 0;
+28     memset(vis, 0, sizeof(vis));
+29     return dfs(len_, 0, true, true);
+30 }
+31  
+32 int main() {
+33     long long a, b;
+34     cin >> a >> b;
+35     for (target = 0; target <= 9; target++) cout << countUpTo(b) - countUpTo(a - 1) << " ";
+36     cout << "\n";
+37     return 0;
+38 }
+INPUT 1
+1 99
+OUTPUT 1
+9 20 20 20 20 20 20 20 20 20
+INPUT 2
+123 4567
+OUTPUT 2
+1284 2361 2391 2395 1963 1363 1293 1285 1284 1284
+INPUT 3
+1 1000000
+OUTPUT 3
+488895 600001 600000 600000 600000 600000 600000 
+600000 600000 600000
+KEY POINT Digit counting (P2602): how many times each digit appears in a … b. All three tests are checked against a
+Python loop over every number. The memo is cleared for each N because it depends on the target digit
+only through cnt, but limit-free states are reused within one N.
+
+=== page 3 ===
+3拓展篇  第 12 章  数位  DP 与  SOS DP
+windy.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int dig[12];
+5 long long memo[12][12];
+6 bool vis[12][12];
+7  
+8 long long dfs(int pos, int last, bool limit, bool lead) {   // last digit placed (10: none yet)
+9     if (pos == 0) return lead ? 0 : 1;                       // the number 0 is not counted
+10     if (!limit && !lead && vis[pos][last]) return memo[pos][last];
+11     long long res = 0;
+12     int up = limit ? dig[pos] : 9;
+13     for (int x = 0; x <= up; x++) {
+14         if (!lead && abs(x - last) < 2) continue;            // neighbours must differ by >= 2
+15         bool nowLead = lead && x == 0;
+16         res += dfs(pos - 1, nowLead ? 10 : x, limit && x == up, nowLead);
+17     }
+18     if (!limit && !lead) { vis[pos][last] = true; memo[pos][last] = res; }
+19     return res;
+20 }
+21 long long countUpTo(long long n) {
+22     int len = 0;
+23     while (n > 0) { dig[++len] = n % 10; n /= 10; }
+24     return dfs(len, 10, true, true);
+25 }
+26  
+27 int main() {
+28     long long a, b;
+29     cin >> a >> b;
+30     cout << countUpTo(b) - countUpTo(a - 1) << "\n";
+31     return 0;
+32 }
+INPUT 1
+1 10
+OUTPUT 1
+9
+INPUT 2
+25 50
+OUTPUT 2
+20
+INPUT 3
+1 100000
+OUTPUT 3
+28002
+IDEA Windy numbers (P2657): no leading zero, adjacent digits differ by at least 2. The state is just the last digit;
+while still in leading zeros there is no "last digit", so the difference rule is skipped.
+KEY POINT The memo does not depend on N here (only on position and last digit), so it could be kept across calls;
+clearing it is still the safer habit.
+12.2 SOS	DP
+Subset	sums	one	bit	at	a	time.
+IDEA SOS	DP ( 子集和  DP, sum over subsets): for every mask, g[mask] = Σ f[sub] over all subsets sub of mask.
+Enumerating subsets costs 3ⁿ ( 进阶篇  第 17 章 ); SOS does it in n·2ⁿ by adding one bit at a time: for each bit
+i, for each mask that has bit i, g[mask] += g[mask without bit i].
+
+=== page 4 ===
+4拓展篇  第 12 章  数位  DP 与  SOS DP
+KEY POINT After processing bits 0 … i, g[mask] holds the sum over subsets that differ from mask only in bits 0 … i.
+When all bits are done, that is every subset. The same loop with the condition reversed gives superset
+sums.
+sos.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<long long> g(1 << n);
+8     for (int m = 0; m < (1 << n); m++) cin >> g[m];
+9     for (int i = 0; i < n; i++)                        // add bit i
+10         for (int m = 0; m < (1 << n); m++)
+11             if (m >> i & 1) g[m] += g[m ^ (1 << i)];   // subsets without bit i are already summed
+12     for (int m = 0; m < (1 << n); m++) cout << g[m] << " ";
+13     cout << "\n";
+14     return 0;
+15 }
+INPUT
+4
+8 6 4 5 4 2 8 4 1 0 3 6 6 4 8 5
+OUTPUT
+8 14 12 23 12 20 24 41 9 15 16 33 19 31 42 74
+IDEA Checked against a direct Python sum over all subsets for random values on 4 bits. With n = 20 this is
+2·10⁷ steps instead of 3²⁰ ≈ 3.5·10⁹.
+KEY POINT Uses: for each number, does some other number share no bit with it (look up the complement's subsets);
+counting pairs with AND = 0; inclusion-exclusion over masks done for all masks at once.
+TRAP Loop order matters: bits	outside, masks inside. Swapping them counts some subsets several times.
+12.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Range [L, R] = f(R) − f(L − 1).
+2. DFS from the top digit: (pos, state, limit, lead); memo only when !limit (and !lead).
+3. limit: next digit ≤ N's digit; lead: still in leading zeros.
+4. SOS: for each bit i, for masks with bit i: g[m] += g[m ^ (1 << i)]; n·2ⁿ.
+5. Bits outside, masks inside.
+12.3.1 Problems
+Problem Name Section What it tests
+P2602 数字计数 12.1 Count each digit in a range.
+P2657 windy 数 12.1 Last digit as the state.
+P6218 Round Numbers S 12.1 Binary digits: zeros ≥ ones.
+
+=== page 5 ===
+5拓展篇  第 12 章  数位  DP 与  SOS DP
+Problem Name Section What it tests
+P4317 花神的数论题 12.1 Count numbers by popcount, then fast power.
+P4127 同类分布 12.1 Fix the digit sum, track the remainder.
+P2518 计数 12.1 Permutations of the digits below N.
+P4999 烦人的数学作业 12.1 Sum of digit sums in a range.
+12.3.2 Practice	ladder
+1. Direct. P2602: first digit DP (12.1).
+2. One	twist. P2657: state = last digit (12.1).
+3. Idea	hidden. P6218: binary digits (12.1).
+4. Two	ideas. P4127: enumerate a parameter outside (12.1).
+5. Stretch. P4317: count then combine (12.1).
+12.3.3 Experiments
+1. Remove the lead flag from digit_count.cpp and see how the count of 0 changes.
+2. Count memo hits in windy.cpp for N = 10¹⁸.
+3. Write the 3ⁿ subset loop and compare with sos.cpp for n = 16.
+4. Change sos.cpp to superset sums and check with brute force.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

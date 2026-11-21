@@ -1,0 +1,204 @@
+# 拓展篇 第10章 博弈论  (拓10)
+# source: 拓展篇 第10章 博弈论.pdf
+
+=== page 1 ===
+1拓展篇  第 10 章  博弈论
+第 10 章 	 博弈论
+Impartial games Luogu (verified) 9 problems C++17 · all programs run
+10.1 Nim 游戏 10.2 SG 函数
+10.3 经典博弈 10.4 课后习题与实验
+10.1 Nim	 游戏
+Winning	/	losing	positions;	XOR	of	piles.
+IDEA In an impartial	game ( 公平组合游戏 ) both players have the same moves, they alternate, and whoever
+cannot move loses. Every position is either winning (some move leads to a losing position) or losing
+(every move leads to a winning position, or there is no move). Positions with no moves are losing.
+KEY POINT Nim: several piles, a move removes any positive number of stones from one pile. The first player wins
+exactly when the XOR of all pile sizes is non-zero. From a non-zero XOR there is always a move to XOR 0,
+and from XOR 0 every move makes it non-zero.
+nim.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int T;
+6     cin >> T;
+7     while (T--) {
+8         int n, x = 0;
+9         cin >> n;
+10         for (int i = 0; i < n; i++) { int a; cin >> a; x ^= a; }
+11         cout << (x != 0 ? "Yes" : "No") << "\n";   // first player wins?
+12     }
+13     return 0;
+14 }
+INPUT
+2
+2
+1 1
+2
+1 0
+OUTPUT
+No
+Yes
+IDEA Piles 1 1: XOR 0, the first player loses (the second copies every move). Piles 1 0: XOR 1, take the stone
+(P2197).
+KEY POINT Winning move: let x = XOR of all piles; pick a pile a with a ⊕ x < a and reduce it to a ⊕ x (P1247 prints it).
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 学 拓 展
+Winning and losing positions, Nim and its XOR rule, Sprague–Grundy numbers for sums of games, and the
+classic games with formulas.
+
+=== page 2 ===
+2拓展篇  第 10 章  博弈论
+10.2 SG	 函数
+mex	of	moves;	a	sum	of	games	XORs	its	SG	values.
+IDEA The Sprague–Grundy	theorem: every impartial position has a Grundy	number SG = mex of the SG
+values of the positions it can move to (mex = smallest non-negative integer not in the set). A position is
+losing iff SG = 0, and a sum	of	independent	games has SG = XOR of their SG values: every game behaves
+like a Nim pile of size SG.
+KEY POINT So: compute SG for one small game by brute force (memoised mex), then XOR across the independent
+parts. A Nim pile of size n has SG = n, which is why plain Nim uses the XOR of the sizes.
+subtraction_game.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int sg[100005];
+5  
+6 int main() {
+7     int k;
+8     cin >> k;
+9     vector<int> s(k);
+10     for (int i = 0; i < k; i++) cin >> s[i];          // allowed numbers to remove
+11     int n;
+12     cin >> n;
+13     vector<int> pile(n);
+14     int mx = 0;
+15     for (int i = 0; i < n; i++) { cin >> pile[i]; mx = max(mx, pile[i]); }
+16     for (int x = 0; x <= mx; x++) {                   // sg[x] = mex of reachable values
+17         vector<bool> seen(k + 2, false);              // mex is at most k
+18         for (int i = 0; i < k; i++)
+19             if (s[i] <= x && sg[x - s[i]] <= k) seen[sg[x - s[i]]] = true;
+20         int m = 0;
+21         while (seen[m]) m++;
+22         sg[x] = m;
+23     }
+24     int x = 0;
+25     for (int i = 0; i < n; i++) x ^= sg[pile[i]];     // sum of games = XOR
+26     cout << (x ? "first" : "second") << "\n";
+27     return 0;
+28 }
+INPUT 1
+3
+1 3 4
+2
+2 5
+OUTPUT 1
+first
+INPUT 2
+3
+1 3 4
+2
+7 7
+OUTPUT 2
+second
+INPUT 3
+3
+1 3 4
+3
+6 10 13
+OUTPUT 3
+first
+
+=== page 3 ===
+3拓展篇  第 10 章  博弈论
+IDEA Subtraction game: from a pile you may remove 1, 3 or 4 stones. SG values for 0, 1, 2, … are 0, 1, 0, 1, 2, 3, 2,
+0, 1, 0, 1, 2, … (periodic). Several piles: XOR their SG values. The expected answers here come from an
+independent Python computation.
+KEY POINT A position's SG has at most k + 1 possible values when there are k moves, so the "seen" array only needs
+size k + 2. Splitting moves (one pile becomes two) give SG = XOR of the parts, inside the mex ( 分裂游戏
+P3185, E&D P2148).
+10.3 经典博弈
+Wythoff,	anti-Nim,	Euclid's	game.
+IDEA Some games have a formula instead. Wythoff's	game ( 威佐夫博弈 ): two piles; remove any amount from
+one pile, or the same amount from both. With a ≤ b, the position is losing exactly when a = ⌊(b − a) · φ⌋, φ
+= (1 + √5)/2 (P2252).
+KEY POINT Anti-Nim ( 反  Nim, the player taking the last stone loses, P4279): the first player wins iff (all piles are 1
+and their number is even) or (some pile is > 1 and the XOR is non-zero). Euclid's	game (P1290): whoever
+first meets a pair with b ≥ 2a can always win.
+wythoff.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     long long a, b;
+6     cin >> a >> b;
+7     if (a > b) swap(a, b);
+8     long double phi = (1 + sqrtl(5.0L)) / 2;
+9     long long cold = llround(floorl((b - a) * phi));  // the losing position with this difference
+10     cout << (a == cold ? 0 : 1) << "\n";              // 1: the first player wins
+11     return 0;
+12 }
+INPUT 1
+2 1
+OUTPUT 1
+0
+INPUT 2
+3 5
+OUTPUT 2
+0
+INPUT 3
+1 1
+OUTPUT 3
+1
+INPUT 4
+4 7
+OUTPUT 4
+0
+IDEA Losing positions (a, b): (0, 0), (1, 2), (3, 5), (4, 7), (6, 10), … Each difference b − a = 0, 1, 2, 3, … appears
+exactly once, and a is ⌊difference · φ⌋.
+KEY POINT Use long double (or exact integer checks) for φ: with values up to 10⁹ a double can round the wrong way.
+When no formula is known, compute SG values for small sizes and look	for	a	pattern, then prove or trust
+it.
+
+=== page 4 ===
+4拓展篇  第 10 章  博弈论
+TRAP Read who loses: in normal play the player who cannot move loses; in "misère" play the player who makes
+the last move loses, and the XOR rule changes (anti-Nim). Check both small cases by hand before trusting
+a formula.
+10.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. No move ⇒ losing; winning ⇔ some move to a losing position.
+2. Nim: first player wins ⇔ XOR ≠ 0; move a pile a to a ⊕ x.
+3. SG(x) = mex of SG of moves; losing ⇔ SG = 0.
+4. Independent games: XOR the SG values.
+5. Wythoff (a ≤ b): losing ⇔ a = ⌊(b − a)φ⌋.
+6. Anti-Nim: win ⇔ (all 1 and even count) or (some > 1 and XOR ≠ 0).
+7. No formula? Tabulate SG for small sizes and look for a pattern.
+10.4.1 Problems
+Problem Name Section What it tests
+P2197 【模板】 Nim 游戏 10.1 XOR of piles.
+P1247 取火柴游戏 10.1 Print the winning move.
+P2252 【模板】威佐夫博弈  / 取
+石子游戏
+10.3 Golden ratio test.
+P4279 小约翰的游戏 10.3 Anti-Nim rule.
+P1290 欧几里德的游戏 10.3 b ≥ 2a decides.
+P2148 E&D 10.2 SG by pattern on binary digits.
+P3185 分裂游戏 10.2 Each bean is its own game.
+P2575 高手过招 10.2 Rows as staircase Nim.
+P4301 新 Nim 游戏 10.1 Linear basis to keep XOR non-zero ( 第 11 章 ).
+10.4.2 Practice	ladder
+1. Direct. P2197: Nim (10.1).
+2. One	twist. P1247: winning move (10.1).
+3. Idea	hidden. P2252: Wythoff (10.3).
+4. Two	ideas. P4279: anti-Nim (10.3).
+5. Stretch. P3185: SG of splits (10.2).
+10.4.3 Experiments
+1. Play Nim 1 2 3 against a friend and find why the second player always wins.
+2. Print SG values of the 1-3-4 subtraction game up to 30 and find the period.
+3. List Wythoff losing positions up to 100 by brute force and compare with the formula.
+4. Brute-force anti-Nim for piles ≤ 3 and check the rule.
+
+=== page 5 ===
+5拓展篇  第 10 章  博弈论
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

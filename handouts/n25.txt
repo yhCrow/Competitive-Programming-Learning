@@ -1,0 +1,207 @@
+# NOI篇 第25章 NOI 与 IOI 专题选讲  (N25)
+# source: NOI篇 第25章 NOI 与 IOI 专题选讲.pdf
+
+=== page 1 ===
+1NOI 篇  第 25 章  NOI 与  IOI 专题选讲
+第 25 章 	NOI	 与 	IOI	 专题选讲
+Chinese postman, misère games, and rare topics Luogu (verified) 1 problems C++17 · all programs run
+25.1 中国邮路问题 25.2 Anti-SG 与罕见专题
+25.3 提交答案题 25.4 树上删边游戏
+25.5 课后习题与实验
+25.1 中国邮路问题
+Pair	odd	vertices	by	shortest	paths.
+IDEA The Chinese	postman	problem ( 中国邮路问题 ): the shortest closed walk that uses every edge of a
+connected undirected graph at least once. If every degree is even, the answer is the total weight (an Euler
+circuit, 拓展篇  第 17 章 ). Otherwise some edges are walked twice: pair up the odd-degree vertices (there is
+an even number of them) with the smallest total shortest-path distance, and add that.
+KEY POINT Pairing odd vertices = minimum-weight perfect matching on their shortest-path distances. With up to
+about 20 odd vertices, a bitmask DP matches them (always pair the lowest unmatched vertex); in general
+it needs weighted blossom. The directed version is a min-cost flow on the in/out-degree imbalance.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+The Chinese postman problem with a bitmask matching, the rule for misère game sums, and a reference
+table of the rare NOI / IOI topics with one-line ideas.
+
+=== page 2 ===
+2NOI 篇  第 25 章  NOI 与  IOI 专题选讲
+chinese_postman.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 int main() {
+6     int n, m;
+7     cin >> n >> m;
+8     const ll INF = LLONG_MAX / 4;
+9     vector<vector<ll>> d(n + 1, vector<ll>(n + 1, INF));
+10     vector<int> deg(n + 1, 0);
+11     ll total = 0;
+12     for (int i = 1; i <= n; i++) d[i][i] = 0;
+13     for (int i = 0; i < m; i++) {
+14         int u, v; ll w; cin >> u >> v >> w;
+15         d[u][v] = min(d[u][v], w); d[v][u] = min(d[v][u], w);
+16         deg[u]++; deg[v]++; total += w;
+17     }
+18     for (int k = 1; k <= n; k++) for (int i = 1; i <= n; i++) for (int j = 1; j <= n; j++)
+19         if (d[i][k] < INF && d[k][j] < INF) d[i][j] = min(d[i][j], d[i][k] + d[k][j]);
+20     vector<int> odd;
+21     for (int v = 1; v <= n; v++) if (deg[v] % 2) odd.push_back(v);
+22     int k = odd.size();
+23     vector<ll> f(1 << k, INF);
+24     f[0] = 0;
+25     for (int S = 0; S < (1 << k); S++) {          // S = already paired odd vertices
+26         if (f[S] >= INF) continue;
+27         int i = 0;
+28         while (i < k && (S >> i & 1)) i++;
+29         if (i == k) continue;
+30         for (int j = i + 1; j < k; j++)           // pair the lowest unpaired vertex i with j
+31             if (!(S >> j & 1)) f[S | 1 << i | 1 << j] = min(f[S | 1 << i | 1 << j], f[S] + d[odd[i]]
+[odd[j]]);
+32     }
+33     cout << total + f[(1 << k) - 1] << "\n";
+34     return 0;
+35 }
+INPUT
+6 9
+1 2 3
+2 3 4
+3 4 2
+4 5 5
+5 6 1
+6 1 2
+2 5 6
+1 4 7
+3 6 3
+OUTPUT
+39
+KEY POINT Checked against a separate recursive pairing in Python on the same shortest-path distances. Pairing the
+lowest unpaired vertex first avoids counting each matching many times: O(2ᵏ · k).
+25.2 Anti-SG	 与罕见专题
+SJ	theorem;	a	table	of	rare	topics.
+
+=== page 3 ===
+3NOI 篇  第 25 章  NOI 与  IOI 专题选讲
+IDEA Misère	and	Anti-SG	games (Anti-SG / SJ 定理 ): in "last player to move loses" versions, plain SG fails. For
+sums of games where a position with SG = 0 everywhere has no move, the first player wins iff either (the
+SG of the whole sum ≠ 0 and some single game has SG > 1) or (the sum's SG = 0 and no single game has SG
+> 1). Anti-Nim ( 拓展篇  第 10 章 ) is the special case.
+KEY POINT Other game patterns that appear at NOI: "every-SG" (players must move in every component, decided by
+the longest finishing time), games on graphs solved by retrograde analysis (BFS backwards from final
+positions, counting remaining moves per state), and partisan games where surreal-number values replace
+SG values (rare).
+Topic One-line idea When it appears
+LCT with subtree
+information
+keep, per node, the sum over its "virtual" (non-preferred)
+children; access() updates it when a child switches
+dynamic trees with subtree sums /
+sizes
+ETT (Euler tour tree) store the Euler tour of each tree in a balanced tree; link / cut =
+split and concatenate tours
+dynamic forests with subtree
+queries
+dynamic convex hull upper and lower hull in a std::set; insert a point, then delete
+neighbours that are no longer convex
+online hull / line queries
+weighted general
+matching
+blossom algorithm with dual variables (O(n³)); long, rarely
+needed
+max-weight matching in non-
+bipartite graphs
+±1 RMQ / Four Russians Euler-tour LCA as RMQ on depths that change by ±1;
+precompute small blocks; O(n) build, O(1) query
+very many LCA queries
+border series ( 字符串周
+期 )
+the borders of a string form O(log n) arithmetic progressions
+(periodicity lemma)
+counting periods, string DP
+Lagrange inversion coefficients of the inverse series g of f: [xⁿ] gᵏ = (k/n) [x⁻ᵏ] f⁻ⁿ counting trees and lattice paths
+with generating functions
+Bell / Stirling numbers
+in O(n log n)
+EGF: Σ Bₙ xⁿ/n! = e^(eˣ − 1), computed with polynomial exp
+(NOI 篇  第 7 章 )
+set partitions for large n
+polynomial composition f(g(x)) mod xⁿ; O(n log² n)–O(n√n log n) methods exist very rare
+KEY POINT These are listed so the names are familiar when they appear; each one is a project on its own. The core
+NOI toolkit is the rest of NOI 篇 : when a problem looks like one of these, first check whether a simpler
+tool from the earlier chapters already solves it.
+25.3 提交答案题
+Inspect	files;	exact	for	easy	ones,	search	for	the	rest.
+IDEA Output-only	tasks ( 提交答案题 ): you get the input files and submit outputs, often scored by quality.
+There is no time limit, so the strategy is different: look at each input first (many are special: a tree, a path,
+tiny n), solve the easy ones exactly, then run search or heuristics (simulated annealing 第 24 章 , random
+restarts, local search) on the rest for hours on your own machine.
+KEY POINT Write a checker that scores your output before trying to improve it, keep the best output of every file, and
+spend effort where the score gap is largest. Hand-made constructions and visualising the input often beat a
+general algorithm on special files.
+
+=== page 4 ===
+4NOI 篇  第 25 章  NOI 与  IOI 专题选讲
+Tool Use in output-only tasks
+brute force / exact search small files; also to check other methods
+ILP / SAT thinking model the file as constraints; solve small parts exactly
+local search, annealing improve a valid answer step by step; keep the best
+special structure trees, paths, grids, bipartite: often a polynomial algorithm fits only that file
+25.4 树上删边游戏
+SG(u)	=	 ⊕ 	(SG(v)	+	1).
+IDEA Green	Hackenbush	on	trees ( 树上删边游戏 ): a rooted tree; a move deletes an edge, and everything no
+longer connected to the root disappears; who cannot move loses. Its SG value: SG(u)	=	XOR	over	children
+v	of	(SG(v)	+	1), leaves 0. A chain of length k is a Nim heap of size k, and the "+1" puts the edge above a
+subtree on top of it like a stalk.
+KEY POINT Colon principle: a subtree can be replaced by a chain with the same SG value. For graphs with cycles
+(fusion principle) an even cycle becomes a single vertex and an odd cycle a vertex with one extra edge,
+after which the tree rule applies. Sums of several trees: XOR their root values ( 拓展篇  SG).
+hackenbush.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 vector<int> ch[N];
+6 int sg[N];
+7  
+8 void dfs(int u) {
+9     sg[u] = 0;
+10     for (int i = 0; i < int(ch[u].size()); i++) { dfs(ch[u][i]); sg[u] ^= sg[ch[u][i]] + 1; }
+11 }
+12  
+13 int main() {
+14     int n;
+15     cin >> n;
+16     for (int i = 2; i <= n; i++) { int p; cin >> p; ch[p].push_back(i); }
+17     dfs(1);
+18     cout << sg[1] << "\n" << (sg[1] ? "First" : "Second") << "\n";
+19     return 0;
+20 }
+INPUT
+9
+1 1 3 4 1 4 7 4
+OUTPUT
+4
+First
+KEY POINT The input gives the parent of vertices 2..n. Checked against the full game tree in Python: every set of
+remaining edges is a state, and its SG value is the mex over all deletions.
+25.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 5 ===
+5NOI 篇  第 25 章  NOI 与  IOI 专题选讲
+Key	points	to	memorise
+1. Postman: total weight + min perfect matching of odd vertices (shortest-path distances).
+2. Bitmask matching: always pair the lowest unpaired vertex; O(2^k k).
+3. SJ theorem: win ⇔ (SG ≠ 0 and some game SG > 1) or (SG = 0 and no game SG > 1).
+4. Rare topics: know the names and the idea; first try a simpler tool.
+5. Output-only: write a checker, keep the best output per file, attack special files by hand.
+6. Hackenbush on trees: SG(u) = XOR of (SG(child) + 1); even cycle → vertex, odd → vertex + edge.
+25.5.1 Problems
+Problem Name Section What it tests
+P4279 小约翰的游戏 25.2 Anti-Nim / SJ theorem.
+25.5.2 Practice	ladder
+1. Direct. P4279: anti-SG (25.2).
+25.5.3 Experiments
+1. Add an edge to make every degree even and check the postman answer equals the total weight.
+2. Brute-force a small misère game and compare with the SJ rule.
+3. Pick one topic from the table and find a problem that uses it.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,346 @@
+# 基础篇 第4章 循环结构程序设计  (基4)
+# source: 基础篇 第04章 循环结构程序设计.pdf
+
+=== page 1 ===
+1基础篇  第 4 章  循环结构程序设计
+第 4 章 	 循环结构程序设计
+Loops Luogu #102 21 problems C++17 · all programs run
+4.1 for 语句和 while 语句 4.2 多重循环
+4.3 循环结构程序设计案例 4.4 课后习题与实验
+4.1 for 语句和 while 语句
+Repeat	with	a	known	count,	or	until	a	condition	stops	you.
+4.1.1 The	three	loops
+init: i = 0
+cond: i < n ?
+body
+update: i++
+true
+false: exi
+Loop Use when Shape
+for the number of steps is
+known
+for (int i = 0; i < n;
+i++)
+while you stop on a condition while (x > 0) { ... }
+do …
+while
+the body must run at least
+once
+do { ... } while (cond);
+KEY POINT break  leaves the innermost loop at once. continue  skips
+to the next round; in a for  the update still runs, in a
+while  it does not, which can loop forever.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 1 部 分  语 言 入 门
+for and while loops, nested loops, and loop patterns: running values, digits, primes, simulation and brute
+force.
+
+=== page 2 ===
+2基础篇  第 4 章  循环结构程序设计
+4.1.2 Pattern:	one	pass	over	a	stream
+one_pass.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3 #define int long long
+4  
+5 signed main() {
+6     int n;
+7     cin >> n;
+8     int sum = 0, mn = LLONG_MAX, mx = LLONG_MIN;
+9     int prev = 0, cur = 0, best = 0;   // longest run of +1 steps
+10     for (int i = 0; i < n; i++) {
+11         int x;
+12         cin >> x;
+13         sum += x;
+14         mn = min(mn, x);
+15         mx = max(mx, x);
+16         cur = (i > 0 && x == prev + 1) ? cur + 1 : 1;
+17         best = max(best, cur);
+18         prev = x;
+19     }
+20     cout << sum << " " << mn << " " << mx << " " << best << "\n";
+21     return 0;
+22 }
+INPUT
+8
+3 4 5 1 2 3 4 1
+OUTPUT
+23 1 5 4
+IDEA Many problems need only a few running values, updated once per input: a sum, a count, a minimum, a
+maximum, the previous value, the current run length. No array is needed when each value is used once.
+Running value Start Update
+sum 0 sum += x
+count 0 if (ok) cnt++
+minimum LLONG_MAX mn = min(mn, x)
+maximum LLONG_MIN mx = max(mx, x)
+current run 1 reset to 1 when broken
+
+=== page 3 ===
+3基础篇  第 4 章  循环结构程序设计
+4.1.3 Pattern:	digits	of	a	number
+digits.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3 #define int long long
+4  
+5 signed main() {
+6     int n;
+7     cin >> n;
+8     int rev = 0, t = n;          // works for negatives too
+9     while (t != 0) { rev = rev * 10 + t % 10; t /= 10; }
+10     int sum = 0, cnt = 0;
+11     t = llabs(n);                // copy: the loop destroys t
+12     do { sum += t % 10; cnt++; t /= 10; } while (t > 0);
+13     cout << rev << " " << sum << " " << cnt << "\n";
+14     return 0;
+15 }
+INPUT 1
+-1230
+OUTPUT 1
+-321 6 4
+INPUT 2
+7
+OUTPUT 2
+7 7 1
+t t % 10 rev
+1230 0 0
+123 3 3
+12 2 32
+1 1 321
+0 — stop
+KEY POINT % 10  takes the last digit, / 10  removes it. Building rev * 10 + digit  reverses, and trailing zeros
+vanish on their own (P1307). Use do … while  so that 0 still has one digit.
+4.1.4 Pattern:	simulate	until	a	condition
+swim.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     double s;
+6     cin >> s;
+7     double step = 2, dist = 0;
+8     int cnt = 0;
+9     while (dist < s) {        // stop as soon as we reach s
+10         dist += step;
+11         step *= 0.98;         // each stroke is 98% of the last
+12         cnt++;
+13     }
+14     cout << cnt << "\n";
+15     return 0;
+16 }
+INPUT
+4.3
+OUTPUT
+3
+
+=== page 4 ===
+4基础篇  第 4 章  循环结构程序设计
+IDEA When the number of steps is unknown, loop with while  on the stopping condition and count the rounds.
+Used for geometric steps (P1423), harmonic sums (P1035) and savings plans (P1089).
+4.2 多重循环
+Loops	inside	loops:	rows	and	columns,	pairs,	tables.
+4.2.1 Pattern:	nested	loops
+triangle_nums.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     int k = 1;
+8     for (int row = n; row >= 1; row--) {   // row has 'row' numbers
+9         for (int j = 0; j < row; j++) printf("%02d", k++);
+10         printf("\n");
+11     }
+12     return 0;
+13 }
+INPUT
+4
+OUTPUT
+01020304
+050607
+0809
+10
+IDEA The outer loop picks a row, the inner loop fills it. Write the inner bound in terms of the outer variable to
+get triangles. A counter that lives outside both loops keeps counting across rows (P5721, P5725).
+TRAP Reset a per-row counter inside the outer loop, not before it. Total work is the sum of all inner lengths: n
+rows of up to n items is O(n²).
+times_table.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     for (int i = 1; i <= 4; i++) {           // row
+6         for (int j = 1; j <= i; j++)         // column: up to the row
+7             cout << j << "*" << i << "=" << setw(2) << i * j << " ";
+8         cout << "\n";
+9     }
+10     return 0;
+11 }
+OUTPUT
+1*1= 1 
+1*2= 2 2*2= 4 
+1*3= 3 2*3= 6 3*3= 9 
+1*4= 4 2*4= 8 3*4=12 4*4=16
+
+=== page 5 ===
+5基础篇  第 4 章  循环结构程序设计
+two_squares.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     bool found = false;
+8     for (int a = 1; a * a <= n && !found; a++)
+9         for (int b = a; a * a + b * b <= n; b++)
+10             if (a * a + b * b == n) {
+11                 cout << a << " " << b << "\n";
+12                 found = true;
+13                 break;            // leaves the inner loop only
+14             }
+15     if (!found) cout << "none\n";
+16     return 0;
+17 }
+INPUT 1
+25
+OUTPUT 1
+3 4
+INPUT 2
+3
+OUTPUT 2
+none
+KEY POINT break  leaves only the innermost loop. To stop both loops, set a flag and test it in the outer condition (as
+above), or put the loops in a function and return . Two nested loops over n values cost about n² steps;
+tighten the bounds (here a * a <= n ) when you can.
+4.3 循环结构程序设计案例
+Primes,	divisors,	brute	force	with	filters,	and	how	fast	is	fast	enough.
+4.3.1 Pattern:	primes	and	divisors
+prime_gcd.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3 #define int long long
+4  
+5 signed main() {
+6     int n, m;
+7     cin >> n >> m;
+8     bool prime = n >= 2;
+9     for (int i = 2; i * i <= n; i++)       // only up to sqrt(n)
+10         if (n % i == 0) { prime = false; break; }
+11     int p = 2;
+12     while (n % p != 0) p++;                // smallest factor of n
+13     int a = n, b = m;
+14     while (b != 0) { int r = a % b; a = b; b = r; }   // Euclid
+15     cout << (prime ? "prime" : "not prime") << " "
+16          << p << " " << a << "\n";
+17     return 0;
+18 }
+INPUT 1
+91 84
+OUTPUT 1
+not prime 7 7
+INPUT 2
+97 10
+OUTPUT 2
+prime 97 1
+
+=== page 6 ===
+6基础篇  第 4 章  循环结构程序设计
+IDEA If n = a × b with a ≤ b, then a ≤ √n. So testing divisors up to i * i <= n  is enough: O(√n) instead of O(n).
+KEY POINT Euclid: gcd(a, b) = gcd(b, a % b), ending when b = 0. C++17 also has gcd(a, b)  in the standard library.
+The smallest factor of n = p × q is p, so the larger is n / p  (P1075).
+4.3.2 Pattern:	brute	force	with	a	cheap	filter	first
+pal_prime.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3 #define int long long
+4  
+5 signed main() {
+6     int a, b;
+7     cin >> a >> b;
+8     for (int x = a; x <= b; x++) {
+9         if (x >= 1000 && x < 10000) x = 10000;          // even length:
+10         if (x >= 100000 && x < 1000000) x = 1000000;    // divisible by 11,
+11         if (x >= 10000000 && x < 100000000) x = 100000000; // never prime
+12         if (x > b) break;
+13         int r = 0;
+14         for (int t = x; t > 0; t /= 10) r = r * 10 + t % 10;
+15         if (r != x) continue;                 // cheap test first
+16         bool prime = x >= 2;
+17         for (int i = 2; i * i <= x; i++)
+18             if (x % i == 0) { prime = false; break; }
+19         if (prime) cout << x << " ";
+20     }
+21     cout << "\n";
+22     return 0;
+23 }
+INPUT
+5 500
+OUTPUT
+5 7 11 101 131 151 181 191 313 353 373 383
+IDEA Put the cheap test (palindrome: about 8 steps) before the expensive one (prime: up to √x steps). Most
+numbers fail the cheap test, so the slow test rarely runs.
+KEY POINT Every palindrome with an even number of digits divides by 11, so 11 is the only prime among them.
+Skipping those ranges makes b up to 108 feasible (P1217).
+4.3.3 How	fast	is	fast	enough?
+n up to Allowed complexity Typical shape
+108 O(n) one simple loop
+105 – 106 O(n log n), O(n√n) at most loop + sqrt test
+5000 O(n²) two nested loops
+500 O(n³) three nested loops
+1012+ O(√n) or O(log n) divisor or digit loop
+KEY POINT Rule of thumb: about 108 simple
+operations per second. Estimate the loop
+count from the constraints before coding.
+
+=== page 7 ===
+7基础篇  第 4 章  循环结构程序设计
+4.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. for = known count; while = stop condition; do-while = at least once.
+2. break leaves only the innermost loop; use a flag or return to leave several.
+3. Running values: sum 0, min LLONG_MAX, max LLONG_MIN, current run 1.
+4. Digits: %	10 takes, /	10 removes; copy n first.
+5. Prime test to i	*	i	<=	n; gcd by Euclid; smallest factor p gives n / p.
+6. Nested loops cost the product of their lengths; tighten bounds.
+7. Cheap filter before an expensive test; about 108 simple steps per second.
+4.4.1 Problems
+Problem Name Section What it tests
+P5718 找最小值 4.1 Running minimum.
+P5719 分类平均 4.1 Sum and count for two groups.
+P5720 一尺之棰 4.1 Halve until 1, count the steps.
+P5721 数字直角三角形 4.2 Nested loops, zero-padded counter.
+P1009 阶乘之和 4.3 n ≤ 50 overflows long long; needs 高精度  (list #106).
+P1980 计数问题 4.2 Digit loop inside a 1..n loop.
+P1035 级数求和 4.1 Add 1/i until the sum passes k.
+P2669 金币 4.2 Nested loop: i coins for i days.
+P5722 数列求和 4.1 Sum 1..n with a loop.
+P5723 质数口袋 4.3 Test primes in order, stop at the limit.
+P1217 回文质数 4.3 Palindrome first, then prime; skip even lengths.
+P1423 小玉在游泳 4.1 Geometric steps, count until the target.
+P1307 数字反转 4.1 Reverse loop, negatives and trailing zeros.
+P1720 月落乌啼算钱 4.1 Fibonacci with rolling variables.
+P5724 求极差 4.1 Maximum minus minimum.
+P1420 最长连号 4.1 Current run and best run.
+P1075 质因数分解 4.3 Smallest factor p, print n/p.
+P5725 求三角形 4.2 Two zero-padded number patterns.
+P5726 打分 4.3 Drop the max and min, then average.
+P4956 Davor 4.2 Search x and k against a fixed total.
+P1089 津津的储蓄计划 4.3 Month-by-month simulation with an early stop.
+4.4.2 Practice	ladder
+1. Direct. P5718: running minimum (4.1).
+2. One	twist. P1307: reverse digits, negatives too (4.1).
+
+=== page 8 ===
+8基础篇  第 4 章  循环结构程序设计
+3. Idea	hidden. P5721: nested loops, zero padding (4.2).
+4. Two	ideas. P1075: smallest factor gives the answer (4.3).
+5. Stretch. P1217: palindrome first, then prime (4.3).
+4.4.3 Experiments
+1. Time a loop to 10⁸ and to 10⁹ on your computer.
+2. Use continue inside a while loop that updates at the bottom: what happens?
+3. Count how many times the inner loop of triangle_nums.cpp runs for n = 100.
+4. Remove the even-length skip from pal_prime.cpp and time it for b = 10⁷.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

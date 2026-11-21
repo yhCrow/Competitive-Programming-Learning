@@ -1,0 +1,290 @@
+# 基础篇 第20章 计数原理与排列组合  (基20)
+# source: 基础篇 第20章 计数原理与排列组合.pdf
+
+=== page 1 ===
+1基础篇  第 20 章  计数原理与排列组合
+第 20 章 	 计数原理与排列组合
+Counting Luogu #117 (part) 6 problems C++17 · all programs run
+20.1 加法原理和乘法原理 20.2 排列与组合
+20.3 课后习题与实验
+20.1 加法原理和乘法原理
+Add	separate	cases,	multiply	independent	steps,	subtract	the	complement.
+shirt A
+shirt B
+jeans
+shorts
+jeans
+shorts
+2 × 2
+= 4
+IDEA Addition	principle ( 加法原理 ): if the ways split
+into separate cases with no overlap, add the
+counts of the cases. Multiplication	principle
+( 乘法原理 ): if a choice is made in independent
+steps, multiply the number of options at each
+step.
+KEY POINT Draw the choices as a tree: a branching step
+multiplies, separate whole branches add. The
+usual trap is double counting (cases that overlap)
+or steps whose options depend on earlier
+choices; then count the dependent step after
+fixing the order.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 4 部 分  基 础 数 学 与 数 论
+Adding separate cases, multiplying independent steps, counting the complement, permutations,
+combinations and Pascal's triangle.
+
+=== page 2 ===
+2基础篇  第 20 章  计数原理与排列组合
+distinct_numbers.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     const long long MOD = 1000000007;
+6     int n;
+7     cin >> n;
+8     vector<long long> mx(n);
+9     for (int i = 0; i < n; i++) cin >> mx[i];
+10     sort(mx.begin(), mx.end());              // most limited first
+11     long long ways = 1;
+12     for (int i = 0; i < n; i++) {
+13         long long options = mx[i] - i;       // i numbers are already taken
+14         if (options <= 0) { ways = 0; break; }
+15         ways = ways * (options % MOD) % MOD;
+16     }
+17     cout << ways << "\n";
+18     return 0;
+19 }
+INPUT 1
+2
+5 8
+OUTPUT 1
+35
+INPUT 2
+3
+2 2 2
+OUTPUT 2
+0
+IDEA Each rabbit picks a different number from 1 to its own maximum. Give numbers to the most limited rabbit
+first: when it is rabbit i's turn (0-based), exactly i numbers inside its range are already used, so it has max
+− i choices. Multiply (P1866).
+KEY POINT Sorting makes each step's choices independent of which numbers were taken, only of how many. Take
+every product % MOD  as you go.
+
+=== page 3 ===
+3基础篇  第 20 章  计数原理与排列组合
+rook_attack.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     long long n;
+6     int k;
+7     cin >> n >> k;
+8     vector<long long> rows(k), cols(k);
+9     for (int i = 0; i < k; i++) cin >> rows[i] >> cols[i];
+10     sort(rows.begin(), rows.end());
+11     sort(cols.begin(), cols.end());
+12     long long r = unique(rows.begin(), rows.end()) - rows.begin();
+13     long long c = unique(cols.begin(), cols.end()) - cols.begin();
+14     long long safe = (n - r) * (n - c);      // free row AND free column
+15     cout << n * n - safe << "\n";            // complement
+16     return 0;
+17 }
+INPUT 1
+3 2
+1 1
+2 2
+OUTPUT 1
+8
+INPUT 2
+1000000 1
+5 5
+OUTPUT 2
+1999999
+IDEA Counting attacked cells directly double counts every cell that is hit by both a row and a column. Count the
+complement instead: a cell is safe exactly when its row has no rook and its column has no rook, (n − r)(n
+− c) cells by the multiplication principle (P3913).
+KEY POINT "Count what you do not want, then subtract" avoids overlaps. Line intersections (P2789) split by how
+many lines are parallel, and adding up the cases is the addition principle.
+20.2 排列与组合
+P(n,	k),	C(n,	k),	Pascal's	rule,	counting	mod	k,	ranking	words.
+Count Formula Example (n =5, k = 2)
+arrange all n n! 120
+arrange k of n
+(order matters)
+P(n, k) = n! / (n − k)! 20
+choose k of n (order
+ignored)
+C(n, k) = n! / (k!(n −
+k)!)
+10
+Pascal's rule C(n, k) = C(n−1,
+k−1) + C(n−1, k)
+C(5,2) = 4 + 6
+symmetry C(n, k) = C(n, n − k) C(5,2) = C(5,3)
+IDEA A permutation counts ordered
+arrangements; a combination counts
+unordered selections. Each combination
+of k items can be ordered in k! ways, so
+P(n, k) = C(n, k) · k!.
+KEY POINT Pascal's rule: either item n is chosen (then
+choose k − 1 of the rest) or it is not
+(choose k of the rest). Filling the triangle
+( 第 5 章 ) needs only additions, so no
+division and no huge factorials.
+
+=== page 4 ===
+4基础篇  第 20 章  计数原理与排列组合
+combinations.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long C[65][65];
+5  
+6 int main() {
+7     for (int i = 0; i <= 60; i++) {           // Pascal's triangle
+8         C[i][0] = 1;
+9         for (int j = 1; j <= i; j++) C[i][j] = C[i - 1][j - 1] + C[i - 1][j];
+10     }
+11     int n, k;
+12     cin >> n >> k;
+13     long long P = 1;
+14     for (int i = 0; i < k; i++) P *= (n - i);  // n (n-1) ... (n-k+1)
+15     cout << "P = " << P << ", C = " << C[n][k] << "\n";
+16     cout << "C(60, 30) = " << C[60][30] << "\n";
+17     return 0;
+18 }
+INPUT
+5 2
+OUTPUT
+P = 20, C = 10
+C(60, 30) = 118264581564861424
+comb_divisible.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int C[2005][2005], S[2005][2005];   // C mod k, prefix counts of zeros
+5  
+6 int main() {
+7     int t, k;
+8     cin >> t >> k;
+9     for (int i = 0; i <= 2000; i++) {
+10         C[i][0] = 1 % k;
+11         for (int j = 1; j <= i; j++) C[i][j] = (C[i - 1][j - 1] + C[i - 1][j]) % k;
+12     }
+13     for (int i = 0; i <= 2000; i++)
+14         for (int j = 0; j <= 2000; j++) {
+15             int hit = (j <= i && C[i][j] == 0) ? 1 : 0;
+16             S[i][j] = hit + (i ? S[i - 1][j] : 0) + (j ? S[i][j - 1] : 0)
+17                     - (i && j ? S[i - 1][j - 1] : 0);   // 2D prefix sum
+18         }
+19     while (t--) {
+20         int n, m;
+21         cin >> n >> m;
+22         cout << S[n][m] << "\n";
+23     }
+24     return 0;
+25 }
+INPUT 1
+1 2
+3 3
+OUTPUT 1
+1
+INPUT 2
+2 5
+4 5
+6 7
+OUTPUT 2
+0
+7
+KEY POINT Store C(i, j) mod	k: "divisible by k" means the value mod k is 0, and Pascal's rule works mod k too. Up to
+104 queries then read a 2D prefix sum in O(1) each instead of rescanning the triangle (P2822).
+
+=== page 5 ===
+5基础篇  第 20 章  计数原理与排列组合
+word_code.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long C[30][30];
+5  
+6 int main() {
+7     for (int i = 0; i <= 26; i++) {
+8         C[i][0] = 1;
+9         for (int j = 1; j <= i; j++) C[i][j] = C[i - 1][j - 1] + C[i - 1][j];
+10     }
+11     string s;
+12     cin >> s;
+13     int L = s.size();
+14     for (int i = 1; i < L; i++)
+15         if (s[i] <= s[i - 1]) { cout << 0 << "\n"; return 0; }  // not increasing
+16     long long rank = 0;
+17     for (int len = 1; len < L; len++) rank += C[26][len];      // shorter words
+18     int prev = 0;                               // letters numbered 1..26
+19     for (int i = 0; i < L; i++) {
+20         int cur = s[i] - 'a' + 1;
+21         for (int ch = prev + 1; ch < cur; ch++)  // a smaller letter here,
+22             rank += C[26 - ch][L - i - 1];       // then any larger letters
+23         prev = cur;
+24     }
+25     cout << rank + 1 << "\n";
+26     return 0;
+27 }
+INPUT 1
+ab
+OUTPUT 1
+27
+INPUT 2
+z
+OUTPUT 2
+26
+INPUT 3
+ac
+OUTPUT 3
+28
+INPUT 4
+ba
+OUTPUT 4
+0
+IDEA Only words with strictly increasing letters get a code, ordered by length and then alphabetically. Code of a
+word = 1 + (number of valid words before it): all shorter words, C(26, len) for each length, plus same-
+length words that are smaller at the first differing position (P1246).
+KEY POINT After fixing a smaller letter ch at position i, the remaining L − i − 1 letters are any increasing choice from
+the 26 − ch letters above ch: C(26 − ch, L − i − 1). Stars-and-bars style splitting (P2638) is another "choose
+positions" count.
+20.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 6 ===
+6基础篇  第 20 章  计数原理与排列组合
+Key	points	to	memorise
+1. Separate cases: add. Independent steps: multiply.
+2. Overlaps are hard to count: count the complement and subtract.
+3. Steps that depend on earlier choices: order them (sort) so only how many, not which, matters.
+4. n! arrangements; P(n, k) = n!/(n−k)!; C(n, k) = n!/(k!(n−k)!).
+5. P(n, k) = C(n, k) · k!.
+6. Pascal: C(n,	k)	=	C(n−1,	k−1)	+	C(n−1,	k); works mod any k.
+7. Many range queries: 2D prefix sums over the triangle.
+8. Rank of an object = 1 + count of smaller objects, position by position.
+20.3.1 Problems
+Problem Name Section What it tests
+P1866 编号 20.1 Sort maxima, multiply (max − i), mod 10⁹+7.
+P2822 组合数问题 20.2 Pascal mod k plus 2D prefix sums.
+P2789 直线交点数 20.1 Split lines into parallel groups; add the cases.
+P3913 车的攻击 20.1 n² minus the safe cells (n − r)(n − c).
+P2638 安全系统 20.2 Put a and b items into n boxes: two stars-and-bars counts.
+P1246 编码 20.2 Rank of an increasing word by combinations.
+20.3.2 Practice	ladder
+1. Direct. P3913: count the complement (20.1).
+2. One	twist. P1866: multiply after sorting (20.1).
+3. Idea	hidden. P1246: rank with combinations (20.2).
+4. Two	ideas. P2822: Pascal mod k with prefix sums (20.2).
+5. Stretch. P2789: add cases of parallel lines (20.1).
+20.3.3 Experiments
+1. Print row 10 of Pascal's triangle and check that it adds up to 2¹⁰.
+2. Count attacked cells in rook_attack.cpp directly for n = 5 and find the double counting.
+3. In distinct_numbers.cpp skip the sort and find an input that gives a wrong answer.
+4. Find the largest n for which C(n, n/2) still fits in long long.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,418 @@
+# 基础篇 第14章 搜索  (基14)
+# source: 基础篇 第14章 搜索.pdf
+
+=== page 1 ===
+1基础篇  第 14 章  搜索
+第 14 章 	 搜索
+Search: DFS and BFS Luogu #112 16 problems C++17 · all programs run
+14.1 深度优先搜索与回溯法 14.2 广度优先搜索
+14.3 课后习题与实验
+14.1 深度优先搜索与回溯法
+Go	deep,	undo,	try	the	next	choice:	queens,	mazes,	partitions,	flood	fill.
+start
+A B C
+A1 A2 go deep first (green),back up at a dead end, try the next
+IDEA Depth-first	search (DFS) explores one choice all the
+way down before trying the next. When a branch fails
+or is finished, it backtracks: undoes the last choice
+and tries another. Written as recursion, the call stack
+remembers where to come back to.
+KEY POINT Template: check the goal; for each possible move: if
+allowed, mark it, recurse, unmark it. Forgetting to
+unmark is the most common backtracking bug.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 2 部 分  初 涉 算 法
+Depth-first search with backtracking for every solution, and breadth-first search for the fewest steps.
+
+=== page 2 ===
+2基础篇  第 14 章  搜索
+14.1.1 Eight	queens:	place,	recurse,	remove
+queens.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, total = 0;
+5 int col[15];                           // col[r] = column of the queen in row r
+6 bool usedCol[15], usedD1[30], usedD2[30];
+7  
+8 void place(int r) {
+9     if (r == n) {                      // every row has a queen
+10         total++;
+11         if (total <= 3) {              // print only the first three
+12             for (int i = 0; i < n; i++) cout << col[i] << " ";
+13             cout << "\n";
+14         }
+15         return;
+16     }
+17     for (int c = 1; c <= n; c++) {
+18         if (usedCol[c] || usedD1[r + c] || usedD2[r - c + n]) continue;
+19         col[r] = c;
+20         usedCol[c] = usedD1[r + c] = usedD2[r - c + n] = true;     // mark
+21         place(r + 1);                                               // recurse
+22         usedCol[c] = usedD1[r + c] = usedD2[r - c + n] = false;    // unmark
+23     }
+24 }
+25  
+26 int main() {
+27     cin >> n;
+28     place(0);
+29     cout << total << "\n";
+30     return 0;
+31 }
+INPUT
+6
+OUTPUT
+2 4 6 1 3 5 
+3 6 2 5 1 4 
+4 1 5 2 6 3 
+4
+KEY POINT One queen per row, so the recursion goes row by row. Each column and each diagonal holds at most one
+queen: cells on the same "/" diagonal have the same r + c, cells on the same "\" diagonal have the same r −
+c (shifted by n so the index is not negative). Three boolean arrays make every check O(1) (P1219).
+
+=== page 3 ===
+3基础篇  第 14 章  搜索
+14.1.2 Counting	paths	in	a	maze
+maze_paths.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, m, ex, ey, cnt = 0;
+5 bool wall[8][8], seen[8][8];
+6 int dx[4] = {-1, 1, 0, 0}, dy[4] = {0, 0, -1, 1};
+7  
+8 void dfs(int x, int y) {
+9     if (x == ex && y == ey) { cnt++; return; }
+10     for (int k = 0; k < 4; k++) {
+11         int nx = x + dx[k], ny = y + dy[k];
+12         if (nx < 1 || nx > n || ny < 1 || ny > m) continue;
+13         if (wall[nx][ny] || seen[nx][ny]) continue;
+14         seen[nx][ny] = true;
+15         dfs(nx, ny);
+16         seen[nx][ny] = false;          // free the cell for other paths
+17     }
+18 }
+19  
+20 int main() {
+21     int t, sx, sy;
+22     cin >> n >> m >> t >> sx >> sy >> ex >> ey;
+23     for (int i = 0; i < t; i++) {
+24         int a, b;
+25         cin >> a >> b;
+26         wall[a][b] = true;
+27     }
+28     seen[sx][sy] = true;
+29     dfs(sx, sy);
+30     cout << cnt << "\n";
+31     return 0;
+32 }
+INPUT 1
+2 2 1
+1 1 2 2
+1 2
+OUTPUT 1
+1
+INPUT 2
+3 3 0
+1 1 3 3
+OUTPUT 2
+12
+IDEA To count all paths that never revisit a cell, mark a cell when you step on it and unmark it when you step
+back, so later paths may use it again (P1605).
+TRAP This explores every path, which grows exponentially: fine for a 5 × 5 maze, hopeless for 50 × 50. For the
+shortest path use BFS (14.2) instead.
+
+=== page 4 ===
+4基础篇  第 14 章  搜索
+14.1.3 Listing	all	solutions	in	order
+partitions.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, part[20], len = 0;
+5  
+6 // remaining sum to split; next part must be >= minPart
+7 void split(int remaining, int minPart) {
+8     if (remaining == 0) {
+9         if (len < 2) return;              // "n" alone does not count
+10         for (int i = 0; i < len; i++) cout << part[i] << (i + 1 < len ? "+" : "\n");
+11         return;
+12     }
+13     for (int p = minPart; p <= remaining; p++) {
+14         part[len++] = p;                  // choose p
+15         split(remaining - p, p);          // later parts are not smaller
+16         len--;                            // undo
+17     }
+18 }
+19  
+20 int main() {
+21     cin >> n;
+22     split(n, 1);
+23     return 0;
+24 }
+INPUT
+4
+OUTPUT
+1+1+1+1
+1+1+2
+1+3
+2+2
+KEY POINT Keeping each part at least as large as the one before (minPart ) lists every split exactly once and already in
+order (P2404). The same "choose → recurse → undo" lists subsets ( 选数  P1036, PERKET P2036, 第 10 章 ).
+KEY POINT Pruning cuts branches that cannot win: stop when the partial cost already exceeds the best answer found
+( 吃奶酪  P1433), or when the remaining choices cannot reach the goal. Order choices so good answers are
+found early, which makes the cut stronger.
+
+=== page 5 ===
+5基础篇  第 14 章  搜索
+14.1.4 Flood	fill:	connected	regions
+lakes.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, m;
+5 string g[105];
+6  
+7 void sink(int x, int y) {             // turn this whole lake into land
+8     if (x < 0 || x >= n || y < 0 || y >= m || g[x][y] != 'W') return;
+9     g[x][y] = '.';
+10     for (int dx = -1; dx <= 1; dx++)  // all 8 neighbours
+11         for (int dy = -1; dy <= 1; dy++)
+12             if (dx != 0 || dy != 0) sink(x + dx, y + dy);
+13 }
+14  
+15 int main() {
+16     cin >> n >> m;
+17     for (int i = 0; i < n; i++) cin >> g[i];
+18     int lakes = 0;
+19     for (int i = 0; i < n; i++)
+20         for (int j = 0; j < m; j++)
+21             if (g[i][j] == 'W') { lakes++; sink(i, j); }
+22     cout << lakes << "\n";
+23     return 0;
+24 }
+INPUT
+4 5
+W..WW
+W...W
+.....
+..W..
+OUTPUT
+3
+IDEA Scan the grid; each time you meet unvisited water, that is a new lake, and a DFS "sinks" every connected
+cell so it is not counted again (P1596). No unmarking here: a cell belongs to exactly one region.
+KEY POINT Searching a fixed word in 8 directions (P1101) and chaining words by overlaps (P1019) are DFS with a
+different "move" step.
+14.2 广度优先搜索
+Layer	by	layer	with	a	queue:	shortest	steps	on	boards	and	between	states.
+0 1 2 3
+1 2 3 4
+2 # 4 5
+3 4 5 6
+IDEA Breadth-first	search (BFS) explores in layers: first every cell 1 step away,
+then every cell 2 steps away, and so on. The first time a cell is reached is
+therefore by a shortest path, when every move costs 1.
+KEY POINT Use a queue (first in, first out): take the front cell, push its unvisited
+neighbours with distance + 1. Mark a cell as visited when	you	push	it, so
+it is never queued twice.
+DFS (14.1) BFS (14.2)
+order one branch to the end, then back up layer by layer
+
+=== page 6 ===
+6基础篇  第 14 章  搜索
+DFS (14.1) BFS (14.2)
+tool recursion (stack) queue
+good for all solutions, counting, regions, backtracking fewest steps when each step costs 1
+memory the current path the current layer
+14.2.1 Shortest	steps	on	a	board
+knight_bfs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int dist[405][405];
+5 int dx[8] = {1, 1, -1, -1, 2, 2, -2, -2};
+6 int dy[8] = {2, -2, 2, -2, 1, -1, 1, -1};
+7  
+8 int main() {
+9     int n, m, sx, sy;
+10     cin >> n >> m >> sx >> sy;
+11     for (int i = 1; i <= n; i++)
+12         for (int j = 1; j <= m; j++) dist[i][j] = -1;    // -1 = not reached
+13     queue<pair<int, int>> q;
+14     dist[sx][sy] = 0;
+15     q.push(make_pair(sx, sy));
+16     while (!q.empty()) {
+17         int x = q.front().first, y = q.front().second;
+18         q.pop();
+19         for (int k = 0; k < 8; k++) {
+20             int nx = x + dx[k], ny = y + dy[k];
+21             if (nx < 1 || nx > n || ny < 1 || ny > m || dist[nx][ny] != -1) continue;
+22             dist[nx][ny] = dist[x][y] + 1;               // mark when pushed
+23             q.push(make_pair(nx, ny));
+24         }
+25     }
+26     for (int i = 1; i <= n; i++) {
+27         for (int j = 1; j <= m; j++) cout << left << setw(5) << dist[i][j];
+28         cout << "\n";
+29     }
+30     return 0;
+31 }
+INPUT
+3 3 1 1
+OUTPUT
+0    3    2    
+3    -1   1    
+2    1    4
+KEY POINT dist[][] = -1  doubles as the "visited" mark. queue<pair<int, int>>  stores a cell as two numbers;
+q.front().first  and .second  read them. Each cell enters the queue once, so the whole BFS is O(n × m)
+(P1443). left << setw(5)  prints each number left-aligned in 5 columns.
+
+=== page 7 ===
+7基础篇  第 14 章  搜索
+14.2.2 BFS	on	numbers,	not	cells
+elevator.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int k[205], dist[205];
+5  
+6 int main() {
+7     int n, a, b;
+8     cin >> n >> a >> b;
+9     for (int i = 1; i <= n; i++) { cin >> k[i]; dist[i] = -1; }
+10     queue<int> q;
+11     dist[a] = 0;
+12     q.push(a);
+13     while (!q.empty()) {
+14         int f = q.front();
+15         q.pop();
+16         int moves[2] = {f + k[f], f - k[f]};   // up or down k[f] floors
+17         for (int t = 0; t < 2; t++) {
+18             int g = moves[t];
+19             if (g < 1 || g > n || dist[g] != -1) continue;
+20             dist[g] = dist[f] + 1;
+21             q.push(g);
+22         }
+23     }
+24     cout << dist[b] << "\n";                    // -1 if never reached
+25     return 0;
+26 }
+INPUT 1
+5 1 5
+3 3 1 2 5
+OUTPUT 1
+3
+INPUT 2
+3 1 3
+0 0 0
+OUTPUT 2
+-1
+IDEA BFS works on any states joined by moves of cost 1, not just grid cells. Here a state is a floor and the two
+buttons are the moves (P1135).
+KEY POINT The same idea finds the fewest rule applications turning one string into another, with map<string, int>
+as the distance table (P1032); time steps (P2895) and teleporters (P1825) only change which moves exist.
+
+=== page 8 ===
+8基础篇  第 14 章  搜索
+14.2.3 Flood	fill	from	the	border
+fill_inside.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, g[35][35];
+5 bool outside[35][35];
+6  
+7 int main() {
+8     cin >> n;
+9     for (int i = 1; i <= n; i++)
+10         for (int j = 1; j <= n; j++) cin >> g[i][j];
+11     // a padding ring 0 / n+1 around the grid is all 0 and connects the border
+12     queue<pair<int, int>> q;
+13     q.push(make_pair(0, 0));
+14     outside[0][0] = true;
+15     int dx[4] = {-1, 1, 0, 0}, dy[4] = {0, 0, -1, 1};
+16     while (!q.empty()) {
+17         int x = q.front().first, y = q.front().second;
+18         q.pop();
+19         for (int k = 0; k < 4; k++) {
+20             int nx = x + dx[k], ny = y + dy[k];
+21             if (nx < 0 || nx > n + 1 || ny < 0 || ny > n + 1) continue;
+22             if (outside[nx][ny] || g[nx][ny] == 1) continue;
+23             outside[nx][ny] = true;
+24             q.push(make_pair(nx, ny));
+25         }
+26     }
+27     for (int i = 1; i <= n; i++) {
+28         for (int j = 1; j <= n; j++)
+29             cout << (g[i][j] == 0 && !outside[i][j] ? 2 : g[i][j]) << " ";
+30         cout << "\n";
+31     }
+32     return 0;
+33 }
+INPUT
+5
+0 0 0 0 0
+0 1 1 1 0
+0 1 0 1 0
+0 1 1 1 0
+0 0 0 0 0
+OUTPUT
+0 0 0 0 0 
+0 1 1 1 0 
+0 1 2 1 0 
+0 1 1 1 0 
+0 0 0 0 0
+IDEA Cells inside a closed loop are exactly the 0s that cannot be reached from outside. So flood the outside
+instead: start from the border and mark every reachable 0; whatever 0 is left unmarked is inside (P1162).
+KEY POINT A padding ring of 0s around the grid joins all border cells into one region, so one BFS start at (0, 0) covers
+the whole outside.
+14.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 9 ===
+9基础篇  第 14 章  搜索
+Key	points	to	memorise
+1. DFS: go deep, then backtrack; template: check goal → for each move: mark, recurse, unmark.
+2. Forgetting to unmark is the classic backtracking bug.
+3. Queens: one per row; columns c, diagonals r + c and r − c + n in boolean arrays.
+4. Counting all paths is exponential; for the shortest path use BFS.
+5. List each combination once: keep choices non-decreasing.
+6. Prune: stop when the partial cost already reaches the best answer.
+7. Flood fill: each unvisited cell starts a new region; no unmarking.
+8. BFS = layers with a queue; first visit = shortest when every move costs 1.
+9. Mark visited when pushing; dist = −1 can serve as "not visited".
+10. States can be floors, strings or positions with time; only the moves change.
+11. Inside a loop = cells not reachable from outside: flood from the border.
+14.3.1 Problems
+Problem Name Section What it tests
+P1219 八皇后  Checker Challenge 14.1 Row by row; column and both diagonals marked.
+P2392 kkksc03 考前临时抱佛脚 14.1 Try every split of each subject by DFS.
+P1443 马的遍历 14.2 Knight BFS: fewest moves to every cell.
+P1135 奇怪的电梯 14.2 BFS over floors with two buttons.
+P2895 Meteor Shower S 14.2 BFS where cells become unsafe at given times.
+P1036 选数 14.1 Choose k of n by DFS, test the sum.
+P2036 PERKET 14.1 DFS over subsets.
+P1433 吃奶酪 14.1 DFS over visiting orders with optimality pruning.
+P1605 迷宫 14.1 Count paths: mark, recurse, unmark.
+P1019 单词接龙 14.1 DFS chaining words by overlaps.
+P1101 单词方阵 14.1 Find a word in 8 directions.
+P2404 自然数的拆分问题 14.1 Non-decreasing parts list each split once.
+P1596 Lake Counting S 14.1 Count 8-connected regions by flood fill.
+P1162 填涂颜色 14.2 Flood the outside from the border.
+P1032 字串变换 14.2 BFS over strings with map as the distance table.
+P1825 Corn Maze S 14.2 Grid BFS with teleporters.
+14.3.2 Practice	ladder
+1. Direct. P1605: count maze paths with backtracking (14.1).
+2. One	twist. P1596: flood fill regions (14.1).
+3. Idea	hidden. P1443: grid BFS for fewest moves (14.2).
+4. Two	ideas. P1219: queens with three marking arrays (14.1).
+5. Stretch. P1032: BFS on strings (14.2).
+
+=== page 10 ===
+10基础篇  第 14 章  搜索
+14.3.3 Experiments
+1. Remove the unmark line from maze_paths.cpp and see how the count changes on a 3 × 3 board.
+2. Count how many times place() is called in queens.cpp for n = 8 and n = 12.
+3. Mark cells when they are popped instead of pushed in knight_bfs.cpp and count queue pushes.
+4. Solve the 3 × 3 knight table with DFS instead of BFS: why are some distances wrong?
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,219 @@
+# NOI篇 第16章 BM 算法与多点求值  (N16)
+# source: NOI篇 第16章 BM 算法与多点求值.pdf
+
+=== page 1 ===
+1NOI 篇  第 16 章  BM 算法与多点求值
+第 16 章 	BM	 算法与多点求值
+Berlekamp–Massey, multipoint evaluation Luogu (verified) 2 problems C++17 · all programs run
+16.1 Berlekamp–Massey 16.2 多项式多点求值
+16.3 课后习题与实验
+16.1 Berlekamp–Massey
+Fix	the	recurrence	with	the	last	failure.
+IDEA Berlekamp–Massey finds the shortest	linear	recurrence ai = Σj=1..L cj ai−j (mod a prime) that generates
+a given sequence, in O(n²). Process terms one by one; when the current recurrence predicts ai wrongly by
+a discrepancy Δ, correct it with a scaled, shifted copy of the recurrence that was current at the last failure.
+With 2L terms of a sequence that truly has an order-L recurrence, the result is exact.
+KEY POINT Contest use: when an answer sequence is known to satisfy some linear recurrence (DP with fixed
+transitions, matrix powers, counting walks), compute the first few hundred terms by brute force, run BM,
+then get the n-th term by matrix power or, faster, polynomial "Kitamasa" reduction (P5487).
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Recover the shortest linear recurrence of a sequence from its first terms, and evaluate a polynomial at
+many points with a product tree and polynomial remainders.
+
+=== page 2 ===
+2NOI 篇  第 16 章  BM 算法与多点求值
+berlekamp_massey.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const ll MOD = 998244353;
+6 ll power(ll a, ll b) { ll r = 1; for (a %= MOD; b; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD; 
+return r; }
+7  
+8 vector<ll> bm(const vector<ll> &s) {
+9     vector<ll> cur, last;                       // cur: recurrence coefficients c_1..c_L
+10     int lastFail = -1; ll lastDelta = 0;
+11     for (int i = 0; i < int(s.size()); i++) {
+12         ll t = 0;
+13         for (int j = 0; j < int(cur.size()); j++) t = (t + cur[j] * s[i - 1 - j]) % MOD;
+14         ll delta = (s[i] - t + MOD) % MOD;      // prediction error
+15         if (delta == 0) continue;
+16         if (lastFail < 0) { cur.assign(i + 1, 0); lastFail = i; lastDelta = delta; continue; }
+17         ll coef = delta * power(lastDelta, MOD - 2) % MOD;
+18         vector<ll> nxt(i - lastFail - 1, 0);    // shift of the old recurrence
+19         nxt.push_back(coef);
+20         for (int j = 0; j < int(last.size()); j++) nxt.push_back((MOD - coef) * last[j] % MOD);
+21         if (nxt.size() < cur.size()) nxt.resize(cur.size(), 0);
+22         for (int j = 0; j < int(cur.size()); j++) nxt[j] = (nxt[j] + cur[j]) % MOD;
+23         if (i - lastFail + int(last.size()) >= int(cur.size())) { last = cur; lastFail = i; lastDelta = 
+delta; }
+24         cur = nxt;
+25     }
+26     return cur;
+27 }
+28  
+29 int main() {
+30     int n, more;
+31     cin >> n >> more;
+32     vector<ll> s(n);
+33     for (int i = 0; i < n; i++) cin >> s[i];
+34     vector<ll> c = bm(s);
+35     cout << c.size() << "\n";
+36     for (int k = 0; k < more; k++) {            // extend the sequence with the recurrence
+37         ll t = 0;
+38         for (int j = 0; j < int(c.size()); j++) t = (t + c[j] * s[s.size() - 1 - j]) % MOD;
+39         s.push_back(t);
+40         cout << t << (k + 1 < more ? " " : "");
+41     }
+42     cout << "\n";
+43     return 0;
+44 }
+INPUT 1
+12 5
+1 2 5 21 76 269 967 3474 12465 44737 160572 576313
+OUTPUT 1
+3
+2068459 7423978 26645645 95634749 343245804
+INPUT 2
+15 5
+1 1 2 3 5 8 13 21 34 55 89 144 233 377 610
+OUTPUT 2
+2
+987 1597 2584 4181 6765
+KEY POINT A sequence made by a third-order recurrence and the Fibonacci numbers: BM recovers orders 3 and 2, and
+the next five terms match those computed directly in Python.
+TRAP Feed enough terms: at least 2L for an order-L recurrence, plus a margin, or BM may return a shorter
+recurrence that fits only the prefix. Work modulo a prime (the algorithm divides by the old discrepancy).
+
+=== page 3 ===
+3NOI 篇  第 16 章  BM 算法与多点求值
+16.2 多项式多点求值
+Product	tree;	remainders	down	the	tree.
+IDEA Multipoint	evaluation ( 多项式多点求值 ): evaluate a degree-n polynomial A at n points in O(n log² n).
+Build a product	tree: leaves (x − xi), each node the product of its children. Then go down: A mod (root
+product), and at each node reduce the parent's remainder modulo the node's product. At leaf i the
+remainder is the constant A(xi).
+KEY POINT Polynomial division with remainder (O(n log n)): reverse A and B, multiply reversed A by the inverse
+(NOI 篇  第 7 章 ) of reversed B modulo xdeg A − deg B + 1 to get the reversed quotient Q; then R = A − Q·B.
+Below a small size, plain Horner evaluation is faster, which is the usual practical cut-off (P5050).
+
+=== page 4 ===
+4NOI 篇  第 16 章  BM 算法与多点求值
+multipoint.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 typedef vector<ll> Poly;
+6 const ll MOD = 998244353, G = 3;
+7 ll power(ll a, ll b) { ll r = 1; for (a %= MOD; b; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD; 
+return r; }
+8 void ntt(Poly &a, bool inv) {
+9     int n = a.size();
+10     for (int i = 1, j = 0; i < n; i++) { int bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= 
+bit; if (i < j) swap(a[i], a[j]); }
+11     for (int len = 2; len <= n; len <<= 1) {
+12         ll w = power(G, (MOD - 1) / len); if (inv) w = power(w, MOD - 2);
+13         for (int i = 0; i < n; i += len) { ll x = 1; for (int j = 0; j < len / 2; j++) {
+14             ll u = a[i + j], v = a[i + j + len / 2] * x % MOD; a[i + j] = (u + v) % MOD; a[i + j + len / 
+2] = (u - v + MOD) % MOD; x = x * w % MOD; } }
+15     }
+16     if (inv) { ll ni = power(n, MOD - 2); for (int i = 0; i < n; i++) a[i] = a[i] * ni % MOD; }
+17 }
+18 Poly mul(Poly a, Poly b) {
+19     if (a.empty() || b.empty()) return Poly();
+20     int need = a.size() + b.size() - 1, n = 1; while (n < need) n <<= 1;
+21     a.resize(n); b.resize(n); ntt(a, false); ntt(b, false);
+22     for (int i = 0; i < n; i++) a[i] = a[i] * b[i] % MOD;
+23     ntt(a, true); a.resize(need); return a;
+24 }
+25 Poly inverse(const Poly &a, int n) {
+26     Poly b(1, power(a[0], MOD - 2));
+27     for (int k = 1; k < n; k <<= 1) {
+28         Poly ak(a.begin(), a.begin() + min(int(a.size()), 2 * k));
+29         Poly t = mul(ak, b); t.resize(2 * k);
+30         for (int i = 0; i < 2 * k; i++) t[i] = (MOD - t[i]) % MOD;
+31         t[0] = (t[0] + 2) % MOD;
+32         b = mul(b, t); b.resize(2 * k);
+33     }
+34     b.resize(n); return b;
+35 }
+36 Poly modp(const Poly &a, const Poly &b) {            // a mod b
+37     int n = a.size(), m = b.size();
+38     if (n < m) return a;
+39     Poly ra(a.rbegin(), a.rend()), rb(b.rbegin(), b.rend());
+40     ra.resize(n - m + 1);
+41     Poly q = mul(ra, inverse(rb, n - m + 1)); q.resize(n - m + 1);
+42     reverse(q.begin(), q.end());
+43     Poly qb = mul(q, b), r(m - 1);
+44     for (int i = 0; i < m - 1; i++) r[i] = (a[i] - qb[i] + MOD) % MOD;
+45     return r;
+46 }
+47 vector<Poly> tree_;
+48 vector<ll> xs, ans;
+49 void build(int p, int l, int r) {
+50     if (l == r) { tree_[p] = Poly{(MOD - xs[l]) % MOD, 1}; return; }
+51     int mid = (l + r) / 2;
+52     build(2 * p, l, mid); build(2 * p + 1, mid + 1, r);
+53     tree_[p] = mul(tree_[2 * p], tree_[2 * p + 1]);
+54 }
+55 void down(int p, int l, int r, const Poly &rem) {
+56     Poly cur = modp(rem, tree_[p]);
+57     if (l == r) { ans[l] = cur.empty() ? 0 : cur[0]; return; }
+58     int mid = (l + r) / 2;
+59     down(2 * p, l, mid, cur); down(2 * p + 1, mid + 1, r, cur);
+
+=== page 5 ===
+5NOI 篇  第 16 章  BM 算法与多点求值
+60 }
+61  
+62 int main() {
+63     int n, m;
+64     cin >> n >> m;
+65     Poly a(n);
+66     for (int i = 0; i < n; i++) cin >> a[i];
+67     xs.resize(m); ans.resize(m);
+68     for (int i = 0; i < m; i++) cin >> xs[i];
+69     tree_.assign(4 * m, Poly());
+70     build(1, 0, m - 1);
+71     down(1, 0, m - 1, a);
+72     for (int i = 0; i < m; i++) cout << ans[i] << (i + 1 < m ? " " : "");
+73     cout << "\n";
+74     return 0;
+75 }
+INPUT
+9 9
+96 50 80 18 48 25 11 79 2
+947279 129287 656660 120909 27141 362362 796756 
+514940 632039
+OUTPUT
+628857565 106794788 710928383 651311802 895110686 
+612693684 704488031 356320135 44931380
+KEY POINT A random polynomial evaluated at 9 random points, checked against Horner's rule in Python. Coefficients
+are listed from x⁰ upward; tree nodes store the products (x − xi) over their ranges.
+16.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. BM: shortest recurrence; on a discrepancy, add a shifted, scaled copy of the last failing recurrence.
+2. Needs ≥ 2L terms; works modulo a prime; O(n²).
+3. Multipoint: product tree of (x − xᵢ); A mod node product down the tree.
+4. Division: reversed quotient = rev(A) · rev(B)⁻¹ mod x^(n−m+1).
+16.3.1 Problems
+Problem Name Section What it tests
+P5487 【模板】 Berlekamp–
+Massey 算法
+16.1 Recurrence and the m-th term.
+P5050 【模板】多项式多点求值 16.2 Product tree.
+16.3.2 Practice	ladder
+1. Direct. P5487: BM (16.1).
+2. One	twist. P5050: multipoint evaluation (16.2).
+16.3.3 Experiments
+1. Feed BM the first 2L − 1 terms only and see whether it still finds the right recurrence.
+2. Find the recurrence of the number of domino tilings of a 3 × n board with BM.
+3. Compare multipoint.cpp with Horner for 10⁵ points and find the crossover size.
+
+=== page 6 ===
+6NOI 篇  第 16 章  BM 算法与多点求值
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

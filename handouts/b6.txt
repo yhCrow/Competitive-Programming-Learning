@@ -1,0 +1,799 @@
+# 基础篇 第6章 字符串与文件操作  (基6)
+# source: 基础篇 第06章 字符串与文件操作.pdf
+
+=== page 1 ===
+1基础篇  第 6 章  字符串与文件操作
+第 6 章 	 字符串与文件操作
+Strings and files Luogu #104 15 problems C++17 · all programs run
+6.1 字符数组 6.2 string 类型字符串
+6.3 文件操作与重定向 6.4 课后习题与实验
+6.1 字符数组
+Text	as	an	array	of	chars	ending	in	\0,	and	walking	through	characters.
+IDEA A character	array char a[105]  stores text one character per box, followed by an invisible end marker
+'\0' . C++ can read and print it with cin  and cout ; you walk it until you meet the end marker. In C++
+programs a string  (6.2) is usually easier, but char arrays appear in many older solutions and in grids.
+char_array.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 char a[105];                     // up to 104 chars + '\0'
+5  
+6 int main() {
+7     cin >> a;                    // one word
+8     int len = 0;
+9     while (a[len] != '\0') len++;  // count up to the end marker
+10     cout << len << "\n";
+11     for (int i = len - 1; i >= 0; i--) cout << a[i];
+12     cout << "\n";
+13     a[0] = a[0] - 'a' + 'A';     // edit one box
+14     cout << a << "\n";           // prints up to '\0'
+15     return 0;
+16 }
+INPUT
+hello
+OUTPUT
+5
+olleh
+Hello
+KEY POINT Reading a whole line into a char array: cin.getline(a, 105) . Size the array one larger than the longest
+text, for the end marker.
+TRAP Writing past the end of the array, or forgetting the '\0'  when you build text yourself, makes cout << a
+print garbage after the text.
+6.1.1 Walking	a	string
+Visit	each	character:	test	it,	change	it,	count	it.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 1 部 分  语 言 入 门
+Character arrays, the string type and its toolkit, and reading and writing files and redirection.
+
+=== page 2 ===
+2基础篇  第 6 章  字符串与文件操作
+classify.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string s;
+6     getline(cin, s);
+7     int up = 0, low = 0, dig = 0, other = 0;
+8     for (int i = 0; i < int(s.size()); i++) {
+9         char ch = s[i];
+10         if ('A' <= ch && ch <= 'Z') up++;
+11         else if ('a' <= ch && ch <= 'z') low++;
+12         else if ('0' <= ch && ch <= '9') dig++;
+13         else other++;
+14     }
+15     cout << up << " " << low << " " << dig << " " << other << "\n";
+16     string t = s;
+17     for (int i = 0; i < int(t.size()); i++)   // t[i] changes t itself
+18         if ('a' <= t[i] && t[i] <= 'z') t[i] = t[i] - 'a' + 'A';
+19     cout << t << "\n";
+20     for (int i = 0; i < int(t.size()); i++)
+21         if ('A' <= t[i] && t[i] <= 'Z') t[i] = t[i] - 'A' + 'a';
+22     cout << t << "\n";
+23     return 0;
+24 }
+INPUT
+Hello, World 42
+OUTPUT
+2 8 2 3
+HELLO, WORLD 42
+hello, world 42
+Test or change Code
+uppercase letter? 'A' <= ch && ch <= 'Z'
+lowercase letter? 'a' <= ch && ch <= 'z'
+digit? '0' <= ch && ch <= '9'
+to uppercase (if lowercase) ch = ch - 'a' + 'A'
+to lowercase (if uppercase) ch = ch - 'A' + 'a'
+KEY POINT Letters and digits have consecutive codes, so each test is one range comparison. Writing to s[i]  changes
+the string itself; int(s.size())  turns the unsigned length into an int for the loop.
+C C LANGUAGE · ADDITIONAL INFORMATION
+The ready-made character tests come from C's <cctype> . They do the same job as the range comparisons above and are
+common in contest code.
+Function True for / returns
+isupper(c) , islower(c) A–Z, a–z
+isalpha(c) any letter
+isdigit(c) 0–9
+isalnum(c) letter or digit
+isspace(c) space, tab, newline
+toupper(c) , tolower(c) converted char (others unchanged)
+
+=== page 3 ===
+3基础篇  第 6 章  字符串与文件操作
+classify_c.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string s;
+6     getline(cin, s);
+7     int up = 0, dig = 0;
+8     for (int i = 0; i < int(s.size()); i++) {
+9         if (isupper(s[i])) up++;
+10         if (isdigit(s[i])) dig++;
+11         s[i] = toupper(s[i]);
+12     }
+13     cout << up << " " << dig << " " << s << "\n";
+14     return 0;
+15 }
+INPUT
+Hello, World 42
+OUTPUT
+2 2 HELLO, WORLD 42
+6.1.2 Shifting	letters	(Caesar)
+a b c d w x y z
+d e f g z a b c
+k = 3: x y z wrap round to a b c
+caesar.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int k;
+6     string s;
+7     cin >> k >> s;               // lowercase letters
+8     for (int i = 0; i < int(s.size()); i++) s[i] = (s[i] - 'a' + k) % 26 + 'a';
+9     cout << s << "\n";
+10     for (int i = 0; i < int(s.size()); i++) s[i] = ((s[i] - 'a' - k) % 26 + 26) % 26 + 'a';
+11     cout << s << "\n";           // decoded again
+12     return 0;
+13 }
+INPUT
+3
+xyz
+OUTPUT
+abc
+xyz
+IDEA Map the letter to 0…25, do the arithmetic, wrap with % 26 , map back. Shifting backwards can go negative,
+and %  keeps the sign, so add 26 before the last % 26  (P1914).
+
+=== page 4 ===
+4基础篇  第 6 章  字符串与文件操作
+6.1.3 Counting	letters
+lucky_word.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int cnt[26];
+5  
+6 int main() {
+7     string s;
+8     cin >> s;
+9     for (int i = 0; i < int(s.size()); i++) cnt[s[i] - 'a']++;
+10     int mx = 0, mn = 1000;
+11     for (int i = 0; i < 26; i++)
+12         if (cnt[i] > 0) {        // only letters that appear
+13             mx = max(mx, cnt[i]);
+14             mn = min(mn, cnt[i]);
+15         }
+16     int dif = mx - mn;
+17     bool prime = dif >= 2;
+18     for (int i = 2; i * i <= dif; i++)
+19         if (dif % i == 0) prime = false;
+20     cout << mx << " " << mn << " " << dif << " "
+21          << (prime ? "prime" : "not prime") << "\n";
+22     return 0;
+23 }
+INPUT 1
+error
+OUTPUT 1
+3 1 2 prime
+INPUT 2
+banana
+OUTPUT 2
+3 1 2 prime
+IDEA cnt[ch - 'a']++  is the counting array from 入门 4 with the letter as the index. Ignore letters that never
+appear when you look for the minimum (P1125). For upper and lower case, use two arrays or convert
+first.
+KEY POINT Letter value 1–26 is ch - 'A' + 1 . A product of such values mod 47 is computed with p = p * v % 47
+at every step, so it never overflows (P1200).
+C C LANGUAGE · ADDITIONAL INFORMATION
+h
+[0]
+e
+[1]
+l
+[2]
+l
+[3]
+o
+[4]
+\0
+[5]
+char a[6]: the text ends at the hidden \0
+C has no string  type. A C-string is a char  array that ends with the
+character \0 , so "hello"  needs 6 boxes. You will meet it in older
+solutions and in scanf /printf  code.
+Task char a[105]  (C) string s  (C++)
+Read a word scanf("%s", a)  or cin >> a cin >> s
+Read a line cin.getline(a, 105) getline(cin, s)
+Length strlen(a) : O(n) every call s.size() : O(1)
+Join / compare strcat , strcmp s + t , s == t , s < t
+i-th char a[i] s[i]
+Cast to int (int)x  (C-style cast) int(x)
+
+=== page 5 ===
+5基础篇  第 6 章  字符串与文件操作
+two_kinds.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 char a[105];
+5  
+6 int main() {
+7     string s;
+8     scanf("%s", a);              // C-string word
+9     cin >> s;                    // std::string word
+10     printf("%d %s\n", (int)strlen(a), a);
+11     cout << s.size() << " " << s << "\n";
+12     string t = a;                // C-string -> string
+13     cout << t + s << "\n";
+14     return 0;
+15 }
+INPUT
+abc hello
+OUTPUT
+3 abc
+5 hello
+abchello
+TRAP strlen(a)  inside a loop condition re-counts the string every round: O(n²). Store it once in a variable.
+TRAP Mixing scanf/printf  with cin/cout  is only safe when the fast-IO line (fast  in your template) is
+not used.
+6.2 string 类型字符串
+std::string:	reading,	the	toolkit,	searching,	conversions,	building	output.
+6.2.1 std::string	basics
+h
+s[0]
+e
+s[1]
+l
+s[2]
+l
+s[3]
+o
+s[4]
+s.size() == 5, s[0] == 'h', s.back() == 'o'
+Task Code Note
+Declare string s = "abc"; string e;  is empty
+Read a word /
+line
+cin >> s , getline(cin,
+s)
+section 2
+Length s.size() O(1), unsigned
+i-th char s[i] i from 0 to size − 1, no range
+check
+First / last s[0] , s.back() string must not be empty
+Join s + t , s += ch adds a string or one char
+Compare s == t , s < t dictionary order
+
+=== page 6 ===
+6基础篇  第 6 章  字符串与文件操作
+string_basics.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string s, t;
+6     cin >> s >> t;               // two words
+7     cout << s.size() << " " << s[0] << " " << s.back() << "\n";
+8     s[0] = 'H';                  // a string can be edited
+9     s += '!';                    // add one char
+10     cout << s + " " + t << "\n";
+11     cout << (s == t) << " " << (s < t) << "\n";
+12     string e;                    // empty
+13     cout << e.empty() << " " << e.size() - 1 << "\n";
+14     return 0;
+15 }
+INPUT
+hello world
+OUTPUT
+5 h o
+Hello! world
+0 1
+1 18446744073709551615
+Char Code Trick
+'0' –'9' 48–57 ch - '0'  = digit value
+'A' –'Z' 65–90 ch - 'A'  = 0…25
+'a' –'z' 97–122 ch - 'a' + 'A'  = uppercase
+' ' 32 space
+TRAP s.size()  is unsigned: on an empty string, s.size() - 1  is 18446744073709551615, not −1 (last line
+of the output). Write int(s.size()) - 1 , or check s.empty()  first.
+6.2.2 Reading	text
+Words,	whole	lines,	or	everything	until	the	input	ends.
+Code Reads Stops at Leaves behind
+cin >> s one word (skips leading spaces) space, tab or newline the separator
+getline(cin, s) the rest of the current line newline nothing (newline is eaten)
+while (cin >> s) word after word end of input —
+while (getline(cin, s)) line after line end of input —
+
+=== page 7 ===
+7基础篇  第 6 章  字符串与文件操作
+getline_trap.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     string w, line;
+7     cin >> n >> w;
+8     getline(cin, line);          // rest of line 1!
+9     cout << "[" << line << "]\n";
+10     getline(cin, line);          // line 2, in full
+11     cout << "[" << line << "]\n";
+12     return 0;
+13 }
+INPUT
+3 hello world
+To be or not to be
+OUTPUT
+[ world]
+[To be or not to be]
+TRAP After cin >> x , the rest of that line (often just the newline) is still waiting. The next getline  returns it,
+so you see an empty or partial line. Fix: call one extra getline  to throw it away.
+KEY POINT cin >> s  never returns spaces. If spaces matter (titles, sentences), you need getline .
+count_words.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string w;
+6     int cnt = 0, longest = 0;
+7     while (cin >> w) {           // until input ends
+8         cnt++;
+9         longest = max(longest, int(w.size()));
+10     }
+11     cout << cnt << " " << longest << "\n";
+12     return 0;
+13 }
+INPUT
+a bb  ccc
+d
+OUTPUT
+4 3
+
+=== page 8 ===
+8基础篇  第 6 章  字符串与文件操作
+visible_chars.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string line;
+6     int cnt = 0;
+7     while (getline(cin, line))   // every line, spaces kept
+8         for (int i = 0; i < int(line.size()); i++)
+9             if (line[i] != ' ' && line[i] != '\r') cnt++;
+10     cout << cnt << "\n";
+11     return 0;
+12 }
+INPUT 1
+Ca 45
+OUTPUT 1
+4
+INPUT 2
+a b
+ c
+OUTPUT 2
+3
+KEY POINT Input files made on Windows end lines with \r\n ; getline  keeps the \r . Skip it when you count or
+compare characters (P5015).
+6.2.3 The	std::string	toolkit
+Positions	are	0-based;	a	length	is	a	count,	not	an	end	index.
+a
+0
+b
+1
+c
+2
+d
+3
+e
+4
+f
+5
+s.substr(1, 3) = "bcd": start 1, take 3
+Call on s = "abcdef" Result Cost
+s.size() , s.length() 6 O(1)
+s.substr(1, 3) "bcd" O(len)
+s.substr(4) "ef"  (to the end) O(len)
+s.find("cd") 2 O(n·m)
+s.find("cd", 3) string::npos search from index 3
+s.rfind("c") 2 (last match)
+
+=== page 9 ===
+9基础篇  第 6 章  字符串与文件操作
+methods.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string s = "abcdef";
+6     cout << s.size() << " " << s.substr(1, 3) << " " << s.substr(4) << "\n";
+7     cout << s.find("cd") << " " << (s.find("zz") == string::npos) << "\n";
+8     s.insert(2, "XY");    cout << s << "\n";   // insert before index 2
+9     s.erase(2, 2);        cout << s << "\n";   // remove 2 chars at index 2
+10     s.replace(0, 3, "Z"); cout << s << "\n";   // 3 chars at 0 -> "Z"
+11     s += "!";             cout << s << " " << s.back() << "\n";
+12     reverse(s.begin(), s.end()); cout << s << "\n";
+13     string a = "10", b = "9";
+14     cout << (a < b) << " " << (stoi(a) < stoi(b)) << "\n";
+15     return 0;
+16 }
+OUTPUT
+6 bcd ef
+2 1
+abXYcdef
+abcdef
+Zdef
+Zdef! !
+!fedZ
+1 0
+TRAP find  returns size_t  (unsigned).
+Compare with string::npos . Storing it in
+an int  and testing == -1  works by
+accident on most compilers; do not rely
+on it.
+TRAP <  on strings compares letter by letter, like
+a dictionary: "10" < "9"  is true. Convert
+to numbers first, or compare lengths
+before letters.
+6.2.4 Searching	for	words
+Find	every	match,	or	only	whole	words.
+·
+0
+t
+1
+o
+2
+·
+3
+b
+4
+e
+5
+·
+6
+o
+7
+r
+8
+·
+9
+n
+10
+o
+11
+t
+12
+·
+13
+t
+14
+o
+15
+·
+16
+b
+17
+e
+18
+·
+19
+IDEA To match whole	words only, lowercase both strings, then put a space on both ends of each: search " be
+"  in " to be or not to be " . Now be  cannot match inside bee  or maybe . The index of each match
+equals the word's start in the original line.
+
+=== page 10 ===
+10基础篇  第 6 章  字符串与文件操作
+word_count.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string word, line;
+6     getline(cin, word);
+7     getline(cin, line);
+8     for (int i = 0; i < int(word.size()); i++) if ('A' <= word[i] && word[i] <= 'Z') word[i] += 'a' - 
+'A';
+9     for (int i = 0; i < int(line.size()); i++) if ('A' <= line[i] && line[i] <= 'Z') line[i] += 'a' - 
+'A';
+10     string w = " " + word + " ", text = " " + line + " ";
+11     int cnt = 0, first = -1;
+12     for (size_t p = text.find(w); p != string::npos;
+13          p = text.find(w, p + 1)) {
+14         if (first < 0) first = p;
+15         cnt++;
+16     }
+17     if (cnt == 0) cout << -1 << "\n";
+18     else cout << cnt << " " << first << "\n";
+19     return 0;
+20 }
+INPUT 1
+To
+to be or not to be is a question
+OUTPUT 1
+2 0
+INPUT 2
+be
+maybe bee
+OUTPUT 2
+-1
+KEY POINT The loop for (p = find(w); p != npos; p = find(w, p + 1))  visits every match, including
+overlapping ones. Use p + w.size()  instead when matches must not overlap (P1308).
+KEY POINT Counting a fixed short pattern such as "VK"  is a simple index loop: s[i] == 'V' && s[i+1] == 'K' ,
+with i + 1 < n  (P3741).
+6.2.5 Numbers	and	strings
+Convert	in	both	directions,	and	parse	text	by	hand.
+Call Result
+to_string(1200) "1200"
+stoi("-42") −42 (int)
+stoll("0042") 42: leading zeros dropped
+stod("3.5") 3.5 (double)
+s[i] - '0' one digit
+x = x * 10 + (ch - '0') build a number digit by digit
+
+=== page 11 ===
+11基础篇  第 6 章  字符串与文件操作
+reverse_number.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string s;
+6     cin >> s;                    // may be longer than long long
+7     reverse(s.begin(), s.end());
+8     size_t k = 0;
+9     while (k + 1 < s.size() && s[k] == '0') k++;   // keep one 0
+10     cout << s.substr(k) << "\n";
+11     return 0;
+12 }
+INPUT 1
+1200
+OUTPUT 1
+21
+INPUT 2
+0
+OUTPUT 2
+0
+INPUT 3
+100000000000000000000
+OUTPUT 3
+1
+KEY POINT Working on the digits as a string avoids overflow and keeps leading zeros under your control. Decimals,
+fractions and percents are split at '.' , '/'  or '%'  and each part handled the same way (P1553).
+parse_expr.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string s;
+6     cin >> s;                    // e.g. 12+34-5
+7     stringstream ss(s);
+8     long long ans, x;
+9     char op;
+10     ss >> ans;
+11     while (ss >> op >> x)        // read "+34", then "-5"
+12         ans = (op == '+') ? ans + x : ans - x;
+13     cout << ans << "\n";
+14     return 0;
+15 }
+INPUT
+12+34-5
+OUTPUT
+41
+
+=== page 12 ===
+12基础篇  第 6 章  字符串与文件操作
+assign.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int v[3];                        // values of a, b, c
+5  
+6 int main() {
+7     string s;
+8     cin >> s;                    // like a:=3;b:=a;
+9     for (size_t i = 0; i + 4 < s.size() + 1; i += 5) {
+10         int lhs = s[i] - 'a';    // s[i+1..i+2] is ":="
+11         char r = s[i + 3];
+12         v[lhs] = ('0' <= r && r <= '9') ? r - '0' : v[r - 'a'];
+13     }
+14     cout << v[0] << " " << v[1] << " " << v[2] << "\n";
+15     return 0;
+16 }
+INPUT
+a:=3;b:=4;c:=5;a:=b;
+OUTPUT
+4 4 5
+IDEA Parsing means walking the text and deciding by what you see. When every statement has the same shape,
+jump by its length (i += 5  for x:=y; ). Otherwise read token by token, or let stringstream  split
+numbers and symbols for you (P1597, P1957).
+6.2.6 Building	output
+Pictures	row	by	row,	and	the	right	order	for	strings.
+histogram.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int cnt[26];
+5  
+6 int main() {
+7     string line;
+8     while (getline(cin, line))
+9         for (int i = 0; i < int(line.size()); i++)
+10             if ('A' <= line[i] && line[i] <= 'Z') cnt[line[i] - 'A']++;
+11     int mx = *max_element(cnt, cnt + 26);
+12     for (int h = mx; h >= 1; h--) {      // top row first
+13         string row;
+14         for (int i = 0; i < 26; i++) {
+15             if (i) row += ' ';
+16             row += (cnt[i] >= h) ? '*' : ' ';
+17         }
+18         while (!row.empty() && row.back() == ' ') row.pop_back();
+19         cout << row << "\n";
+20     }
+21     for (int i = 0; i < 26; i++) cout << char('A' + i) << (i < 25 ? " " : "\n");
+22     return 0;
+23 }
+INPUT
+ABBCCC
+AB
+OUTPUT
+  * *
+* * *
+* * *
+A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+
+=== page 13 ===
+13基础篇  第 6 章  字符串与文件操作
+KEY POINT A vertical chart is printed top-down: row h shows a *  for every column whose count is at least h. Build
+each row as a string and trim trailing spaces before printing (P1598).
+smallest_concat.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 string a[25];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     for (int i = 0; i < n; i++) cin >> a[i];
+10     sort(a, a + n, [](const string &x, const string &y) {
+11         return x + y < y + x;    // which order joins smaller?
+12     });
+13     string ans;
+14     for (int i = 0; i < n; i++) ans += a[i];
+15     cout << ans << "\n";
+16     return 0;
+17 }
+INPUT
+3
+32 3 321
+OUTPUT
+321323
+IDEA sort  on strings uses dictionary order. To glue strings into the smallest result, compare the two possible
+joins: put x first when x + y < y + x . The [](…) {…}  is a small inline comparison function (a lambda);
+functions come in 入门 6 (P1603).
+6.3 文件操作与重定向
+Files	with	fstream,	and	redirection	on	the	command	line.
+IDEA By default a program reads the keyboard and prints to the screen. Contests and testing often use files
+instead: either the program opens the files itself, or the command line redirects the keyboard and screen
+to files without changing the code.
+
+=== page 14 ===
+14基础篇  第 6 章  字符串与文件操作
+files.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     ofstream out("data.txt");        // create / overwrite a file
+6     out << "3\n10 20 30\n";
+7     out.close();                     // finish writing
+8  
+9     ifstream in("data.txt");         // open it for reading
+10     int n, x;
+11     long long sum = 0;
+12     in >> n;
+13     for (int i = 0; i < n; i++) { in >> x; sum += x; }
+14     cout << "sum = " << sum << "\n";
+15  
+16     ifstream missing("no_such_file.txt");
+17     if (!missing) cout << "could not open\n";   // always check
+18     return 0;
+19 }
+OUTPUT
+sum = 60
+could not open
+Task C++ (fstream)
+read from a file ifstream in("a.in"); in >> x;
+write to a file ofstream out("a.out"); out << x;
+read a whole line getline(in, s)
+read until the file ends while (in >> x)
+check it opened if (!in) { … }
+KEY POINT An ifstream  is used exactly like cin , and an ofstream  exactly like cout ; only the name changes.
+6.3.1 Redirection	on	the	command	line
+Command Effect
+a < in.txt cin reads from in.txt instead of the keyboard
+a > out.txt cout writes to out.txt instead of the screen
+a < in.txt > out.txt both
+fc out.txt ans.txt  (Windows) / diff out.txt ans.txt compare your output with the expected answer
+KEY POINT Redirection needs no code changes, so it is the quickest way to rerun a long sample. Keep the sample input
+in a file and compare outputs with fc  / diff  instead of by eye.
+C C LANGUAGE · ADDITIONAL INFORMATION
+The C way, still required by some contests (for example NOIP-style rules that name the input and output files): freopen
+from <cstdio>  reconnects stdin /stdout , and therefore cin /cout , to files. Put it at the start of main ; the rest of the
+program is unchanged.
+TRAP Comment out freopen  when testing by hand, or the program waits on a file instead of the keyboard.
+Luogu itself reads standard input: submit without freopen  unless the problem asks for files.
+
+=== page 15 ===
+15基础篇  第 6 章  字符串与文件操作
+freopen_demo.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     FILE *f = fopen("in.txt", "w");      // make a test file (C)
+6     fprintf(f, "4 5\n");
+7     fclose(f);
+8     freopen("in.txt", "r", stdin);       // cin now reads in.txt
+9     int a, b;
+10     cin >> a >> b;
+11     cout << a + b << "\n";
+12     return 0;
+13 }
+OUTPUT
+9
+6.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Use string; s.size() is unsigned, so write int(s.size())	-	1.
+2. (C) A C-string is a char array ending in \0; <cctype> gives isupper, isdigit, toupper, tolower.
+3. cin	>>	s reads a word; getline(cin,	s) reads a line with spaces.
+4. After cin	>>	x, call one extra getline before reading lines.
+5. while	(cin	>>	s) and while	(getline(cin,	s)) read until input ends; skip \r.
+6. Loop over a string with for	(int	i	=	0;	i	<	int(s.size());	i++); assigning to s[i] changes s.
+7. Letters as numbers: ch	-	'a' (0–25); tally with cnt[ch	-	'a']++.
+8. Caesar: (ch	-	'a'	+	k)	%	26	+	'a'; backwards add 26 before the last % 26.
+9. substr(pos,	len): len is a count; substr(pos) goes to the end.
+10. find returns an index or string::npos; loop with find(w, p + 1).
+11. Whole word, any case: lowercase both, pad with spaces, search "	"	+	w	+	"	".
+12. "10"	<	"9" is true: compare numbers as numbers.
+13. to_string / stoi / stoll; long numbers stay as strings.
+14. Parse by walking the text; stringstream splits numbers and symbols.
+15. Pictures are printed row by row; trim trailing spaces.
+16. Files: ifstream / ofstream work like cin / cout; check that the file opened.
+17. Redirection: a	<	in.txt	>	out.txt, compare with fc / diff; (C) freopen does it inside the code.
+6.4.1 Problems
+Problem Name Section What it tests
+P5733 自动修正 6.1 Convert every letter to uppercase.
+P1914 小书童 —— 凯撒密码 6.1 Shift letters by n with wrap-around.
+P1125 笨小猴 6.1 Letter tally, max − min, then a prime test.
+
+=== page 16 ===
+16基础篇  第 6 章  字符串与文件操作
+Problem Name Section What it tests
+P1957 口算练习题 6.2 Parse each line; reuse the last operator when it is missing.
+P5015 标题统计 6.2 Count characters that are not spaces or newlines.
+P5734 文字处理软件 6.2 Apply append, substr, insert and find operations.
+P1308 统计单词数 6.2 Whole-word count ignoring case, plus the first position.
+P1765 手机 6.2 Key presses per letter from a lookup table.
+P3741 小果的键盘 6.2 Count "VK", allowing at most one changed character.
+P1321 单词覆盖还原 6.2 Count words from partial letters left behind.
+P1553 数字反转（升级版） 6.2 Reverse integers, decimals, fractions, percents; strip zeros.
+P1603 斯诺登的密码 6.2 Words to numbers, square mod 100, smallest join.
+P1200 Your Ride Is Here 6.1 Product of letter values mod 47, compare.
+P1597 语句解析 6.2 Parse a:=3; statements character by character.
+P1598 垂直柱状图 6.2 Letter tally, then print the histogram row by row.
+6.4.2 Practice	ladder
+1. Direct. P5733: uppercase every letter (6.1).
+2. One	twist. P1914: shift with wrap-around (6.1).
+3. Idea	hidden. P1308: whole words, any case, first position (6.2).
+4. Two	ideas. P1125: letter tally plus a prime test (6.1).
+5. Stretch. P1598: tally across lines, vertical histogram (6.2).
+6.4.3 Experiments
+1. Read a line with cin >> s and with getline: compare on "hello world".
+2. Print s.size() - 1 for an empty string, then int(s.size()) - 1.
+3. Save a sample input as in.txt and run your program with a < in.txt.
+4. Write the output to out.txt and compare with the answer using fc or diff.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

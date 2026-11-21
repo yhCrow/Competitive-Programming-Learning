@@ -1,0 +1,236 @@
+# 拓展篇 第24章 复杂度、三分、三维差分与拟阵  (拓24)
+# source: 拓展篇 第24章 复杂度、三分、三维差分与拟阵.pdf
+
+=== page 1 ===
+1拓展篇  第 24 章  复杂度、三分、三维差分与拟阵
+第 24 章 	 复杂度、三分、三维差分与拟阵
+Complexity, ternary search, 3D differences, matroids Luogu (verified) 4 problems C++17 · all programs run
+24.1 算法复杂度 24.2 三分法
+24.3 三维差分 24.4 拟阵与贪心
+24.5 课后习题与实验
+24.1 算法复杂度
+Big	O;	limits	table;	amortised	and	expected.
+IDEA Time	complexity ( 时间复杂度 ) counts how the number of basic steps grows with the input size n,
+ignoring constant factors: big	O ( 大  O 记号 ) gives an upper bound, O(f(n)) means "at most c·f(n) steps for
+large n". Space complexity counts memory the same way. Judges run roughly 108 simple operations per
+second.
+KEY POINT Read the limits first and work backwards to the complexity you need. Worst case is what matters on a
+judge; an "average O(n log n)" algorithm can be attacked by a bad input (quick sort without random
+pivots).
+n up to Feasible complexity Typical methods
+10–12 O(n!) all permutations
+20–25 O(2ⁿ · n) subsets, bitmask DP
+100–500 O(n³) Floyd, interval DP
+5 000 O(n²) simple DP, all pairs
+10⁵–10⁶ O(n log n) sorting, segment trees, Dijkstra
+10⁷–10⁸ O(n) prefix sums, two pointers, linear sieve
+10¹⁸ O(log n) or O(√n) binary search, fast power, divisors
+KEY POINT Amortised complexity ( 均摊 ) averages over a whole sequence of operations: a monotonic stack pushes
+and pops each element once, so n operations cost O(n) in total even though one step can pop many.
+Expected complexity averages over the random choices of the algorithm (treap, randomised quick sort).
+24.2 三分法
+Unimodal	functions;	real	and	integer	versions.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 基 础 补 充
+Estimate what fits in the time limit, find the peak of a unimodal function, add to boxes in 3D with eight
+corners, and know when greedy is provably optimal.
+
+=== page 2 ===
+2拓展篇  第 24 章  复杂度、三分、三维差分与拟阵
+IDEA Ternary	search ( 三分法 ) finds the maximum of a unimodal function: increasing, then decreasing. Pick
+m1 < m2 inside [l, r]. If f(m1) < f(m2), the maximum is not in [l, m1]; otherwise it is not in [m2, r]. Each
+step keeps 2/3 of the range: O(log n) steps.
+KEY POINT Real numbers: loop a fixed number of times (100 iterations shrink any range below 10⁻¹⁵). Integers: stop
+when r − l < 3 and check the few remaining points. Ternary search needs strict monotonicity on each side;
+a flat part breaks it (the comparison cannot tell which side to drop).
+ternary.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n;
+5 double a[20];
+6  
+7 double f(double x) {                          // Horner: highest coefficient first
+8     double v = 0;
+9     for (int i = 0; i <= n; i++) v = v * x + a[i];
+10     return v;
+11 }
+12  
+13 int main() {
+14     double l, r;
+15     cin >> n >> l >> r;
+16     for (int i = 0; i <= n; i++) cin >> a[i];
+17     for (int it = 0; it < 100; it++) {        // fixed number of steps
+18         double m1 = l + (r - l) / 3, m2 = r - (r - l) / 3;
+19         if (f(m1) < f(m2)) l = m1;            // the maximum is right of m1
+20         else r = m2;                          // ... or left of m2
+21     }
+22     cout << fixed << setprecision(5) << l << "\n";
+23     return 0;
+24 }
+INPUT 1
+3 -0.9981 0.5
+1 -3 -3 1
+OUTPUT 1
+-0.41421
+INPUT 2
+2 0 5
+-1 4 1
+OUTPUT 2
+2.00000
+IDEA P3382: the cubic x³ − 3x² − 3x + 1 rises then falls on [−0.9981, 0.5]; its maximum is at 1 − √2 ≈ −0.41421.
+The parabola −x² + 4x + 1 peaks at x = 2.
+KEY POINT Integer version: while (r − l > 2) { m1 = l + (r − l)/3; m2 = r − (r − l)/3; … } then try l … r directly. Binary
+search on the slope (compare f(m) with f(m + 1)) is an equivalent integer trick.
+24.3 三维差分
+Eight	corners;	one	prefix	pass	per	axis.
+IDEA Difference	arrays	in	higher	dimensions ( 二维  / 三维差分 ): adding v to a box changes only the box's
+corners in the difference array, then one prefix-sum pass per dimension rebuilds the values. 1D: 2 corners;
+2D: 4 corners with signs + − − +; 3D: 8 corners, the sign is (−1)number of "far" coordinates.
+
+=== page 3 ===
+3拓展篇  第 24 章  复杂度、三分、三维差分与拟阵
+KEY POINT Many box updates then one read-out: each update O(1), the final rebuild O(volume). 地毯  (P3397) is the
+2D case. In 3D, prefix sums along x, then y, then z (three separate passes) are simpler and less error-prone
+than one inclusion-exclusion formula.
+diff3d.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, q;
+5 long long d[12][12][12];
+6  
+7 int main() {
+8     cin >> n >> q;
+9     while (q--) {
+10         int x1, y1, z1, x2, y2, z2; long long v;
+11         cin >> x1 >> y1 >> z1 >> x2 >> y2 >> z2 >> v;
+12         for (int mask = 0; mask < 8; mask++) {               // the 8 corners of the box
+13             int x = (mask & 1) ? x2 + 1 : x1, y = (mask & 2) ? y2 + 1 : y1, z = (mask & 4) ? z2 + 1 : 
+z1;
+14             d[x][y][z] += (__builtin_popcount(mask) % 2 ? -v : v);
+15         }
+16     }
+17     for (int x = 1; x <= n; x++) for (int y = 1; y <= n; y++) for (int z = 1; z <= n; z++) d[x][y][z] += 
+d[x - 1][y][z];
+18     for (int x = 1; x <= n; x++) for (int y = 1; y <= n; y++) for (int z = 1; z <= n; z++) d[x][y][z] += 
+d[x][y - 1][z];
+19     for (int x = 1; x <= n; x++) for (int y = 1; y <= n; y++) for (int z = 1; z <= n; z++) d[x][y][z] += 
+d[x][y][z - 1];
+20     for (int x = 1; x <= n; x++)
+21         for (int y = 1; y <= n; y++) {
+22             for (int z = 1; z <= n; z++) cout << d[x][y][z] << (z < n ? " " : "");
+23             cout << "\n";
+24         }
+25     return 0;
+26 }
+INPUT
+4 5
+2 1 3 4 2 4 5
+2 1 1 3 4 2 3
+2 1 3 3 3 4 1
+1 1 3 3 2 4 4
+1 3 1 3 4 4 9
+OUTPUT
+0 0 4 4
+0 0 4 4
+9 9 9 9
+9 9 9 9
+3 3 10 10
+3 3 10 10
+12 12 10 10
+12 12 9 9
+3 3 10 10
+3 3 10 10
+12 12 10 10
+12 12 9 9
+0 0 5 5
+0 0 5 5
+0 0 0 0
+0 0 0 0
+KEY POINT Five random box additions on a 4×4×4 cube, checked against adding to every cell in Python. Size the array
+one larger than n in each dimension because corners use x2 + 1.
+24.4 拟阵与贪心
+Independence	+	exchange;	jobs	with	deadlines.
+
+=== page 4 ===
+4拓展篇  第 24 章  复杂度、三分、三维差分与拟阵
+IDEA A matroid ( 拟阵 ) is a family of "independent" sets with two rules: (1) every subset of an independent set
+is independent; (2) exchange: if A, B are independent and |A| < |B|, some element of B can be added to A
+keeping it independent. On a matroid, the greedy algorithm "take elements by decreasing weight, keep
+each one that stays independent" finds the maximum-weight independent set.
+KEY POINT Examples: forests of a graph (Kruskal, 进阶篇  第 11 章 ), linearly independent vectors (linear basis, 第 11
+章 ), and sets of unit jobs that can all meet their deadlines. Recognising a matroid tells you greedy is
+provably optimal, no exchange argument needed each time.
+job_deadlines.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int fa[100005];
+5 int find(int x) { return fa[x] == x ? x : fa[x] = find(fa[x]); }    // latest free slot <= x
+6  
+7 int main() {
+8     int n;
+9     cin >> n;
+10     vector<pair<int, int>> job(n);                 // (profit, deadline)
+11     int maxD = 0;
+12     for (int i = 0; i < n; i++) { cin >> job[i].second >> job[i].first; maxD = max(maxD, job[i].second); 
+}
+13     sort(job.rbegin(), job.rend());                 // greedy: most profitable first
+14     for (int i = 0; i <= maxD; i++) fa[i] = i;
+15     long long total = 0;
+16     for (int i = 0; i < n; i++) {
+17         int slot = find(min(job[i].second, maxD));
+18         if (slot > 0) { total += job[i].first; fa[slot] = slot - 1; }   // still independent: schedule 
+it
+19     }
+20     cout << total << "\n";
+21     return 0;
+22 }
+INPUT
+7
+2 100
+1 19
+2 27
+1 25
+3 15
+3 40
+2 30
+OUTPUT
+170
+IDEA Unit-time jobs with deadlines and profits: a set is independent when all its jobs can be scheduled before
+their deadlines. Greedy by profit, placing each job in the latest free slot (found with a DSU), is optimal.
+Checked against Python trying every subset.
+KEY POINT When the problem is not a matroid (e.g. jobs with different lengths, or a knapsack), greedy by weight can
+fail; then DP is needed.
+24.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 5 ===
+5拓展篇  第 24 章  复杂度、三分、三维差分与拟阵
+Key	points	to	memorise
+1. O(f(n)): growth up to a constant; ~10⁸ simple steps per second.
+2. Read n first: 20 → 2ⁿ, 500 → n³, 5000 → n², 10⁶ → n log n.
+3. Ternary: compare f(m1), f(m2), drop a third; needs strict unimodality.
+4. Real: fixed 100 iterations. Integer: stop at r − l < 3, test the rest.
+5. kD difference: 2^k corners with sign (−1)^(far coordinates); rebuild axis by axis.
+6. Matroid: hereditary + exchange ⇒ greedy by weight is optimal.
+24.5.1 Problems
+Problem Name Section What it tests
+P3382 三分 24.2 Real ternary search on a polynomial.
+P1883 【模板】三分  / 函数  /
+Error Curves
+24.2 Maximum of quadratics is unimodal.
+P3397 地毯 24.3 2D difference.
+P4570 元素 24.4 Matroid greedy with a linear basis.
+24.5.2 Practice	ladder
+1. Direct. P3397: 2D difference (24.3).
+2. One	twist. P3382: ternary search (24.2).
+3. Idea	hidden. P1883: unimodal max (24.2).
+4. Two	ideas. P4570: matroid greedy (24.4).
+24.5.3 Experiments
+1. Time a loop of 10⁸ additions on your machine to calibrate the "10⁸ per second" rule.
+2. Run ternary.cpp on a function with a flat top and watch it pick a wrong side.
+3. Check diff3d.cpp against brute force on random boxes.
+4. Find two jobs with different lengths where greedy by profit fails.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,270 @@
+# 基础篇 第2章 顺序结构程序设计  (基2)
+# source: 基础篇 第02章 顺序结构程序设计.pdf
+
+=== page 1 ===
+1基础篇  第 2 章  顺序结构程序设计
+第 2 章 	 顺序结构程序设计
+Sequential programs Luogu #100 10 problems C++17 · all programs run
+2.1 变量的数据类型 2.2 变量的输入与输出
+2.3 顺序结构程序设计案例 2.4 提交评测与错误自查
+2.5 课后习题与实验
+2.1 变量的数据类型
+How	big	each	type	is,	characters	as	numbers,	and	converting	between	types.
+2.1.1 Types	and	their	limits
+Type Size Range / precision Use it for
+int 4 bytes about ±2.1 × 109 Counters, small values
+long long 8 bytes about ±9.2 × 1018 Default in contests; a product of two values up to 109
+double 8 bytes about 15 significant digits Real-number answers; never test exact equality
+long
+double
+16
+bytes*
+about 18 significant digits What double  means under the template; more precision for
+real answers
+char 1 byte one character, stored as its ASCII
+number
+Letters, digits, symbols
+bool 1 byte true  (1) or false  (0) Yes/no results
+* On GCC (Luogu, MinGW); measured here: 18 digits. Its size differs between compilers.
+KEY POINT Overflow does not crash. An int  that passes 2.1 × 109 silently becomes a wrong number. When in doubt,
+use long long  and write constants as 100000LL .
+2.1.2 Characters	are	numbers
+Char Code Use
+'0'  … '9' 48 … 57 c - '0'  gives the digit
+'A'  … 'Z' 65 … 90 c - 'A'  gives 0 … 25
+'a'  … 'z' 97 … 122 lowercase = uppercase + 32
+' ' 32 space
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 1 部 分  语 言 入 门
+Data types, input and output, worked sequential programs, and how to read a judge verdict and check your
+own code.
+
+=== page 2 ===
+2基础篇  第 2 章  顺序结构程序设计
+chars.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     char c = 'a', d = '7';
+6     cout << (int)c << " " << (int)'A' << " " << (int)'0' << "\n";
+7     cout << char(c - 'a' + 'A') << "\n";   // to uppercase
+8     cout << d - '0' + 1 << "\n";           // digit value + 1
+9     return 0;
+10 }
+OUTPUT
+97 65 48
+A
+8
+2.1.3 Converting	between	types
+convert.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int a = 7, b = 2;
+6     cout << a / b << " " << double(a) / b << "\n";
+7     double x = 3.99;
+8     cout << int(x) << " " << int(-3.99) << "\n";     // cut toward 0
+9     cout << int('A') << " " << char(66) << "\n";     // char <-> code
+10     long long big = 1LL * 100000 * 100000;           // widen first
+11     cout << big << "\n";
+12     cout << round(2.5) << " " << floor(-2.5) << " " << ceil(2.1) << "\n";
+13     return 0;
+14 }
+OUTPUT
+3 3.5
+3 -3
+65 B
+10000000000
+3 -3 3
+Conversion Result
+double(a) / b real division (convert before dividing)
+int(x) drops the fraction, toward 0
+char(66) , int('A') between a character and its code
+1LL * a * b multiply in long long, no overflow
+round , floor , ceil nearest, down, up (return double)
+TRAP double(a / b)  is still 3.0: the integer division happened first. long long x = a * b;  still overflows if
+a and b are int: the product is computed as int before it is stored.
+2.2 变量的输入与输出
+cin/cout	and	printf	formats,	widths	and	decimals.
+
+=== page 3 ===
+3基础篇  第 2 章  顺序结构程序设计
+2.2.1 Input	and	output
+format.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {                 // plain int here, so %d is right
+5     double x = 3.14159;
+6     int h = 7, m = 5, n = 42;
+7     printf("%.2f\n", x);           // 2 decimals
+8     printf("%02d:%02d\n", h, m);   // pad with 0 to width 2
+9     printf("[%5d] [%-5d]\n", n, n); // width 5, right / left
+10     cout << fixed << setprecision(3) << x << "\n";
+11     cout << setw(5) << n << "|" << n << "\n";
+12     cout << setfill('0') << setw(3) << n << "\n";
+13     return 0;
+14 }
+OUTPUT
+3.14
+07:05
+[   42] [42   ]
+3.142
+   42|42
+042
+Format Meaning
+%d  / %lld int / long long
+%f  / %.2f double / with 2 decimals (rounded)
+%c  / %s one char / a C-string
+%5d , %-5d width 5, right or left aligned
+%02d width 2, padded with zeros
+fixed << setprecision(k) k decimals for every later double
+setw(k) width k for the next	item	only
+setfill(c) padding char; stays on until changed
+TRAP scanf  needs & : scanf("%d", &n) . Reading a long long  with %d  or a double  with %f  in scanf  (use
+%lf ) gives garbage.
+2.3 顺序结构程序设计案例
+Read,	compute,	print:	complete	worked	programs.
+
+=== page 4 ===
+4基础篇  第 2 章  顺序结构程序设计
+2.3.1 Worked	programs
+swim_time.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int a, b, c, d;               // start a:b, end c:d (same day)
+6     cin >> a >> b >> c >> d;
+7     int t = (c * 60 + d) - (a * 60 + b);   // everything in minutes
+8     cout << t / 60 << " " << t % 60 << "\n";
+9     return 0;
+10 }
+INPUT
+12 50 19 10
+OUTPUT
+6 20
+leave_home.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int s, v;                     // distance, speed (m/min)
+6     cin >> s >> v;
+7     int need = (s + v - 1) / v + 10;       // round up, +10 min
+8     int t = ((8 * 60 - need) % 1440 + 1440) % 1440;  // wrap days
+9     printf("%02d:%02d\n", t / 60, t % 60);
+10     return 0;
+11 }
+INPUT 1
+100 99
+OUTPUT 1
+07:48
+INPUT 2
+10000 1
+OUTPUT 2
+09:10
+KEY POINT Time problems: convert every time to minutes since midnight, compute, then convert back with / 60
+and % 60 . Going back past midnight needs the % 1440 + 1440  wrap. The idea behind P1425 and P5707.
+heron.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     double a, b, c;
+6     cin >> a >> b >> c;
+7     double p = (a + b + c) / 2;                     // half perimeter
+8     printf("%.1f\n", sqrt(p * (p - a) * (p - b) * (p - c)));  // Heron
+9     return 0;
+10 }
+INPUT
+3 4 5
+OUTPUT
+6.0
+2.4 提交评测与错误自查
+What	each	verdict	means,	and	a	checklist	before	you	submit.
+
+=== page 5 ===
+5基础篇  第 2 章  顺序结构程序设计
+IDEA After you submit, the judge runs your program on hidden tests and gives a verdict for each. Each verdict
+points to a different kind of mistake, so read it before changing code.
+Verdict Meaning Usual causes
+AC Accepted —
+WA Wrong Answer misread rule, overflow, wrong format (spaces, newlines, decimals), missed edge case
+TLE Time Limit Exceeded algorithm too slow for the limits, infinite loop, slow input/output
+MLE Memory Limit Exceeded arrays far too big, endless recursion storing data
+RE Runtime Error index out of range, division by 0, stack overflow from deep recursion
+CE Compile Error syntax error, a function the judge's compiler lacks, wrong language chosen
+Self-check	before	submitting
+1. Re-read the statement and the limits; estimate the operation count.
+2. Run all samples; compare the output character by character.
+3. Test the smallest case (n = 1, 0, empty) and the largest values.
+4. Check every product and sum for overflow; use long long .
+5. Remove debug output; check spaces, newlines and decimals.
+6. Compile with -Wall  and read every warning.
+debug_cerr.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     long long sum = 0;
+8     for (int i = 0; i < n; i++) {
+9         int x;
+10         cin >> x;
+11         sum += x;
+12         cerr << "i=" << i << " sum=" << sum << "\n";  // debug only
+13     }
+14     cout << sum << "\n";
+15     return 0;
+16 }
+INPUT
+3
+1 2 3
+OUTPUT
+6
+KEY POINT Print debug values to cerr : you see them on screen, but they are not part of the answer the judge reads
+(the Output panel above shows only cout ). Still, remove them before submitting, because printing takes
+time.
+TRAP WA on a hidden test while the samples pass usually means an edge case or overflow. Make a tiny test
+where you know the answer by hand, and compare.
+2.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 6 ===
+6基础篇  第 2 章  顺序结构程序设计
+Key	points	to	memorise
+1. Default to long	long; write constants as 100000LL; overflow is silent.
+2. A char is a number: c	-	'0', c	-	'a'	+	'A'.
+3. Convert before dividing: double(a) / b; int(x) cuts toward 0.
+4. printf: %lld, %.2f, %02d; cout: fixed	<<	setprecision(k), setw, setfill.
+5. Times: convert to minutes; wrap with (t	%	1440	+	1440)	%	1440.
+6. WA: format, overflow, edge cases. TLE: too slow or slow IO. RE: index or /0. CE: syntax.
+7. Debug with cerr, remove before submitting; test n = 1 and the largest values.
+2.5.1 Problems
+Problem Name Section What it tests
+P5703 苹果采购 2.3 One multiplication.
+P5704 字母转换 2.1 Lowercase to uppercase with char arithmetic.
+P5705 数字反转 2.1 Read as text, print the characters backwards.
+P5706 再分肥宅水 2.2 Real division, fixed decimals.
+P5708 三角形面积 2.3 Heron formula, sqrt, fixed decimals.
+P5707 上学迟到 2.3 Round up, count back from 08:00, wrap past midnight.
+B2029 大象喝水 2.3 Cylinder volume, then round up.
+P1425 小鱼的游泳时间 2.3 Convert both times to minutes, subtract.
+P1421 小玉买文具 2.3 Work in the smallest unit, integer division.
+P3954 成绩 2.1 Weighted score; keep it in integers.
+2.5.2 Practice	ladder
+1. Direct. P5703: one multiplication (2.3).
+2. One	twist. P5704: lowercase to uppercase (2.1).
+3. Idea	hidden. P1425: times in minutes (2.3).
+4. Two	ideas. P5707: round up and wrap past midnight (2.3).
+5. Stretch. P3954: weighted score kept in integers (2.1).
+2.5.3 Experiments
+1. Compute 100000 * 100000 in int and in long long; compare the outputs.
+2. Print 1.0 / 3 with setprecision(3), (10) and (20): where do the digits stop being right?
+3. Read a number with %d in scanf when the input is 3.7: what happens?
+4. Submit a program that prints an extra space at the end of a line and see the verdict on a test problem.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

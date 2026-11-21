@@ -1,0 +1,343 @@
+# 基础篇 第18章 图的基本应用  (基18)
+# source: 基础篇 第18章 图的基本应用.pdf
+
+=== page 1 ===
+1基础篇  第 18 章  图的基本应用
+第 18 章 	 图的基本应用
+Graphs Luogu #116 10 problems C++17 · all programs run
+18.1 图的概念和建立 18.2 图的遍历
+18.3 DAG 与拓扑排序 18.4 课后习题与实验
+18.1 图的概念和建立
+Directed,	undirected,	weighted;	adjacency	lists	and	matrices.
+1 2
+3 4
+adj[1] = {2, 3, 4}
+adj[2] = {4}
+adj[3] = {}
+adj[4] = {}
+a directed graph and its adjacency list
+IDEA A graph is a set of vertices (points) joined
+by edges. Edges may be directed (one-way
+arrows) or undirected, and may carry a
+weight (a length or a cost). Trees, grids and
+"who depends on whom" are all graphs.
+KEY POINT Store a graph as an adjacency	list:
+vector<int> adj[N] , where adj[u]  lists
+the vertices an edge from u reaches. Memory
+O(n + m). An undirected edge is stored twice,
+once in each direction.
+Storage Memory Check edge u–v List neighbours of u Use when
+adjacency matrix g[u][v] O(n²) O(1) O(n) n ≤ about 5000
+adjacency list adj[u] O(n + m) O(deg u) O(deg u) almost always
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 3 部 分  简 单 数 据 结 构
+Vertices and edges: storing a graph, searching it with DFS and BFS, and ordering a DAG topologically.
+
+=== page 2 ===
+2基础篇  第 18 章  图的基本应用
+build_graph.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 vector<int> adj[100005];
+5 int indeg[100005];
+6  
+7 int main() {
+8     int n, m;
+9     cin >> n >> m;
+10     for (int i = 0; i < m; i++) {
+11         int u, v;
+12         cin >> u >> v;
+13         adj[u].push_back(v);     // directed edge u -> v
+14         indeg[v]++;
+15     }
+16     for (int u = 1; u <= n; u++) {
+17         cout << u << ": out " << adj[u].size() << ", in " << indeg[u] << " ->";
+18         for (int k = 0; k < int(adj[u].size()); k++) cout << " " << adj[u][k];
+19         cout << "\n";
+20     }
+21     return 0;
+22 }
+INPUT
+4 4
+1 2
+1 3
+1 4
+2 4
+OUTPUT
+1: out 3, in 0 -> 2 3 4
+2: out 1, in 1 -> 4
+3: out 0, in 1 ->
+4: out 0, in 2 ->
+18.2 图的遍历
+DFS	and	BFS	over	adjacency	lists;	reversing	edges.
+IDEA DFS and BFS from 第 14 章  work on any graph: replace "the four neighbouring cells" by "every vertex in
+adj[u] ". A visited  array stops the search from going round a cycle forever.
+
+=== page 3 ===
+3基础篇  第 18 章  图的基本应用
+dfs_bfs_graph.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 vector<int> adj[100005];
+5 bool seen[100005];
+6  
+7 void dfs(int u) {
+8     seen[u] = true;
+9     cout << u << " ";
+10     for (int k = 0; k < int(adj[u].size()); k++)
+11         if (!seen[adj[u][k]]) dfs(adj[u][k]);
+12 }
+13  
+14 int main() {
+15     int n, m;
+16     cin >> n >> m;
+17     for (int i = 0; i < m; i++) {
+18         int u, v;
+19         cin >> u >> v;
+20         adj[u].push_back(v);
+21     }
+22     for (int u = 1; u <= n; u++) sort(adj[u].begin(), adj[u].end());  // smaller first
+23     dfs(1);
+24     cout << "\n";
+25     fill(seen, seen + n + 1, false);
+26     queue<int> q;
+27     q.push(1);
+28     seen[1] = true;
+29     while (!q.empty()) {
+30         int u = q.front();
+31         q.pop();
+32         cout << u << " ";
+33         for (int k = 0; k < int(adj[u].size()); k++) {
+34             int v = adj[u][k];
+35             if (!seen[v]) { seen[v] = true; q.push(v); }
+36         }
+37     }
+38     cout << "\n";
+39     return 0;
+40 }
+INPUT
+8 9
+1 2
+1 3
+1 4
+2 5
+2 6
+3 7
+4 7
+4 8
+7 8
+OUTPUT
+1 2 5 6 3 7 8 4 
+1 2 3 4 5 6 7 8
+KEY POINT Sorting each adj[u]  makes the search visit smaller numbers first, which is what "print in the required
+order" problems want (P5318). DFS is O(n + m): each vertex is entered once and each edge is looked at
+once.
+
+=== page 4 ===
+4基础篇  第 18 章  图的基本应用
+max_reachable.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 vector<int> rev[100005];               // reversed edges
+5 int best[100005];                      // 0 = not decided yet
+6  
+7 void mark(int u, int label) {
+8     best[u] = label;
+9     for (int k = 0; k < int(rev[u].size()); k++)
+10         if (best[rev[u][k]] == 0) mark(rev[u][k], label);
+11 }
+12  
+13 int main() {
+14     int n, m;
+15     cin >> n >> m;
+16     for (int i = 0; i < m; i++) {
+17         int u, v;
+18         cin >> u >> v;
+19         rev[v].push_back(u);           // u -> v becomes v -> u
+20     }
+21     for (int v = n; v >= 1; v--)       // largest vertex first
+22         if (best[v] == 0) mark(v, v);
+23     for (int u = 1; u <= n; u++) cout << best[u] << " ";
+24     cout << "\n";
+25     return 0;
+26 }
+INPUT
+4 3
+1 2
+2 4
+4 3
+OUTPUT
+4 4 3 4
+IDEA "From each vertex, the largest vertex you can reach" is slow from every vertex separately. Turn it around:
+reverse every edge, then start from n, n − 1, … and label everything each one can reach that has no label
+yet (P3916).
+KEY POINT Graph search can run out of stack on 105-long paths; if that happens, use BFS or an explicit stack instead
+of recursion.
+18.3 DAG	 与拓扑排序
+Kahn's	algorithm	and	recurrences	over	a	DAG.
+
+=== page 5 ===
+5基础篇  第 18 章  图的基本应用
+1
+2
+3
+4 5
+a topological order: 1 2 3 4 5
+IDEA A DAG (directed acyclic graph) has directed
+edges and no cycle. Its vertices can be lined
+up so every edge points forward: a
+topological	order. Tasks with "must happen
+before" rules, food chains and course
+prerequisites are DAGs.
+KEY POINT Kahn's	algorithm: count each vertex's
+incoming edges (in-degree); queue every
+vertex with in-degree 0; pop one, output it,
+and remove its edges, queuing any vertex
+whose in-degree drops to 0. If fewer than n
+vertices come out, the graph has a cycle.
+
+=== page 6 ===
+6基础篇  第 18 章  图的基本应用
+food_chains.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int MOD = 80112002;
+5 vector<int> adj[5005];
+6 int indeg[5005], outdeg[5005];
+7 long long ways[5005];                  // chains from a producer to here
+8  
+9 int main() {
+10     int n, m;
+11     cin >> n >> m;
+12     for (int i = 0; i < m; i++) {
+13         int a, b;
+14         cin >> a >> b;                 // a is eaten by b: edge a -> b
+15         adj[a].push_back(b);
+16         indeg[b]++;
+17         outdeg[a]++;
+18     }
+19     queue<int> q;
+20     for (int u = 1; u <= n; u++)
+21         if (indeg[u] == 0) { ways[u] = 1; q.push(u); }   // producers
+22     long long total = 0;
+23     while (!q.empty()) {
+24         int u = q.front();
+25         q.pop();
+26         if (outdeg[u] == 0) total = (total + ways[u]) % MOD;   // top predator
+27         for (int k = 0; k < int(adj[u].size()); k++) {
+28             int v = adj[u][k];
+29             ways[v] = (ways[v] + ways[u]) % MOD;   // every chain to u extends to v
+30             if (--indeg[v] == 0) q.push(v);        // all inputs of v are done
+31         }
+32     }
+33     cout << total << "\n";
+34     return 0;
+35 }
+INPUT
+5 7
+1 2
+1 3
+2 3
+3 5
+2 5
+4 5
+3 4
+OUTPUT
+5
+KEY POINT In topological order, every vertex is processed only after all vertices that point into it, so a recurrence over
+the DAG ("number of ways", "longest time") can be filled in that order, exactly like 第 11 章  (P4017).
+
+=== page 7 ===
+7基础篇  第 18 章  图的基本应用
+longest_path.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 vector<pair<int, int>> adj[1505];      // (to, length)
+5 int indeg[1505];
+6 long long best[1505];                  // longest distance from vertex 1
+7  
+8 int main() {
+9     int n, m;
+10     cin >> n >> m;
+11     for (int i = 0; i < m; i++) {
+12         int u, v, w;
+13         cin >> u >> v >> w;
+14         adj[u].push_back(make_pair(v, w));
+15         indeg[v]++;
+16     }
+17     for (int u = 1; u <= n; u++) best[u] = LLONG_MIN;   // unreachable
+18     best[1] = 0;
+19     queue<int> q;
+20     for (int u = 1; u <= n; u++) if (indeg[u] == 0) q.push(u);
+21     while (!q.empty()) {
+22         int u = q.front();
+23         q.pop();
+24         for (int k = 0; k < int(adj[u].size()); k++) {
+25             int v = adj[u][k].first, w = adj[u][k].second;
+26             if (best[u] != LLONG_MIN) best[v] = max(best[v], best[u] + w);
+27             if (--indeg[v] == 0) q.push(v);
+28         }
+29     }
+30     cout << (best[n] == LLONG_MIN ? -1 : best[n]) << "\n";
+31     return 0;
+32 }
+INPUT 1
+2 1
+1 2 1
+OUTPUT 1
+1
+INPUT 2
+3 2
+1 2 5
+3 2 7
+OUTPUT 2
+-1
+TRAP Start the topological order from every in-degree-0 vertex, not only from vertex 1: vertices that vertex 1
+cannot reach still have to remove their edges, or their targets never reach in-degree 0. Keep "unreachable"
+as a separate value so it is never extended (P1807).
+KEY POINT Chores with durations (P1113) are the same longest-path idea; deciding whether a set of "A < B" facts gives
+a unique order checks that the queue never holds two vertices at once (P1347).
+18.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 8 ===
+8基础篇  第 18 章  图的基本应用
+Key	points	to	memorise
+1. Graph = vertices + edges; directed or undirected; maybe weighted.
+2. Adjacency list vector<int>	adj[N]: O(n + m); store undirected edges twice.
+3. DFS/BFS on graphs: loop over adj[u]; a visited array stops cycles; O(n + m).
+4. Sort adj[u] to visit smaller vertices first.
+5. "Largest reachable from each": reverse edges, search from n downwards.
+6. DAG = directed, no cycle; topological order makes every edge point forward.
+7. Kahn: queue in-degree-0 vertices, remove their edges; fewer than n out → cycle.
+8. Recurrences over a DAG (count paths, longest path) follow the topological order.
+9. Start Kahn from every in-degree-0 vertex; keep "unreachable" separate.
+18.4.1 Problems
+Problem Name Section What it tests
+P5318 查找文献 18.2 DFS and BFS with sorted neighbours.
+P3916 图的遍历 18.2 Reverse edges, label from the largest vertex.
+P1113 杂务 18.3 Longest finishing time over a DAG.
+P4017 最大食物链计数 18.3 Count paths in topological order.
+P1807 最长路 18.3 Longest path from 1 to n in a DAG.
+P1127 词链 18.2 Euler path over first/last letters.
+P2853 Cow Picnic S 18.2 DFS from each cow, count fields reached by all.
+P1363 幻象迷宫 18.2 Infinite tiled maze: reach the same cell in another copy.
+P1347 排序 18.3 Topological sort: cycle, unique order, or not yet.
+P1983 车站分级 18.3 Edges from skipped to stopping stations; longest chain.
+18.4.2 Practice	ladder
+1. Direct. P5318: DFS and BFS on a graph (18.2).
+2. One	twist. P3916: reverse the edges (18.2).
+3. Idea	hidden. P4017: count paths in topological order (18.3).
+4. Two	ideas. P1807: longest path with unreachable vertices (18.3).
+5. Stretch. P1347: detect cycles and uniqueness (18.3).
+18.4.3 Experiments
+1. Add the edge 5 → 1 to the food chain input and see what Kahn's algorithm prints.
+2. Remove the sorting in dfs_bfs_graph.cpp and compare the visiting order.
+3. Store the same graph as an adjacency matrix for n = 10⁵: how much memory would it need?
+4. Run max_reachable.cpp on a 10⁵-vertex chain and watch for a stack overflow.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

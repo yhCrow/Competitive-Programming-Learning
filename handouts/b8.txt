@@ -1,0 +1,686 @@
+# 基础篇 第8章 模拟与高精度  (基8)
+# source: 基础篇 第08章 模拟与高精度.pdf
+
+=== page 1 ===
+1基础篇  第 8 章  模拟与高精度
+第 8 章 	 模拟与高精度
+Simulation and high precision Luogu #106 16 problems C++17 · all programs run
+8.1 模拟方法问题实例 8.2 高精度运算
+8.3 课后习题与实验
+8.1 模拟方法问题实例
+State,	step,	stop:	worked	simulation	problems.
+Read
+every rule
+State
+variables
+Step
+apply rules
+Output
+exact format
+repeat
+IDEA A simulation problem has no clever
+trick: the difficulty is reading every rule
+correctly and turning it into code
+without slips. Decide the state (which
+variables describe the situation), the
+step (how one event changes it), and the
+stop condition.
+KEY POINT Checklist before coding: list every rule
+from the statement; note edge cases
+(empty input, ties, wrap-around); check
+the output format character by character.
+Most wrong answers here are misread
+rules, not bad algorithms.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 2 部 分  初 涉 算 法
+Turning rules into code without slips, and arithmetic on numbers of any length.
+
+=== page 2 ===
+2基础篇  第 8 章  模拟与高精度
+8.1.1 Scoring	a	match
+table_tennis.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 // print every game's score; a game ends at >= target with a lead of 2
+5 void play(const string &s, int target) {
+6     int w = 0, l = 0;
+7     for (int i = 0; i < int(s.size()); i++) {
+8         char ch = s[i];
+9         if (ch == 'W') w++;
+10         else l++;
+11         if (max(w, l) >= target && abs(w - l) >= 2) {
+12             cout << w << ":" << l << "\n";
+13             w = l = 0;                       // new game
+14         }
+15     }
+16     cout << w << ":" << l << "\n";           // unfinished game, even 0:0
+17 }
+18  
+19 int main() {
+20     string s;
+21     char ch;
+22     while (cin >> ch && ch != 'E')           // ignore line breaks
+23         if (ch == 'W' || ch == 'L') s += ch;
+24     play(s, 11);
+25     cout << "\n";
+26     play(s, 21);
+27     return 0;
+28 }
+INPUT
+WWWWWWWWWWWW
+LE
+OUTPUT
+11:0
+1:1
+12:1
+IDEA State: the two scores of the current game. Step: one character. Stop: a game ends when one side reaches the
+target and leads by 2; the input ends at 'E' .
+KEY POINT Store the input once, then run the same function for both rule sets (11 and 21). Print the last, unfinished
+game even when it is 0:0 (P1042).
+TRAP cin >> ch  skips spaces and line breaks, which is exactly right here; the record can be split over many
+lines.
+
+=== page 3 ===
+3基础篇  第 8 章  模拟与高精度
+8.1.2 Walking	round	a	circle
+toy_puzzle.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int face[100005];
+5 string name[100005];
+6  
+7 int main() {
+8     int n, m;
+9     cin >> n >> m;
+10     for (int i = 0; i < n; i++) cin >> face[i] >> name[i];
+11     int p = 0;
+12     while (m--) {
+13         int a, s;                    // a: 0 left, 1 right; s steps
+14         cin >> a >> s;
+15         if (face[p] == a) p = (p - s % n + n) % n;  // one way round
+16         else p = (p + s) % n;                    // the other way
+17     }
+18     cout << name[p] << "\n";
+19     return 0;
+20 }
+INPUT
+7 3
+0 singer
+0 reader
+0 mengbier
+1 thinker
+1 archer
+0 writer
+1 mogician
+0 3
+1 1
+0 2
+OUTPUT
+writer
+IDEA Number the seats 0 … n−1. Moving s seats round a circle is (p + s) % n  one way and (p - s + n) % n
+the other.
+KEY POINT Facing in or out flips left and right. Instead of four cases, notice that "facing direction equals instruction"
+always means the same way round: one comparison decides it (P1563).
+TRAP p - s  can be negative and %  keeps the sign: add n  first. If s can exceed n, reduce it with s % n .
+
+=== page 4 ===
+4基础篇  第 8 章  模拟与高精度
+8.1.3 Lookup	tables	and	repeating	sequences
+rps_lizard.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 // win[x][y] = 1 if gesture x beats y
+5 // 0 scissors, 1 rock, 2 paper, 3 lizard, 4 Spock
+6 int win[5][5] = {{0, 0, 1, 1, 0},
+7                  {1, 0, 0, 1, 0},
+8                  {0, 1, 0, 0, 1},
+9                  {0, 0, 1, 0, 1},
+10                  {1, 1, 0, 0, 0}};
+11 int A[205], B[205];
+12  
+13 int main() {
+14     int n, na, nb;
+15     cin >> n >> na >> nb;
+16     for (int i = 0; i < na; i++) cin >> A[i];
+17     for (int i = 0; i < nb; i++) cin >> B[i];
+18     int sa = 0, sb = 0;
+19     for (int i = 0; i < n; i++) {
+20         int x = A[i % na], y = B[i % nb];   // patterns repeat
+21         sa += win[x][y];
+22         sb += win[y][x];
+23     }
+24     cout << sa << " " << sb << "\n";
+25     return 0;
+26 }
+INPUT
+10 5 6
+0 1 2 3 4
+0 3 4 2 1 0
+OUTPUT
+6 2
+IDEA Copy a rule table from the statement into a 2D array once, then every round is a lookup instead of a chain
+of if s (P1328).
+KEY POINT A pattern of length k that repeats forever: round i uses element i % k .
+KEY POINT Grid simulations (P2670 minesweeper, P4924 rotating sub-squares, P1518 two walkers) reuse the 入门 4
+tools: dx/dy  arrays, bounds checks, rotate into a second array. When a walk might never end, stop after a
+safe maximum number of steps or detect a repeated state.
+
+=== page 5 ===
+5基础篇  第 8 章  模拟与高精度
+8.1.4 Output	with	fiddly	formatting
+polynomial.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     bool first = true;
+8     for (int i = n; i >= 0; i--) {       // degree n down to 0
+9         int a;
+10         cin >> a;
+11         if (a == 0) continue;            // zero terms vanish
+12         if (a < 0) cout << '-';
+13         else if (!first) cout << '+';    // no leading '+'
+14         if (abs(a) != 1 || i == 0) cout << abs(a);  // hide 1 in "1x"
+15         if (i > 0) cout << 'x';
+16         if (i > 1) cout << '^' << i;     // "x" not "x^1"
+17         first = false;
+18     }
+19     cout << "\n";
+20     return 0;
+21 }
+INPUT 1
+5
+100 -1 1 -3 0 10
+OUTPUT 1
+100x^5-x^4+x^3-3x^2+10
+INPUT 2
+1
+-1 1
+OUTPUT 2
+-x+1
+IDEA Split the output into small decisions, one per rule: sign, coefficient, variable, power. Each decision is one
+if  that matches one sentence of the statement (P1067).
+Rule Code
+skip zero terms if (a == 0) continue
+no + at the start first  flag
+no 1 before x abs(a) != 1 || i == 0
+x, not x^1; nothing for x^0 i > 0 , i > 1
+KEY POINT String expansion (P1098) and work scheduling (P1065) are the same style: many small rules, each a
+separate, testable piece.
+8.2 高精度运算
+Add,	subtract,	multiply	and	divide	numbers	stored	digit	by	digit.
+
+=== page 6 ===
+6基础篇  第 8 章  模拟与高精度
+a = 987 stored as d[0..2] = 7 8 9
+7 8 9
+d[0] d[1] d[2]
+987 + 45: 7+5=12 → 2 carry 1; 8+4+1=13 → 3 carry 1;
+9+0+1=10 → 0 carry 1; last carry → new digit 1
+result d = 2 3 0 1 → printed backwards: 1032
+IDEA long long  stops at about 9.2 × 1018. Longer
+numbers are kept as a vector	of	digits, ones
+digit first. Then digit i of every number lines
+up at index i, and a carry simply moves to
+index i + 1.
+KEY POINT Every operation is the school method: work
+from the ones digit up, keep a carry (or
+borrow), and remove leading zeros at the end.
+// a big number: digits stored backwards, d[0] = ones digit
+vector<int> toBig(const string &s) {
+    vector<int> d;
+    for (int i = int(s.size()) - 1; i >= 0; i--) d.push_back(s[i] - '0');
+    return d;
+}
+ 
+void trim(vector<int> &d) {          // drop leading zeros, keep one digit
+    while (d.size() > 1 && d.back() == 0) d.pop_back();
+}
+ 
+void print(const vector<int> &d) {
+    for (int i = int(d.size()) - 1; i >= 0; i--) cout << d[i];
+    cout << "\n";
+}
+KEY POINT Read the number as a string , convert with toBig , compute, trim , then print  from the last index
+down. Every program below starts with these three helpers.
+
+=== page 7 ===
+7基础篇  第 8 章  模拟与高精度
+8.2.1 Addition
+big_add.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 // a big number: digits stored backwards, d[0] = ones digit
+5 vector<int> toBig(const string &s) {
+6     vector<int> d;
+7     for (int i = int(s.size()) - 1; i >= 0; i--) d.push_back(s[i] - '0');
+8     return d;
+9 }
+10  
+11 void trim(vector<int> &d) {          // drop leading zeros, keep one digit
+12     while (d.size() > 1 && d.back() == 0) d.pop_back();
+13 }
+14  
+15 void print(const vector<int> &d) {
+16     for (int i = int(d.size()) - 1; i >= 0; i--) cout << d[i];
+17     cout << "\n";
+18 }
+19  
+20 vector<int> add(const vector<int> &a, const vector<int> &b) {
+21     vector<int> c;
+22     int carry = 0;
+23     for (size_t i = 0; i < max(a.size(), b.size()) || carry; i++) {
+24         int s = carry;
+25         if (i < a.size()) s += a[i];
+26         if (i < b.size()) s += b[i];
+27         c.push_back(s % 10);
+28         carry = s / 10;
+29     }
+30     return c;
+31 }
+32  
+33 int main() {
+34     string x, y;
+35     cin >> x >> y;
+36     print(add(toBig(x), toBig(y)));
+37     return 0;
+38 }
+INPUT 1
+99999999999999999999
+1
+OUTPUT 1
+100000000000000000000
+INPUT 2
+987
+45
+OUTPUT 2
+1032
+IDEA Loop while there are digits left in either number or a carry. Each step: digit sum + carry; keep % 10 , pass
+/ 10  on (P1601).
+KEY POINT Numbers of different lengths need no padding: a missing digit counts as 0.
+
+=== page 8 ===
+8基础篇  第 8 章  模拟与高精度
+8.2.2 Comparison	and	subtraction
+big_sub.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 // a big number: digits stored backwards, d[0] = ones digit
+5 vector<int> toBig(const string &s) {
+6     vector<int> d;
+7     for (int i = int(s.size()) - 1; i >= 0; i--) d.push_back(s[i] - '0');
+8     return d;
+9 }
+10  
+11 void trim(vector<int> &d) {          // drop leading zeros, keep one digit
+12     while (d.size() > 1 && d.back() == 0) d.pop_back();
+13 }
+14  
+15 void print(const vector<int> &d) {
+16     for (int i = int(d.size()) - 1; i >= 0; i--) cout << d[i];
+17     cout << "\n";
+18 }
+19  
+20 // true if a < b (both trimmed)
+21 bool less_(const vector<int> &a, const vector<int> &b) {
+22     if (a.size() != b.size()) return a.size() < b.size();
+23     for (int i = int(a.size()) - 1; i >= 0; i--)
+24         if (a[i] != b[i]) return a[i] < b[i];
+25     return false;
+26 }
+27  
+28 vector<int> sub(vector<int> a, const vector<int> &b) {  // a >= b
+29     for (size_t i = 0; i < a.size(); i++) {
+30         if (i < b.size()) a[i] -= b[i];
+31         if (a[i] < 0) { a[i] += 10; a[i + 1]--; }    // borrow
+32     }
+33     trim(a);
+34     return a;
+35 }
+36  
+37 int main() {
+38     string x, y;
+39     cin >> x >> y;
+40     vector<int> a = toBig(x), b = toBig(y);
+41     trim(a); trim(b);
+42     if (less_(a, b)) { cout << '-'; swap(a, b); }   // a - b = -(b - a)
+43     print(sub(a, b));
+44     return 0;
+45 }
+INPUT 1
+100
+999
+OUTPUT 1
+-899
+INPUT 2
+1000
+1
+OUTPUT 2
+999
+INPUT 3
+5
+5
+OUTPUT 3
+0
+IDEA Compare first: more digits means bigger; equal length → compare from the highest digit down. Subtract the
+smaller from the larger and put a minus sign in front if you swapped.
+
+=== page 9 ===
+9基础篇  第 8 章  模拟与高精度
+KEY POINT Borrow: when a digit goes negative, add 10 and take 1 from the next digit. trim  afterwards, so 1000 − 999
+prints 1, not 0001.
+8.2.3 Multiplying	by	a	small	number,	and	factorials
+big_factorial.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 void mulSmall(vector<int> &d, int k) {   // d = d * k, k small
+5     int carry = 0;
+6     for (size_t i = 0; i < d.size(); i++) {
+7         int t = d[i] * k + carry;
+8         d[i] = t % 10;
+9         carry = t / 10;
+10     }
+11     while (carry) { d.push_back(carry % 10); carry /= 10; }
+12 }
+13  
+14 int main() {
+15     int n;
+16     cin >> n;
+17     vector<int> f = {1};                  // 1, stored backwards
+18     for (int k = 2; k <= n; k++) mulSmall(f, k);
+19     for (int i = int(f.size()) - 1; i >= 0; i--) cout << f[i];
+20     cout << "\n";
+21     return 0;
+22 }
+INPUT 1
+30
+OUTPUT 1
+265252859812191058636308480000000
+INPUT 2
+1
+OUTPUT 2
+1
+IDEA Multiplying by an ordinary int  k touches each digit once: digit × k + carry . The final carry can be
+several digits long, so push them one by one.
+KEY POINT n! for n up to 1000 has about 2568 digits; this loop handles it easily. Counting how often a digit appears in
+n! is then a tally over f  (P1591).
+TRAP digit * k + carry  must fit in an int : fine for k up to about 108. For bigger k use long long  or big ×
+big multiplication.
+
+=== page 10 ===
+10基础篇  第 8 章  模拟与高精度
+factorial_sum.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 vector<int> add(const vector<int> &a, const vector<int> &b) {
+5     vector<int> c;
+6     int carry = 0;
+7     for (size_t i = 0; i < max(a.size(), b.size()) || carry; i++) {
+8         int s = carry;
+9         if (i < a.size()) s += a[i];
+10         if (i < b.size()) s += b[i];
+11         c.push_back(s % 10);
+12         carry = s / 10;
+13     }
+14     return c;
+15 }
+16  
+17 void mulSmall(vector<int> &d, int k) {
+18     int carry = 0;
+19     for (size_t i = 0; i < d.size(); i++) {
+20         int t = d[i] * k + carry;
+21         d[i] = t % 10;
+22         carry = t / 10;
+23     }
+24     while (carry) { d.push_back(carry % 10); carry /= 10; }
+25 }
+26  
+27 int main() {
+28     int n;
+29     cin >> n;
+30     vector<int> f = {1}, sum = {0};
+31     for (int k = 1; k <= n; k++) {
+32         mulSmall(f, k);              // f = k!
+33         sum = add(sum, f);           // S = 1! + ... + k!
+34     }
+35     for (int i = int(sum.size()) - 1; i >= 0; i--) cout << sum[i];
+36     cout << "\n";
+37     return 0;
+38 }
+INPUT 1
+3
+OUTPUT 1
+9
+INPUT 2
+20
+OUTPUT 2
+2561327494111820313
+INPUT 3
+50
+OUTPUT 3
+3103505322954619965625203297275931995319036209456667
+2920420940313
+IDEA Combine the pieces: keep the running factorial f  and the running sum. Each round is one small
+multiplication and one big addition (P1009, the problem from 入门 3 that needed this list).
+KEY POINT Build each new value from the previous one (k! = (k−1)! × k) instead of recomputing from scratch. The
+same habit makes 2p cheap (P1045).
+
+=== page 11 ===
+11基础篇  第 8 章  模拟与高精度
+8.2.4 Big	×	big	multiplication
+a[i] × b[j] adds into c[i + j]
+b[0] b[1] b[2]
+a[0]
+a[1]
+c[0] c[1] c[2]
+c[1] c[2] c[3]
+big_mul.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 // a big number: digits stored backwards, d[0] = ones digit
+5 vector<int> toBig(const string &s) {
+6     vector<int> d;
+7     for (int i = int(s.size()) - 1; i >= 0; i--) d.push_back(s[i] - '0');
+8     return d;
+9 }
+10  
+11 void trim(vector<int> &d) {          // drop leading zeros, keep one digit
+12     while (d.size() > 1 && d.back() == 0) d.pop_back();
+13 }
+14  
+15 void print(const vector<int> &d) {
+16     for (int i = int(d.size()) - 1; i >= 0; i--) cout << d[i];
+17     cout << "\n";
+18 }
+19  
+20 vector<int> mul(const vector<int> &a, const vector<int> &b) {
+21     vector<long long> c(a.size() + b.size(), 0);
+22     for (size_t i = 0; i < a.size(); i++)
+23         for (size_t j = 0; j < b.size(); j++)
+24             c[i + j] += 1LL * a[i] * b[j];     // same column: i + j
+25     vector<int> r;
+26     long long carry = 0;
+27     for (size_t k = 0; k < c.size(); k++) {   // carry once at the end
+28         long long t = c[k] + carry;
+29         r.push_back(t % 10);
+30         carry = t / 10;
+31     }
+32     trim(r);
+33     return r;
+34 }
+35  
+36 int main() {
+37     string x, y;
+38     cin >> x >> y;
+39     print(mul(toBig(x), toBig(y)));
+40     return 0;
+41 }
+INPUT 1
+123456789
+987654321
+OUTPUT 1
+121932631112635269
+INPUT 2
+0
+12345
+OUTPUT 2
+0
+
+=== page 12 ===
+12基础篇  第 8 章  模拟与高精度
+KEY POINT Digit i of a times digit j of b lands in column i + j. Add all products first (in long long ), then sweep the
+carries once. A result has at most len(a) + len(b) digits; trim  removes the rest, so 0 × 12345 prints 0
+(P1303). Cost: O(len(a) × len(b)).
+8.2.5 Dividing	by	a	small	number
+big_div_small.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 // a big number: digits stored backwards, d[0] = ones digit
+5 vector<int> toBig(const string &s) {
+6     vector<int> d;
+7     for (int i = int(s.size()) - 1; i >= 0; i--) d.push_back(s[i] - '0');
+8     return d;
+9 }
+10  
+11 void trim(vector<int> &d) {          // drop leading zeros, keep one digit
+12     while (d.size() > 1 && d.back() == 0) d.pop_back();
+13 }
+14  
+15 void print(const vector<int> &d) {
+16     for (int i = int(d.size()) - 1; i >= 0; i--) cout << d[i];
+17     cout << "\n";
+18 }
+19  
+20 // q = a / k, returns the remainder; works from the top digit down
+21 long long divSmall(const vector<int> &a, long long k, vector<int> &q) {
+22     q.assign(a.size(), 0);
+23     long long rem = 0;
+24     for (int i = int(a.size()) - 1; i >= 0; i--) {
+25         rem = rem * 10 + a[i];
+26         q[i] = rem / k;
+27         rem %= k;
+28     }
+29     trim(q);
+30     return rem;
+31 }
+32  
+33 int main() {
+34     string x;
+35     long long k;
+36     cin >> x >> k;
+37     vector<int> q;
+38     long long r = divSmall(toBig(x), k, q);
+39     for (int i = int(q.size()) - 1; i >= 0; i--) cout << q[i];
+40     cout << " " << r << "\n";
+41     return 0;
+42 }
+INPUT
+1000000000000000000000 7
+OUTPUT
+142857142857142857142 6
+IDEA Long division goes the other way, from the highest digit down: bring down one digit into the remainder,
+write the quotient digit, keep the remainder.
+
+=== page 13 ===
+13基础篇  第 8 章  模拟与高精度
+KEY POINT Only the remainder is needed for "is this huge number divisible by k?" questions. The last 500 digits of a
+power (P1045) are a big multiplication that throws away everything above digit 500; the digit count of 2p
+is ⌊p · log102⌋ + 1.
+KEY POINT P1249: split n into distinct parts 2, 3, 4, … and adjust the last ones, then multiply the parts with mulSmall .
+C C LANGUAGE · ADDITIONAL INFORMATION
+Classic C solutions store big numbers in fixed int  arrays with a separate length, read the digits into a char  array with
+scanf("%s") , clear arrays with memset , and use strlen  for the length. The arithmetic is the same column method.
+TRAP A fixed array must be large enough for the longest answer (len(a) + len(b) + 1 digits for a product). A
+vector  grows by itself.
+big_add_c.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 char s1[505], s2[505];
+5 int a[505], b[505], c[510];
+6  
+7 int main() {
+8     scanf("%s %s", s1, s2);
+9     int la = strlen(s1), lb = strlen(s2);
+10     memset(a, 0, sizeof a); memset(b, 0, sizeof b);
+11     for (int i = 0; i < la; i++) a[i] = s1[la - 1 - i] - '0';
+12     for (int i = 0; i < lb; i++) b[i] = s2[lb - 1 - i] - '0';
+13     int lc = (la > lb ? la : lb) + 1;
+14     for (int i = 0; i < lc; i++) {
+15         c[i] += a[i] + b[i];
+16         c[i + 1] += c[i] / 10;
+17         c[i] %= 10;
+18     }
+19     while (lc > 1 && c[lc - 1] == 0) lc--;
+20     for (int i = lc - 1; i >= 0; i--) printf("%d", c[i]);
+21     printf("\n");
+22     return 0;
+23 }
+INPUT
+987 45
+OUTPUT
+1032
+8.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 14 ===
+14基础篇  第 8 章  模拟与高精度
+Key	points	to	memorise
+1. Simulation: list every rule, choose the state, write one step, know when to stop.
+2. Check the output format character by character; most errors are misread rules.
+3. Circle of n: (p	+	s)	%	n and (p	-	s	%	n	+	n)	%	n.
+4. Rule tables go into a 2D array; repeating patterns use i	%	k.
+5. Formatting: one small if per rule (sign, 1, x, power, first term).
+6. Endless walks: cap the steps or detect a repeated state.
+7. Big numbers: vector<int> of digits, ones	digit	first; read as a string.
+8. Add: digit + digit + carry, keep % 10, pass / 10; loop while digits or	carry remain.
+9. Compare by length, then from the top digit; subtract smaller from larger and add "−".
+10. Borrow: +10 here, −1 at the next digit; always trim leading zeros.
+11. Big × small: digit × k + carry; push the final carry digit by digit.
+12. Big × big: c[i	+	j]	+=	a[i]	*	b[j], then one carry sweep.
+13. Big ÷ small: from the top digit down, rem = rem × 10 + digit.
+14. (C) Fixed int arrays + char input + memset + strlen do the same job; size them for the longest answer.
+8.3.1 Problems
+Problem Name Section What it tests
+P1042 乒乓球 8.1 Score games under two rule sets; print the unfinished game.
+P2670 扫雷游戏 8.1 Count mines around each cell (dx/dy).
+P1563 玩具谜题 8.1 Circle moves with mod n; facing flips direction.
+P1601 高精度加法 8.2 Big + big, column addition with carry.
+P1303 A*B Problem 8.2 Big × big: products into column i + j.
+P1009 阶乘之和 8.2 Running factorial × small, plus big addition.
+P4924 魔法少女小 Scarlet 8.1 Rotate square sub-grids, using a second array.
+P1328 生活大爆炸版石头剪刀布 8.1 Win table lookup; cyclic patterns with i % k.
+P1518 两只塔姆沃斯牛 8.1 Two walkers on a grid; stop on meeting or repeated state.
+P1067 多项式输出 8.1 Format each term: sign, coefficient, x, power.
+P1098 字符串的展开 8.1 Expand a-d style ranges under three parameters.
+P1065 作业调度方案 8.1 Schedule steps on machines following the rules exactly.
+P1786 帮贡排序 8.1 Sort by several keys, then reassign ranks.
+P1591 阶乘数码 8.2 Big factorial, then tally one digit.
+P1249 最大乘积 8.2 Split into distinct parts, then big multiplication.
+P1045 麦森数 8.2 Digit count by logarithm; last 500 digits by truncated big multiplication.
+8.3.2 Practice	ladder
+1. Direct. P1601: big addition (8.2).
+2. One	twist. P1563: circle moves with a direction flip (8.1).
+3. Idea	hidden. P1009: factorials that overflow (8.2).
+4. Two	ideas. P1067: many small formatting rules (8.1).
+
+=== page 15 ===
+15基础篇  第 8 章  模拟与高精度
+5. Stretch. P1045: logarithm plus truncated big multiplication (8.2).
+8.3.3 Experiments
+1. Feed table_tennis.cpp a record split over several lines.
+2. Compute 100! with big_factorial.cpp and count its digits.
+3. Multiply two 1000-digit numbers with big_mul.cpp and time it.
+4. Check big_sub.cpp on 1000 − 999 and 999 − 1000.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,165 @@
+# NOI篇 第14章 反演与容斥  (N14)
+# source: NOI篇 第14章 反演与容斥.pdf
+
+=== page 1 ===
+1NOI 篇  第 14 章  反演与容斥
+第 14 章 	 反演与容斥
+Binomial and Stirling inversion, min-max inclusion-exclusion Luogu (verified) 2 problems
+C++17 · all programs run
+14.1 二项式反演与斯特林反演 14.2 min-max 容斥
+14.3 课后习题与实验
+14.1 二项式反演与斯特林反演
+At	least	 ⇒ 	exactly;	forced	pairs	DP.
+IDEA Binomial	inversion ( 二项式反演 ): if f(k) = Σi≥k C(i, k) g(i) for all k ("f counts objects with at	least k
+marked items, each counted once per chosen k-subset"), then g(k) = Σi≥k (−1)i−k C(i, k) f(i) ("exactly k").
+The other form: f(n) = Σi≤n C(n, i) g(i) ⇔ g(n) = Σi≤n (−1)n−i C(n, i) f(i).
+KEY POINT "Exactly k" is hard, "at least k" is easy: choose k items to force the property, arrange the rest freely.
+Derangements are the case k = 0. 已经没有什么好害怕的了  (P4859): count pairings with exactly (n +
+k)/2 pairs where the candy beats the pill: DP the forced pairs, multiply by (n − j)! for the rest, then invert.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Turn "at least k" counts into "exactly k" with binomial inversion, switch between block counts with Stirling
+inversion, and compute an expected maximum from expected minima.
+
+=== page 2 ===
+2NOI 篇  第 14 章  反演与容斥
+binomial_inversion.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long MOD = 1000000009;
+5 int main() {
+6     int n, k;
+7     cin >> n >> k;
+8     vector<long long> a(n), b(n);
+9     for (int i = 0; i < n; i++) cin >> a[i];
+10     for (int i = 0; i < n; i++) cin >> b[i];
+11     if ((n + k) % 2) { cout << 0 << "\n"; return 0; }
+12     int need = (n + k) / 2;
+13     sort(a.begin(), a.end()); sort(b.begin(), b.end());
+14     vector<vector<long long>> C(n + 1, vector<long long>(n + 1, 0));
+15     for (int i = 0; i <= n; i++) { C[i][0] = 1; for (int j = 1; j <= i; j++) C[i][j] = (C[i - 1][j - 1] 
++ C[i - 1][j]) % MOD; }
+16     vector<long long> fact(n + 1, 1);
+17     for (int i = 1; i <= n; i++) fact[i] = fact[i - 1] * i % MOD;
+18     // dp[j] = ways to choose j forced pairs (a beats b) among the a's processed so far
+19     vector<long long> dp(n + 1, 0);
+20     dp[0] = 1;
+21     int smaller = 0;                                  // b's below the current a
+22     for (int i = 0; i < n; i++) {
+23         while (smaller < n && b[smaller] < a[i]) smaller++;
+24         for (int j = i + 1; j >= 1; j--)              // a[i] takes one of the free smaller b's
+25             dp[j] = (dp[j] + dp[j - 1] * max(0, smaller - (j - 1))) % MOD;
+26     }
+27     vector<long long> f(n + 1);
+28     for (int j = 0; j <= n; j++) f[j] = dp[j] * fact[n - j] % MOD;        // "at least j" (with 
+multiplicity)
+29     long long g = 0;
+30     for (int i = need; i <= n; i++) {                 // binomial inversion: exactly `need`
+31         long long term = C[i][need] * f[i] % MOD;
+32         g = ((i - need) % 2 ? g - term + MOD : g + term) % MOD;
+33     }
+34     cout << g << "\n";
+35     return 0;
+36 }
+INPUT 1
+4 2
+21 24 33 6
+26 19 2 25
+OUTPUT 1
+8
+INPUT 2
+6 0
+8 23 37 7 11 15
+29 32 24 36 39 18
+OUTPUT 2
+0
+INPUT 3
+7 3
+4 11 29 14 28 5 1
+32 9 36 21 3 27 34
+OUTPUT 3
+0
+KEY POINT Checked against trying all n! pairings in Python. Sorting both lists lets each a choose among the b's
+smaller than it, minus those already used by earlier (smaller) a's.
+IDEA Stirling	inversion ( 斯特林反演 ) is the analogue with Stirling numbers: f(n) = Σ S(n, k) g(k) ⇔ g(n) = Σ
+(−1)n−k s(n, k) f(k), where S and s are Stirling numbers of the second and (unsigned) first kind ( 进阶篇  第
+20 章 ). It converts between "partitions into any number of blocks" and "exactly k blocks".
+
+=== page 3 ===
+3NOI 篇  第 14 章  反演与容斥
+14.2 min-max	 容斥
+E[max]	from	E[min]	over	subsets;	SOS.
+IDEA Min-max	inclusion-exclusion (min-max 容斥 ): for any finite set S of numbers, max(S) = Σ∅≠T⊆S
+(−1)|T|+1 min(T). It also holds for expectations, E[max] = Σ (−1)|T|+1 E[min(T)], even though max and
+min of random variables are not linear. The point: E[min] is often easy when E[max] is not.
+KEY POINT 按位或  (P3175): each second a random number i (probability pi) is ORed into x; expected time until all n
+bits are set. Tb = time bit b first appears; the answer is E[max Tb]. min over a bit set T is the first time any
+bit of T appears: geometric with success probability 1 − Σi ∩ T = ∅ pi, i.e. 1 − (sum of p over subsets of T's
+complement), which SOS DP ( 拓展篇  第 12 章 ) gives for all T at once.
+minmax.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     int full = (1 << n) - 1;
+8     vector<double> s(1 << n);
+9     for (int i = 0; i <= full; i++) cin >> s[i];
+10     for (int b = 0; b < n; b++)                      // SOS: s[m] = sum of p over subsets of m
+11         for (int m = 0; m <= full; m++) if (m >> b & 1) s[m] += s[m ^ (1 << b)];
+12     double ans = 0;
+13     for (int T = 1; T <= full; T++) {
+14         double miss = s[full ^ T];                   // a draw misses every bit of T
+15         if (1 - miss < 1e-12) { cout << "INF\n"; return 0; }
+16         double emin = 1 / (1 - miss);                // geometric waiting time
+17         ans += (__builtin_popcount(T) % 2 ? emin : -emin);
+18     }
+19     cout << fixed << setprecision(10) << ans << "\n";
+20     return 0;
+21 }
+INPUT 1
+2
+0.250000000000 0.250000000000 0.250000000000 
+0.250000000000
+OUTPUT 1
+2.6666666667
+INPUT 2
+2
+0.428571428571 0.142857142857 0.428571428571 
+0.000000000000
+OUTPUT 2
+7.5833333333
+INPUT 3
+3
+0.080000000000 0.000000000000 0.160000000000 
+0.040000000000 0.320000000000 0.000000000000 
+0.120000000000 0.280000000000
+OUTPUT 3
+3.1980994152
+KEY POINT Checked against solving the Markov chain over all 2ⁿ states with exact fractions in Python. If some bit can
+never be set, every T containing it has a zero success probability: the answer is INF.
+14.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 4 ===
+4NOI 篇  第 14 章  反演与容斥
+Key	points	to	memorise
+1. f(k) = Σ_{i≥k} C(i, k) g(i) ⇔ g(k) = Σ_{i≥k} (−1)^(i−k) C(i, k) f(i).
+2. "At least k" (force k, rest free) is easy; invert to "exactly k".
+3. Stirling inversion: S(n, k) and signed s(n, k) are inverse matrices.
+4. max(S) = Σ_{T≠∅} (−1)^(|T|+1) min(T); holds for expectations.
+5. E[min] of geometric waits = 1 / P(any hit); SOS gives all subsets.
+14.3.1 Problems
+Problem Name Section What it tests
+P4859 已经没有什么好害怕的了 14.1 Forced pairs + binomial inversion.
+P3175 按位或 14.2 Min-max over bits + SOS.
+14.3.2 Practice	ladder
+1. Direct. P4859: binomial inversion (14.1).
+2. One	twist. P3175: min-max inclusion-exclusion (14.2).
+14.3.3 Experiments
+1. Derive derangements with binomial inversion (f(k) = C(n, k)(n − k)!).
+2. Check max(S) = Σ (−1)^(|T|+1) min(T) on random small sets.
+3. Make one bit impossible in minmax.cpp and confirm INF.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

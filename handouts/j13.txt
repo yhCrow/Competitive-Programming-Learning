@@ -1,0 +1,469 @@
+# 进阶篇 第13章 动态规划的引入  (进13)
+# source: 进阶篇 第13章 动态规划的引入.pdf
+
+=== page 1 ===
+1进阶篇  第 13 章  动态规划的引入
+第 13 章 	 动态规划的引入
+Introduction to dynamic programming Luogu #211 18 problems C++17 · all programs run
+13.1 动态规划 13.2 状态、转移与有向无环图
+13.3 拓扑排序与记忆化搜索 13.4 动态规划的解法
+13.5 课后习题与实验
+13.1 动态规划
+Number	triangle;	coins	three	ways.
+7
+3 8
+8 1 0
+2 7 4 4
+4 5 2 6 5
+best path 7 + 3 + 8 + 7 + 5 = 30
+IDEA Dynamic	programming ( 动态规划 )
+solves a problem by solving smaller
+versions of it, each	once, and storing
+the answers. The number triangle:
+walking from the top to the bottom, each
+step down-left or down-right, maximise
+the sum. Trying all 2n−1 paths is too
+slow.
+KEY POINT Let f[i][j] = best sum from (i, j) down to
+the bottom. Then f[i][j] = a[i][j] +
+max(f[i+1][j], f[i+1][j+1]). Each cell is
+computed once from two stored values:
+O(n²) instead of O(2ⁿ) (P1216).
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 4 部 分  动 态 规 划
+Solve each subproblem once and store it: states and transitions form a DAG, which you visit in topological
+order or by memoised search, and a few patterns cover most first DPs.
+
+=== page 2 ===
+2进阶篇  第 13 章  动态规划的引入
+triangle.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[1005][1005], f[1005][1005];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     for (int i = 1; i <= n; i++)
+10         for (int j = 1; j <= i; j++) cin >> a[i][j];
+11     for (int j = 1; j <= n; j++) f[n][j] = a[n][j];         // bottom row
+12     for (int i = n - 1; i >= 1; i--)                         // from the bottom up
+13         for (int j = 1; j <= i; j++)
+14             f[i][j] = a[i][j] + max(f[i + 1][j], f[i + 1][j + 1]);
+15     cout << f[1][1] << "\n";
+16     return 0;
+17 }
+INPUT
+5
+7
+3 8
+8 1 0
+2 7 4 4
+4 5 2 6 5
+OUTPUT
+30
+IDEA Why the plain recursion is slow: the same cell is reached by many paths, and each time its whole lower
+triangle is recomputed. These overlapping	subproblems are what DP removes.
+KEY POINT Two properties make DP correct: optimal	substructure (the best path from (i, j) uses a best path from
+the cell below) and no	after-effect ( 无后效性 : how you reached (i, j) does not change what is possible
+from it).
+13.1.1 Coins:	three	questions,	three	recurrences
+1
+w=0
+1
+w=1
+2
+w=2
+3
+w=3
+5
+w=4
+9
+w=5
+g
+g[w] = g[w−1] + g[w−2] + g[w−5]
+IDEA Coins {1, 2, 5}, total w = 5. Fewest
+coins: f[w] = 1 + min f[w − c] (P2842).
+Ordered ways (1 + 2 ≠ 2 + 1): g[w] = Σ
+g[w − c] (P2840). Unordered ways:
+process coin types one at a time, so
+each combination is counted in one
+order only (P2834).
+KEY POINT The only difference between the last
+two is the loop	order: total outside and
+coins inside counts sequences; coins
+outside and total inside counts sets.
+
+=== page 3 ===
+3进阶篇  第 13 章  动态规划的引入
+coins.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int MOD = 1000000007;
+5 int f[10005];
+6 long long g[10005], h[10005];
+7  
+8 int main() {
+9     int n, w;
+10     cin >> n >> w;
+11     vector<int> c(n);
+12     for (int i = 0; i < n; i++) cin >> c[i];
+13     // fewest coins
+14     for (int x = 1; x <= w; x++) {
+15         f[x] = INT_MAX;
+16         for (int i = 0; i < n; i++)
+17             if (c[i] <= x && f[x - c[i]] != INT_MAX) f[x] = min(f[x], f[x - c[i]] + 1);
+18     }
+19     // ordered ways: for each total, try every last coin
+20     g[0] = 1;
+21     for (int x = 1; x <= w; x++)
+22         for (int i = 0; i < n; i++)
+23             if (c[i] <= x) g[x] = (g[x] + g[x - c[i]]) % MOD;
+24     // unordered ways: coin types in a fixed order
+25     h[0] = 1;
+26     for (int i = 0; i < n; i++)
+27         for (int x = c[i]; x <= w; x++) h[x] = (h[x] + h[x - c[i]]) % MOD;
+28     cout << (f[w] == INT_MAX ? -1 : f[w]) << " " << g[w] << " " << h[w] << "\n";
+29     return 0;
+30 }
+INPUT 1
+3 5
+1 2 5
+OUTPUT 1
+1 9 4
+INPUT 2
+2 3
+2 4
+OUTPUT 2
+-1 0 0
+KEY POINT 5 = 5 uses 1 coin. Ordered: 9 sequences. Unordered: {5}, {2,2,1}, {2,1,1,1}, {1,1,1,1,1} = 4. With coins {2, 4}
+the total 3 is impossible, so the minimum must stay "infinite" and print −1: never add 1 to INT_MAX.
+13.2 状态、转移与有向无环图
+Designing	a	DP;	recovering	the	path;	grid	counting.
+IDEA Every DP is a DAG ( 有向无环图 ): the states are the nodes (f[i][j], g[w]) and the transitions are the edges
+(which states a state is computed from). "No after-effect" means there are no cycles. The answer is a
+longest / shortest path or a path count on that DAG.
+KEY POINT To design a DP: (1) define the state in words: "f[i][j] = the best … when …"; (2) find the last decision and
+write the transition; (3) set the boundary values; (4) choose an order where every state comes after the
+ones it uses; (5) say where the answer is.
+Step Triangle Coins (ordered) Mine paths (P2196)
+state f[i][j]: best sum from (i, j) down g[w]: sequences with total w f[i]: most mines on a path ending at i
+
+=== page 4 ===
+4进阶篇  第 13 章  动态规划的引入
+Step Triangle Coins (ordered) Mine paths (P2196)
+transition a[i][j] + max of the two below Σ over the last coin a[i] + max f[j] over edges j → i
+boundary bottom row g[0] = 1 f[i] = a[i] with no predecessor
+order i from n down w increasing i increasing (edges go forward)
+answer f[1][1] g[w] max f[i], path rebuilt from pre[]
+mines.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, a[25], f[25], pre[25];
+5 bool e[25][25];                               // e[i][j]: road from i to j, i < j
+6  
+7 void printPath(int i) {
+8     if (pre[i]) printPath(pre[i]);            // print the earlier part first
+9     cout << i << " ";
+10 }
+11  
+12 int main() {
+13     cin >> n;
+14     for (int i = 1; i <= n; i++) cin >> a[i];
+15     for (int i = 1; i < n; i++)
+16         for (int j = i + 1; j <= n; j++) { int x; cin >> x; e[i][j] = x; }
+17     int best = 0;
+18     for (int i = 1; i <= n; i++) {            // roads only go forward: i in order
+19         f[i] = a[i];
+20         for (int j = 1; j < i; j++)
+21             if (e[j][i] && f[j] + a[i] > f[i]) { f[i] = f[j] + a[i]; pre[i] = j; }
+22         if (f[i] > f[best]) best = i;
+23     }
+24     printPath(best);
+25     cout << "\n" << f[best] << "\n";
+26     return 0;
+27 }
+INPUT
+5
+10 8 4 7 6
+1 1 1 0
+0 0 0
+1 1
+1
+OUTPUT
+1 3 4 5 
+27
+IDEA Recovering	the	choice: store pre[i], the state that gave f[i] its value. Walking pre[] back from the best end
+gives the path in reverse; recursion prints it forwards (P2196).
+KEY POINT The roads only lead from smaller to larger cellar numbers, so "i increasing" is already a topological order.
+When the order is not obvious, use a topological sort (13.3).
+
+=== page 5 ===
+5进阶篇  第 13 章  动态规划的引入
+pawn.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long f[25][25];
+5 bool blocked[25][25];
+6  
+7 int main() {
+8     int bx, by, hx, hy;
+9     cin >> bx >> by >> hx >> hy;
+10     int dx[9] = {0, 1, 1, -1, -1, 2, 2, -2, -2}, dy[9] = {0, 2, -2, 2, -2, 1, -1, 1, -1};
+11     for (int k = 0; k < 9; k++) {             // the horse and the 8 squares it attacks
+12         int x = hx + dx[k], y = hy + dy[k];
+13         if (x >= 0 && x <= bx && y >= 0 && y <= by) blocked[x][y] = true;
+14     }
+15     for (int x = 0; x <= bx; x++)
+16         for (int y = 0; y <= by; y++) {
+17             if (blocked[x][y]) { f[x][y] = 0; continue; }
+18             if (x == 0 && y == 0) { f[x][y] = 1; continue; }
+19             f[x][y] = (x > 0 ? f[x - 1][y] : 0) + (y > 0 ? f[x][y - 1] : 0);
+20         }
+21     cout << f[bx][by] << "\n";
+22     return 0;
+23 }
+INPUT
+6 6 3 3
+OUTPUT
+6
+IDEA Counting paths on a grid that move right or down: f[x][y] = f[x − 1][y] + f[x][y − 1], with blocked squares
+fixed at 0 (P1002 过河卒 ). Row by row is a topological order of this grid DAG.
+KEY POINT Counts grow fast: up to C(40, 20) ≈ 1.4 × 10¹¹ here, so long	long. Check the boundary: f[0][0] = 1 only if
+the start itself is not attacked.
+13.3 拓扑排序与记忆化搜索
+Memoised	recursion;	pushing	counts	in	Kahn	order.
+IDEA Two ways to visit the DAG in a valid order. Topological	order ( 拓扑排序 ): repeatedly take a state with no
+unfinished predecessors (Kahn's queue, 基础篇  第 18 章 ) and push its value forward. Memoised	search
+( 记忆化搜索 ): write the recursion, and store each result the first time it is computed.
+KEY POINT Memoisation needs no order at all: the recursion visits exactly the states that are needed. It is the easiest
+way when the order is awkward (a grid where you may move to any lower neighbour). The cost is
+recursion overhead and depth.
+
+=== page 6 ===
+6进阶篇  第 13 章  动态规划的引入
+ski.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int R, C, h[105][105], f[105][105];
+5 int dx[4] = {1, -1, 0, 0}, dy[4] = {0, 0, 1, -1};
+6  
+7 int longest(int x, int y) {                   // longest slide starting at (x, y)
+8     if (f[x][y]) return f[x][y];              // already known
+9     f[x][y] = 1;
+10     for (int k = 0; k < 4; k++) {
+11         int nx = x + dx[k], ny = y + dy[k];
+12         if (nx >= 1 && nx <= R && ny >= 1 && ny <= C && h[nx][ny] < h[x][y])
+13             f[x][y] = max(f[x][y], longest(nx, ny) + 1);
+14     }
+15     return f[x][y];
+16 }
+17  
+18 int main() {
+19     cin >> R >> C;
+20     for (int i = 1; i <= R; i++)
+21         for (int j = 1; j <= C; j++) cin >> h[i][j];
+22     int best = 0;
+23     for (int i = 1; i <= R; i++)
+24         for (int j = 1; j <= C; j++) best = max(best, longest(i, j));
+25     cout << best << "\n";
+26     return 0;
+27 }
+INPUT
+5 5
+1 2 3 4 5
+16 17 18 19 6
+15 24 25 20 7
+14 23 22 21 8
+13 12 11 10 9
+OUTPUT
+25
+IDEA Skiing (P1434): you may only slide to a strictly lower neighbour, so there are no cycles; but rows and
+columns give no order. Memoised search handles it in O(RC): each cell is solved once.
+KEY POINT Use a value that cannot be an answer (here 0) as "not computed yet". When 0 can be a real answer, keep a
+separate bool seen[][]  or start with −1.
+
+=== page 7 ===
+7进阶篇  第 13 章  动态规划的引入
+food_chains.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int MOD = 80112002;
+5 const int N = 5005;
+6 vector<int> g[N];
+7 int indeg[N], outdeg[N];
+8 long long ways[N];
+9  
+10 int main() {
+11     int n, m;
+12     cin >> n >> m;
+13     for (int i = 0; i < m; i++) {
+14         int a, b;
+15         cin >> a >> b;                        // a is eaten by b: a -> b
+16         g[a].push_back(b);
+17         indeg[b]++; outdeg[a]++;
+18     }
+19     queue<int> q;
+20     for (int i = 1; i <= n; i++)
+21         if (indeg[i] == 0) { ways[i] = 1; q.push(i); }   // producers start chains
+22     long long ans = 0;
+23     while (!q.empty()) {
+24         int u = q.front();
+25         q.pop();
+26         if (outdeg[u] == 0) ans = (ans + ways[u]) % MOD;   // top consumer ends chains
+27         for (int k = 0; k < int(g[u].size()); k++) {
+28             int v = g[u][k];
+29             ways[v] = (ways[v] + ways[u]) % MOD;           // push forward
+30             if (--indeg[v] == 0) q.push(v);
+31         }
+32     }
+33     cout << ans << "\n";
+34     return 0;
+35 }
+INPUT
+5 7
+1 2
+1 3
+2 3
+3 5
+2 5
+4 5
+3 4
+OUTPUT
+5
+IDEA Counting maximal food chains (P4017): the number of paths from the sources (in-degree 0) to the sinks
+(out-degree 0). With Kahn's queue a node is processed only after all its predecessors have pushed their
+counts into it.
+KEY POINT Push style ("add my value to my successors") fits a queue; pull style ("read my predecessors") fits loops
+and memoisation. Both visit the same DAG; pick the one whose order is easy to get.
+13.4 动态规划的解法
+Knapsack	directions;	best	block	ending	here.
+IDEA Most introductory DPs are one of a few patterns. Recognising the pattern gives the state at once.
+
+=== page 8 ===
+8进阶篇  第 13 章  动态规划的引入
+Pattern State Transition Examples
+0/1 knapsack f[j]: best value with capacity j f[j] = max(f[j], f[j − w] + v), j downward P1048, P1049, P1164
+unbounded knapsack same same, j upward P1616, P2834
+group / dependent f[j] per group try each option of the group P1064, P1077
+sequence ending at i f[i]: best ending at i extend or restart P1115
+grid / DAG path f[x][y] from the allowed predecessors P1216, P1002, P1434
+knapsack.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int T, m;
+6     cin >> T >> m;                            // time available, number of herbs
+7     vector<int> t(m), v(m);
+8     vector<long long> g(T + 1, 0), f(T + 1, 0);   // sized by the capacity
+9     for (int i = 0; i < m; i++) cin >> t[i] >> v[i];
+10     for (int i = 0; i < m; i++)               // 0/1: each herb at most once
+11         for (int j = T; j >= t[i]; j--) g[j] = max(g[j], g[j - t[i]] + v[i]);
+12     for (int i = 0; i < m; i++)               // unbounded: as often as you like
+13         for (int j = t[i]; j <= T; j++) f[j] = max(f[j], f[j - t[i]] + v[i]);
+14     cout << g[T] << " " << f[T] << "\n";
+15     return 0;
+16 }
+INPUT
+70 3
+71 100
+69 1
+1 2
+OUTPUT
+3 140
+IDEA Herbs: time 70; (71, 100) does not fit; (69, 1); (1, 2). Each herb at most once: 1 + 2 = 3 (P1048). As often as
+you like: 70 × 2 = 140 (P1616 疯狂的采药 ).
+KEY POINT The 2D state f[i][j] (first i items, capacity j) shrinks to one row. Going down in j reads values from the
+previous item (each item once); going up reads values already updated for this item (unlimited copies).
+
+=== page 9 ===
+9进阶篇  第 13 章  动态规划的引入
+max_subarray.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     long long cur = 0, best = LLONG_MIN;
+8     for (int i = 0; i < n; i++) {
+9         long long x;
+10         cin >> x;
+11         cur = max(cur + x, x);                // best sum ending here: extend or restart
+12         best = max(best, cur);
+13     }
+14     cout << best << "\n";
+15     return 0;
+16 }
+INPUT 1
+7
+2 -4 3 -1 2 -4 3
+OUTPUT 1
+4
+INPUT 2
+3
+-5 -2 -8
+OUTPUT 2
+-2
+IDEA f[i] = the best sum of a block ending	at	i: either a[i] alone or f[i − 1] + a[i]. Only the previous value is
+needed, so f becomes one variable (P1115).
+KEY POINT "Ending at i" is the standard trick when the answer is "best block anywhere": the block ends somewhere,
+so the answer is max f[i]. Start best at the smallest value, not 0, so all-negative input works.
+TRAP Size the arrays by the capacity, not the number of items (P1616 has capacity up to 10⁷), and use long long
+when values times counts can exceed 2³¹.
+13.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. DP = each subproblem once + stored; needs optimal substructure and no after-effect.
+2. States = DAG nodes, transitions = edges; answer = a path value or count on the DAG.
+3. Design: state in words → last decision → boundary → order → answer.
+4. Coins: total outside = ordered sequences; coin types outside = unordered sets.
+5. Keep pre[] to rebuild the choices.
+6. Memoised search: no order needed; "not computed" value must not be an answer.
+7. Kahn order + push forward for counting paths.
+8. 0/1 knapsack: j downward; unbounded: j upward.
+9. Best block: f = max(f + x, x); answer max f; start best at −∞.
+
+=== page 10 ===
+10进阶篇  第 13 章  动态规划的引入
+13.5.1 Problems
+Problem Name Section What it tests
+P2842 纸币问题  1 13.1 Fewest coins.
+P1216 数字三角形  Number
+Triangles
+13.1 Bottom-up max path.
+P2840 纸币问题  2 13.1 Ordered ways: total outside.
+P2834 纸币问题  3 13.1 Unordered ways: coins outside.
+P1048 采药 13.4 0/1 knapsack.
+P2196 挖地雷 13.2 Best path in a DAG, print it.
+P1434 滑雪 13.3 Memoised longest descent.
+P4017 最大食物链计数 13.3 Count source-to-sink paths.
+P1115 最大子段和 13.4 Best block ending here.
+P1802 5 倍经验日 13.4 Knapsack with a base value per item.
+P1002 过河卒 13.2 Grid paths avoiding the horse.
+P1049 装箱问题 13.4 Knapsack: largest reachable volume.
+P1616 疯狂的采药 13.4 Unbounded knapsack.
+P1164 小  A 点菜 13.4 Count subsets with exact sum.
+P1077 摆花 13.4 Count with at most a[i] of each kind.
+P3842 线段 13.2 Per row: end at the left or right end.
+P1064 金明的预算方案 13.4 Main item with up to two attachments.
+P2392 考前临时抱佛脚 13.4 Split each subject in half: subset sum.
+13.5.2 Practice	ladder
+1. Direct. P1216: first DP (13.1).
+2. One	twist. P1048: 0/1 knapsack (13.4).
+3. Idea	hidden. P1434: memoised search (13.3).
+4. Two	ideas. P2834: loop order matters (13.1).
+5. Stretch. P1064: grouped choices (13.4).
+13.5.3 Experiments
+1. Write the triangle as plain recursion without storing f and count the calls for n = 25.
+2. Swap the loops of h[] in coins.cpp and check that it now prints the ordered count.
+3. Run the 0/1 loop of knapsack.cpp upward and explain the larger answer.
+4. Print f[][] of ski.cpp after the search: which cells were computed by recursion first?
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

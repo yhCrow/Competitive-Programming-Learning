@@ -1,0 +1,377 @@
+# 进阶篇 第14章 线性状态动态规划  (进14)
+# source: 进阶篇 第14章 线性状态动态规划.pdf
+
+=== page 1 ===
+1进阶篇  第 14 章  线性状态动态规划
+第 14 章 	 线性状态动态规划
+Linear-state DP Luogu #212 17 problems C++17 · all programs run
+14.1 单序列问题 14.2 多序列问题
+14.3 高维问题 14.4 课后习题与实验
+14.1 单序列问题
+LIS	two	ways,	mountains,	indexing	by	a	property.
+IDEA Longest	increasing	subsequence (LIS): f[i] = the longest increasing subsequence ending	at	a[i] = 1 +
+max f[j] over j < i with a[j] < a[i]. O(n²). The answer is max f[i], since it ends somewhere.
+a = 3 1 4 1 5 9 2 6, tails g[]:
+after 3 1 4 1 4
+after 1 5 9 1 4 5 9
+after 2 1 2 5 9
+after 6 1 2 5 6
+IDEA O(n log n): keep g[k] = the smallest
+possible	last	value of an increasing
+subsequence of length k + 1. g stays
+sorted, so each new x replaces the first
+g[k] ≥ x (lower_bound), or extends g.
+The length of g is the answer.
+KEY POINT A smaller tail is never worse: anything
+that extends a longer tail also extends a
+smaller one. g itself is not an actual
+subsequence (1 2 5 6 happens to be one
+here; in general it is not).
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 4 部 分  动 态 规 划
+One sequence: the best answer ending at each position, and LIS in O(n log n). Two sequences: a table of
+prefix pairs. More dimensions: keep what the future needs, compute the rest.
+
+=== page 2 ===
+2进阶篇  第 14 章  线性状态动态规划
+missiles.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     vector<int> a;
+6     int x;
+7     while (cin >> x) a.push_back(x);
+8     int n = a.size();
+9     // longest NON-increasing: reverse the comparisons, upper_bound with greater<int>
+10     vector<int> down, up;
+11     for (int i = 0; i < n; i++) {
+12         int p = upper_bound(down.begin(), down.end(), a[i], greater<int>()) - down.begin();
+13         if (p == int(down.size())) down.push_back(a[i]); else down[p] = a[i];
+14         // strictly increasing: lower_bound
+15         int q = lower_bound(up.begin(), up.end(), a[i]) - up.begin();
+16         if (q == int(up.size())) up.push_back(a[i]); else up[q] = a[i];
+17     }
+18     cout << down.size() << "\n" << up.size() << "\n";
+19     return 0;
+20 }
+INPUT
+389 207 155 300 299 170 158 65
+OUTPUT
+6
+2
+IDEA Missiles (P1020): one system intercepts a non-increasing sequence of heights. Part 1 = the longest non-
+increasing subsequence. Part 2 = how many systems cover all missiles = the longest strictly	increasing
+subsequence (Dilworth's theorem: two missiles in increasing order can never share a system).
+KEY POINT Choosing the bound: strict increase → lower_bound (equal values replace); non-strict → upper_bound
+(equal values extend). For decreasing versions add greater<int>() .
+chorus.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<int> t(n), L(n, 1), R(n, 1);
+8     for (int i = 0; i < n; i++) cin >> t[i];
+9     for (int i = 0; i < n; i++)                    // increasing, ending at i
+10         for (int j = 0; j < i; j++) if (t[j] < t[i]) L[i] = max(L[i], L[j] + 1);
+11     for (int i = n - 1; i >= 0; i--)               // decreasing, starting at i
+12         for (int j = n - 1; j > i; j--) if (t[j] < t[i]) R[i] = max(R[i], R[j] + 1);
+13     int best = 0;
+14     for (int i = 0; i < n; i++) best = max(best, L[i] + R[i] - 1);   // i is the peak, counted once
+15     cout << n - best << "\n";                      // students who must leave
+16     return 0;
+17 }
+INPUT
+8
+186 186 150 200 160 130 197 220
+OUTPUT
+4
+IDEA Chorus line (P1091): heights rise strictly to a peak and then fall strictly. Fix the peak i: the best line is (LIS
+ending at i) + (decreasing sequence starting at i) − 1. Two O(n²) LIS passes, one from each side.
+
+=== page 3 ===
+3进阶篇  第 14 章  线性状态动态规划
+KEY POINT "Best ending at i" from the left and "best starting at i" from the right, combined at i, is a common pattern
+for "mountain" shapes and for "split into two parts" problems.
+best_and.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     int best[32] = {0};                // best[b]: longest valid chain whose last value has bit b
+8     int ans = 0;
+9     for (int i = 0; i < n; i++) {
+10         int x;
+11         cin >> x;
+12         int len = 1;
+13         for (int b = 0; b < 31; b++)
+14             if (x >> b & 1) len = max(len, best[b] + 1);   // previous shares bit b with x
+15         for (int b = 0; b < 31; b++)
+16             if (x >> b & 1) best[b] = max(best[b], len);
+17         ans = max(ans, len);
+18     }
+19     cout << ans << "\n";
+20     return 0;
+21 }
+INPUT 1
+3
+1 2 3
+OUTPUT 1
+2
+INPUT 2
+5
+1 2 4 7 3
+OUTPUT 2
+3
+IDEA Longest subsequence where each neighbour pair has a non-zero AND (P4310). The O(n²) DP is too slow,
+but "x & y ≠ 0" only depends on a shared bit, so store the best chain per bit instead of per position: O(31n).
+KEY POINT When the transition only cares about a small property of the previous element (a bit, a remainder, a value
+range), index the DP by that property. The same idea speeds up LIS with a Fenwick tree over values.
+14.2 多序列问题
+Edit	distance,	LCS,	LCS	of	permutations	as	LIS.
+IDEA Two sequences: the state is a pair	of	prefixes, f[i][j] = the answer for a[1..i] and b[1..j]. Look at the last
+characters a[i] and b[j]: either they are used together, or one of them is not used at all.
+Problem f[i][j] = Transition
+LCS longest common subsequence of a[1..i],
+b[1..j]
+a[i] = b[j]: f[i−1][j−1] + 1; else max(f[i−1][j], f[i][j−1])
+edit
+distance
+fewest edits turning a[1..i] into b[1..j] min(delete f[i−1][j] + 1, insert f[i][j−1] + 1, replace f[i−1][j−1] + (a[i] ≠
+b[j]))
+
+=== page 4 ===
+4进阶篇  第 14 章  线性状态动态规划
+edit_distance.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int f[2005][2005];
+5  
+6 int main() {
+7     string a, b;
+8     cin >> a >> b;
+9     int n = a.size(), m = b.size();
+10     for (int i = 0; i <= n; i++) f[i][0] = i;          // delete all of a[1..i]
+11     for (int j = 0; j <= m; j++) f[0][j] = j;          // insert all of b[1..j]
+12     for (int i = 1; i <= n; i++)
+13         for (int j = 1; j <= m; j++) {
+14             f[i][j] = min(f[i - 1][j], f[i][j - 1]) + 1;                       // delete / insert
+15             f[i][j] = min(f[i][j], f[i - 1][j - 1] + (a[i - 1] != b[j - 1]));  // keep / replace
+16         }
+17     cout << f[n][m] << "\n";
+18     return 0;
+19 }
+INPUT 1
+sfdqxbw
+gfdgw
+OUTPUT 1
+4
+INPUT 2
+abc
+abc
+OUTPUT 2
+0
+IDEA Edit distance (P2758): the boundaries matter, f[i][0] = i and f[0][j] = j. Strings are 0-based, so a[i − 1] is the
+i-th character. O(nm) time; only the previous row is needed if memory is tight.
+KEY POINT The same table shape solves LCS, "is b a subsequence of a", and counting ways to pick k pieces of a that
+concatenate to b (P2679 子串 , which adds a third index for the number of pieces).
+lcs_perm.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<int> a(n), b(n), pos(n + 1);
+8     for (int i = 0; i < n; i++) { cin >> a[i]; pos[a[i]] = i; }   // where each value sits in a
+9     for (int i = 0; i < n; i++) cin >> b[i];
+10     vector<int> g;                                 // LIS of positions, O(n log n)
+11     for (int i = 0; i < n; i++) {
+12         int x = pos[b[i]];
+13         int k = lower_bound(g.begin(), g.end(), x) - g.begin();
+14         if (k == int(g.size())) g.push_back(x); else g[k] = x;
+15     }
+16     cout << g.size() << "\n";
+17     return 0;
+18 }
+INPUT
+5
+3 2 1 4 5
+1 2 3 4 5
+OUTPUT
+3
+
+=== page 5 ===
+5进阶篇  第 14 章  线性状态动态规划
+IDEA LCS of two permutations with n = 10⁵ (P1439): O(n²) is too slow. Replace each value of b by its position
+in a. A common subsequence is then exactly an increasing sequence of positions, so LCS = LIS, O(n log n).
+KEY POINT Here b becomes positions 2 1 0 3 4, whose LIS is 3 (for example 1 3 4: values 2, 4, 5). This only works
+because each value appears once in a.
+14.3 高维问题
+Two	walkers	on	a	grid;	counting	cards.
+S
+6
+7
+T
+both walkers move
+at the same time:
+step k = x + y
+same cell ⇔  same x
+solid takes 6, dashed takes 7
+IDEA Higher-dimensional states appear
+when several things move at once or
+several counters matter. Two walkers
+collect numbers on a grid, both moving
+right/down; a cell's number counts once
+(P1004 方格取数 ). Walking one after
+the other is wrong: the best first path
+can spoil the second.
+KEY POINT Move them together: after k steps both
+are on the diagonal x + y = k, so the state
+f[k][x1][x2] fixes both cells. They share
+a cell exactly when x1 = x2. Four
+transitions (each walker came from the
+left or from above).
+
+=== page 6 ===
+6进阶篇  第 14 章  线性状态动态规划
+two_walkers.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[12][12], f[24][12][12];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     int x, y, v;
+10     while (cin >> x >> y >> v && x) a[x][y] = v;
+11     for (int k = 2; k <= 2 * n; k++)                      // k = x + y
+12         for (int x1 = 1; x1 <= n; x1++)
+13             for (int x2 = 1; x2 <= n; x2++) {
+14                 int y1 = k - x1, y2 = k - x2;
+15                 if (y1 < 1 || y1 > n || y2 < 1 || y2 > n) continue;
+16                 int best = max(max(f[k - 1][x1 - 1][x2 - 1], f[k - 1][x1 - 1][x2]),
+17                                max(f[k - 1][x1][x2 - 1], f[k - 1][x1][x2]));   // came from above / left
+18                 int gain = a[x1][y1] + (x1 == x2 ? 0 : a[x2][y2]);            // shared cell once
+19                 f[k][x1][x2] = best + gain;
+20             }
+21     cout << f[2 * n][n][n] << "\n";
+22     return 0;
+23 }
+INPUT
+8
+2 3 13
+2 6 6
+3 5 7
+4 4 14
+5 2 21
+5 6 4
+6 3 15
+7 2 14
+0 0 0
+OUTPUT
+67
+IDEA Removing a dimension: four indices (x1, y1, x2, y2) become three because y = k − x. That cuts n⁴ states to
+2n·n². Unreachable states stay 0, which is safe here because all numbers are non-negative.
+KEY POINT The same trick, "walk both paths at once", solves passing notes there and back (P1006) and the triple-
+experience triangle with k picks (P1544 三倍经验  adds a "uses left" index).
+
+=== page 7 ===
+7进阶篇  第 14 章  线性状态动态规划
+tortoise.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int f[41][41][41][41];
+5  
+6 int main() {
+7     int n, m;
+8     cin >> n >> m;
+9     vector<int> s(n);
+10     for (int i = 0; i < n; i++) cin >> s[i];
+11     int c[5] = {0};
+12     for (int i = 0; i < m; i++) { int x; cin >> x; c[x]++; }   // how many cards of each kind
+13     for (int a = 0; a <= c[1]; a++)
+14         for (int b = 0; b <= c[2]; b++)
+15             for (int cc = 0; cc <= c[3]; cc++)
+16                 for (int d = 0; d <= c[4]; d++) {
+17                     int pos = a + 2 * b + 3 * cc + 4 * d;     // position is determined by the cards
+18                     int best = 0;
+19                     if (a) best = max(best, f[a - 1][b][cc][d]);
+20                     if (b) best = max(best, f[a][b - 1][cc][d]);
+21                     if (cc) best = max(best, f[a][b][cc - 1][d]);
+22                     if (d) best = max(best, f[a][b][cc][d - 1]);
+23                     f[a][b][cc][d] = best + s[pos];
+24                 }
+25     cout << f[c[1]][c[2]][c[3]][c[4]] << "\n";
+26     return 0;
+27 }
+INPUT
+9 5
+6 10 14 2 8 8 18 5 17
+1 3 1 2 1
+OUTPUT
+73
+IDEA Tortoise chess (P1541): the state is how many cards of each kind are used. The position on the board is
+not a separate index: it follows from the counts, pos = a + 2b + 3c + 4d.
+KEY POINT Rule for picking dimensions: keep everything the future depends on, and drop anything that can be
+computed from the rest. 40⁴ = 2.56 million states is fine; adding the position would not be.
+TRAP Memory grows with every dimension: f[41][41][41][41] ints is about 11 MB, but one more index of size
+350 would be 3.9 GB. Estimate the state count before writing the arrays.
+14.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 8 ===
+8进阶篇  第 14 章  线性状态动态规划
+Key	points	to	memorise
+1. LIS O(n²): f[i] = 1 + max f[j] (j < i, a[j] < a[i]); answer max f[i].
+2. LIS O(n log n): g[k] = smallest tail of length k+1; strict → lower_bound, non-strict → upper_bound.
+3. Fewest non-increasing chains = longest strictly increasing (Dilworth).
+4. Mountain: best ending at i from the left + best starting at i from the right − 1.
+5. Two sequences: f[i][j] on prefixes; look at a[i], b[j].
+6. Edit distance: f[i][0] = i, f[0][j] = j; min(del, ins, replace/keep).
+7. LCS of permutations: replace by positions, then LIS.
+8. Two walkers: step k = x + y, state f[k][x1][x2], add a shared cell once.
+9. Drop any index that follows from the others (position from card counts).
+14.4.1 Problems
+Problem Name Section What it tests
+P1020 导弹拦截 14.1 Longest non-increasing + longest increasing.
+P2285 打鼹鼠 14.1 LIS-like over moles in time order.
+P1725 琪露诺 14.1 Jump window max: monotone queue.
+P4933 大师 14.1 Count arithmetic subsequences, f[i][diff].
+P1874 快速求和 14.1 Insert pluses: f[i][sum] fewest pluses.
+P2758 编辑距离 14.2 Three edit operations.
+P1439 两个排列的最长公共子序
+列
+14.2 Positions, then LIS.
+P2679 子串 14.2 k pieces of A forming B.
+P1544 三倍经验 14.3 Triangle with k triples.
+P1004 方格取数 14.3 Two walkers at once.
+P1091 合唱队形 14.1 LIS from both sides.
+P1854 花店橱窗布置 14.2 Flowers into vases in order, print the choice.
+P1833 樱花 14.3 Mixed 0/1, bounded, unbounded knapsack.
+P2340 Cow Exhibition G 14.3 Knapsack over a signed sum (offset).
+P1541 乌龟棋 14.3 Card counts as the state.
+P4310 绝世好题 14.1 Best chain per bit.
+P3147 262144 P 14.1 f[v][i]: where a merge to v starting at i ends.
+14.4.2 Practice	ladder
+1. Direct. P1091: O(n²) LIS (14.1).
+2. One	twist. P1020: O(n log n) LIS (14.1).
+3. Idea	hidden. P2758: two-sequence table (14.2).
+4. Two	ideas. P1004: move together (14.3).
+5. Stretch. P1439: LCS as LIS (14.2).
+
+=== page 9 ===
+9进阶篇  第 14 章  线性状态动态规划
+14.4.3 Experiments
+1. Print the tails array g after every step of missiles.cpp for the sample.
+2. Change lower_bound to upper_bound in lcs_perm.cpp: why does nothing change for permutations?
+3. Solve two_walkers.cpp by taking the best path, zeroing it, then the best again; find a grid where it loses.
+4. Count the states of tortoise.cpp for 40 cards of each kind, then with the position as a fifth index.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

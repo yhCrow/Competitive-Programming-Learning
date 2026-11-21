@@ -1,0 +1,142 @@
+# 拓展篇 第16章 对拍与常数优化  (拓16)
+# source: 拓展篇 第16章 对拍与常数优化.pdf
+
+=== page 1 ===
+1拓展篇  第 16 章  对拍与常数优化
+第 16 章 	 对拍与常数优化
+Stress testing and constant factors Luogu (verified) 4 problems C++17 · all programs run
+16.1 对拍 16.2 常数优化
+16.3 课后习题与实验
+16.1 对拍
+Generator,	brute	force,	comparison	loop.
+IDEA Stress	testing ( 对拍 ) finds the bug the samples did not show. You need three programs: your solution, a
+slow but obviously correct brute	force, and a generator of small random inputs. Run all three in a loop
+and stop at the first input where the two answers differ: that input is a tiny, concrete failing case.
+KEY POINT Keep the random tests small (n ≤ 10, values ≤ 10): bugs show up just as often, and a failing case of size 5
+can be traced by hand. Include edge cases on purpose: n = 1, all values equal, the maximum and minimum
+values.
+gen.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main(int argc, char *argv[]) {
+5     unsigned seed = argc > 1 ? atoi(argv[1]) : 1;     // the loop passes a new seed each time
+6     mt19937 rng(seed);
+7     int n = rng() % 8 + 1;                            // small n: easy to trace by hand
+8     cout << n << "\n";
+9     for (int i = 0; i < n; i++) cout << int(rng() % 21) - 10 << " ";   // values in [-10, 10]
+10     cout << "\n";
+11     return 0;
+12 }
+OUTPUT
+6
+7 8 7 0 3 4
+stress.sh
+1 # stress.sh  (Git Bash / Linux). Windows cmd: same idea with a .bat file and fc
+2 g++ -O2 -o sol sol.cpp && g++ -O2 -o brute brute.cpp && g++ -O2 -o gen gen.cpp
+3 for i in $(seq 1 10000); do
+4     ./gen $i > in.txt
+5     ./sol < in.txt > out1.txt
+6     ./brute < in.txt > out2.txt
+7     if ! diff -w out1.txt out2.txt > /dev/null; then
+8         echo "different on seed $i"; cat in.txt; break
+9     fi
+10 done
+竞 赛 拓 展 专 题  · 拓 展 篇  · 综 合 技 巧
+Find the bug the samples missed by comparing your solution with a brute force on many small random
+tests, and make a correct solution fast enough with I/O and memory habits.
+
+=== page 2 ===
+2拓展篇  第 16 章  对拍与常数优化
+KEY POINT Pass the seed on the command line so a failing case can be reproduced exactly. diff -w ignores trailing
+spaces. When the brute force itself is wrong, both disagree with a hand-checked tiny case: check the brute
+on the samples first.
+TRAP A generator seeded with the time produces the same test many times per second; use the loop counter as
+the seed. For problems with several valid answers, compare with a checker program that validates your
+output instead of diff.
+16.2 常数优化
+Fast	I/O,	containers,	memory	order,	contest	habits.
+IDEA Constant-factor	optimisation ( 常数优化 ) matters when the complexity is right but the time is close to
+the limit. The biggest wins are almost always: fast input / output, avoiding heavy containers in inner
+loops, and memory access in order.
+Change Why it helps Typical gain
+ios::sync_with_stdio(false);
+cin.tie(nullptr);
+cin no longer syncs with C stdio 3–10× on large input
+"\n"  instead of endl endl flushes every line large on big output
+custom reader with getchar  (below) no format parsing 2× over fast cin
+array instead of map  / unordered_map no hashing, no tree, cache-friendly 5–20×
+loop order i-k-j for matrix products reads rows in memory order 2–5× on large
+matrices
+avoid % in hot loops (compare and subtract) division is slow up to 2×
+vector.reserve , global arrays no repeated allocation small but free
+#pragma GCC optimize("O3") more compiler work (not allowed
+everywhere)
+varies
+
+=== page 3 ===
+3拓展篇  第 16 章  对拍与常数优化
+fast_io.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 inline long long readInt() {                      // reads one integer, skipping spaces
+5     long long x = 0;
+6     int ch = getchar();
+7     bool neg = false;
+8     while (ch != '-' && (ch < '0' || ch > '9')) ch = getchar();
+9     if (ch == '-') { neg = true; ch = getchar(); }
+10     while (ch >= '0' && ch <= '9') { x = x * 10 + (ch - '0'); ch = getchar(); }
+11     return neg ? -x : x;
+12 }
+13  
+14 int main() {
+15     int n = readInt();
+16     long long s = 0;
+17     for (int i = 0; i < n; i++) s += readInt();
+18     printf("%lld\n", s);
+19     return 0;
+20 }
+INPUT
+5
+1 -2 3 -4 5
+OUTPUT
+3
+IDEA Reading 10⁶–10⁷ numbers is where input speed matters. This reader handles negative numbers and any
+whitespace. Do not mix it with cin on the same input.
+KEY POINT Measure before optimising: a better algorithm beats every constant trick. Use these only when the
+complexity is already the intended one.
+KEY POINT Contest	habits: compile with -Wall -Wextra  and read every warning; test n = 1 and the maximum sizes;
+check overflow (int vs long long) and array sizes before submitting; on OI-style contests, secure the
+subtasks with a simple method before trying the full solution.
+16.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. 对拍 : solution + brute force + small random generator, loop until they differ.
+2. Seed by loop counter; keep tests tiny; check the brute on samples.
+3. Multiple valid answers: write a checker instead of diff.
+4. Fast cin: sync_with_stdio(false) + cin.tie(nullptr); "\n" not endl.
+5. Arrays over maps in hot loops; memory in order; avoid % in inner loops.
+6. Complexity first, constants second.
+16.3.1 Problems
+Problem Name Section What it tests
+P1001 A+B Problem 16.1 Practise the stress loop on something trivial.
+
+=== page 4 ===
+4拓展篇  第 16 章  对拍与常数优化
+Problem Name Section What it tests
+P1177 【模板】排序 16.2 Large input: fast I/O matters.
+P3865 【模板】 ST 表  & RMQ 问题 16.2 Needs fast input.
+P1886 【模板】单调队列  / 滑动
+窗口
+16.2 Large output.
+16.3.2 Practice	ladder
+1. Direct. P1001: set up the stress loop (16.1).
+2. One	twist. P3865: fast reader (16.2).
+16.3.3 Experiments
+1. Plant a bug (≤ instead of <) in a solution and let the stress loop find it.
+2. Time reading 10⁷ numbers with cin, fast cin and readInt.
+3. Time a 1000 × 1000 matrix product with loop orders i-j-k and i-k-j.
+4. Replace an array by unordered_map in a hot loop and measure.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

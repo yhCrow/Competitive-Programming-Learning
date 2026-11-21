@@ -1,0 +1,346 @@
+# 进阶篇 第4章 进阶搜索  (进4)
+# source: 进阶篇 第04章 进阶搜索.pdf
+
+=== page 1 ===
+1进阶篇  第 4 章  进阶搜索
+第 4 章 	 进阶搜索
+Advanced search Luogu #204 15 problems C++17 · all programs run
+4.1 状态剪枝 4.2 迭代加深与双向搜索
+4.3 启发式搜索 4.4 课后习题与实验
+4.1 状态剪枝
+Feasibility,	optimality,	ordering,	symmetry	and	repeated-state	cuts.
+IDEA A plain DFS ( 基础篇  第 14 章 ) visits every branch. Pruning ( 剪枝 ) proves early that a branch cannot lead
+to a (better) answer and cuts it off. Good pruning often turns "never finishes" into "a few milliseconds";
+the answer stays the same.
+Kind of
+pruning Cut a branch when … Example
+feasibility the remaining choices can no longer reach a valid answer the sum left is too large to fill
+optimality the cost so far already reaches the best answer found path length ≥ best
+order of choices (not a cut) try the most constrained or largest choice first, so failures come
+early
+sort sticks longest first
+repeated states the same state was already explored memo / visited set
+symmetry a branch is a mirror of one already tried equal sticks: try one, skip the
+rest
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 1 部 分  进 阶 技 巧 与 思 想
+Make search fast: prune branches, deepen step by step, meet in the middle, and let a heuristic point the
+way.
+
+=== page 2 ===
+2进阶篇  第 4 章  进阶搜索
+sticks.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, len[70], target, total;
+5 bool used[70];
+6  
+7 // built `done` full sticks; the current one has length cur; try pieces from index `from`
+8 bool dfs(int done, int cur, int from) {
+9     if (done * target == total) return true;
+10     if (cur == target) return dfs(done + 1, 0, 0);          // start a new stick
+11     int lastFailed = -1;
+12     for (int i = from; i < n; i++) {
+13         if (used[i] || cur + len[i] > target) continue;      // feasibility
+14         if (len[i] == lastFailed) continue;                  // same length just failed
+15         used[i] = true;
+16         if (dfs(done, cur + len[i], i + 1)) return true;
+17         used[i] = false;
+18         lastFailed = len[i];
+19         if (cur == 0 || cur + len[i] == target) return false; // see the key point
+20     }
+21     return false;
+22 }
+23  
+24 int main() {
+25     cin >> n;
+26     for (int i = 0; i < n; i++) { cin >> len[i]; total += len[i]; }
+27     sort(len, len + n, greater<int>());                      // longest first
+28     for (target = len[0]; target <= total; target++) {
+29         if (total % target != 0) continue;                   // must divide the total
+30         fill(used, used + n, false);
+31         if (dfs(0, 0, 0)) { cout << target << "\n"; return 0; }
+32     }
+33     return 0;
+34 }
+INPUT 1
+9
+5 2 1 5 2 1 5 2 1
+OUTPUT 1
+6
+INPUT 2
+4
+1 2 3 4
+OUTPUT 2
+5
+KEY POINT Rebuilding broken sticks (P1120) needs every kind of cut: the original length divides the total; pieces are
+tried longest first and in increasing index (no reordering of the same stick); a failed length is not retried; if
+the first piece of a new stick fails, or a piece that exactly	finishes a stick fails, no other choice can work,
+so the whole branch returns false.
+
+=== page 3 ===
+3进阶篇  第 4 章  进阶搜索
+cheese.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n;
+5 double x[20], y[20], best = 1e18;
+6 bool eaten[20];
+7  
+8 double dist(int a, int b) { return sqrt((x[a] - x[b]) * (x[a] - x[b]) + (y[a] - y[b]) * (y[a] - y[b])); 
+}
+9  
+10 void dfs(int at, int count, double walked) {
+11     if (walked >= best) return;                // optimality pruning
+12     if (count == n) { best = walked; return; }
+13     for (int i = 1; i <= n; i++)
+14         if (!eaten[i]) {
+15             eaten[i] = true;
+16             dfs(i, count + 1, walked + dist(at, i));
+17             eaten[i] = false;
+18         }
+19 }
+20  
+21 int main() {
+22     cin >> n;
+23     for (int i = 1; i <= n; i++) cin >> x[i] >> y[i];
+24     x[0] = y[0] = 0;                           // the mouse starts at (0, 0)
+25     dfs(0, 0, 0);
+26     cout << fixed << setprecision(2) << best << "\n";
+27     return 0;
+28 }
+INPUT
+4
+1 1
+1 -1
+-1 1
+-1 -1
+OUTPUT
+7.41
+IDEA Optimality pruning: once a full route of length best is known, any partial route already that long is
+abandoned. The better the first answer found, the more is cut, which is why visiting nearer pieces first can
+help (P1433).
+KEY POINT For n up to 15 the safe method is a state over "which pieces are eaten" ( 状态压缩 , 第 17 章 ); pruning only
+makes plain DFS fast on typical data. Sudoku-like puzzles (P1074) fill the cell with the fewest options
+first.
+4.2 迭代加深与双向搜索
+IDDFS	for	shallow	answers;	meet	in	the	middle	for	2ⁿ	splits.
+
+=== page 4 ===
+4进阶篇  第 4 章  进阶搜索
+depth ≤ 1 depth ≤ 2 depth ≤ 3
+rerun DFS with a growing depth limit until it succeeds
+IDEA Iterative	deepening ( 迭代加深 , IDDFS): run a
+DFS that refuses to go deeper than D; if it fails, try
+D + 1. The first D that succeeds is the shallowest
+answer, like BFS, but memory stays as small as
+DFS. The repeated shallow levels cost little
+because the deepest level dominates.
+KEY POINT Use it when the answer is shallow but the tree is
+wide or infinite in depth: plain DFS would
+wander deep and never return, and BFS would
+need too much memory.
+addition_chain.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, chain[30], limit;
+5  
+6 // chain[0..k] is built; can we reach n within `limit` additions?
+7 bool dfs(int k) {
+8     if (chain[k] == n) return true;
+9     if (k == limit) return false;
+10     if ((1LL * chain[k] << (limit - k)) < n) return false;      // even doubling is too slow
+11     for (int i = k; i >= 0; i--)
+12         for (int j = i; j >= 0; j--) {
+13             int next = chain[i] + chain[j];
+14             if (next <= chain[k] || next > n) continue;      // keep it increasing
+15             chain[k + 1] = next;
+16             if (dfs(k + 1)) return true;
+17         }
+18     return false;
+19 }
+20  
+21 int main() {
+22     cin >> n;
+23     chain[0] = 1;
+24     for (limit = 0; !dfs(0); limit++) {}                      // deepen until found
+25     cout << limit << "\n";
+26     return 0;
+27 }
+INPUT 1
+15
+OUTPUT 1
+5
+INPUT 2
+31
+OUTPUT 2
+7
+INPUT 3
+1
+OUTPUT 3
+0
+IDEA Shortest addition chain: start from 1, each new number is the sum of two earlier ones, reach n with the
+fewest additions. The depth is small (about 2 log₂ n) but every level has many choices, a perfect fit for
+iterative deepening.
+KEY POINT The doubling test is an estimate of the steps still needed: even doubling every time cannot reach n, so
+stop. Egyptian fractions (P1763) use the same "deepen, estimate, cut" pattern.
+
+=== page 5 ===
+5进阶篇  第 4 章  进阶搜索
+4.2.1 Meet	in	the	middle
+ice_hockey.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n;
+5 long long M, price[45];
+6 vector<long long> sumsA, sumsB;
+7  
+8 void gen(int i, int end, long long s, vector<long long> &out) {
+9     if (s > M) return;                       // already too expensive
+10     if (i == end) { out.push_back(s); return; }
+11     gen(i + 1, end, s, out);                 // skip game i
+12     gen(i + 1, end, s + price[i], out);      // watch game i
+13 }
+14  
+15 int main() {
+16     cin >> n >> M;
+17     for (int i = 0; i < n; i++) cin >> price[i];
+18     gen(0, n / 2, 0, sumsA);                 // first half: up to 2^20 sums
+19     gen(n / 2, n, 0, sumsB);                 // second half
+20     sort(sumsB.begin(), sumsB.end());
+21     long long ways = 0;
+22     for (int i = 0; i < int(sumsA.size()); i++)   // pair each A with all B <= M - A
+23         ways += upper_bound(sumsB.begin(), sumsB.end(), M - sumsA[i]) - sumsB.begin();
+24     cout << ways << "\n";
+25     return 0;
+26 }
+INPUT
+5 1000
+100 1500 500 500 1000
+OUTPUT
+8
+IDEA 240 subsets are far too many, but 2 × 220 ≈ 2 million half-subsets are fine. Meet	in	the	middle ( 双向搜索
+/ 折半搜索 ): enumerate each half separately, sort one side, and count matching pairs with binary search
+(P4799).
+KEY POINT The pattern works whenever the answer is "a choice from the left half combined with a choice from the
+right half": sums (CF525E with factorials), products below a bound (CF912E). Searching from both ends of
+a graph toward each other is the same idea.
+4.3 启发式搜索
+A*	with	an	estimate	that	never	overestimates;	IDA*.
+IDEA Heuristic	search ( 启发式搜索 ) uses an estimate h(state) of the remaining cost to explore promising
+states first. A*: always expand the state with the smallest f = g + h, where g is the cost so far. If h never
+overestimates the true remaining cost, the first time the goal is taken from the queue its cost is optimal.
+KEY POINT A good h is cheap to compute and as close to the truth as possible without exceeding it. For sliding
+puzzles, "how many tiles are out of place" and "total Manhattan distance of the tiles" both never
+overestimate.
+
+=== page 6 ===
+6进阶篇  第 4 章  进阶搜索
+eight_puzzle.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const string goal = "123804765";
+5 int gx[9], gy[9];                         // goal position of each tile
+6  
+7 int h(const string &s) {                  // total Manhattan distance, blank excluded
+8     int d = 0;
+9     for (int i = 0; i < 9; i++)
+10         if (s[i] != '0') { int t = s[i] - '0'; d += abs(i / 3 - gx[t]) + abs(i % 3 - gy[t]); }
+11     return d;
+12 }
+13  
+14 int main() {
+15     for (int i = 0; i < 9; i++) { gx[goal[i] - '0'] = i / 3; gy[goal[i] - '0'] = i % 3; }
+16     string start;
+17     cin >> start;
+18     map<string, int> g;                   // best known cost to each state
+19     priority_queue<pair<int, string>, vector<pair<int, string>>, greater<pair<int, string>>> pq;
+20     g[start] = 0;
+21     pq.push(make_pair(h(start), start));
+22     int dx[4] = {-1, 1, 0, 0}, dy[4] = {0, 0, -1, 1};
+23     while (!pq.empty()) {
+24         string s = pq.top().second;
+25         int f = pq.top().first;
+26         pq.pop();
+27         if (s == goal) { cout << g[s] << "\n"; return 0; }
+28         if (f > g[s] + h(s)) continue;     // an outdated queue entry
+29         int z = s.find('0');
+30         for (int k = 0; k < 4; k++) {
+31             int nx = z / 3 + dx[k], ny = z % 3 + dy[k];
+32             if (nx < 0 || nx > 2 || ny < 0 || ny > 2) continue;
+33             string t = s;
+34             swap(t[z], t[nx * 3 + ny]);
+35             if (!g.count(t) || g[s] + 1 < g[t]) {
+36                 g[t] = g[s] + 1;
+37                 pq.push(make_pair(g[t] + h(t), t));
+38             }
+39         }
+40     }
+41     return 0;
+42 }
+INPUT 1
+283104765
+OUTPUT 1
+4
+INPUT 2
+123804765
+OUTPUT 2
+0
+KEY POINT The board is a 9-character string, the queue is ordered by g + h, and map<string, int>  keeps the best
+known cost of every state (P1379). Plain BFS explores states in every direction; A* heads toward the goal.
+With a memory limit, IDA* runs iterative deepening with the bound "g + h ≤ D" instead (knights P2324,
+the mechanism puzzle P5507).
+TRAP An h that sometimes overestimates can make A* return a non-optimal answer. When unsure, take a weaker
+estimate; h = 0 turns A* back into ordinary shortest-path search.
+
+=== page 7 ===
+7进阶篇  第 4 章  进阶搜索
+4.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Pruning cuts branches that cannot give a (better) answer; the answer must not change.
+2. Feasibility: the rest cannot reach a valid answer. Optimality: cost so far ≥ best.
+3. Order choices so failures come early: largest / most constrained first.
+4. Symmetry: equal choices that failed once will fail again.
+5. IDDFS: DFS with depth limit D = 0, 1, 2, …; first success is the shallowest.
+6. Add an estimate: if even the best possible remaining steps cannot finish, stop.
+7. Meet in the middle: enumerate both halves (2^(n/2) each), sort one, binary search.
+8. A*: expand smallest g + h; h must never overestimate.
+9. IDA*: iterative deepening on g + h ≤ D; low memory.
+4.4.1 Problems
+Problem Name Section What it tests
+P1036 选数 4.1 Subset search with a sum test.
+P1433 吃奶酪 4.1 DFS with optimality pruning (or bitmask DP).
+P1120 小木棍 4.1 The classic set of stick-rebuilding cuts.
+P1763 埃及分数 4.2 Iterative deepening with bound estimates.
+CF525E Anya and Cubes 4.2 Meet in the middle with factorial choices.
+P1379 八数码难题 4.3 A* (or BFS) on 9-character states.
+P5507 机关 4.3 A* / IDA* on knob states.
+P2324 骑士精神 4.3 IDA* with "pieces out of place".
+P1074 靶形数独 4.1 Fill the most constrained cell first.
+P1312 Mayan 游戏 4.1 Careful simulation plus pruning of useless moves.
+P3959 宝藏 4.1 Search over depths with pruning (or state DP).
+P2960 Invasion of the Milkweed G 4.1 BFS spread over time.
+CF912E Prime Gift 4.2 Meet in the middle plus binary search on the answer.
+P4799 世界冰球锦标赛 4.2 Half sums, sort, upper_bound.
+P1078 文化之旅 4.1 Shortest path with pruned states.
+4.4.2 Practice	ladder
+1. Direct. P4799: meet in the middle (4.2).
+2. One	twist. P1433: optimality pruning (4.1).
+3. Idea	hidden. P1379: A* on puzzle states (4.3).
+4. Two	ideas. P1120: many cuts together (4.1).
+5. Stretch. P2324: IDA* (4.3).
+
+=== page 8 ===
+8进阶篇  第 4 章  进阶搜索
+4.4.3 Experiments
+1. Remove one cut at a time from sticks.cpp and time it on 60 sticks.
+2. Print the depth limits tried by addition_chain.cpp for n = 1000.
+3. Replace Manhattan distance by 0 in eight_puzzle.cpp and count the states taken from the queue.
+4. Solve ice_hockey.cpp by plain 2ⁿ enumeration for n = 25 and compare the time.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

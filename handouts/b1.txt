@@ -1,0 +1,288 @@
+# 基础篇 第1章 简简单单写程序  (基1)
+# source: 基础篇 第01章 简简单单写程序.pdf
+
+=== page 1 ===
+1基础篇  第 1 章  简简单单写程序
+第 1 章 	 简简单单写程序
+First programs Luogu #100 (part), #101 (P2433) 6 problems C++17 · all programs run
+1.1 程序设计的目标和流程 1.2 简单数学运算
+1.3 变量与常量 1.4 课后习题与实验
+1.1 程序设计的目标和流程
+What	a	program	is,	and	the	read	→	write	→	compile	→	test	cycle.
+Read
+the problem
+Write
+the code
+Compile
+g++
+Test
+samples
+error or wrong answer: fix and repeat
+IDEA A program is a list of exact steps that
+turns the input into the required
+output. A contest problem gives the
+statement, the input and output
+formats, samples, and limits; your job
+is to write steps that are correct for
+every allowed input, and fast enough.
+KEY POINT The work cycle: read the problem
+carefully, write the code, compile it,
+run it on the samples and on your own
+small tests, then submit. Most of the
+time goes into the last two steps.
+1.1.1 Your	first	program
+hello.cpp
+1 #include <bits/stdc++.h>     // the standard library
+2 using namespace std;
+3  
+4 int main() {                 // execution starts here
+5     cout << "Hello, World!" << "\n";   // print, then a newline
+6     return 0;                // 0 means "finished normally"
+7 }
+OUTPUT
+Hello, World!
+Piece Meaning
+#include brings in library code (here: all of it)
+int main() the function the computer runs first
+{ } a block: the statements that belong together
+cout << x print x; chain several with more <<
+"\n" start a new line
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 1 部 分  语 言 入 门
+The goal and workflow of programming, your first programs, simple arithmetic, variables and constants.
+
+=== page 2 ===
+2基础篇  第 1 章  简简单单写程序
+Piece Meaning
+; ends every statement
+// … , /* … */ comments, ignored by the compiler
+TRAP A missing ; , a wrong bracket or a misspelt name is a compile	error: the program does not run at all.
+Read the first error message; its line number points at, or just after, the mistake.
+ascii_art.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     cout << "  *\n";
+6     cout << " ***\n";
+7     cout << "*****\n";
+8     cout << R"(\_"_/)" << "\n";   // raw string: \ and " as typed
+9     return 0;
+10 }
+OUTPUT
+  *
+ ***
+*****
+\_"_/
+KEY POINT Fixed-output problems (P1000, B2025, B2005) test only that you copy the picture exactly. Inside normal
+quotes, \\  prints one backslash and \"  prints a quote; a raw string R"(...)"  prints everything between
+the brackets as typed.
+1.1.2 Compiling	and	running
+Step Command (Windows / Linux) What happens
+Compile g++ -std=c++17 -O2 -Wall a.cpp -o a turns a.cpp into the program a (a.exe); -Wall shows warnings
+Run a  / ./a type the input, read the output
+Run with a file a < in.txt the input comes from in.txt (see 第 6 章  6.3)
+In an IDE Dev-C++, VS Code, Code::Blocks one button compiles and runs
+
+=== page 3 ===
+3基础篇  第 1 章  简简单单写程序
+1.1.3 Your	contest	template
+template.cpp
+1 #include<bits/stdc++.h>
+2  
+3 #define int long long
+4 #define endl '\n'
+5 #define double long double
+6 #define fast ios_base::sync_with_stdio(0); cin.tie(0); cout.tie(0);
+7  
+8 using namespace std;
+9  
+10 signed main(){
+11     fast;
+12  
+13     int a, b;
+14     cin >> a >> b;
+15     double avg = (double)(a + b) / 2;
+16     cout << a + b << " " << avg << endl;
+17  
+18     return 0;
+19 }
+INPUT
+1 2
+OUTPUT
+3 1.5
+Line What it does
+1 bits/stdc++.h  includes the whole standard library at once.
+3 Every int  becomes long long , so overflow is rare.
+4 endl  becomes '\n' : a newline without the slow flush.
+5 Every double  becomes long double : about 18 significant digits instead of 15.
+6 fast  turns on fast cin/cout . After it, do not mix them with scanf/printf .
+8 Lets you write cout  instead of std::cout .
+10 main  must return int ; the macro would break it, so write signed .
+15 (double)  makes the sum a long double  before dividing, so 3 / 2 gives 1.5.
+16 Thanks to line 4, endl  here is just a fast newline.
+TRAP #define int long long : a printf  needs %lld , and the largest value is LLONG_MAX , not INT_MAX .
+TRAP #define double long double : printf("%f", x)  silently prints 0.000000  (tested); use %Lf , or better
+cout << fixed << setprecision(k) . Writing long double  yourself becomes long long double  and
+does not compile (tested).
+TRAP #define endl '\n' : endl  no longer flushes. That is what you want normally, but an interactive
+problem (the judge answers your output) needs cout.flush()  after each query.
+1.2 简单数学运算
+Operators,	their	order,	and	integer	versus	real	division.
+IDEA C++ evaluates arithmetic like a calculator, with the usual order: brackets first, then * / % , then + - , left
+to right within a level. With two integers, /  drops the fraction and %  gives the remainder.
+
+=== page 4 ===
+4基础篇  第 1 章  简简单单写程序
+calc.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     cout << 1 + 2 * 3 << "\n";        // * before +
+6     cout << (1 + 2) * 3 << "\n";      // brackets first
+7     cout << 17 / 5 << " " << 17 % 5 << "\n";   // quotient, remainder
+8     cout << 17.0 / 5 << "\n";         // a decimal point: real division
+9     cout << 2 * 3 - 4 / 2 << "\n";
+10     return 0;
+11 }
+OUTPUT
+7
+9
+3 2
+3.4
+4
+Operator Meaning Example
++ - add, subtract 7 - 2  = 5
+* multiply 7 * 2  = 14
+/ divide (integers: drop fraction) 7 / 2  = 3
+% remainder (integers only) 7 % 2  = 1
+( ) group first (1 + 2) * 3  = 9
+KEY POINT " 小学数学  N 合一 " style tasks (P2433) are all of this: translate each word problem into one expression,
+and choose integer or real division on purpose.
+1.2.1 Arithmetic	rules
+-4 -3 -2 -1 0 1 2 3 4
+-7/2 = -3.5 7/2 = 3.5
+int division moves toward 0
+Expression Value Rule
+7 / 2 3 int / int drops the fraction
+-7 / 2 -3 cuts toward 0, not down
+-7 % 2 -1 % has the sign of the left side
+7.0 / 2 , 1.0 * 7 / 2 3.5 one double makes it real division
+(a + b - 1) / b ⌈a / b⌉ for a ≥ 0, b > 0
+(int)(x + 0.5) round(x) for x ≥ 0
+
+=== page 5 ===
+5基础篇  第 1 章  简简单单写程序
+arith.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     cout << 7 / 2 << " " << 7 % 2 << "\n";
+6     cout << -7 / 2 << " " << -7 % 2 << "\n";
+7     cout << 7.0 / 2 << " " << 1.0 * 7 / 2 << "\n";
+8     int a = 7, b = 3;
+9     cout << (a + b - 1) / b << "\n";        // ceil(7 / 3)
+10     long long big = 100000LL * 100000;      // 1e10: needs long long
+11     cout << big << "\n";
+12     cout << sqrt(2.0) << " " << pow(2, 10) << " " << abs(-5) << "\n";
+13     cout << ((-7 % 3) + 3) % 3 << "\n";     // non-negative remainder
+14     return 0;
+15 }
+OUTPUT
+3 1
+-3 -1
+3.5 3.5
+3
+10000000000
+1.41421 1024 5
+2
+TRAP pow  returns a double ; for large integer powers it can be off by one. Multiply in a loop instead. sqrt  also
+returns a double.
+1.3 变量与常量
+Named	boxes	for	values,	and	values	that	never	change.
+3→5
+a
+5→3
+b
+3
+t
+t = a; a = b; b = t;
+IDEA A variable is a named box that holds one value of a
+fixed type. int a;  creates it, a = 5;  puts a value in
+(the old value is gone), and cin >> a;  fills it from
+the input.
+KEY POINT To swap two boxes you need a third: copying a = b
+first would destroy a. (swap(a, b)  does the same
+for you.)
+
+=== page 6 ===
+6基础篇  第 1 章  简简单单写程序
+variables.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     const double PI = 3.14159265358979;  // a constant: never changes
+6     int a, b;
+7     cin >> a >> b;
+8     int t = a; a = b; b = t;             // swap with a third box
+9     cout << a << " " << b << "\n";
+10     int x = 10;
+11     x += 5;                              // x = x + 5  -> 15
+12     x *= 2;                              // x = x * 2  -> 30
+13     x--;                                 // x = x - 1  -> 29
+14     cout << x << "\n";
+15     double r = 2;
+16     cout << PI * r * r << "\n";          // area of a circle
+17     return 0;
+18 }
+INPUT
+3 5
+OUTPUT
+5 3
+29
+12.5664
+Rule Examples
+letters, digits, _ ; not starting with a digit sum , a1 , max_h  — not 1a
+case matters Sum  and sum  are different
+not a keyword not int , for , return
+constants const int N = 1005;  — compile error if changed
+literals 42 , 3.14 , 1e9 , 'a' , "text" , 100000LL
+TRAP =  assigns, ==  compares. A local variable that was never given a value holds garbage, so give it one before
+you use it.
+1.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. A program turns input into output by exact steps; test on samples and your own cases.
+2. Every statement ends with ;; blocks use {	}; main runs first.
+3. Raw strings R"(...)" print backslashes and quotes as typed.
+4. Order: brackets, then * / %, then + −; int / int drops the fraction toward 0.
+5. -7	%	3	==	-1; ceil(a / b) = (a	+	b	-	1)	/	b.
+6. A variable is a typed box; = assigns, == compares.
+7. Swap needs a third box (or swap); constants are const.
+8. Your template: #define	int	long	long → printf needs %lld; double is long double; endl does not flush.
+
+=== page 7 ===
+7基础篇  第 1 章  简简单单写程序
+1.4.1 Problems
+Problem Name Section What it tests
+B2002 Hello,World! 1.1 Print a fixed string.
+B2025 输出字符菱形 1.1 Print a fixed pattern.
+P1000 超级玛丽游戏 1.1 Print ASCII art; a raw string R"(...)" avoids escaping.
+P1001 A+B Problem 1.3 Read two numbers, print the sum.
+B2005 字符三角形 1.1 Read one char, print it in a triangle.
+P2433 小学数学  N 合一 1.2 Many small tasks picked by an input number.
+1.4.2 Practice	ladder
+1. Direct. B2002: print a fixed line (1.1).
+2. One	twist. P1000: copy a picture exactly (1.1).
+3. Idea	hidden. P1001: read two variables, print the sum (1.3).
+4. Two	ideas. B2005: read one char, print it in a pattern (1.3).
+5. Stretch. P2433: many small formulas, choosing / and % (1.2).
+1.4.3 Experiments
+1. Delete one semicolon from hello.cpp and read the compiler's first error message.
+2. Print 7 / 2, 7.0 / 2, 7 % 2 and -7 % 2, and explain each result.
+3. Swap two variables without the third box (a = b; b = a;) and see what goes wrong.
+4. Change const int N = 5 and try N = 6 later in main: what does the compiler say?
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

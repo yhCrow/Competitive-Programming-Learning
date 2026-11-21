@@ -1,0 +1,419 @@
+# 拓展篇 第1章 网络流  (拓1)
+# source: 拓展篇 第01章 网络流.pdf
+
+=== page 1 ===
+1拓展篇  第 1 章  网络流
+第 1 章 	 网络流
+Network flow Luogu (verified) 17 problems C++17 · all programs run
+1.1 最大流 1.2 最小割
+1.3 二分图匹配 1.4 最小费用最大流
+1.5 课后习题与实验
+1.1 最大流
+Residual	network,	reverse	edges,	Dinic	with	current-arc.
+30/30
+20/20
+20/20
+10/30
+10/30s=4
+2 1
+t=3
+labels: flow / capacity · max flow 50
+IDEA A flow	network ( 网络流 ) is a directed
+graph with a source s, a sink t and a
+capacity on every edge. A flow sends
+f(u, v) ≤ c(u, v) along each edge, and
+every node except s and t passes on
+exactly what it receives. Maximum	flow
+( 最大流 ): send as much as possible
+from s to t (P3376).
+KEY POINT Greedy "push along any path" can get
+stuck. The fix is the residual	network
+( 残量网络 ): for each edge with flow f,
+there is room c − f forward and a
+reverse	edge with room f, so later
+paths can undo earlier choices. A path
+from s to t in the residual network is an
+augmenting	path; when none exists,
+the flow is maximum.
+Algorithm Idea Time (worst case)
+Ford–
+Fulkerson
+any augmenting path, by DFS O(m · maxflow), can be slow
+Edmonds–
+Karp
+shortest augmenting path, by BFS O(n m²)
+Dinic BFS builds levels; DFS sends a blocking flow along level-increasing
+edges, many paths per round
+O(n² m); very fast in practice, O(m√n) on
+unit / bipartite graphs
+竞 赛 拓 展 专 题  · 拓 展 篇  · 图 论 拓 展
+Push as much as possible from source to sink with Dinic, read the minimum cut off the same run and use it
+to model choices, match bipartite graphs, and find the cheapest maximum flow.
+
+=== page 2 ===
+2拓展篇  第 1 章  网络流
+dinic.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long INF = LLONG_MAX;
+5 struct Edge { int to; long long cap; };
+6 vector<Edge> e;                    // edge i and i ^ 1 are a pair (forward, reverse)
+7 vector<int> g[205];
+8 int n, m, s, t, level[205], it[205];
+9  
+10 void addEdge(int u, int v, long long c) {
+11     g[u].push_back(e.size()); e.push_back(Edge{v, c});
+12     g[v].push_back(e.size()); e.push_back(Edge{u, 0});    // reverse edge starts empty
+13 }
+14  
+15 bool bfs() {                        // levels in the residual network
+16     fill(level, level + n + 1, -1);
+17     queue<int> q;
+18     level[s] = 0; q.push(s);
+19     while (!q.empty()) {
+20         int u = q.front(); q.pop();
+21         for (int k = 0; k < int(g[u].size()); k++) {
+22             Edge &x = e[g[u][k]];
+23             if (x.cap > 0 && level[x.to] < 0) { level[x.to] = level[u] + 1; q.push(x.to); }
+24         }
+25     }
+26     return level[t] >= 0;
+27 }
+28  
+29 long long dfs(int u, long long f) { // push at most f from u towards t
+30     if (u == t) return f;
+31     for (int &k = it[u]; k < int(g[u].size()); k++) {     // current-arc: never retry a dead edge
+32         int id = g[u][k];
+33         Edge &x = e[id];
+34         if (x.cap > 0 && level[x.to] == level[u] + 1) {
+35             long long got = dfs(x.to, min(f, x.cap));
+36             if (got > 0) { x.cap -= got; e[id ^ 1].cap += got; return got; }
+37         }
+38     }
+39     return 0;
+40 }
+41  
+42 int main() {
+43     cin >> n >> m >> s >> t;
+44     for (int i = 0; i < m; i++) { int u, v; long long c; cin >> u >> v >> c; addEdge(u, v, c); }
+45     long long flow = 0;
+46     while (bfs()) {
+47         fill(it, it + n + 1, 0);
+48         while (long long f = dfs(s, INF)) flow += f;
+49     }
+50     cout << flow << "\n";
+51     return 0;
+52 }
+INPUT
+4 5 4 3
+4 2 30
+4 3 20
+2 3 20
+2 1 30
+1 3 30
+OUTPUT
+50
+
+=== page 3 ===
+3拓展篇  第 1 章  网络流
+KEY POINT Store each edge and its reverse at indices i and i ^ 1, so the partner is one XOR away. The current-arc
+pointer it[u] ( 当前弧优化 ) remembers where u stopped, so a saturated edge is never scanned again in the
+same round; without it Dinic can be far slower.
+TRAP Use long long for capacities and the answer, reset it[] before every DFS phase, and make sure the reverse
+edge starts with capacity 0 (for an undirected edge, give both directions capacity c).
+1.2 最小割
+Max-flow	min-cut;	modelling	choices	as	cuts.
+IDEA An s–t	cut splits the nodes into S (containing s) and T (containing t); its capacity is the total capacity of
+edges from S to T. Max-flow	min-cut	theorem ( 最大流最小割定理 ): the maximum flow equals the
+minimum cut capacity. After Dinic finishes, S = nodes still reachable from s in the residual network.
+KEY POINT Min cut is a modelling	tool: build a graph where "cutting an edge" means "paying a cost" or "giving up a
+choice". Every s–t path is a set of choices that cannot all be kept, so the cheapest way to break all of them
+is the min cut.
+Model Graph Answer
+each item goes to A or B with costs ai, bi, plus
+penalties for splitting pairs
+s → i (bi), i → t (ai), i ↔ j (penalty) min cut (P2057 善意的投
+票 , P1361 小 M 的作物 )
+choose a set of non-adjacent cells with the
+largest sum
+bipartite colouring; s → black (value), white → t
+(value), black → white neighbour (∞)
+total − min cut (P2774)
+maximum	weight	closure ( 最大权闭合子图 ):
+choosing an item forces its prerequisites
+s → positive (w), negative → t (−w), item →
+prerequisite (∞)
+sum of positives − min cut
+(P2762)
+
+=== page 4 ===
+4拓展篇  第 1 章  网络流
+grid_select.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long INF = LLONG_MAX / 4;
+5 struct Edge { int to; long long cap; };
+6 vector<Edge> e;
+7 vector<int> g[10005];
+8 int N, s, t, level[10005], it[10005];
+9  
+10 void addEdge(int u, int v, long long c) {
+11     g[u].push_back(e.size()); e.push_back(Edge{v, c});
+12     g[v].push_back(e.size()); e.push_back(Edge{u, 0});
+13 }
+14 bool bfs() {
+15     fill(level, level + N, -1);
+16     queue<int> q; level[s] = 0; q.push(s);
+17     while (!q.empty()) {
+18         int u = q.front(); q.pop();
+19         for (int k = 0; k < int(g[u].size()); k++) {
+20             Edge &x = e[g[u][k]];
+21             if (x.cap > 0 && level[x.to] < 0) { level[x.to] = level[u] + 1; q.push(x.to); }
+22         }
+23     }
+24     return level[t] >= 0;
+25 }
+26 long long dfs(int u, long long f) {
+27     if (u == t) return f;
+28     for (int &k = it[u]; k < int(g[u].size()); k++) {
+29         int id = g[u][k]; Edge &x = e[id];
+30         if (x.cap > 0 && level[x.to] == level[u] + 1) {
+31             long long got = dfs(x.to, min(f, x.cap));
+32             if (got > 0) { x.cap -= got; e[id ^ 1].cap += got; return got; }
+33         }
+34     }
+35     return 0;
+36 }
+37  
+38 int main() {
+39     int R, C;
+40     cin >> R >> C;
+41     N = R * C + 2; s = R * C; t = R * C + 1;
+42     long long total = 0;
+43     int dx[4] = {1, -1, 0, 0}, dy[4] = {0, 0, 1, -1};
+44     for (int i = 0; i < R; i++)
+45         for (int j = 0; j < C; j++) {
+46             long long v; cin >> v; total += v;
+47             int id = i * C + j;
+48             if ((i + j) % 2 == 0) {                       // black: from the source
+49                 addEdge(s, id, v);
+50                 for (int k = 0; k < 4; k++) {
+51                     int x = i + dx[k], y = j + dy[k];
+52                     if (x >= 0 && x < R && y >= 0 && y < C) addEdge(id, x * C + y, INF);   // conflict
+53                 }
+54             } else addEdge(id, t, v);                     // white: to the sink
+55         }
+56     long long cut = 0;
+57     while (bfs()) { fill(it, it + N, 0); while (long long f = dfs(s, INF)) cut += f; }
+58     cout << total - cut << "\n";                          // keep everything not cut
+59     return 0;
+60 }
+INPUT OUTPUT
+
+=== page 5 ===
+5拓展篇  第 1 章  网络流
+3 3
+1 2 3
+3 2 3
+2 3 1
+11
+IDEA Grid selection (P2774): no two chosen cells may share an edge. Neighbouring cells have different colours
+in a chessboard pattern, so every conflict is a black–white pair. Each s → black → white → t path is a
+conflicting pair; the ∞ edge can never be cut, so the cut must drop one of the two cells.
+KEY POINT Dropped cells = cut edges, so kept sum = total − min cut. The ∞ edge must be large but not overflow when
+added: LLONG_MAX / 4.
+1.3 二分图匹配
+Hungarian	algorithm;	matching	as	flow;	König.
+IDEA A bipartite	graph ( 二分图 ) has a left side and a right side, with edges only between them. A matching
+picks edges with no shared endpoint. Maximum	matching (P3386): as flow, s → each left (1), left → right
+(1), each right → t (1); max flow = max matching. Dinic does this in O(m√n).
+KEY POINT The Hungarian	algorithm ( 匈牙利算法 ) is shorter: for each left node, try to find an augmenting path by
+DFS: take a free right node, or a right node whose partner can move elsewhere. O(nm), and only a dozen
+lines.
+
+=== page 6 ===
+6拓展篇  第 1 章  网络流
+hungarian.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 vector<int> g[505];
+5 int matchR[505];                     // matchR[v]: left node matched to right node v (0: free)
+6 bool seen[505];
+7  
+8 bool tryMatch(int u) {
+9     for (int k = 0; k < int(g[u].size()); k++) {
+10         int v = g[u][k];
+11         if (seen[v]) continue;
+12         seen[v] = true;
+13         if (!matchR[v] || tryMatch(matchR[v])) {   // v free, or its partner can move
+14             matchR[v] = u;
+15             return true;
+16         }
+17     }
+18     return false;
+19 }
+20  
+21 int main() {
+22     int n, m, edges;
+23     cin >> n >> m >> edges;
+24     for (int i = 0; i < edges; i++) { int u, v; cin >> u >> v; g[u].push_back(v); }
+25     int ans = 0;
+26     for (int u = 1; u <= n; u++) {
+27         fill(seen, seen + m + 1, false);           // fresh search for each left node
+28         if (tryMatch(u)) ans++;
+29     }
+30     cout << ans << "\n";
+31     return 0;
+32 }
+INPUT
+3 3 5
+1 1
+1 2
+2 1
+3 2
+3 3
+OUTPUT
+3
+IDEA Left 1 takes right 1. Left 2 also wants right 1, so left 1 moves to right 2. Left 3 wants right 2, so left 1 would
+have to move again; but right 3 is free, so left 3 takes it. Three pairs.
+KEY POINT König's	theorem: in a bipartite graph, maximum matching = minimum vertex cover. Minimum path cover
+of a DAG = n − maximum matching (split each node into an "out" and an "in" copy). Pilots (P2756) and the
+hotel (P1402, two matchings chained through the guest) are matching models.
+1.4 最小费用最大流
+Cheapest	augmenting	paths	with	SPFA.
+IDEA Minimum-cost	maximum	flow ( 最小费用最大流 ): every edge also has a cost per unit of flow. Among all
+maximum flows, find the cheapest (P3381). Successive	shortest	paths: repeatedly find the cheapest
+augmenting path in the residual network (reverse edges have cost −w), push as much as it allows, and
+repeat.
+
+=== page 7 ===
+7拓展篇  第 1 章  网络流
+KEY POINT Reverse edges carry negative costs, so the shortest path needs SPFA / Bellman-Ford ( 第 10 章 ), or Dijkstra
+with potentials. Each augmentation keeps the current flow the cheapest one for its size, which is why the
+final maximum flow is the cheapest.
+
+=== page 8 ===
+8拓展篇  第 1 章  网络流
+mcmf.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Edge { int to; long long cap, cost; };
+5 vector<Edge> e;
+6 vector<int> g[5005];
+7 int n, m, s, t, pre[5005];
+8 long long dist[5005], push_[5005];
+9 bool inq[5005];
+10  
+11 void addEdge(int u, int v, long long c, long long w) {
+12     g[u].push_back(e.size()); e.push_back(Edge{v, c, w});
+13     g[v].push_back(e.size()); e.push_back(Edge{u, 0, -w});    // undo = refund the cost
+14 }
+15  
+16 bool spfa() {                                     // cheapest path s -> t with room left
+17     fill(dist, dist + n + 1, LLONG_MAX);
+18     queue<int> q;
+19     dist[s] = 0; push_[s] = LLONG_MAX; q.push(s); inq[s] = true;
+20     while (!q.empty()) {
+21         int u = q.front(); q.pop(); inq[u] = false;
+22         for (int k = 0; k < int(g[u].size()); k++) {
+23             int id = g[u][k]; Edge &x = e[id];
+24             if (x.cap > 0 && dist[u] + x.cost < dist[x.to]) {
+25                 dist[x.to] = dist[u] + x.cost;
+26                 pre[x.to] = id;                   // edge used to reach x.to
+27                 push_[x.to] = min(push_[u], x.cap);
+28                 if (!inq[x.to]) { q.push(x.to); inq[x.to] = true; }
+29             }
+30         }
+31     }
+32     return dist[t] != LLONG_MAX;
+33 }
+34  
+35 int main() {
+36     cin >> n >> m >> s >> t;
+37     for (int i = 0; i < m; i++) { int u, v; long long c, w; cin >> u >> v >> c >> w; addEdge(u, v, c, 
+w); }
+38     long long flow = 0, cost = 0;
+39     while (spfa()) {
+40         long long f = push_[t];
+41         flow += f; cost += f * dist[t];
+42         for (int v = t; v != s; v = e[pre[v] ^ 1].to) {   // walk the path back
+43             e[pre[v]].cap -= f;
+44             e[pre[v] ^ 1].cap += f;
+45         }
+46     }
+47     cout << flow << " " << cost << "\n";
+48     return 0;
+49 }
+INPUT
+4 5 4 3
+4 2 30 2
+4 3 20 3
+2 3 20 1
+2 1 30 9
+1 3 40 5
+OUTPUT
+50 280
+KEY POINT Here the paths are taken cheapest first: 4 → 2 → 3 (cost 3, 20 units), 4 → 3 (cost 3, 20 units), then 4 → 2 →
+1 → 3 (cost 16, the last 10 units): 60 + 60 + 160 = 280.
+
+=== page 9 ===
+9拓展篇  第 1 章  网络流
+KEY POINT Cost-flow models: balancing loads around a ring (P4016), the napkin plan (P1251: day nodes, buy / fast
+wash / slow wash edges with costs), two disjoint routes with the most cities (P2770: split each city into
+in → out with capacity 1 and cost −1). Splitting a node into in / out with an edge between them is how a
+node	capacity or node cost is expressed.
+TRAP Flow problems are mostly about building	the	graph; the algorithm is a template. Draw the graph for the
+sample by hand before coding, and count nodes carefully when you split nodes or add a super source /
+sink.
+1.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Residual room: forward c − f, reverse f; augmenting path ⇒ more flow.
+2. Edges in pairs i, i ^ 1; reverse edge starts at 0.
+3. Dinic: BFS levels, DFS along level + 1 with current-arc; repeat while t is reachable.
+4. Max flow = min cut; S side = reachable from s in the residual graph.
+5. Cut models: ∞ edges forbid, cut edges pay; answer often total − min cut.
+6. Max weight closure: s → positive, negative → t, item → prerequisite ∞.
+7. Bipartite matching: Hungarian O(nm) or flow; König: matching = vertex cover.
+8. Cost flow: SPFA cheapest path, reverse edge cost −w.
+9. Node capacity or cost: split into in → out.
+1.5.1 Problems
+Problem Name Section What it tests
+P3376 【模板】网络最大流 1.1 Dinic.
+P3386 【模板】二分图最大匹配 1.3 Hungarian or flow.
+P3381 【模板】最小费用最大流 1.4 SPFA augmenting.
+P2756 飞行员配对方案问题 1.3 Matching, print the pairs.
+P2774 方格取数问题 1.2 Chessboard colouring, total − min cut.
+P2762 太空飞行计划问题 1.2 Maximum weight closure, print the plan.
+P2057 善意的投票  / 冠军调查 1.2 Two sides plus disagreement edges.
+P1361 小 M 的作物 1.2 Group bonuses through extra nodes.
+P3254 圆桌问题 1.1 Units to tables, capacity 1 per pair.
+P2763 试题库问题 1.1 Types to problems, check full flow.
+P2766 最长不下降子序列问题 1.1 Layered by DP value, split nodes.
+P4001 狼抓兔子 1.2 Min cut on a grid (large: fast Dinic or dual graph).
+P1402 酒店之王 1.3 Room – guest – dish chain, split guests.
+P4209 学习小组 1.4 Convex costs as parallel edges.
+P4016 负载平衡问题 1.4 Ring transfers with unit costs.
+
+=== page 10 ===
+10拓展篇  第 1 章  网络流
+Problem Name Section What it tests
+P1251 餐巾计划问题 1.4 Day nodes, wash edges.
+P2770 航空路线问题 1.4 Two disjoint routes, cost −1 per city.
+1.5.2 Practice	ladder
+1. Direct. P3376: write Dinic (1.1).
+2. One	twist. P3386: write Hungarian (1.3).
+3. Idea	hidden. P2774: first min-cut model (1.2).
+4. Two	ideas. P3381: cost flow template (1.4).
+5. Stretch. P2762: maximum weight closure (1.2).
+1.5.3 Experiments
+1. Remove the reverse edges from dinic.cpp and find a graph where the answer becomes too small.
+2. Remove the current-arc pointer and time dinic.cpp on a dense random graph with n = 200.
+3. After Dinic, print the nodes still reachable from s and check the cut edges add up to the flow.
+4. Solve hungarian.cpp's sample with dinic.cpp by adding a source and a sink.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

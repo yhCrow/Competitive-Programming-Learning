@@ -1,0 +1,640 @@
+# NOI篇 第12章 数据结构补充三  (N12)
+# source: NOI篇 第12章 数据结构补充三.pdf
+
+=== page 1 ===
+1NOI 篇  第 12 章  数据结构补充三
+第 12 章 	 数据结构补充三
+Cat tree, historic maximum, dynamic centroid, second-offline Mo, zkw, segment tree split Luogu (verified)
+9 problems C++17 · all programs run
+12.1 猫树 12.2 区间历史最值
+12.3 动态点分治（代码） 12.4 莫队二次离线与  Top Tree
+12.5 zkw 线段树与线段树分裂 12.6 珂朵莉树
+12.7 课后习题与实验
+12.1 猫树
+Split	node	by	the	highest	differing	bit.
+IDEA A cat	tree ( 猫树 ) answers static range queries in O(1) for any associative merge whose partial results can
+be precomputed. Build a segment tree over a power-of-two length. At each node with midpoint mid, store
+the answer for every suffix [i, mid] of the left half and every prefix [mid + 1, j] of the right half. A query [l,
+r] with l ≠ r uses the node where l and r are first split, which is found from the highest differing bit of l and
+r.
+KEY POINT O(n log n) memory and preprocessing, O(1) per query, no LCA walk. For maximum subarray sum each
+stored entry holds the best inside, the best touching the middle, and the sum. Knapsack-like merges ( 好吃
+的题目  P6240) store a whole DP array per position, so queries cost the merge of two arrays.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+O(1) static range queries with precomputed half-answers, historic maxima with a "best pending prefix" tag,
+full code for dynamic centroid decomposition, and the idea behind second-offline Mo.
+
+=== page 2 ===
+2NOI 篇  第 12 章  数据结构补充三
+cat_tree.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int LOG = 17, N = 1 << LOG;
+5 int n, sz, lg[2 * N];
+6 long long a[N];
+7 long long inside[LOG + 1][N], touch[LOG + 1][N];   // per level: best inside, best touching mid
+8  
+9 void build(int lv, int l, int r) {                 // node covers [l, r], length a power of two
+10     if (l == r) return;
+11     int mid = (l + r) / 2;
+12     long long s = 0, bestTouch = LLONG_MIN, cur = 0, bestIn = LLONG_MIN;
+13     for (int i = mid; i >= l; i--) {               // suffixes of the left half
+14         s += a[i]; bestTouch = max(bestTouch, s);
+15         cur = max(a[i], cur + a[i]); bestIn = max(bestIn, cur);
+16         touch[lv][i] = bestTouch; inside[lv][i] = bestIn;
+17     }
+18     s = 0; bestTouch = LLONG_MIN; cur = 0; bestIn = LLONG_MIN;
+19     for (int i = mid + 1; i <= r; i++) {           // prefixes of the right half
+20         s += a[i]; bestTouch = max(bestTouch, s);
+21         cur = max(a[i], cur + a[i]); bestIn = max(bestIn, cur);
+22         touch[lv][i] = bestTouch; inside[lv][i] = bestIn;
+23     }
+24     build(lv + 1, l, mid); build(lv + 1, mid + 1, r);
+25 }
+26  
+27 int main() {
+28     int q;
+29     cin >> n >> q;
+30     sz = 1; while (sz < n) sz <<= 1;
+31     for (int i = 0; i < sz; i++) a[i] = (i < n) ? 0 : -1000000000;   // padding never helps
+32     for (int i = 0; i < n; i++) cin >> a[i];
+33     int levels = 0; while ((1 << levels) < sz) levels++;
+34     build(0, 0, sz - 1);
+35     while (q--) {
+36         int l, r; cin >> l >> r; l--; r--;
+37         if (l == r) { cout << a[l] << "\n"; continue; }
+38         int lv = levels - 1 - (31 - __builtin_clz(l ^ r));   // level where l and r split
+39         cout << max(max(inside[lv][l], inside[lv][r]), touch[lv][l] + touch[lv][r]) << "\n";
+40     }
+41     return 0;
+42 }
+INPUT
+13 10
+-3 1 6 -3 3 4 -4 -3 4 8 -2 -4 5
+7 13
+7 12
+5 11
+4 9
+8 8
+6 9
+10 13
+7 7
+7 13
+9 9
+OUTPUT
+12
+12
+12
+7
+-3
+4
+8
+-4
+12
+4
+KEY POINT Maximum subarray sum on random ranges, checked against trying every subarray in Python. The highest
+bit where l and r differ tells the depth of their split node directly: no tree walk at all.
+
+=== page 3 ===
+3NOI 篇  第 12 章  数据结构补充三
+12.2 区间历史最值
+Tags	(add,	max	prefix	of	adds).
+IDEA Historic	maximum ( 区间历史最值 ): besides the current values ai, ask for max over time of ai. With range
+add, each node keeps mx (current max) and hmx (historic max), and two lazy tags: add (total pending
+addition) and hadd (the largest prefix of that pending sequence of additions). When pushing tags (add,
+hadd) onto a child: child.hmx = max(child.hmx, child.mx + hadd), child.hadd = max(child.hadd, child.add
++ hadd), then child.mx += add, child.add += add.
+KEY POINT The order matters: the historic values must be updated with the child's old current values before adding.
+That "max prefix of pending additions" tag is the whole trick; CPU 监控  (P4314) adds assignment tags the
+same way, and P6242 combines it with chmin (NOI 篇  第 5 章 ).
+
+=== page 4 ===
+4NOI 篇  第 12 章  数据结构补充三
+history_max.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int n, q;
+6 long long a[N], mx[N * 4], hmx[N * 4], add_[N * 4], hadd[N * 4];
+7  
+8 void apply(int p, long long ad, long long had) {     // pending (ad, had) arrives at node p
+9     hmx[p] = max(hmx[p], mx[p] + had);               // old current + best prefix
+10     hadd[p] = max(hadd[p], add_[p] + had);
+11     mx[p] += ad; add_[p] += ad;
+12 }
+13 void push(int p) {
+14     apply(2 * p, add_[p], hadd[p]); apply(2 * p + 1, add_[p], hadd[p]);
+15     add_[p] = hadd[p] = 0;
+16 }
+17 void pull(int p) { mx[p] = max(mx[2 * p], mx[2 * p + 1]); hmx[p] = max(hmx[2 * p], hmx[2 * p + 1]); }
+18 void build(int p, int l, int r) {
+19     if (l == r) { mx[p] = hmx[p] = a[l]; return; }
+20     int mid = (l + r) / 2; build(2 * p, l, mid); build(2 * p + 1, mid + 1, r); pull(p);
+21 }
+22 void update(int p, int l, int r, int x, int y, long long v) {
+23     if (y < l || r < x) return;
+24     if (x <= l && r <= y) { apply(p, v, max(v, 0LL)); return; }    // prefix max of one step: max(v, 0)
+25     push(p); int mid = (l + r) / 2;
+26     update(2 * p, l, mid, x, y, v); update(2 * p + 1, mid + 1, r, x, y, v); pull(p);
+27 }
+28 long long query(int p, int l, int r, int x, int y, bool hist) {
+29     if (y < l || r < x) return LLONG_MIN;
+30     if (x <= l && r <= y) return hist ? hmx[p] : mx[p];
+31     push(p); int mid = (l + r) / 2;
+32     return max(query(2 * p, l, mid, x, y, hist), query(2 * p + 1, mid + 1, r, x, y, hist));
+33 }
+34  
+35 int main() {
+36     cin >> n >> q;
+37     for (int i = 1; i <= n; i++) cin >> a[i];
+38     build(1, 1, n);
+39     while (q--) {
+40         int t, l, r; cin >> t >> l >> r;
+41         if (t == 1) { long long v; cin >> v; update(1, 1, n, l, r, v); }
+42         else cout << query(1, 1, n, l, r, t == 3) << "\n";
+43     }
+44     return 0;
+45 }
+INPUT
+10 14
+2 8 5 4 4 -1 6 2 9 1
+1 3 8 2
+3 8 8
+3 10 10
+2 8 9
+1 4 5 5
+2 8 10
+2 7 10
+1 1 2 4
+3 4 6
+1 2 2 -3
+3 5 10
+3 1 5
+2 9 9
+1 9 10 2
+OUTPUT
+4
+1
+9
+9
+9
+11
+11
+12
+9
+
+=== page 5 ===
+5NOI 篇  第 12 章  数据结构补充三
+KEY POINT Random range adds (positive and negative), current maxima and historic maxima, checked against
+tracking every element's best value in Python.
+12.3 动态点分治（代码）
+Two	Fenwick	trees	per	centroid.
+IDEA Dynamic	centroid	decomposition with code ( 拓展篇  第 27 章  gave the idea): query "sum of values
+within distance k of x" with point updates ( 震波  P6329). For each centroid c keep two Fenwick trees
+indexed by distance: Fc[d] = total value at distance d from c inside c's piece, and Gc[d] = total value inside
+c's piece at distance d from c's centroid	parent.
+KEY POINT Query(x, k): start with Fx up to k; then for each centroid ancestor p of the current c: add Fp up to k − dist(x,
+p), and subtract Gc up to k − dist(x, p) (those vertices were already counted below). Update changes O(log
+n) Fenwick entries the same way. dist uses the original tree (LCA).
+
+=== page 6 ===
+6NOI 篇  第 12 章  数据结构补充三
+dynamic_centroid.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int n, m, val[N], sz[N], cpar[N], dep[N], up[N][17];
+6 bool removed[N];
+7 vector<int> g[N];
+8 vector<long long> F[N], Gt[N];                   // Fenwick trees, 1-based on distance + 1
+9  
+10 void addF(vector<long long> &t, int i, long long v) { for (i++; i < int(t.size()); i += i & -i) t[i] += 
+v; }
+11 long long sumF(vector<long long> &t, int i) { if (i < 0) return 0; long long s = 0; for (i = min(i + 1, 
+int(t.size()) - 1); i > 0; i -= i & -i) s += t[i]; return s; }
+12  
+13 void dfsL(int u, int p) { up[u][0] = p; for (int k = 1; k < 17; k++) up[u][k] = up[up[u][k - 1]][k - 1]; 
+for (int k = 0; k < int(g[u].size()); k++) { int v = g[u][k]; if (v != p) { dep[v] = dep[u] + 1; dfsL(v, 
+u); } } }
+14 int lca(int a, int b) {
+15     if (dep[a] < dep[b]) swap(a, b);
+16     for (int k = 16; k >= 0; k--) if (dep[a] - (1 << k) >= dep[b]) a = up[a][k];
+17     if (a == b) return a;
+18     for (int k = 16; k >= 0; k--) if (up[a][k] != up[b][k]) { a = up[a][k]; b = up[b][k]; }
+19     return up[a][0];
+20 }
+21 int dist(int a, int b) { return dep[a] + dep[b] - 2 * dep[lca(a, b)]; }
+22 int calcSize(int u, int p) { sz[u] = 1; for (int k = 0; k < int(g[u].size()); k++) { int v = g[u][k]; if 
+(v != p && !removed[v]) sz[u] += calcSize(v, u); } return sz[u]; }
+23 int centroid(int u, int p, int total) {
+24     for (int k = 0; k < int(g[u].size()); k++) { int v = g[u][k]; if (v != p && !removed[v] && sz[v] * 2 
+> total) return centroid(v, u, total); }
+25     return u;
+26 }
+27 int build(int u, int parentC) {
+28     int total = calcSize(u, 0), c = centroid(u, 0, total);
+29     cpar[c] = parentC; removed[c] = true;
+30     F[c].assign(total + 2, 0); Gt[c].assign(total + 2, 0);
+31     for (int k = 0; k < int(g[c].size()); k++) { int v = g[c][k]; if (!removed[v]) build(v, c); }
+32     return c;
+33 }
+34 void change(int x, long long v) {                // add v at vertex x
+35     addF(F[x], 0, v);
+36     for (int c = x; cpar[c]; c = cpar[c]) {
+37         int p = cpar[c], d = dist(x, p);
+38         addF(F[p], d, v); addF(Gt[c], d, v);
+39     }
+40 }
+41 long long query(int x, int k) {
+42     long long res = sumF(F[x], k);
+43     for (int c = x; cpar[c]; c = cpar[c]) {
+44         int p = cpar[c], d = dist(x, p);
+45         res += sumF(F[p], k - d) - sumF(Gt[c], k - d);   // remove what c's piece already counted
+46     }
+47     return res;
+48 }
+49  
+50 int main() {
+51     cin >> n >> m;
+52     for (int i = 1; i <= n; i++) cin >> val[i];
+53     for (int i = 1; i < n; i++) { int a, b; cin >> a >> b; g[a].push_back(b); g[b].push_back(a); }
+54     dfsL(1, 0);
+55     build(1, 0);
+56     for (int i = 1; i <= n; i++) change(i, val[i]);
+
+=== page 7 ===
+7NOI 篇  第 12 章  数据结构补充三
+57     while (m--) {
+58         int t, x, y; cin >> t >> x >> y;
+59         if (t == 0) cout << query(x, y) << "\n";
+60         else { change(x, y - val[x]); val[x] = y; }
+61     }
+62     return 0;
+63 }
+INPUT
+9 10
+1 2 5 3 5 8 5 5 7
+1 2
+2 3
+1 4
+4 5
+5 6
+3 7
+2 8
+7 9
+1 4 8
+1 5 1
+0 3 4
+0 5 3
+0 3 2
+0 5 1
+1 1 1
+0 1 4
+0 5 4
+0 3 1
+OUTPUT
+34
+20
+25
+17
+42
+30
+12
+KEY POINT Random queries and point changes, checked against BFS distances from x in Python. Each Fenwick tree is
+as long as its piece, so the total memory is O(n log n). P6329 additionally XORs each query with the last
+answer (forced online), which this structure handles directly.
+12.4 莫队二次离线与 	Top	Tree
+Prefix	contributions	offline;	top	trees	in	brief.
+IDEA Second-offline	Mo ( 莫队二次离线 ): when moving a Mo pointer costs O(log n) (e.g. "count pairs i < j in
+the window with ai > aj", 莫队二次离线  P4887), write each pointer move's contribution as f(prefix, x):
+"the effect of element x against the prefix 1 … p". Record all those (p, x-range) requests offline, sweep p
+from 1 to n once with a structure that makes each request O(1), and add the results back. Total O(n√n)
+instead of O(n√n log n).
+KEY POINT Top	trees (Top Tree) maintain path and subtree information on a dynamic forest at once, generalising LCT
+( 拓展篇  第 14 章 ); they are almost never required in contests: LCT plus "virtual subtree" sums (keeping the
+sum of non-preferred children) covers subtree queries in practice.
+12.5 zkw	 线段树与线段树分裂
+Bottom-up	loops;	move	nodes	into	a	new	tree.
+IDEA zkw	segment	tree (zkw 线段树 , bottom-up): put the leaves at positions M + i where M is a power of two
+≥ n + 2, parents at i / 2. A point update walks up with p >>= 1. A range query [l, r] starts from the open
+ends l − 1 and r + 1 and moves both up until they become siblings, adding the sibling subtrees they pass.
+
+=== page 8 ===
+8NOI 篇  第 12 章  数据结构补充三
+KEY POINT No recursion, so it is several times faster than the usual segment tree, and about 10 lines. Range updates
+with lazy tags are possible but awkward; use it for point update + range query (or range update + point
+query).
+zkw.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5  
+6 int main() {
+7     int n, q;
+8     cin >> n >> q;
+9     int M = 1;
+10     while (M < n + 2) M <<= 1;
+11     vector<ll> t(2 * M, 0);
+12     for (int i = 1; i <= n; i++) cin >> t[M + i];
+13     for (int i = M - 1; i > 0; i--) t[i] = t[2 * i] + t[2 * i + 1];
+14     for (int k = 0; k < q; k++) {
+15         int op, a; ll b;
+16         cin >> op >> a >> b;
+17         if (op == 1) { for (int p = M + a; p; p >>= 1) t[p] += b; }
+18         else {
+19             ll s = 0;
+20             for (int l = M + a - 1, r = M + int(b) + 1; l ^ r ^ 1; l >>= 1, r >>= 1) {   // open 
+interval (l, r)
+21                 if (~l & 1) s += t[l ^ 1];              // l is a left child: take its right sibling
+22                 if (r & 1) s += t[r ^ 1];               // r is a right child: take its left sibling
+23             }
+24             cout << s << "\n";
+25         }
+26     }
+27     return 0;
+28 }
+INPUT
+10 12
+4 4 1 -9 2 9 -8 -7 -5 -1
+1 5 -4
+2 2 10
+1 9 -4
+2 5 9
+1 7 0
+1 8 -5
+2 4 4
+1 4 3
+1 4 -5
+2 3 5
+2 6 6
+2 6 10
+OUTPUT
+-18
+-17
+-9
+-12
+9
+-21
+KEY POINT Random point additions and range sums, checked against a Python list. The leaf positions M and M + n + 1
+are never used by data, which is why M ≥ n + 2.
+IDEA Segment	tree	splitting ( 线段树分裂 ) is the reverse of merging ( 拓展篇 ): to move the values in [x, y] out
+of a dynamic (value-indexed) segment tree into a new tree, walk down both at once. A node fully inside [x,
+y] is moved by pointer, not copied; partially covered nodes are split into a new node for each side. Each
+split creates O(log n) nodes.
+
+=== page 9 ===
+9NOI 篇  第 12 章  数据结构补充三
+KEY POINT With merge and split together, sets of values can be cut and glued freely: "move these values to a new set /
+merge set t into p / count / k-th" (P5494). Merging costs are paid by the nodes they remove, splits add
+O(log n), so the total stays O((n + q) log n).
+
+=== page 10 ===
+10NOI 篇  第 12 章  数据结构补充三
+seg_split.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const int M = 4000005;
+6 int lc[M], rc[M], cnt = 0, n;
+7 ll s[M];
+8 int root[200005];
+9  
+10 void add(int &o, int l, int r, int x, ll q) {
+11     if (!o) o = ++cnt;
+12     s[o] += q;
+13     if (l == r) return;
+14     int md = (l + r) / 2;
+15     if (x <= md) add(lc[o], l, md, x, q); else add(rc[o], md + 1, r, x, q);
+16 }
+17 int merge(int a, int b, int l, int r) {
+18     if (!a || !b) return a | b;
+19     s[a] += s[b];
+20     if (l == r) return a;
+21     int md = (l + r) / 2;
+22     lc[a] = merge(lc[a], lc[b], l, md); rc[a] = merge(rc[a], rc[b], md + 1, r);
+23     return a;
+24 }
+25 void split(int &a, int &b, int l, int r, int x, int y) {     // move [x, y] of tree a into tree b
+26     if (!a || y < l || r < x) return;
+27     if (x <= l && r <= y) { b = a; a = 0; return; }           // whole node moves
+28     if (!b) b = ++cnt;
+29     int md = (l + r) / 2;
+30     split(lc[a], lc[b], l, md, x, y); split(rc[a], rc[b], md + 1, r, x, y);
+31     s[a] = s[lc[a]] + s[rc[a]]; s[b] = s[lc[b]] + s[rc[b]];
+32 }
+33 ll query(int o, int l, int r, int x, int y) {
+34     if (!o || y < l || r < x) return 0;
+35     if (x <= l && r <= y) return s[o];
+36     int md = (l + r) / 2;
+37     return query(lc[o], l, md, x, y) + query(rc[o], md + 1, r, x, y);
+38 }
+39 int kth(int o, int l, int r, ll k) {
+40     if (l == r) return l;
+41     int md = (l + r) / 2;
+42     if (s[lc[o]] >= k) return kth(lc[o], l, md, k);
+43     return kth(rc[o], md + 1, r, k - s[lc[o]]);
+44 }
+45  
+46 int main() {
+47     int m, tot = 1;
+48     cin >> n >> m;
+49     for (int i = 1; i <= n; i++) { ll a; cin >> a; if (a) add(root[1], 1, n, i, a); }
+50     for (int i = 0; i < m; i++) {
+51         int op, p; cin >> op >> p;
+52         if (op == 0) { int x, y; cin >> x >> y; split(root[p], root[++tot], 1, n, x, y); }
+53         else if (op == 1) { int t; cin >> t; root[p] = merge(root[p], root[t], 1, n); root[t] = 0; }
+54         else if (op == 2) { int x; ll q; cin >> x >> q; add(root[p], 1, n, x, q); }
+55         else if (op == 3) { int x, y; cin >> x >> y; cout << query(root[p], 1, n, x, y) << "\n"; }
+56         else { ll k; cin >> k; cout << (s[root[p]] < k ? -1 : kth(root[p], 1, n, k)) << "\n"; }
+57     }
+58     return 0;
+59 }
+INPUT OUTPUT
+
+=== page 11 ===
+11NOI 篇  第 12 章  数据结构补充三
+8 23
+0 0 2 0 1 1 3 0
+4 1 8
+2 1 1 1
+3 1 8 8
+3 1 1 5
+3 1 6 8
+4 1 2
+4 1 8
+0 1 3 3
+0 2 2 4
+3 1 3 6
+1 1 2
+3 3 3 5
+4 2 5
+4 2 5
+4 1 4
+0 3 7 7
+3 4 7 7
+3 2 7 7
+4 4 1
+0 3 5 8
+1 3 4
+2 4 6 3
+0 1 8 8
+-1
+0
+4
+4
+3
+7
+2
+2
+-1
+-1
+7
+0
+0
+-1
+KEY POINT The P5494 operations (0 split off [x, y] as a new set, 1 merge, 2 add copies, 3 count in range, 4 k-th), run at
+random and checked against Python dictionaries of counts.
+12.6 珂朵莉树
+Segments	in	a	set;	split,	assign,	walk.
+IDEA The Chtholly	tree ( 珂朵莉树 , ODT, 颜色段均摊 ) stores the array as a set of maximal segments [l, r] with
+one value. split(pos) cuts the segment containing pos so that a new one starts at pos. Range assign =
+split(r + 1), split(l), erase everything between, insert one segment. Other operations just walk the
+segments in [l, r].
+KEY POINT Fast only when random	range	assignments keep the number of segments small (expected O(n log log n)
+total, CF896C). Any operation that walks segments costs their count, so without assignments, or on
+adversarial data, it degrades to O(n) per operation. Always split(r + 1) before split(l): the other order can
+invalidate the first iterator.
+
+=== page 12 ===
+12NOI 篇  第 12 章  数据结构补充三
+odt.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 struct Seg {
+6     int l, r;
+7     mutable ll v;
+8     bool operator<(const Seg &o) const { return l < o.l; }
+9 };
+10 set<Seg> s;
+11  
+12 set<Seg>::iterator split(int pos) {               // a segment now starts at pos
+13     set<Seg>::iterator it = s.lower_bound({pos, 0, 0});
+14     if (it != s.end() && it->l == pos) return it;
+15     --it;
+16     int l = it->l, r = it->r; ll v = it->v;
+17     s.erase(it);
+18     s.insert({l, pos - 1, v});
+19     return s.insert({pos, r, v}).first;
+20 }
+21 ll pw(ll a, ll e, ll m) { ll r = 1 % m; a %= m; while (e) { if (e & 1) r = r * a % m; a = a * a % m; e 
+>>= 1; } return r; }
+22  
+23 int main() {
+24     int n, m;
+25     cin >> n >> m;
+26     for (int i = 1; i <= n; i++) { ll x; cin >> x; s.insert({i, i, x}); }
+27     s.insert({n + 1, n + 1, 0});                   // sentinel so split(r + 1) always works
+28     for (int k = 0; k < m; k++) {
+29         int op, l, r; ll x;
+30         cin >> op >> l >> r >> x;
+31         set<Seg>::iterator itr = split(r + 1), itl = split(l);
+32         if (op == 1) { for (set<Seg>::iterator it = itl; it != itr; ++it) it->v += x; }
+33         else if (op == 2) { s.erase(itl, itr); s.insert({l, r, x}); }
+34         else if (op == 3) {
+35             vector<pair<ll, int>> v;
+36             for (set<Seg>::iterator it = itl; it != itr; ++it) v.push_back({it->v, it->r - it->l + 1});
+37             sort(v.begin(), v.end());
+38             for (int i = 0; i < int(v.size()); i++) { if (x <= v[i].second) { cout << v[i].first << 
+"\n"; break; } x -= v[i].second; }
+39         } else {
+40             ll y, sum = 0;
+41             cin >> y;
+42             for (set<Seg>::iterator it = itl; it != itr; ++it) sum = (sum + (it->r - it->l + 1) % y * 
+pw(it->v, x, y)) % y;
+43             cout << sum << "\n";
+44         }
+45     }
+46     return 0;
+47 }
+INPUT
+10 16
+7 7 7 5 2 3 1 2 3 5
+1 2 8 2
+4 7 7 2 47
+2 4 4 2
+4 8 10 3 17
+2 1 8 7
+4 8 8 4 50
+4 4 8 3 43
+1 1 2 4
+3 5 6 2
+OUTPUT
+9
+12
+1
+38
+7
+9
+1
+
+=== page 13 ===
+13NOI 篇  第 12 章  数据结构补充三
+1 5 8 2
+3 3 9 5
+2 2 9 4
+1 3 5 1
+1 2 2 4
+1 5 5 5
+4 10 10 4 3
+KEY POINT The four CF896C operations (add, assign, x-th smallest, Σ aᵢˣ mod y) at random, checked against a plain
+Python list.
+12.7 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Cat tree: per level store suffix answers of the left half, prefix answers of the right.
+2. Split level of [l, r] from the highest bit of l xor r; O(1) per query.
+3. Historic max: tags (add, hadd); child.hmx = max(hmx, mx + hadd) before mx += add.
+4. Dynamic centroid: F_c by distance to c, G_c by distance to c's parent; subtract G.
+5. Second-offline Mo: pointer moves become prefix requests, answered in one sweep.
+6. zkw: leaves at M + i; query open interval (l − 1, r + 1) upward while l ^ r ^ 1.
+7. Split [x, y]: move fully covered nodes by pointer; O(log n) new nodes.
+8. ODT: split(r + 1) then split(l); fast only with random assignments.
+12.7.1 Problems
+Problem Name Section What it tests
+P6240 好吃的题目 12.1 Cat tree of knapsack arrays.
+P4314 CPU 监控 12.2 Historic max with add and assign.
+P6242 【模板】线段树  3 （区间最
+值操作、区间历史最值）
+12.2 Beats + historic max.
+P6329 【模板】点分树  / 震波 12.3 Distance-k sums with updates.
+P2056 捉迷藏 12.3 Farthest marked pair with toggles.
+P4887 【模板】莫队二次离线  /
+第十四分块 ( 前体 )
+12.4 Second-offline Mo.
+P3374 【模板】树状数组  1 12.5 Try it with a zkw tree.
+P5494 【模板】线段树分裂 12.5 Split, merge, count, k-th.
+CF896C Willem, Chtholly and
+Seniorious
+12.6 Random assignments keep segments few.
+12.7.2 Practice	ladder
+1. Direct. P3374: zkw tree (12.5).
+2. One	twist. P5494: segment tree split (12.5).
+3. Idea	hidden. P4314: historic max (12.2).
+4. Two	ideas. P6329: dynamic centroid (12.3).
+
+=== page 14 ===
+14NOI 篇  第 12 章  数据结构补充三
+5. Stretch. P4887: second-offline Mo (12.4).
+12.7.3 Experiments
+1. Print the split level of cat_tree.cpp for several (l, r) and check it by hand.
+2. Swap the order inside apply() of history_max.cpp and find a failing case.
+3. Compare dynamic_centroid.cpp with BFS per query for n = 10⁵.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

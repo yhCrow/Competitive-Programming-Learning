@@ -1,0 +1,194 @@
+# 拓展篇 第15章 随机化、构造与交互  (拓15)
+# source: 拓展篇 第15章 随机化、构造与交互.pdf
+
+=== page 1 ===
+1拓展篇  第 15 章  随机化、构造与交互
+第 15 章 	 随机化、构造与交互
+Randomisation, construction, interaction Luogu (verified) 1 problems C++17 · all programs run
+15.1 随机化 15.2 构造
+15.3 交互题 15.4 课后习题与实验
+15.1 随机化
+mt19937,	shuffling,	minimum	enclosing	circle.
+IDEA Randomised	algorithms ( 随机化 ): randomness can make the expected running time good on every
+input, so no worst case can be prepared against you. Use mt19937  seeded with the clock, never rand()
+(small range on Windows) and never a fixed seed on Codeforces (hacks).
+KEY POINT Typical uses: shuffle the input so an incremental algorithm runs in expected linear time; random priorities
+(treap, 第 4 章 ); random hash bases ( 第 3 章 ); trying random candidates when a large fraction of them work
+(e.g. "an element appearing in at least half the positions").
+竞 赛 拓 展 专 题  · 拓 展 篇  · 综 合 技 巧
+Use randomness for expected-time guarantees, build objects by pattern plus a brute-force checker, and talk
+to an interactive judge with flushed queries.
+
+=== page 2 ===
+2拓展篇  第 15 章  随机化、构造与交互
+min_circle.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct P { double x, y; };
+5 double dist(P a, P b) { return hypot(a.x - b.x, a.y - b.y); }
+6 P center3(P a, P b, P c) {                         // circumcentre of three points
+7     double bx = b.x - a.x, by = b.y - a.y, cx = c.x - a.x, cy = c.y - a.y;
+8     double d = 2 * (bx * cy - by * cx);
+9     double ux = (cy * (bx * bx + by * by) - by * (cx * cx + cy * cy)) / d;
+10     double uy = (bx * (cx * cx + cy * cy) - cx * (bx * bx + by * by)) / d;
+11     return P{a.x + ux, a.y + uy};
+12 }
+13  
+14 int main() {
+15     int n;
+16     cin >> n;
+17     vector<P> p(n);
+18     for (int i = 0; i < n; i++) cin >> p[i].x >> p[i].y;
+19     mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+20     shuffle(p.begin(), p.end(), rng);              // random order: expected O(n)
+21     P c = p[0];
+22     double r = 0;
+23     const double EPS = 1e-9;
+24     for (int i = 1; i < n; i++) {
+25         if (dist(c, p[i]) <= r + EPS) continue;
+26         c = p[i]; r = 0;                           // p[i] must be on the circle
+27         for (int j = 0; j < i; j++) {
+28             if (dist(c, p[j]) <= r + EPS) continue;
+29             c = P{(p[i].x + p[j].x) / 2, (p[i].y + p[j].y) / 2}; r = dist(c, p[i]);   // p[i], p[j] on 
+it
+30             for (int k = 0; k < j; k++)
+31                 if (dist(c, p[k]) > r + EPS) { c = center3(p[i], p[j], p[k]); r = dist(c, p[i]); }
+32         }
+33     }
+34     cout << fixed << setprecision(10) << r << "\n" << c.x << " " << c.y << "\n";
+35     return 0;
+36 }
+INPUT
+6
+8.0 9.0
+4.0 7.5
+1.0 2.0
+5.1 8.7
+9.0 2.0
+4.5 1.0
+OUTPUT
+5.0000000000
+5.0000000000 5.0000000000
+KEY POINT Minimum enclosing circle (P1742): three nested loops look like O(n³), but after a random shuffle the
+chance that point i lies outside the circle of the first i − 1 points is at most 3 / i, so the expected total is
+O(n). A sorted or adversarial order would really be cubic.
+15.2 构造
+Small	cases,	patterns,	invariants,	checkers.
+IDEA Constructive	problems ( 构造 ) ask you to build an object (an array, a permutation, a graph) with given
+properties, or say it is impossible. There is no template; the usual path: solve tiny cases by hand or by
+brute force, guess a pattern, prove it (or at least check it by brute force for all small n), then code it.
+
+=== page 3 ===
+3拓展篇  第 15 章  随机化、构造与交互
+KEY POINT Useful moves: start from an extreme (sorted, alternating, all equal); build in pairs or blocks; reduce n to n
+− 2 by fixing the ends; find an invariant (parity, sum mod k) that decides when it is impossible; and
+always write a checker for your own output.
+distinct_differences.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     int lo = 1, hi = n;
+8     while (lo <= hi) {                         // 1, n, 2, n-1, 3, ...
+9         cout << lo++ << " ";
+10         if (lo <= hi) cout << hi-- << " ";
+11     }
+12     cout << "\n";
+13     return 0;
+14 }
+INPUT 1
+5
+OUTPUT 1
+1 5 2 4 3
+INPUT 2
+8
+OUTPUT 2
+1 8 2 7 3 6 4 5
+IDEA Build a permutation of 1 … n whose neighbouring differences are all different. Zigzag between the ends: the
+differences are n − 1, n − 2, …, 1. The pattern was checked by Python for every n up to 39 before writing the
+program.
+KEY POINT That habit, construct then verify with a brute-force checker on all small n, catches most wrong
+constructions before you submit.
+15.3 交互题
+Query,	flush,	read;	testing	locally.
+IDEA In an interactive	problem ( 交互题 ) your program talks to the judge: print a query, flush the output, read
+the reply, repeat, and answer within a query limit. Queries are the resource: binary search uses ⌈log₂ n⌉ of
+them; think about how many each strategy needs before coding.
+KEY POINT Flush after every query: cout << x << endl;  (endl flushes) or cout.flush() . This is the one place
+where endl is the right choice instead of "\n". Never print extra text, and stop immediately after the final
+answer.
+
+=== page 4 ===
+4拓展篇  第 15 章  随机化、构造与交互
+guess_number.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     int lo = 1, hi = n;
+8     while (lo <= hi) {
+9         int mid = (lo + hi) / 2;
+10         cout << mid << endl;                   // endl flushes: the judge must see the query now
+11         string reply;
+12         cin >> reply;
+13         if (reply == "=") return 0;            // found
+14         if (reply == "<") hi = mid - 1;        // the hidden number is smaller
+15         else lo = mid + 1;
+16     }
+17     return 0;
+18 }
+INPUT 1
+100
+<
+>
+=
+OUTPUT 1
+50
+25
+37
+INPUT 2
+100
+>
+>
+<
+=
+OUTPUT 2
+50
+75
+88
+81
+IDEA Guess a number in 1 … 100 (hidden 37, then hidden 81). Here the judge's replies are prepared in the input,
+which is how you test an interactive program locally; on a real judge they arrive one by one.
+KEY POINT For local testing, write a small judge program that knows the hidden value and answers each query, or feed
+prepared replies as above. Count queries in your own tests to check the limit.
+TRAP Forgetting to flush is the classic "Idleness limit exceeded": your query sits in the buffer while the judge
+waits forever. Also, reading with ios::sync_with_stdio(false)  is fine, but every query still needs a
+flush.
+15.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. mt19937 seeded by the clock; shuffle before incremental algorithms.
+2. Random order ⇒ expected time, no adversarial worst case.
+3. Construction: tiny cases → pattern → invariant → checker.
+4. Interactive: print, flush (endl), read; respect the query limit.
+5. Test interactive code with prepared replies or a local judge.
+
+=== page 5 ===
+5拓展篇  第 15 章  随机化、构造与交互
+15.4.1 Problems
+Problem Name Section What it tests
+P1742 最小圆覆盖 15.1 Random incremental, expected O(n).
+15.4.2 Practice	ladder
+1. Direct. P1742: random incremental (15.1).
+15.4.3 Experiments
+1. Run min_circle.cpp on points sorted by x without shuffling, n = 10⁵, and time it.
+2. Brute-force the smallest n where a distinct-difference permutation needs a different idea (there is none: why?).
+3. Write a judge for guess_number.cpp and count queries for every hidden value 1…10⁶.
+4. Find a Codeforces "constructive algorithms" problem rated 1200 and solve it with a brute-force checker.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

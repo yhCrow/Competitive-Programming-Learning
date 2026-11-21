@@ -1,0 +1,454 @@
+# NOI篇 第10章 计算几何进阶  (N10)
+# source: NOI篇 第10章 计算几何进阶.pdf
+
+=== page 1 ===
+1NOI 篇  第 10 章  计算几何进阶
+第 10 章 	 计算几何进阶
+3D hull, enclosing sphere, Minkowski sums, adaptive Simpson Luogu (verified) 6 problems
+C++17 · all programs run
+10.1 三维凸包 10.2 最小球覆盖
+10.3 闵可夫斯基和 10.4 自适应辛普森与  Voronoi
+10.5 课后习题与实验
+10.1 三维凸包
+Visible	faces,	horizon	edges,	perturbation.
+IDEA The 3D	convex	hull ( 三维凸包 ) is made of triangular faces. Incremental	construction: start with a
+tetrahedron, then add points one by one. A face is visible from the new point p if p lies on its outer side
+(positive triple product). Delete all visible faces; the edges on the border between visible and invisible
+faces (the "horizon") each form a new face with p. O(n²) total, enough for n ≤ 2000 (P4724).
+KEY POINT Mark visibility per directed edge: for each face (a, b, c) visible from p, set vis[a][b] = vis[b][c] = vis[c][a].
+An edge (a, b) of a kept face with vis[b][a] set is a horizon edge, and the new face is (a, b, p) with the same
+orientation. Perturb the points by about 10⁻⁹ first, so that no four points are coplanar.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Grow a 3D hull by deleting the faces a new point sees, find the smallest enclosing sphere, add convex
+polygons with Minkowski sums, and integrate areas numerically with adaptive Simpson.
+
+=== page 2 ===
+2NOI 篇  第 10 章  计算几何进阶
+hull3d.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct V { double x, y, z; };
+5 V operator-(V a, V b) { return V{a.x - b.x, a.y - b.y, a.z - b.z}; }
+6 V cross(V a, V b) { return V{a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x}; }
+7 double dot(V a, V b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+8 double len(V a) { return sqrt(dot(a, a)); }
+9 struct F { int a, b, c; };
+10 int n;
+11 V p[2005];
+12 bool vis[2005][2005];
+13  
+14 bool sees(F f, V q) { return dot(cross(p[f.b] - p[f.a], p[f.c] - p[f.a]), q - p[f.a]) > 0; }   // q 
+outside face
+15  
+16 int main() {
+17     cin >> n;
+18     mt19937 rng(7);
+19     uniform_real_distribution<double> jitter(-1e-9, 1e-9);
+20     for (int i = 0; i < n; i++) { cin >> p[i].x >> p[i].y >> p[i].z; p[i].x += jitter(rng); p[i].y += 
+jitter(rng); p[i].z += jitter(rng); }
+21     vector<F> faces;
+22     faces.push_back(F{0, 1, 2}); faces.push_back(F{2, 1, 0});   // both sides of the first triangle
+23     for (int i = 3; i < n; i++) {
+24         vector<F> keep;
+25         for (int k = 0; k < int(faces.size()); k++) {
+26             F f = faces[k];
+27             bool v = sees(f, p[i]);
+28             if (!v) keep.push_back(f);
+29             vis[f.a][f.b] = vis[f.b][f.c] = vis[f.c][f.a] = v;   // record per directed edge
+30         }
+31         for (int k = 0; k < int(faces.size()); k++) {           // horizon: visible on one side only
+32             F f = faces[k];
+33             if (vis[f.a][f.b] && !vis[f.b][f.a]) keep.push_back(F{f.a, f.b, i});
+34             if (vis[f.b][f.c] && !vis[f.c][f.b]) keep.push_back(F{f.b, f.c, i});
+35             if (vis[f.c][f.a] && !vis[f.a][f.c]) keep.push_back(F{f.c, f.a, i});
+36         }
+37         faces = keep;
+38     }
+39     double area = 0;
+40     for (int k = 0; k < int(faces.size()); k++) area += len(cross(p[faces[k].b] - p[faces[k].a], 
+p[faces[k].c] - p[faces[k].a])) / 2;
+41     cout << fixed << setprecision(3) << area << "\n";
+42     return 0;
+43 }
+INPUT 1
+20
+0 0 0
+0 0 2
+0 2 0
+0 2 2
+2 0 0
+2 0 2
+2 2 0
+2 2 2
+0.33363283384573705 0.4757988925875141 
+1.2940984806838902
+0.4581754732400198 1.7187344367382662 
+1.5509248349930091
+1.3877864651694058 0.9447130377063009 
+1.523210111326636
+OUTPUT 1
+24.000
+
+=== page 3 ===
+3NOI 篇  第 10 章  计算几何进阶
+0.5898766540038147 1.1652727823296267 
+0.7929130768794326
+0.9846933867663477 1.7423151825845338 
+0.5466224120436444
+1.4076070081081447 1.426206395977884 
+0.3398848629081487
+1.7883223376575486 0.9177028143192074 
+1.0695440845934543
+0.6832178877129182 1.091596243195015 
+1.7361298182478337
+0.7584846422175653 1.3728243944453533 
+1.4548032719235517
+1.589613101100914 1.3054730122945513 
+0.8911299368550256
+0.742475905171158 0.8149414380832853 
+0.7980203835844402
+1.6176497049611769 1.5250908114331825 
+0.5430100072290778
+INPUT 2
+6
+0 0 0
+3 0 0
+0 3 0
+0 0 3
+0.5 0.5 0.5
+1 0.5 0.3
+OUTPUT 2
+21.294
+KEY POINT A 2 × 2 × 2 cube (surface 24) with random points inside, and a corner tetrahedron (three right triangles of
+area 4.5 plus an equilateral face of side 3√2): the exact areas are computed by formula in Python. Interior
+points must not change the area.
+10.2 最小球覆盖
+Four	nested	loops;	circumsphere	by	elimination.
+IDEA The minimum	enclosing	sphere ( 最小球覆盖 ) extends the random incremental circle of 拓展篇  第 15 章
+one level deeper: shuffle the points; whenever point i is outside the current sphere, restart with i on the
+boundary; inside that, whenever j is outside, restart with i and j on the boundary; then k; then l, where four
+boundary points fix the sphere. Expected O(n) after shuffling.
+KEY POINT The sphere through 2 points: centre at the midpoint. Through 3: the circumcircle centre in their plane.
+Through 4: solve the 3 × 3 linear system |c − pi|² = |c − p0|² (Gaussian elimination, 进阶篇  第 22 章 ).
+
+=== page 4 ===
+4NOI 篇  第 10 章  计算几何进阶
+min_sphere.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct V { double x, y, z; };
+5 V operator+(V a, V b) { return V{a.x + b.x, a.y + b.y, a.z + b.z}; }
+6 V operator-(V a, V b) { return V{a.x - b.x, a.y - b.y, a.z - b.z}; }
+7 V operator*(V a, double t) { return V{a.x * t, a.y * t, a.z * t}; }
+8 double dot(V a, V b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+9 V cross(V a, V b) { return V{a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x}; }
+10 double dist(V a, V b) { return sqrt(dot(a - b, a - b)); }
+11  
+12 V circum3(V a, V b, V c) {                      // centre of the circle through a, b, c (in their plane)
+13     V ab = b - a, ac = c - a, n = cross(ab, ac);
+14     V t = cross(n, ab) * dot(ac, ac) + cross(ac, n) * dot(ab, ab);
+15     return a + t * (1.0 / (2 * dot(n, n)));
+16 }
+17 V circum4(V a, V b, V c, V d) {                 // solve 2 (p_i - a) . x = |p_i|^2 - |a|^2
+18     double M[3][4];
+19     V ps[3] = {b, c, d};
+20     for (int i = 0; i < 3; i++) {
+21         V q = ps[i] - a;
+22         M[i][0] = 2 * q.x; M[i][1] = 2 * q.y; M[i][2] = 2 * q.z;
+23         M[i][3] = dot(ps[i], ps[i]) - dot(a, a);
+24     }
+25     for (int col = 0; col < 3; col++) {          // Gaussian elimination
+26         int piv = col;
+27         for (int r = col; r < 3; r++) if (fabs(M[r][col]) > fabs(M[piv][col])) piv = r;
+28         for (int j = 0; j < 4; j++) swap(M[col][j], M[piv][j]);
+29         for (int r = 0; r < 3; r++) if (r != col) {
+30             double f = M[r][col] / M[col][col];
+31             for (int j = col; j < 4; j++) M[r][j] -= f * M[col][j];
+32         }
+33     }
+34     return V{M[0][3] / M[0][0], M[1][3] / M[1][1], M[2][3] / M[2][2]};
+35 }
+36  
+37 int main() {
+38     int n;
+39     cin >> n;
+40     vector<V> p(n);
+41     for (int i = 0; i < n; i++) cin >> p[i].x >> p[i].y >> p[i].z;
+42     mt19937 rng(11);
+43     shuffle(p.begin(), p.end(), rng);
+44     const double EPS = 1e-9;
+45     V c = p[0]; double r = 0;
+46     for (int i = 1; i < n; i++) {
+47         if (dist(c, p[i]) <= r + EPS) continue;
+48         c = p[i]; r = 0;
+49         for (int j = 0; j < i; j++) {
+50             if (dist(c, p[j]) <= r + EPS) continue;
+51             c = (p[i] + p[j]) * 0.5; r = dist(c, p[i]);
+52             for (int k = 0; k < j; k++) {
+53                 if (dist(c, p[k]) <= r + EPS) continue;
+54                 c = circum3(p[i], p[j], p[k]); r = dist(c, p[i]);
+55                 for (int l = 0; l < k; l++)
+56                     if (dist(c, p[l]) > r + EPS) { c = circum4(p[i], p[j], p[k], p[l]); r = dist(c, 
+p[i]); }
+57             }
+58         }
+59     }
+60     cout << fixed << setprecision(4) << r << "\n";
+61     return 0;
+
+=== page 5 ===
+5NOI 篇  第 10 章  计算几何进阶
+62 }
+INPUT 1
+28
+0 0 0
+4 0 0
+0 4 0
+0 0 4
+4 4 4
+4 4 0
+4 0 4
+0 4 4
+1.2953404586565846 0.6325253886509813 
+3.294302349336466
+0.6778641842018898 1.6728059372382058 
+1.050997537460629
+1.090794222130065 3.323770408489623 
+1.807602720307152
+2.4011591536290613 2.9907742205979937 
+2.070567551756319
+2.958381452106824 2.8124650080514915 
+2.3146399007366933
+2.190509591758557 3.161262805258195 
+2.527097522425929
+1.5267741408249313 3.1986696101522165 
+2.9636665134647906
+3.3543730423417446 2.499436155216862 
+1.8335631367923486
+1.560083077684871 2.371470088086878 
+1.0389399843409217
+2.6897759525525173 2.6225843767547783 
+3.136593922356484
+1.155182648926242 2.242668120466715 
+2.1517488169930576
+2.295071514723439 1.7277694429450539 
+0.5275464167921612
+3.2793551681794284 3.2124895350538707 
+0.9776313308876846
+3.2383733248034794 2.287889862432328 
+0.5245908700955285
+2.4077031352535525 1.400736999750383 
+1.6190033265973458
+0.8174229057116108 2.997955754144151 
+2.446393804967066
+1.1960085685141282 2.2064681018835572 
+1.767335077689261
+3.45021283456968 1.127888040202661 
+2.5524483386870536
+2.8946931628872554 3.1656647989041393 
+1.3037547497648159
+3.099663808538651 1.0344694194206423 
+0.9500251886411629
+OUTPUT 1
+3.4641
+INPUT 2
+2
+0 0 0
+6 8 0
+OUTPUT 2
+5.0000
+KEY POINT The corners of a 4 × 4 × 4 cube plus interior points need the sphere of radius 2√3 (half the space
+diagonal); two points 10 apart need radius 5. Both answers are exact formulas, independent of the
+program.
+TRAP Degenerate input (three collinear points, four coplanar points) makes circum3 / circum4 divide by zero;
+real solutions either perturb the points or check the determinant and fall back to the smaller case.
+
+=== page 6 ===
+6NOI 篇  第 10 章  计算几何进阶
+10.3 闵可夫斯基和
+Merge	edge	lists	by	angle.
+IDEA The Minkowski	sum ( 闵可夫斯基和 ) A + B = {a + b} of two convex polygons is convex, and its edges are
+the edges of A and B sorted	by	angle. Start both at their lowest (then leftmost) vertex and merge the two
+edge lists like merge sort, comparing directions by cross product: O(n + m).
+KEY POINT Typical uses: "can polygon B moved by vector v touch A?" ⇔ v ∈ A + (−B) (P4557 战争 ), distances
+between convex polygons, and motion planning. Remove collinear vertices afterwards if the problem
+wants a strict polygon.
+
+=== page 7 ===
+7NOI 篇  第 10 章  计算几何进阶
+minkowski.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 struct P { ll x, y; };
+6 P operator+(P a, P b) { return {a.x + b.x, a.y + b.y}; }
+7 P operator-(P a, P b) { return {a.x - b.x, a.y - b.y}; }
+8 ll cross(P a, P b) { return a.x * b.y - a.y * b.x; }
+9  
+10 vector<P> readPoly() {
+11     int n; cin >> n;
+12     vector<P> a(n);
+13     for (int i = 0; i < n; i++) cin >> a[i].x >> a[i].y;   // counter-clockwise
+14     int k = 0;
+15     for (int i = 1; i < n; i++) if (a[i].y < a[k].y || (a[i].y == a[k].y && a[i].x < a[k].x)) k = i;
+16     rotate(a.begin(), a.begin() + k, a.end());              // start at the lowest point
+17     a.push_back(a[0]); a.push_back(a[1]);
+18     return a;
+19 }
+20  
+21 int main() {
+22     vector<P> A = readPoly(), B = readPoly();
+23     int n = A.size() - 2, m = B.size() - 2, i = 0, j = 0;
+24     vector<P> r;
+25     while (i < n || j < m) {                                 // merge edges by angle
+26         r.push_back(A[i] + B[j]);
+27         ll c = cross(A[i + 1] - A[i], B[j + 1] - B[j]);
+28         if (c >= 0 && i < n) i++;
+29         if (c <= 0 && j < m) j++;
+30     }
+31     int k = r.size();
+32     vector<P> s;                                             // drop collinear vertices
+33     for (int t = 0; t < k; t++)
+34         if (cross(r[t] - r[(t + k - 1) % k], r[(t + 1) % k] - r[t]) != 0) s.push_back(r[t]);
+35     ll area2 = 0;
+36     for (int t = 0; t < int(s.size()); t++) area2 += cross(s[t], s[(t + 1) % s.size()]);
+37     cout << s.size() << " " << area2 << "\n";                // vertices, twice the area
+38     return 0;
+39 }
+INPUT
+6
+-12 0
+-8 -10
+15 -16
+17 -10
+17 13
+3 17
+6
+-9 3
+-8 -1
+2 -7
+8 -1
+10 5
+-8 4
+OUTPUT
+11 3294
+KEY POINT Two random convex polygons, checked against the convex hull of all n·m pairwise sums in Python (same
+vertex count and doubled area).
+
+=== page 8 ===
+8NOI 篇  第 10 章  计算几何进阶
+10.4 自适应辛普森与 	Voronoi
+Split	until	halves	agree;	union	of	circles.
+IDEA Adaptive	Simpson	integration ( 自适应辛普森 ): Simpson's rule ∫lr f ≈ (r − l)(f(l) + 4f(m) + f(r)) / 6.
+Compare the whole interval with its two halves; if they agree within 15·ε accept, otherwise recurse on
+each half with ε / 2. The function only needs to be evaluable, not integrable by hand.
+KEY POINT Classic use: the area	of	a	union	of	circles (or other shapes) as ∫ f(x) dx, where f(x) = total length of the
+union of the vertical chords at x (merge intervals). Integrate each connected x-range separately (f = 0 in
+gaps fools the error test), and force a few levels of recursion before trusting the error estimate.
+
+=== page 9 ===
+9NOI 篇  第 10 章  计算几何进阶
+simpson_circles.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n;
+5 double cx[105], cy[105], cr[105];
+6  
+7 double f(double x) {                               // length of the union of chords at x
+8     vector<pair<double, double>> iv;
+9     for (int i = 0; i < n; i++) {
+10         double dx = fabs(x - cx[i]);
+11         if (dx >= cr[i]) continue;
+12         double h = sqrt(cr[i] * cr[i] - dx * dx);
+13         iv.push_back({cy[i] - h, cy[i] + h});
+14     }
+15     sort(iv.begin(), iv.end());
+16     double len = 0, lo = -1e18, hi = -1e18;
+17     for (int i = 0; i < int(iv.size()); i++) {
+18         if (iv[i].first > hi) { len += hi - lo; lo = iv[i].first; hi = iv[i].second; }
+19         else hi = max(hi, iv[i].second);
+20     }
+21     return len + hi - lo;
+22 }
+23 double simpson(double l, double r, double fl, double fm, double fr) { return (r - l) * (fl + 4 * fm + 
+fr) / 6; }
+24 double asr(double l, double r, double fl, double fm, double fr, double whole, double eps, int depth) {
+25     double m = (l + r) / 2, lm = (l + m) / 2, rm = (m + r) / 2, flm = f(lm), frm = f(rm);
+26     double L = simpson(l, m, fl, flm, fm), R = simpson(m, r, fm, frm, fr);
+27     if (depth <= 0 && fabs(L + R - whole) <= 15 * eps) return L + R + (L + R - whole) / 15;
+28     return asr(l, m, fl, flm, fm, L, eps / 2, depth - 1) + asr(m, r, fm, frm, fr, R, eps / 2, depth - 
+1);
+29 }
+30  
+31 int main() {
+32     cin >> n;
+33     vector<pair<double, double>> xs;
+34     for (int i = 0; i < n; i++) { cin >> cx[i] >> cy[i] >> cr[i]; xs.push_back({cx[i] - cr[i], cx[i] + 
+cr[i]}); }
+35     sort(xs.begin(), xs.end());
+36     double area = 0;
+37     for (int i = 0; i < int(xs.size());) {         // each connected x-range separately
+38         double l = xs[i].first, r = xs[i].second;
+39         int j = i;
+40         while (j < int(xs.size()) && xs[j].first <= r) { r = max(r, xs[j].second); j++; }
+41         double m = (l + r) / 2, fl = f(l), fm = f(m), fr = f(r);
+42         area += asr(l, r, fl, fm, fr, simpson(l, r, fl, fm, fr), 1e-7, 8);
+43         i = j;
+44     }
+45     cout << fixed << setprecision(3) << area << "\n";
+46     return 0;
+47 }
+INPUT
+5
+-2 -2 1
+0 1 2
+-2 2 1
+2 0 2
+5 -1 3
+OUTPUT
+49.836
+KEY POINT Five random circles, checked against an exact union area in Python (Green's theorem over the arcs not
+covered by other circles). The minimum depth 8 stops an early, lucky agreement on a coarse split.
+
+=== page 10 ===
+10NOI 篇  第 10 章  计算几何进阶
+TRAP Simpson assumes f is smooth; at chord ends f has √ cusps, which is why the adaptive version (not a fixed
+number of slices) is needed. ε too small makes it slow: pick it a few digits below the required precision.
+KEY POINT Voronoi	diagram	and	Delaunay	triangulation (Voronoi 图  / Delaunay 三角剖分 ): the Voronoi cell of a
+site is the set of points nearest to it; joining sites whose cells share an edge gives the Delaunay
+triangulation (no point inside any triangle's circumcircle). Both have O(n) size and are built in O(n log n)
+(divide and conquer or Fortune's sweep). The Euclidean MST is a subgraph of the Delaunay triangulation.
+They are rare in NOI; know them by name and use half-plane intersection ( 拓展篇 ) for small n.
+10.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Face visible from p: positive triple product.
+2. Delete visible faces; horizon edge (visible one side only) + p ⇒ new face.
+3. Perturb by ~1e-9 against coplanar points; O(n²).
+4. Min sphere: shuffle; nested loops with 1, 2, 3, 4 boundary points; expected O(n).
+5. Minkowski: start at lowest points, merge edges by cross product; O(n + m).
+6. Adaptive Simpson: |L + R − S| ≤ 15ε ⇒ accept; integrate each x-component separately.
+10.5.1 Problems
+Problem Name Section What it tests
+P4724 【模板】三维凸包 10.1 Surface area.
+P1742 最小圆覆盖 10.2 The 2D version first.
+P4557 战争 10.3 Minkowski sum + point in convex polygon.
+P4525 【模板】自适应辛普森法  1 10.4 Integrate a rational function.
+P4526 【模板】自适应辛普森法  2 10.4 Improper integral, cut off the tail.
+P4207 月下柠檬树 10.4 Union of circles and trapezoids.
+10.5.2 Practice	ladder
+1. Direct. P1742: minimum circle (10.2).
+2. One	twist. P4525: Simpson (10.4).
+3. Idea	hidden. P4557: Minkowski (10.3).
+4. Two	ideas. P4724: 3D hull (10.1).
+5. Stretch. P4207: Simpson on shapes (10.4).
+10.5.3 Experiments
+1. Count faces of hull3d.cpp for points on a sphere and check Euler: F = 2V − 4.
+2. Remove the jitter in hull3d.cpp and feed coplanar points.
+3. Time min_sphere.cpp with and without the shuffle on sorted points.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

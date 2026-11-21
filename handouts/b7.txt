@@ -1,0 +1,725 @@
+# 基础篇 第7章 函数与结构体  (基7)
+# source: 基础篇 第07章 函数与结构体.pdf
+
+=== page 1 ===
+1基础篇  第 7 章  函数与结构体
+第 7 章 	 函数与结构体
+Functions and structs Luogu #105 15 problems C++17 · all programs run
+7.1 定义子程序 7.2 变量作用域与参数传递
+7.3 递归函数 7.4 结构体的使用
+7.5 课后习题与实验
+7.1 定义子程序
+Functions:	parts,	return	values,	order,	and	reusable	helpers.
+x1, y1
+x2, y2
+dist(...)
+body runs
+5.0
+parameters in → return value out
+IDEA A function packs a computation under a
+name. Calling it jumps into the body with the
+arguments copied into the parameters, runs
+until return , and hands back one value. You
+write the logic once and test it once.
+KEY POINT Parts: return	type, name, parameter	list,
+body. A function that returns nothing has
+type void . A function must be declared
+above the code that calls it.
+dist.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 double dist(double x1, double y1,
+5             double x2, double y2) {
+6     double dx = x1 - x2, dy = y1 - y2;
+7     return sqrt(dx * dx + dy * dy);
+8 }
+9  
+10 int main() {
+11     double x1, y1, x2, y2, x3, y3;
+12     cin >> x1 >> y1 >> x2 >> y2 >> x3 >> y3;
+13     double p = dist(x1, y1, x2, y2)
+14              + dist(x2, y2, x3, y3)
+15              + dist(x3, y3, x1, y1);
+16     cout << fixed << setprecision(2) << p << "\n";
+17     return 0;
+18 }
+INPUT
+0 0
+0 3
+4 0
+OUTPUT
+12.00
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 1 部 分  语 言 入 门
+Defining functions, scope and parameter passing, recursion, and structs with sorting.
+
+=== page 2 ===
+2基础篇  第 7 章  函数与结构体
+Piece In dist.cpp
+return type double
+name dist
+parameters double x1, double y1, …
+body the lines between { }
+return return sqrt(...);  ends the call
+call dist(x1, y1, x2, y2)  in an expression
+KEY POINT Write the three side lengths once as a function instead of copying the formula three times (P5735). One fix
+in the function fixes every call.
+void_and_order.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int square(int x);               // declared first...
+5  
+6 void line(int n) {               // void: no value back
+7     for (int i = 0; i < n; i++) cout << '*';
+8     cout << "\n";
+9     // no return needed; "return;" exits early
+10 }
+11  
+12 int main() {
+13     line(3);
+14     cout << square(7) << "\n";
+15     auto cube = [](int x) { return x * x * x; };
+16     cout << cube(3) << "\n";     // lambda: inline function
+17     return 0;
+18 }
+19  
+20 int square(int x) { return x * x; }   // ...defined later
+OUTPUT
+***
+49
+27
+TRAP Calling a function that is defined below main  without a declaration (prototype) above gives "was not
+declared in this scope". Either put helpers above main , or declare them first.
+TRAP A non-void function must return on every path. Falling off the end returns garbage, and the compiler only
+warns.
+KEY POINT A lambda, [](int x) { return x * x * x; } , is a small unnamed function written where it is used.
+You met one as the comparison in sort .
+7.1.1 Function	patterns
+Small	yes/no	and	number	helpers	make	the	main	loop	read	like	the	statement.
+
+=== page 3 ===
+3基础篇  第 7 章  函数与结构体
+primes_filter.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 bool isPrime(int x) {
+5     if (x < 2) return false;
+6     for (int i = 2; i * i <= x; i++)
+7         if (x % i == 0) return false;   // early exit
+8     return true;
+9 }
+10  
+11 int main() {
+12     int n;
+13     cin >> n;
+14     for (int i = 0; i < n; i++) {
+15         int x;
+16         cin >> x;
+17         if (isPrime(x)) cout << x << " ";
+18     }
+19     cout << "\n";
+20     return 0;
+21 }
+INPUT
+5
+2 3 4 5 6
+OUTPUT
+2 3 5
+leap_years.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 bool isLeap(int y) {
+5     return (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+6 }
+7  
+8 int main() {
+9     int x, y;
+10     cin >> x >> y;
+11     vector<int> found;               // grows as needed
+12     for (int i = x; i <= y; i++)
+13         if (isLeap(i)) found.push_back(i);
+14     cout << found.size() << "\n";
+15     for (int i = 0; i < int(found.size()); i++) cout << found[i] << " ";
+16     cout << "\n";
+17     return 0;
+18 }
+INPUT
+1989 2001
+OUTPUT
+3
+1992 1996 2000
+KEY POINT A bool  helper can return  as soon as the answer is known: return false  inside the loop stops the
+whole function. vector<int>  is a C++ array that grows with push_back  and knows its size() ; handy
+when you do not know the count in advance (P5736, P5737).
+
+=== page 4 ===
+4基础篇  第 7 章  函数与结构体
+goldbach.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 bool isPrime(int x) {
+5     if (x < 2) return false;
+6     for (int i = 2; i * i <= x; i++)
+7         if (x % i == 0) return false;
+8     return true;
+9 }
+10  
+11 int main() {
+12     int n;
+13     cin >> n;
+14     for (int e = 4; e <= n; e += 2)
+15         for (int p = 2; p <= e / 2; p++)
+16             if (isPrime(p) && isPrime(e - p)) {
+17                 cout << e << "=" << p << "+" << e - p << "\n";
+18                 break;                   // smallest p only
+19             }
+20     return 0;
+21 }
+INPUT
+10
+OUTPUT
+4=2+2
+6=3+3
+8=3+5
+10=3+7
+IDEA Once isPrime  exists, "write each even number as a sum of two primes, smallest first" is just two loops
+and one test. The helper hides the details, so the main loop reads like the statement (P1304).
+KEY POINT Reuse helpers across problems: the same isPrime  solves P5736, P1304, P1217 and P1075. Keep a tested
+copy in your notes.
+KEY POINT Averages after dropping the highest and lowest score fit one function, double judge(int a[], int m) ,
+called once per singer (P5738).
+7.2 变量作用域与参数传递
+Copies	or	references,	arrays	as	parameters,	and	where	a	name	lives.
+by value: int x
+1
+a (main)
+100
+x (copy)
+by reference: int &x
+100
+a = x (same box)
+x = 100 changes only the copy, or the original itself
+IDEA By default a parameter is a copy: changing it
+inside the function does not touch the caller's
+variable. Add &  to make it a reference,
+another name for the caller's variable, so
+changes stick.
+KEY POINT Use &  to change arguments (swap) or to send
+back several results. Use const string &s
+to pass a big object without copying it and
+without changing it.
+
+=== page 5 ===
+5基础篇  第 7 章  函数与结构体
+value_ref.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 void byValue(int x) { x = 100; }
+5 void byRef(int &x) { x = 100; }
+6 void mySwap(int &a, int &b) { int t = a; a = b; b = t; }
+7 void minMax(int a, int b, int c, int &mn, int &mx) {
+8     mn = min({a, b, c});
+9     mx = max({a, b, c});
+10 }
+11  
+12 int main() {
+13     int a = 1, b = 2;
+14     byValue(a); cout << a << "\n";   // unchanged
+15     byRef(a);   cout << a << "\n";   // changed
+16     mySwap(a, b); cout << a << " " << b << "\n";
+17     int mn, mx;
+18     minMax(5, 1, 9, mn, mx);         // two results
+19     cout << mn << " " << mx << "\n";
+20     return 0;
+21 }
+OUTPUT
+1
+100
+2 100
+1 9
+array_param.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[105];
+5  
+6 int total(const int arr[], int n) {
+7     int s = 0;
+8     for (int i = 0; i < n; i++) s += arr[i];
+9     return s;
+10 }
+11  
+12 void doubleAll(int arr[], int n) {
+13     for (int i = 0; i < n; i++) arr[i] *= 2;
+14 }
+15  
+16 int main() {
+17     int n;
+18     cin >> n;
+19     for (int i = 0; i < n; i++) cin >> a[i];
+20     cout << total(a, n) << "\n";
+21     doubleAll(a, n);                 // changes a itself
+22     cout << total(a, n) << "\n";
+23     return 0;
+24 }
+INPUT
+3
+1 2 3
+OUTPUT
+6
+12
+KEY POINT An array argument is never	copied: the function works on the caller's array, so changes are visible
+outside. Pass the length n  along with it. Write const  when the function should only read.
+
+=== page 6 ===
+6基础篇  第 7 章  函数与结构体
+7.2.1 Scope:	where	a	name	lives
+scope.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int cnt = 0;                     // global: visible everywhere
+5  
+6 void hit() { cnt++; }
+7  
+8 int main() {
+9     for (int i = 0; i < 3; i++) hit();
+10     int cnt = 10;                // local: hides the global
+11     cout << cnt << " " << ::cnt << "\n";
+12     return 0;
+13 }
+OUTPUT
+10 3
+Kind Lives Starts as
+global (outside all functions) whole program 0
+local (inside { }) until its block ends garbage unless set
+parameter during the call the argument value
+static  local whole program, one copy 0, set once
+TRAP A local with the same name as a global hides it. Give globals clear names; ::cnt  reaches the global one
+when you must.
+7.3 递归函数
+Base	case,	smaller	call,	call	stack,	and	memoisation.
+fact(3) = 3 × fact(2)
+fact(2) = 2 × fact(1)
+fact(1) = 1 (base)
+calls
+results return upward: 1 → 2 → 6
+IDEA Every recursive function has a base	case that answers
+directly, and a recursive	case that calls itself on a
+smaller input and combines the result. Each call waits
+on a stack until the call it made returns.
+TRAP No base case, or a step that does not shrink the input,
+means infinite recursion: the program crashes with a
+stack overflow. Very deep recursion (around 105–106
+levels) can crash too.
+
+=== page 7 ===
+7基础篇  第 7 章  函数与结构体
+fact_trace.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long fact(int n, int depth) {
+5     string pad(depth * 2, ' ');
+6     cout << pad << "fact(" << n << ")\n";
+7     if (n <= 1) return 1;                    // base case
+8     long long r = n * fact(n - 1, depth + 1); // smaller
+9     cout << pad << "= " << r << "\n";
+10     return r;
+11 }
+12  
+13 int main() {
+14     int n;
+15     cin >> n;
+16     long long ans = fact(n, 0);
+17     cout << ans << "\n";
+18     return 0;
+19 }
+INPUT
+3
+OUTPUT
+fact(3)
+  fact(2)
+    fact(1)
+  = 2
+= 6
+6
+peaches.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n;
+5  
+6 // peaches on day d; on day n only 1 is left
+7 long long peaches(int d) {
+8     if (d == n) return 1;                 // base case
+9     return (peaches(d + 1) + 1) * 2;      // undo "eat half + 1"
+10 }
+11  
+12 int main() {
+13     cin >> n;
+14     cout << peaches(1) << "\n";
+15     long long x = 1;                       // same, as a loop
+16     for (int d = n - 1; d >= 1; d--) x = (x + 1) * 2;
+17     cout << x << "\n";
+18     return 0;
+19 }
+INPUT
+4
+OUTPUT
+22
+22
+KEY POINT Recursion fits when the answer for n is built from the answer for a smaller n: factorial (P5739), working
+backwards day by day (P5743). Any such recursion can also be written as a loop; recursion is shorter, the
+loop avoids deep stacks.
+
+=== page 8 ===
+8基础篇  第 7 章  函数与结构体
+7.3.1 Divide	into	parts:	a	recursive	picture
+0 0 0 1
+0 0 1 1
+0 1 0 1
+1 1 1 1
+pardon.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int g[1030][1030];
+5  
+6 // square of side s with top-left corner (r, c)
+7 void solve(int r, int c, int s) {
+8     if (s == 1) return;                       // base case
+9     int h = s / 2;
+10     for (int i = 0; i < h; i++)               // top-left quarter: 0
+11         for (int j = 0; j < h; j++) g[r + i][c + j] = 0;
+12     solve(r, c + h, h);                       // the other three
+13     solve(r + h, c, h);                       // quarters repeat the
+14     solve(r + h, c + h, h);                   // same rule, smaller
+15 }
+16  
+17 int main() {
+18     int n;
+19     cin >> n;
+20     int s = 1 << n;                           // 2^n
+21     for (int i = 0; i < s; i++)
+22         for (int j = 0; j < s; j++) g[i][j] = 1;
+23     solve(0, 0, s);
+24     for (int i = 0; i < s; i++) {
+25         for (int j = 0; j < s; j++) cout << g[i][j] << " ";
+26         cout << "\n";
+27     }
+28     return 0;
+29 }
+INPUT
+2
+OUTPUT
+0 0 0 1 
+0 0 1 1 
+0 1 0 1 
+1 1 1 1
+IDEA Split the square into four quarters: one is handled directly, the other three are the same problem at half
+size. The function only describes one level; recursion repeats it down to size 1 (P5461).
+
+=== page 9 ===
+9基础篇  第 7 章  函数与结构体
+7.3.2 When	recursion	repeats	work:	memoisation
+fib_memo.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long memo[95];                  // 0 = not computed yet
+5  
+6 long long fib(int n) {
+7     if (n <= 2) return 1;
+8     if (memo[n] != 0) return memo[n];  // already known
+9     return memo[n] = fib(n - 1) + fib(n - 2);
+10 }
+11  
+12 int main() {
+13     int n;
+14     cin >> n;
+15     cout << fib(n) << "\n";
+16     return 0;
+17 }
+INPUT 1
+50
+OUTPUT 1
+12586269025
+INPUT 2
+90
+OUTPUT 2
+2880067194370816120
+TRAP Plain fib(n - 1) + fib(n - 2)  recomputes the same values again and again: about 2n calls, hopeless
+for n = 50.
+KEY POINT Store each result the first time it is computed and return it straight away next time. Now each fib(k) is
+computed once: O(n). This "remember results" idea is the seed of dynamic programming.
+KEY POINT Some answers need no recursion at all: the sum over all subsets of a set is (sum of elements) × 2n−1,
+because each element appears in half of the subsets (P2415).
+7.4 结构体的使用
+Group	fields,	member	functions,	arrays	of	structs,	and	sorting	them.
+Student s
+s.name "senpai"
+s.chinese 114 s.math 51
+s.english 4 s.total() 169
+IDEA A struct  is a new type made of named fields. One Student
+carries a name and three scores together, so sorting or picking
+the best student moves the whole record at once.
+KEY POINT Access fields with a dot: s.name . A struct can also hold
+functions (member	functions) that use its fields, such as
+s.total() . An array of structs, Student a[1005] , is a table
+with one row per student.
+
+=== page 10 ===
+10基础篇  第 7 章  函数与结构体
+best_student.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Student {
+5     string name;
+6     int chinese, math, english;
+7     int total() const { return chinese + math + english; }
+8 };
+9  
+10 Student a[1005];
+11  
+12 int main() {
+13     int n;
+14     cin >> n;
+15     for (int i = 0; i < n; i++)
+16         cin >> a[i].name >> a[i].chinese >> a[i].math >> a[i].english;
+17     int best = 0;
+18     for (int i = 1; i < n; i++)
+19         if (a[i].total() > a[best].total()) best = i;   // > keeps the first
+20     Student &s = a[best];
+21     cout << s.name << " " << s.chinese << " " << s.math
+22          << " " << s.english << "\n";
+23     return 0;
+24 }
+INPUT
+3
+senpai 114 51 4
+lxl 114 10 23
+fafa 51 42 60
+OUTPUT
+senpai 114 51 4
+
+=== page 11 ===
+11基础篇  第 7 章  函数与结构体
+similar_pairs.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Student {
+5     string name;
+6     int c, m, e;
+7 };
+8  
+9 Student a[1005];
+10  
+11 int main() {
+12     int n;
+13     cin >> n;
+14     for (int i = 0; i < n; i++)
+15         cin >> a[i].name >> a[i].c >> a[i].m >> a[i].e;
+16     for (int i = 0; i < n; i++)
+17         for (int j = i + 1; j < n; j++) {
+18             Student &p = a[i], &q = a[j];
+19             int ti = p.c + p.m + p.e, tj = q.c + q.m + q.e;
+20             if (abs(p.c - q.c) <= 5 && abs(p.m - q.m) <= 5 &&
+21                 abs(p.e - q.e) <= 5 && abs(ti - tj) <= 10)
+22                 cout << p.name << " " << q.name << "\n";
+23         }
+24     return 0;
+25 }
+INPUT
+3
+fafa 90 90 90
+lxl 95 85 90
+senpai 100 80 91
+OUTPUT
+fafa lxl
+lxl senpai
+KEY POINT Using >  (not >= ) when searching for the best keeps the first student among ties (P5740). The pair loop
+from 入门 4 works unchanged on structs (P5741). Student &s = a[best]  gives a short name for one
+record without copying it.
+
+=== page 12 ===
+12基础篇  第 7 章  函数与结构体
+next_year.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Person {
+5     string name;
+6     int age, score;
+7 };
+8  
+9 void nextYear(Person &p) {           // & : change the original
+10     p.age += 1;
+11     p.score = min(600, p.score * 6 / 5);   // +20%, at most 600
+12 }
+13  
+14 int main() {
+15     int n;
+16     cin >> n;
+17     for (int i = 0; i < n; i++) {
+18         Person p;
+19         cin >> p.name >> p.age >> p.score;
+20         nextYear(p);
+21         cout << p.name << " " << p.age << " " << p.score << "\n";
+22     }
+23     return 0;
+24 }
+INPUT
+3
+kkksc03 24 0
+chen_zhe 14 400
+nzhtl1477 18 590
+OUTPUT
+kkksc03 25 0
+chen_zhe 15 480
+nzhtl1477 19 600
+IDEA Pass a struct by reference (Person &p ) when the function should update it; by const Person &p  when it
+only reads. Passing by value copies every field.
+TRAP score * 1.2  uses floating point and can land just below the true value. score * 6 / 5  stays exact in
+integers (P5744). Compute weighted scores such as 70% + 30% the same way, as 7 * a + 3 * b
+compared with 10 * limit  (P5742).
+7.4.1 Sorting	structs
+Tell	sort	what	"comes	first"	means.
+
+=== page 13 ===
+13基础篇  第 7 章  函数与结构体
+sort_students.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Student {
+5     string name;
+6     int score;
+7 };
+8  
+9 // true if x must come before y
+10 bool cmp(const Student &x, const Student &y) {
+11     if (x.score != y.score) return x.score > y.score;  // high first
+12     return x.name < y.name;                            // then A-Z
+13 }
+14  
+15 Student a[1005];
+16  
+17 int main() {
+18     int n;
+19     cin >> n;
+20     for (int i = 0; i < n; i++) cin >> a[i].name >> a[i].score;
+21     sort(a, a + n, cmp);
+22     for (int i = 0; i < n; i++)
+23         cout << a[i].name << " " << a[i].score << "\n";
+24     return 0;
+25 }
+INPUT
+4
+bob 240
+amy 240
+cat 300
+dan 180
+OUTPUT
+cat 300
+amy 240
+bob 240
+dan 180
+IDEA sort(a, a + n, cmp)  calls cmp(x, y)  to ask "must x come before y?". Compare the main key first; only
+when it ties, compare the next key.
+TRAP cmp  must be a strict order: return false  when x and y are equal. Writing >=  instead of >  can crash
+sort .
+KEY POINT Alternative: give the struct an operator<  and call plain sort(a, a + n) . For one-off orders a lambda
+works too: sort(a, a + n, [](const Student &x, const Student &y) { return x.score >
+y.score; }) .
+C C LANGUAGE · ADDITIONAL INFORMATION
+C has no references. To change the caller's variable, C passes its address with &x  and the function works through a
+pointer with * . C++ code still meets this in older solutions.
+A C struct has no member functions, and in C you must write struct Student s;  (or use typedef ). Sorting in C uses
+qsort  with a comparison that returns a negative, zero or positive int .
+
+=== page 14 ===
+14基础篇  第 7 章  函数与结构体
+c_style.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 void swapP(int *a, int *b) {         // pointers
+5     int t = *a; *a = *b; *b = t;
+6 }
+7  
+8 int cmpInt(const void *x, const void *y) {
+9     return *(const int *)x - *(const int *)y;
+10 }
+11  
+12 int main() {
+13     int x = 1, y = 2;
+14     swapP(&x, &y);                   // pass addresses
+15     printf("%d %d\n", x, y);
+16     int a[5] = {5, 3, 9, 1, 7};
+17     qsort(a, 5, sizeof(int), cmpInt);
+18     for (int i = 0; i < 5; i++) printf("%d ", a[i]);
+19     printf("\n");
+20     return 0;
+21 }
+OUTPUT
+2 1
+1 3 5 7 9
+7.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. A function = return type, name, parameters, body; void returns nothing.
+2. Define or declare a function above the code that calls it.
+3. Every path of a non-void function must return a value.
+4. Parameters are copies; add & to change the caller's variable or return several results.
+5. Pass big objects as const	T	&; arrays are never copied, so pass n too.
+6. Locals start as garbage and hide globals of the same name.
+7. Write tested helpers once: isPrime, isLeap, gcd; return as soon as the answer is known.
+8. Recursion = base	case + a call on a smaller input; no base case → stack overflow.
+9. Recomputed recursion (fib) is exponential; memoise results to make it linear.
+10. A struct groups fields; access with s.field; member functions like s.total().
+11. Best record: compare with > to keep the first among ties.
+12. Sort structs with cmp(x,	y) = "x before y": main key first, then tie-breaks; never >=.
+13. Keep scores exact: score	*	6	/	5, not score * 1.2.
+14. (C) C passes pointers (&x, *p) instead of references, and sorts with qsort.
+7.5.1 Problems
+Problem Name Section What it tests
+P5735 距离函数 7.1 A distance function called three times.
+
+=== page 15 ===
+15基础篇  第 7 章  函数与结构体
+Problem Name Section What it tests
+P5736 质数筛 7.1 isPrime helper, filter a list.
+P5737 闰年展示 7.1 isLeap helper, collect and count.
+P5738 歌唱比赛 7.1 Function: drop max and min, average; best of all.
+P5739 计算阶乘 7.3 Factorial written with recursion.
+P5461 赦免战俘 7.3 Recursive quarters of a 2ⁿ grid.
+P5740 最厉害的学生 7.4 Struct of scores; first student with the top total.
+P5741 旗鼓相当的对手  - 加强版 7.4 Pairs of structs with several limits.
+P5742 评等级 7.4 Struct plus a weighted score, exact in integers.
+P1075 质因数分解 7.1 Smallest factor helper, print n / p.
+P1304 哥德巴赫猜想 7.1 isPrime helper; smallest p for each even number.
+P1217 回文质数 7.1 Palindrome and prime helpers, skip even lengths.
+P2415 集合求和 7.3 Each element is in half the subsets: sum × 2ⁿ⁻¹.
+P5743 猴子吃桃 7.3 Work backwards: x = (x + 1) × 2.
+P5744 培训 7.4 Update each struct: age + 1, score × 6 / 5 capped at 600.
+7.5.2 Practice	ladder
+1. Direct. P5735: write and call a distance function (7.1).
+2. One	twist. P1304: an isPrime helper inside two loops (7.1).
+3. Idea	hidden. P5743: work backwards by recursion or a loop (7.3).
+4. Two	ideas. P5741: structs plus the pair loop (7.4).
+5. Stretch. P5461: recursive quarters of a grid (7.3).
+7.5.3 Experiments
+1. Remove the & from mySwap and run value_ref.cpp again.
+2. Call fact_trace with n = 5 and draw the call stack it prints.
+3. Time plain recursive fib(40) and fib_memo(40).
+4. Change cmp in sort_students.cpp to use >= and test with many equal scores.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,445 @@
+# 进阶篇 第6章 线段树  (进6)
+# source: 进阶篇 第06章 线段树.pdf
+
+=== page 1 ===
+1进阶篇  第 6 章  线段树
+第 6 章 	 线段树
+Segment trees Luogu #206 16 problems C++17 · all programs run
+6.1 线段树的建立与操作 6.2 线段树的应用
+6.3 权值线段树 ( 选读 ) 6.4 课后习题与实验
+6.1 线段树的建立与操作
+Build,	query,	update;	lazy	tags	for	range	add.
+[1,5]
+[1,3] [4,5]
+[1,2] [3,3] [4,4] [5,5]
+[1,1] [2,2]
+IDEA A segment	tree ( 线段树 ) splits [1, n]
+into halves again and again; every node
+stores a summary (sum, max, …) of its
+range. Node p has children 2p and 2p + 1,
+like a heap. Any range [l, r] is covered by
+O(log n) nodes (green: [1, 4] = [1, 3] + [4,
+4]), so queries and updates cost O(log n).
+KEY POINT Unlike prefix sums and Fenwick trees, a
+segment tree can store anything that two
+halves can be combined into: sums,
+max/min, max subarray, counts of
+colours. Allocate 4n nodes.
+Lazy	propagation ( 懒标记 ): adding v to a whole range
+would touch every leaf. Instead, when a node's range lies
+fully inside the update, update its sum (+ v × length) and
+leave a note "add v to my children later" in tag[p] . Push the
+note down only when a later operation needs to go below that
+node.
+Function Job
+build(p, l, r) fill leaves, combine upward
+pushup(p) sum[p] = sum[2p] +
+sum[2p+1]
+pushdown(p, l, r) hand tag[p] to both children
+update(p, l, r, x, y,
+v)
+add v on [x, y]
+query(p, l, r, x, y) sum over [x, y]
+KEY POINT Every update and query follows the same
+three cases: node range outside [x, y] →
+ignore; fully inside → use or mark this
+node; otherwise → push down, recurse
+into both halves, push up.
+TRAP Push down before going into the children,
+in both update and query, or children
+answer with stale values. Sums reach
+10¹⁸: use long long  for sums and tags.
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 2 部 分  进 阶 数 据 结 构
+One tree over ranges for sums, maxima and anything mergeable, with lazy tags for range updates, and a
+value tree for order statistics.
+
+=== page 2 ===
+2进阶篇  第 6 章  线段树
+segtree_add.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long a[100005], sum[400005], tag[400005];
+5  
+6 void pushup(int p) { sum[p] = sum[2 * p] + sum[2 * p + 1]; }
+7  
+8 void apply(int p, int l, int r, long long v) {   // add v to every element of node p
+9     sum[p] += v * (r - l + 1);
+10     tag[p] += v;
+11 }
+12  
+13 void pushdown(int p, int l, int r) {
+14     if (tag[p] == 0) return;
+15     int m = (l + r) / 2;
+16     apply(2 * p, l, m, tag[p]);
+17     apply(2 * p + 1, m + 1, r, tag[p]);
+18     tag[p] = 0;
+19 }
+20  
+21 void build(int p, int l, int r) {
+22     if (l == r) { sum[p] = a[l]; return; }
+23     int m = (l + r) / 2;
+24     build(2 * p, l, m);
+25     build(2 * p + 1, m + 1, r);
+26     pushup(p);
+27 }
+28  
+29 void update(int p, int l, int r, int x, int y, long long v) {
+30     if (y < l || r < x) return;                    // outside
+31     if (x <= l && r <= y) { apply(p, l, r, v); return; }   // fully inside
+32     pushdown(p, l, r);
+33     int m = (l + r) / 2;
+34     update(2 * p, l, m, x, y, v);
+35     update(2 * p + 1, m + 1, r, x, y, v);
+36     pushup(p);
+37 }
+38  
+39 long long query(int p, int l, int r, int x, int y) {
+40     if (y < l || r < x) return 0;
+41     if (x <= l && r <= y) return sum[p];
+42     pushdown(p, l, r);
+43     int m = (l + r) / 2;
+44     return query(2 * p, l, m, x, y) + query(2 * p + 1, m + 1, r, x, y);
+45 }
+46  
+47 int main() {
+48     ios::sync_with_stdio(false);
+49     cin.tie(nullptr);
+50     int n, q;
+51     cin >> n >> q;
+52     for (int i = 1; i <= n; i++) cin >> a[i];
+53     build(1, 1, n);
+54     while (q--) {
+55         int op, x, y;
+56         cin >> op >> x >> y;
+57         if (op == 1) { long long k; cin >> k; update(1, 1, n, x, y, k); }
+58         else cout << query(1, 1, n, x, y) << "\n";
+59     }
+60     return 0;
+61 }
+
+=== page 3 ===
+3进阶篇  第 6 章  线段树
+INPUT
+5 5
+1 5 4 2 3
+2 2 4
+1 2 3 2
+2 3 4
+1 1 5 1
+2 1 4
+OUTPUT
+11
+8
+20
+KEY POINT This is the template for range add + range sum (P3372). Range max/min only changes pushup  (max
+instead of +) and what a tag does to a node (P1816). Flipping lights on a range keeps the count of lit lights
+and a "flip" tag that toggles (P3870).
+6.2 线段树的应用
+Two	tags	in	order;	nodes	that	keep	several	numbers.
+IDEA Two kinds of tags at once need an order. For "multiply then add", store each node's pending change as x →
+x · mul + add. A new multiply c turns it into x · (mul·c) + add·c; a new add c turns it into x · mul + (add +
+c). Push both down together.
+
+=== page 4 ===
+4进阶篇  第 6 章  线段树
+segtree_mul_add.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long P, a[100005], sum[400005], mul[400005], add[400005];
+5  
+6 void apply(int p, int l, int r, long long m, long long c) {   // x -> x * m + c
+7     sum[p] = (sum[p] * m + c * (r - l + 1)) % P;
+8     mul[p] = mul[p] * m % P;
+9     add[p] = (add[p] * m + c) % P;
+10 }
+11  
+12 void pushdown(int p, int l, int r) {
+13     int m = (l + r) / 2;
+14     apply(2 * p, l, m, mul[p], add[p]);
+15     apply(2 * p + 1, m + 1, r, mul[p], add[p]);
+16     mul[p] = 1; add[p] = 0;
+17 }
+18  
+19 void build(int p, int l, int r) {
+20     mul[p] = 1; add[p] = 0;
+21     if (l == r) { sum[p] = a[l] % P; return; }
+22     int m = (l + r) / 2;
+23     build(2 * p, l, m); build(2 * p + 1, m + 1, r);
+24     sum[p] = (sum[2 * p] + sum[2 * p + 1]) % P;
+25 }
+26  
+27 void update(int p, int l, int r, int x, int y, long long m, long long c) {
+28     if (y < l || r < x) return;
+29     if (x <= l && r <= y) { apply(p, l, r, m, c); return; }
+30     pushdown(p, l, r);
+31     int md = (l + r) / 2;
+32     update(2 * p, l, md, x, y, m, c); update(2 * p + 1, md + 1, r, x, y, m, c);
+33     sum[p] = (sum[2 * p] + sum[2 * p + 1]) % P;
+34 }
+35  
+36 long long query(int p, int l, int r, int x, int y) {
+37     if (y < l || r < x) return 0;
+38     if (x <= l && r <= y) return sum[p];
+39     pushdown(p, l, r);
+40     int md = (l + r) / 2;
+41     return (query(2 * p, l, md, x, y) + query(2 * p + 1, md + 1, r, x, y)) % P;
+42 }
+43  
+44 int main() {
+45     ios::sync_with_stdio(false);
+46     cin.tie(nullptr);
+47     int n, q;
+48     cin >> n >> q >> P;
+49     for (int i = 1; i <= n; i++) cin >> a[i];
+50     build(1, 1, n);
+51     while (q--) {
+52         int op, x, y;
+53         cin >> op >> x >> y;
+54         if (op == 1) { long long k; cin >> k; update(1, 1, n, x, y, k % P, 0); }   // multiply
+55         else if (op == 2) { long long k; cin >> k; update(1, 1, n, x, y, 1, k % P); }  // add
+56         else cout << query(1, 1, n, x, y) << "\n";
+57     }
+58     return 0;
+59 }
+INPUT OUTPUT
+
+=== page 5 ===
+5进阶篇  第 6 章  线段树
+5 5 38
+1 5 4 2 3
+2 1 4 1
+3 2 5
+1 2 4 2
+2 3 5 5
+3 1 4
+17
+2
+KEY POINT Writing every pending change as the same shape (x · mul + add) makes combining two changes a small
+formula, so any order of operations is handled by one apply  (P3373). "Set to v" plus "add v" (P1253)
+works the same way with an "assigned?" flag that clears the add.
+
+=== page 6 ===
+6进阶篇  第 6 章  线段树
+6.2.1 Merging	more	than	one	number	per	node
+max_segment.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Node { long long sum, pre, suf, best; };   // best = max subarray inside
+5 Node t[2000005];
+6 long long a[500005];
+7  
+8 Node merge(const Node &L, const Node &R) {
+9     Node res;
+10     res.sum = L.sum + R.sum;
+11     res.pre = max(L.pre, L.sum + R.pre);            // prefix may cross into R
+12     res.suf = max(R.suf, R.sum + L.suf);
+13     res.best = max(max(L.best, R.best), L.suf + R.pre);   // or crosses the middle
+14     return res;
+15 }
+16  
+17 void build(int p, int l, int r) {
+18     if (l == r) { t[p].sum = t[p].pre = t[p].suf = t[p].best = a[l]; return; }
+19     int m = (l + r) / 2;
+20     build(2 * p, l, m); build(2 * p + 1, m + 1, r);
+21     t[p] = merge(t[2 * p], t[2 * p + 1]);
+22 }
+23  
+24 void change(int p, int l, int r, int x, long long v) {
+25     if (l == r) { t[p].sum = t[p].pre = t[p].suf = t[p].best = v; return; }
+26     int m = (l + r) / 2;
+27     if (x <= m) change(2 * p, l, m, x, v); else change(2 * p + 1, m + 1, r, x, v);
+28     t[p] = merge(t[2 * p], t[2 * p + 1]);
+29 }
+30  
+31 Node query(int p, int l, int r, int x, int y) {   // [x, y] overlaps [l, r]
+32     if (x <= l && r <= y) return t[p];
+33     int m = (l + r) / 2;
+34     if (y <= m) return query(2 * p, l, m, x, y);
+35     if (x > m) return query(2 * p + 1, m + 1, r, x, y);
+36     return merge(query(2 * p, l, m, x, y), query(2 * p + 1, m + 1, r, x, y));
+37 }
+38  
+39 int main() {
+40     ios::sync_with_stdio(false);
+41     cin.tie(nullptr);
+42     int n, q;
+43     cin >> n >> q;
+44     for (int i = 1; i <= n; i++) cin >> a[i];
+45     build(1, 1, n);
+46     while (q--) {
+47         int k, x, y;
+48         cin >> k >> x >> y;
+49         if (k == 1) { if (x > y) swap(x, y); cout << query(1, 1, n, x, y).best << "\n"; }
+50         else change(1, 1, n, x, y);
+51     }
+52     return 0;
+53 }
+INPUT
+5 3
+1 2 -3 4 5
+1 2 3
+2 2 -1
+1 3 2
+OUTPUT
+2
+-1
+
+=== page 7 ===
+7进阶篇  第 6 章  线段树
+IDEA The best subarray of a range lies in the left half, in the right half, or crosses the middle ( 进阶篇  第 3 章 ).
+Each node keeps four numbers so that two halves can always be merged: total, best prefix, best suffix, best
+inside. Queries merge the O(log n) nodes they meet (P4513).
+KEY POINT Variance (P1471) keeps Σx and Σx²; the longest alternating run (P6492) keeps run lengths at both ends;
+square roots on ranges (P4145) stop once a node's max is 1. Design the node first: "what must I know
+about each half to answer for the whole?"
+6.3 权值线段树 ( 选读 )
+A	tree	over	values:	counts	and	the	k-th	smallest.
+IDEA A value	segment	tree ( 权值线段树 ) is built over values instead of positions: leaf v counts how many
+times v has appeared. It answers "how many seen values are ≤ x" and "what is the k-th smallest seen
+value" in O(log V); discretise first if values are large.
+kth_value.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int V = 100000;                 // values 1..V
+5 int cnt[4 * V + 5];
+6  
+7 void insert(int p, int l, int r, int x) {
+8     cnt[p]++;
+9     if (l == r) return;
+10     int m = (l + r) / 2;
+11     if (x <= m) insert(2 * p, l, m, x); else insert(2 * p + 1, m + 1, r, x);
+12 }
+13  
+14 int kth(int p, int l, int r, int k) {  // k-th smallest inserted value
+15     if (l == r) return l;
+16     int m = (l + r) / 2;
+17     if (k <= cnt[2 * p]) return kth(2 * p, l, m, k);       // enough on the left
+18     return kth(2 * p + 1, m + 1, r, k - cnt[2 * p]);       // skip the left ones
+19 }
+20  
+21 int main() {
+22     int n, k;
+23     cin >> n;
+24     for (int i = 0; i < n; i++) { int x; cin >> x; insert(1, 1, V, x); }
+25     cin >> k;
+26     cout << kth(1, 1, V, k) << "\n";
+27     return 0;
+28 }
+INPUT 1
+6
+5 1 4 1 3 9
+3
+OUTPUT 1
+3
+INPUT 2
+6
+5 1 4 1 3 9
+6
+OUTPUT 2
+9
+
+=== page 8 ===
+8进阶篇  第 6 章  线段树
+triples.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, V;
+5 long long t[400005];
+6  
+7 void add(int i) { for (; i <= V; i += i & -i) t[i]++; }           // a Fenwick tree
+8 long long ask(int i) { long long s = 0; for (; i > 0; i -= i & -i) s += t[i]; return s; }
+9  
+10 int main() {
+11     cin >> n;
+12     vector<int> a(n), v;
+13     for (int i = 0; i < n; i++) cin >> a[i];
+14     v = a;
+15     sort(v.begin(), v.end());
+16     v.erase(unique(v.begin(), v.end()), v.end());
+17     V = v.size();
+18     vector<long long> smallerBefore(n);
+19     for (int i = 0; i < n; i++) {
+20         a[i] = lower_bound(v.begin(), v.end(), a[i]) - v.begin() + 1;   // ranks
+21         smallerBefore[i] = ask(a[i] - 1);
+22         add(a[i]);
+23     }
+24     fill(t, t + V + 1, 0);
+25     long long total = 0;
+26     for (int i = n - 1; i >= 0; i--) {                // scan back for larger after
+27         long long largerAfter = (n - 1 - i) - ask(a[i]);
+28         total += smallerBefore[i] * largerAfter;      // a[i] is the middle
+29         add(a[i]);
+30     }
+31     cout << total << "\n";
+32     return 0;
+33 }
+INPUT 1
+4
+2 1 3 4
+OUTPUT 1
+2
+INPUT 2
+5
+1 2 3 4 5
+OUTPUT 2
+10
+KEY POINT k-th smallest: walk down from the root; if the left child holds at least k values go left, otherwise subtract
+its count and go right. Counting increasing triples (P1637): fix the middle element; multiply "smaller
+values before it" by "larger values after it", both counts over values, so a value tree or the equivalent
+Fenwick tree ( 进阶篇  第 5 章 ) does the job. Inversions (P1908) and point sets with "first point to the upper
+right" (CF19D) also count over values.
+TRAP A value tree needs a leaf for every possible value. Values up to 10⁹ must be discretised ( 第 2 章 ) first, or
+the tree built dynamically, creating nodes only when they are reached.
+6.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 9 ===
+9进阶篇  第 6 章  线段树
+Key	points	to	memorise
+1. Node p covers [l, r]; children 2p, 2p + 1 split at m = (l + r) / 2; 4n nodes.
+2. Three cases: outside → ignore; inside → use / tag; else → pushdown, recurse, pushup.
+3. Lazy add: sum += v·len, tag += v; push down before visiting children.
+4. Two tags: store x → x·mul + add; new mul c: (mul·c, add·c); new add c: (mul, add + c).
+5. Design nodes by "what must I know about each half to answer for the whole?"
+6. Max subarray node: sum, best prefix, best suffix, best inside.
+7. Value tree: leaf v counts v; k-th smallest walks left if cnt[left] ≥ k.
+8. Large values: discretise first (or build nodes on demand).
+6.4.1 Problems
+Problem Name Section What it tests
+P3372 【模板】线段树  1 6.1 Range add, range sum with lazy tags.
+P3870 开关 6.1 Flip a range; count lit lights.
+P1438 无聊的数列 6.2 Arithmetic sequences added via a difference tree.
+P1253 扶苏的问题 6.2 Assign and add tags, max query.
+P3373 【模板】线段树  2 6.2 Multiply and add tags, mod p.
+P4513 小白逛公园 6.2 Max subarray in a range with point changes.
+P1908 逆序对 6.3 Count over values.
+P1816 忠诚 6.1 Range minimum.
+P1471 方差 6.2 Keep Σx and Σx² per node.
+P6492 STEP 6.2 Longest alternating run: merge end runs.
+P1637 三元上升子序列 6.3 Smaller before × larger after.
+P1558 色板游戏 6.2 Colours as a bitmask per node.
+P5522 棠梨煎雪 6.2 Per-bit constraints merged per node.
+P4145 上帝造题的七分钟  2 6.2 Range sqrt; stop when max ≤ 1.
+P2572 序列操作 6.2 Assign, flip, count and longest run of 1s.
+CF19D Points 6.3 Upper-right first point via max tree over x.
+6.4.2 Practice	ladder
+1. Direct. P3372: lazy range add (6.1).
+2. One	twist. P1816: range minimum (6.1).
+3. Idea	hidden. P4513: design a mergeable node (6.2).
+4. Two	ideas. P3373: two ordered tags (6.2).
+5. Stretch. P1637: counting over values (6.3).
+6.4.3 Experiments
+1. Print which nodes query(1, 1, 8, 2, 7) visits and check that only O(log n) are fully used.
+2. Remove pushdown from query in segtree_add.cpp and find an input that gives a wrong answer.
+3. Apply the add tag before the multiply tag in segtree_mul_add.cpp and test.
+
+=== page 10 ===
+10进阶篇  第 6 章  线段树
+4. Find the k-th smallest of 10⁶ inserts with kth_value.cpp and with sorting; compare.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

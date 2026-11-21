@@ -1,0 +1,323 @@
+# 基础篇 第3章 分支结构程序设计  (基3)
+# source: 基础篇 第03章 分支结构程序设计.pdf
+
+=== page 1 ===
+1基础篇  第 3 章  分支结构程序设计
+第 3 章 	 分支结构程序设计
+Branching programs Luogu #101 17 problems C++17 · all programs run
+3.1 关系表达式与逻辑表达式 3.2 分支语句
+3.3 分支嵌套 3.4 分支程序设计案例
+3.5 课后习题与实验
+3.1 关系表达式与逻辑表达式
+Comparisons	are	values;	&&	||	!	combine	them.
+A B A && B A || B !A
+true true true true false
+true false false true false
+false true false true true
+false false false false true
+bools.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int x = 5;
+6     cout << (x > 3) << " " << (x == 4) << "\n";
+7     cout << (x > 3 && x < 10) << " " << (x < 3 || x > 4) << "\n";
+8     cout << !(x > 3) << "\n";
+9     bool even = x % 2 == 0;
+10     cout << boolalpha << even << "\n";    // words instead of 1/0
+11     int y = 0;
+12     if (y != 0 && 10 / y > 1) cout << "big\n";
+13     else cout << "skip\n";                // 10 / y never runs
+14     return 0;
+15 }
+OUTPUT
+1 0
+1 1
+0
+false
+skip
+KEY POINT A comparison is a value of type bool : true  (printed as 1) or false  (0). Any non-zero number used as a
+condition counts as true, so if (n)  means if (n != 0) .
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 1 部 分  语 言 入 门
+Relational and logical expressions, if/else and switch, nested branches, and worked branching programs.
+
+=== page 2 ===
+2基础篇  第 3 章  分支结构程序设计
+3.1.1 Conditions
+Operator Meaning Example
+== != equal, not equal x % 2 == 0  (even)
+< <= > >= compare a <= b
+&& and: both true 1 <= x && x <= 9
+|| or: at least one c == 'a' || c == 'A'
+! not !(x > 5)
+a % b == 0 b divides a n % 3 == 0
+Precedence, high to low: !  → arithmetic → < >  → == !=
+→ &&  → || . Add brackets whenever you mix &&  and || .
+KEY POINT Short-circuit: &&  stops at the first false
+part, ||  at the first true part. So n != 0
+&& a / n > 2  never divides by zero.
+TRAP if (a = b)  assigns instead of comparing. 1 < x < 5  means (1 < x) < 5 , which is always true. if
+(x);  has an empty body. An else  pairs with the nearest if : use braces.
+3.2 分支语句
+if,	else	if,	else,	switch	and	the	?	:	operator.
+3.2.1 if	/	else	if	/	else,	and	switch
+IDEA An else-if	chain tests conditions in order and runs only the first that is true. Order matters: put the narrow
+cases first, or write each condition so it cannot overlap.
+month_days.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int y, m;
+6     cin >> y >> m;
+7     bool leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
+8     int days;
+9     switch (m) {
+10         case 2: days = leap ? 29 : 28; break;
+11         case 4: case 6: case 9: case 11: days = 30; break;
+12         default: days = 31;
+13     }
+14     cout << days << "\n";
+15     return 0;
+16 }
+INPUT 1
+2024 2
+OUTPUT 1
+29
+INPUT 2
+1900 2
+OUTPUT 2
+28
+INPUT 3
+2023 11
+OUTPUT 3
+30
+
+=== page 3 ===
+3基础篇  第 3 章  分支结构程序设计
+bmi.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     double m, h;
+6     cin >> m >> h;
+7     double bmi = m / (h * h);
+8     if (bmi < 18.5) cout << "Underweight\n";
+9     else if (bmi < 24) cout << "Normal\n";   // 18.5 <= bmi < 24
+10     else cout << "Overweight\n";
+11     return 0;
+12 }
+INPUT 1
+70 1.75
+OUTPUT 1
+Normal
+INPUT 2
+45 1.7
+OUTPUT 2
+Underweight
+KEY POINT Leap year: divisible by 4 and not by 100, or divisible by 400. switch  works on integers and chars; each
+case  needs break , or it falls through into the next case. The ? :  operator picks between two values: x
+= cond ? a : b .
+3.3 分支嵌套
+Decisions	inside	decisions.
+x == 0 || y == 0 ?
+on an axis x > 0 ?
+y > 0 ? 1 : 4 y > 0 ? 2 : 3
+yes no
+IDEA An if  inside another if  makes a decision
+tree: the inner question is only asked on one
+branch of the outer one. Draw the tree first
+when the cases depend on each other.
+KEY POINT Braces show which else  belongs to which
+if . Many nests can be flattened into an else
+if  chain with && , which is often easier to
+read.
+
+=== page 4 ===
+4基础篇  第 3 章  分支结构程序设计
+quadrant.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int x, y;
+6     cin >> x >> y;
+7     if (x == 0 || y == 0) {
+8         cout << "on an axis\n";
+9     } else {
+10         if (x > 0) {
+11             if (y > 0) cout << "1\n";
+12             else cout << "4\n";
+13         } else {
+14             if (y > 0) cout << "2\n";
+15             else cout << "3\n";
+16         }
+17     }
+18     return 0;
+19 }
+INPUT 1
+3 4
+OUTPUT 1
+1
+INPUT 2
+-2 -5
+OUTPUT 2
+3
+INPUT 3
+0 7
+OUTPUT 3
+on an axis
+quadrant_flat.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int x, y;
+6     cin >> x >> y;
+7     if (x == 0 || y == 0) cout << "on an axis\n";
+8     else if (x > 0 && y > 0) cout << "1\n";
+9     else if (x < 0 && y > 0) cout << "2\n";
+10     else if (x < 0 && y < 0) cout << "3\n";
+11     else cout << "4\n";
+12     return 0;
+13 }
+INPUT 1
+3 4
+OUTPUT 1
+1
+INPUT 2
+-2 -5
+OUTPUT 2
+3
+INPUT 3
+0 7
+OUTPUT 3
+on an axis
+TRAP Without braces, if (a) if (b) x; else y;  attaches the else  to the inner if , whatever the
+indentation suggests. Put braces on every nested if .
+3.4 分支程序设计案例
+Complete	programs	built	from	branches.
+
+=== page 5 ===
+5基础篇  第 3 章  分支结构程序设计
+3.4.1 Sorting	three	values	and	the	triangle	test
+triangle.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     long long a, b, c;
+6     cin >> a >> b >> c;
+7     if (a > b) swap(a, b);       // three swaps sort a <= b <= c
+8     if (b > c) swap(b, c);
+9     if (a > b) swap(a, b);
+10     if (a + b <= c) { cout << "Not triangle\n"; return 0; }
+11     if (a * a + b * b == c * c) cout << "Right\n";
+12     else if (a * a + b * b > c * c) cout << "Acute\n";
+13     else cout << "Obtuse\n";
+14     if (a == c) cout << "Equilateral\n";
+15     else if (a == b || b == c) cout << "Isosceles\n";
+16     return 0;
+17 }
+INPUT 1
+5 3 4
+OUTPUT 1
+Right
+INPUT 2
+2 2 3
+OUTPUT 2
+Obtuse
+Isosceles
+INPUT 3
+1 2 3
+OUTPUT 3
+Not triangle
+After sorting, one test decides each question:
+Is	it	a	triangle? a + b > c.
+Angle	type: compare a² + b² with c². Equal: right. Greater: acute. Smaller: obtuse.
+Equilateral: a == c (sorted, so all three equal).
+Isosceles: a == b or b == c.
+KEY POINT All tests stay in integers, so there is no rounding error. Sorting first removes the "which side is longest"
+case analysis.
+
+=== page 6 ===
+6基础篇  第 3 章  分支结构程序设计
+3.4.2 Choosing	the	cheapest	option
+pencils.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3 #define int long long
+4  
+5 signed main() {
+6     int n;
+7     cin >> n;
+8     int best = LLONG_MAX;
+9     for (int k = 0; k < 3; k++) {          // 3 kinds of pack
+10         int size, price;
+11         cin >> size >> price;
+12         int packs = (n + size - 1) / size; // round up
+13         best = min(best, packs * price);
+14     }
+15     cout << best << "\n";
+16     return 0;
+17 }
+INPUT
+57
+2 2
+50 30
+30 27
+OUTPUT
+54
+IDEA Compute the cost of each choice and keep the minimum. Start the minimum at a value larger than any
+answer (LLONG_MAX ), or at the first choice. The idea behind P1909.
+TRAP 0.1 + 0.2 == 0.3  is false for doubles. Compare with a tolerance, fabs(x - y) < 1e-9 , or better,
+multiply out so everything stays an integer.
+3.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Comparisons give bool: true (1) or false (0); any non-zero counts as true.
+2. && and || short-circuit: n != 0 && a / n > 2 is safe.
+3. 1	<	x	<	5 is wrong; write 1 < x && x < 5.
+4. else-if chains test in order and run only the first true branch.
+5. switch: each case needs break; ?	: picks one of two values.
+6. Nested ifs: braces always; else binds to the nearest if.
+7. Leap year: (y%4==0	&&	y%100!=0)	||	y%400==0.
+8. Sort three with swaps; triangle if a + b > c; compare a²+b² with c² exactly.
+3.5.1 Problems
+Problem Name Section What it tests
+P5709 Apples Prologue 3.4 Round up, clamp at 0, handle the zero case.
+P5710 数的性质 3.1 Combine two conditions: both, either, exactly one, neither.
+
+=== page 7 ===
+7基础篇  第 3 章  分支结构程序设计
+Problem Name Section What it tests
+P5711 闰年判断 3.1 The leap-year condition.
+P5712 Apples 3.2 Singular or plural output.
+P5713 洛谷团队系统 3.2 Compare two cost formulas.
+P5714 肥胖问题 3.2 BMI, three branches.
+P5715 三位数排序 3.4 Sort three values.
+P5716 月份天数 3.2 Month lengths plus the leap rule.
+P1085 不高兴的津津 3.4 Maximum of seven sums, first day wins ties.
+P1909 买铅笔 3.4 Round up for each pack, take the minimum.
+P5717 三角形分类 3.4 Sort sides, then exact integer tests.
+P1422 小玉家的电费 3.2 Piecewise price bands.
+P1424 小鱼的航程（改进版） 3.4 Walk through the days, skip weekends.
+P1888 三角函数 3.4 Smallest over largest, reduced by gcd.
+P1046 陶陶摘苹果 3.4 Count values within reach.
+P4414 ABC 3.3 Sort, then print in the order the letters ask.
+P1055 ISBN 号码 3.4 Weighted digits mod 11, with X as 10.
+3.5.2 Practice	ladder
+1. Direct. P5711: the leap-year condition (3.1).
+2. One	twist. P5716: month lengths with switch (3.2).
+3. Idea	hidden. P4414: sort three, then reorder by letters (3.3).
+4. Two	ideas. P5717: sort sides, exact triangle tests (3.4).
+5. Stretch. P1055: weighted digits mod 11 (3.4).
+3.5.3 Experiments
+1. Print (1 < x < 5) for x = 0, 3 and 9. Why is it always 1?
+2. Write if (a = 5) and compile with -Wall. Read the warning.
+3. Remove all braces from quadrant.cpp and test it again on the three inputs.
+4. Rewrite month_days.cpp without break and watch the cases fall through.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,228 @@
+# 拓展篇 第31章 组合与博弈补充  (拓31)
+# source: 拓展篇 第31章 组合与博弈补充.pdf
+
+=== page 1 ===
+1拓展篇  第 31 章  组合与博弈补充
+第 31 章 	 组合与博弈补充
+Pigeonhole, generating functions, P/N positions, permutation groups Luogu (verified) 4 problems
+C++17 · all programs run
+31.1 鸽巢原理 31.2 母函数
+31.3 P/N 状态、巴什游戏与置换群 31.4 课后习题与实验
+31.1 鸽巢原理
+n	+	1	into	n;	prefix	remainders.
+IDEA The pigeonhole	principle ( 鸽巢原理 ): putting n + 1 objects into n boxes forces some box to hold two.
+Stronger form: kn + 1 objects force some box to hold k + 1. It proves that something must	exist, and the
+proof usually tells you where to look.
+KEY POINT Classic use: among any n integers there is a non-empty block al + … + ar divisible by n. The n + 1 prefix
+sums S0 … Sn have only n possible remainders mod n, so two are equal; their difference is the block. The
+proof is the O(n) algorithm.
+pigeonhole.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<int> first(n, -1);                 // first prefix index with each remainder
+8     first[0] = 0;
+9     long long s = 0;
+10     for (int i = 1; i <= n; i++) {
+11         long long x; cin >> x;
+12         s = (s + x) % n;
+13         if (first[s] >= 0) { cout << first[s] + 1 << " " << i << "\n"; return 0; }   // equal remainders
+14         first[s] = i;
+15     }
+16     return 0;                                 // never reached: n+1 prefixes, n remainders
+17 }
+INPUT
+9
+31 39 14 93 51 62 20 12 9
+OUTPUT
+4 5
+IDEA Prints l and r such that al + … + ar is divisible by n; the first repeated remainder is reported. Checked
+against the same rule in Python.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 学 拓 展
+Prove existence with the pigeonhole principle, count with ordinary and exponential generating functions,
+classify game positions as P or N, and read symmetries as permutations made of cycles.
+
+=== page 2 ===
+2拓展篇  第 31 章  组合与博弈补充
+KEY POINT Other pigeonhole facts: among n + 1 numbers from 1 … 2n two are consecutive; any sequence of mn + 1
+distinct numbers has an increasing run of length m + 1 or a decreasing one of length n + 1 (Erdős–
+Szekeres).
+31.2 母函数
+OGF	for	combinations,	EGF	for	arrangements.
+IDEA A generating	function ( 母函数 ) packs a sequence into a power series. Ordinary ( 普通型 , OGF): A(x) = Σ
+anxn; multiplying OGFs counts combinations: picking 0 … ci items of type i is (1 + x + … + xci), and the
+product's xn coefficient counts the ways to pick n items in total.
+KEY POINT Exponential ( 指数型 , EGF): A(x) = Σ anxn/n!; multiplying EGFs counts arrangements (labelled objects,
+strings): a letter used k times contributes xk/k!, and n! times the xn coefficient counts strings of length n.
+Taylor series give closed forms: Σ xk = 1/(1 − x), Σ xk/k! = eˣ, even k: (eˣ + e⁻ˣ)/2.
+ogf.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int k, n;
+6     cin >> k >> n;
+7     vector<long long> poly(n + 1, 0);
+8     poly[0] = 1;                                  // the empty product
+9     for (int t = 0; t < k; t++) {
+10         int c; cin >> c;                          // type t: 0..c copies
+11         vector<long long> next(n + 1, 0);
+12         for (int i = 0; i <= n; i++)
+13             for (int j = 0; j <= c && i + j <= n; j++) next[i + j] += poly[i];   // multiply by 1 + x + 
+... + x^c
+14         poly = next;
+15     }
+16     cout << poly[n] << "\n";                      // coefficient of x^n
+17     return 0;
+18 }
+INPUT
+4 6
+2 3 1 4
+OUTPUT
+20
+
+=== page 3 ===
+3拓展篇  第 31 章  组合与博弈补充
+egf.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long MOD = 1000000007;
+5 long long power(long long a, long long b) { long long r = 1; for (a %= MOD; b; b >>= 1, a = a * a % MOD) 
+if (b & 1) r = r * a % MOD; return r; }
+6  
+7 int main() {
+8     int n;
+9     cin >> n;
+10     vector<long long> fact(n + 1, 1), inv(n + 1, 1);
+11     for (int i = 1; i <= n; i++) fact[i] = fact[i - 1] * i % MOD;
+12     for (int i = 0; i <= n; i++) inv[i] = power(fact[i], MOD - 2);
+13     vector<long long> A(n + 1, 0), B(n + 1, 0), C(n + 1, 0);
+14     for (int k = 0; k <= n; k++) {
+15         if (k % 2 == 0) A[k] = inv[k];             // 'a': even number of times
+16         if (k >= 1) B[k] = inv[k];                 // 'b': at least once
+17         C[k] = inv[k];                             // 'c': any number of times
+18     }
+19     vector<long long> AB(n + 1, 0), ABC(n + 1, 0);
+20     for (int i = 0; i <= n; i++) for (int j = 0; i + j <= n; j++) AB[i + j] = (AB[i + j] + A[i] * B[j]) 
+% MOD;
+21     for (int i = 0; i <= n; i++) for (int j = 0; i + j <= n; j++) ABC[i + j] = (ABC[i + j] + AB[i] * 
+C[j]) % MOD;
+22     cout << ABC[n] * fact[n] % MOD << "\n";        // n! times the x^n coefficient
+23     return 0;
+24 }
+INPUT
+6
+OUTPUT
+333
+KEY POINT OGF: ways to pick 6 items when the four types allow at most 2, 3, 1, 4 copies; EGF: strings of length 6 over
+{a, b, c} with an even number of a's and at least one b. Both are checked by brute force in Python. Products
+of large series use FFT / NTT ( 第 8 章 ).
+31.3 P/N	 状态、巴什游戏与置换群
+Backward	tables;	Bash	game;	cycles.
+IDEA P-positions	and	N-positions: a position is P (the Previous player, who just moved, wins) when every
+move leads to an N-position; it is N (the Next player wins) when some move leads to a P-position.
+Terminal positions are P. Filling this table backwards is the basic method for any small game (and SG = 0
+⇔ P, 第 10 章 ).
+KEY POINT Bash	game ( 巴什游戏 ): one pile of n stones, take 1 … m per move, taking the last stone wins. P-positions
+are exactly the multiples of m + 1: from a multiple, every move leaves a non-multiple; from a non-
+multiple, taking n mod (m + 1) leaves a multiple. So the first player wins iff n mod (m + 1) ≠ 0.
+
+=== page 4 ===
+4拓展篇  第 31 章  组合与博弈补充
+bash_game.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int T;
+6     cin >> T;
+7     while (T--) {
+8         long long n, m;
+9         cin >> n >> m;
+10         if (n % (m + 1) != 0) cout << "first, take " << n % (m + 1) << "\n";   // leave a multiple of 
+m+1
+11         else cout << "second\n";
+12     }
+13     return 0;
+14 }
+INPUT
+4
+10 3
+12 3
+7 6
+1 1
+OUTPUT
+first, take 2
+second
+second
+first, take 1
+pn_table.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int k, n;
+6     cin >> k;
+7     vector<int> s(k);
+8     for (int i = 0; i < k; i++) cin >> s[i];
+9     cin >> n;
+10     string res(n + 1, 'P');
+11     for (int x = 0; x <= n; x++)
+12         for (int i = 0; i < k; i++)
+13             if (s[i] <= x && res[x - s[i]] == 'P') { res[x] = 'N'; break; }   // a move to P exists
+14     cout << res << "\n";
+15     return 0;
+16 }
+INPUT
+3
+1 3 4
+20
+OUTPUT
+PNPNNNNPNPNNNNPNPNNNN
+KEY POINT The table for moves {1, 3, 4} shows P-positions at 0, 2, 7, 9, 14, 16, …: period 7. Tabulating, then spotting
+the period, is how most "formula" games are discovered.
+IDEA A permutation	group ( 置换群 ) is a set of permutations closed under composition, containing the
+identity and inverses (rotations of a necklace, rotations and reflections of a square). Every permutation
+splits into disjoint cycles; a colouring is fixed by a permutation iff each cycle is single-coloured, so it fixes
+m(number of cycles) colourings. That is the input to Burnside / Pólya ( 第 23 章 ).
+KEY POINT Rotation by k of n positions has gcd(k, n) cycles, each of length n / gcd(k, n). A reflection of an n-gon has
+(n + 1)/2 cycles for odd n; for even n, half the reflections have n/2 cycles and half have n/2 + 1.
+
+=== page 5 ===
+5拓展篇  第 31 章  组合与博弈补充
+31.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Pigeonhole: n + 1 objects, n boxes ⇒ a shared box; kn + 1 ⇒ k + 1.
+2. Prefix remainders mod n repeat ⇒ a block divisible by n.
+3. OGF: product of (1 + x + … + x^c) counts combinations.
+4. EGF: terms x^k/k!; n!·[x^n] counts arrangements.
+5. P: all moves to N; N: some move to P; terminal = P.
+6. Bash (take 1…m): P ⇔ n ≡ 0 (mod m + 1).
+7. Permutation = disjoint cycles; fixed colourings m^(cycles).
+31.4.1 Problems
+Problem Name Section What it tests
+P2000 拯救世界 31.2 Product of OGFs, closed form, big numbers.
+P4980 【模板】 Pólya （ Polya ）定
+理
+31.3 Rotations as cycles.
+P2197 【模板】 Nim 游戏 31.3 P-positions: XOR 0.
+P2252 【模板】威佐夫博弈  / 取
+石子游戏
+31.3 P-positions by formula.
+31.4.2 Practice	ladder
+1. Direct. P2197: P/N positions (31.3).
+2. One	twist. P2252: game formula (31.3).
+3. Idea	hidden. P4980: permutation cycles (31.3).
+4. Two	ideas. P2000: generating functions (31.2).
+31.4.3 Experiments
+1. Run pigeonhole.cpp on 1000 random inputs and check every answer.
+2. Compute the OGF of ogf.cpp by hand for two types and compare.
+3. Find the period of the P/N table for moves {2, 5, 6}.
+4. List the cycles of every rotation of a 6-bead necklace.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

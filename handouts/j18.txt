@@ -1,0 +1,294 @@
+# 进阶篇 第18章 动态规划的设计与优化  (进18)
+# source: 进阶篇 第18章 动态规划的设计与优化.pdf
+
+=== page 1 ===
+1进阶篇  第 18 章  动态规划的设计与优化
+第 18 章 	 动态规划的设计与优化
+Designing and optimising DP Luogu #225 19 problems C++17 · all programs run
+18.1 设计动态规划 18.2 优化转移
+18.3 课后习题与实验
+18.1 设计动态规划
+Choosing	what	to	remember;	inserting	by	size.
+IDEA Designing a DP is mostly choosing the state. Ask: (1) what is the last decision? (2) what must I remember
+about the past to make every future decision? Keep exactly that, nothing more. Then the transition is "try
+every last decision" and its cost decides whether you need an optimisation (18.2).
+KEY POINT Useful moves when a state seems impossible: build	the	object	step	by	step in a clever order (insert
+numbers by size, not by position); count	something	else (its complement, or "at least k" then subtract);
+add	a	dimension for the one fact that matters; swap	state	and	answer when the answer is small and a
+quantity is large (f[value] = smallest cost).
+1 2 3 insert 4 at the end: +0
+before 3: +1, before 2: +2,
+at the front: +3 inversions
+new largest: +1 inversion per number it jumps
+IDEA Count permutations of 1..n with exactly
+k inversions (P2513). Building by
+position needs to remember which
+numbers are left: too much. Insert the
+numbers by	size instead: putting i into a
+permutation of 1..i − 1 creates t new
+inversions, for any t from 0 to i − 1,
+whatever the order of the others.
+KEY POINT So f[i][j] = Σt=0..min(j, i−1) f[i−1][j−t].
+That sum is a window of the previous
+row: keep its prefix sums and every
+state costs O(1). O(nk) instead of
+O(n²k).
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 4 部 分  动 态 规 划
+Choose the state by asking what the future needs; then speed up "best over many previous states" with
+prefix sums, monotone queues, or convex hulls.
+
+=== page 2 ===
+2进阶篇  第 18 章  动态规划的设计与优化
+inversion_count.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int MOD = 10000;
+5 int f[1005][1005], pre[1005];
+6  
+7 int main() {
+8     int n, k;
+9     cin >> n >> k;
+10     f[1][0] = 1;
+11     for (int i = 2; i <= n; i++) {
+12         pre[0] = f[i - 1][0];                              // prefix sums of the previous row
+13         for (int j = 1; j <= k; j++) pre[j] = (pre[j - 1] + f[i - 1][j]) % MOD;
+14         for (int j = 0; j <= k; j++) {
+15             int lo = j - (i - 1);                          // window f[i-1][lo..j]
+16             f[i][j] = pre[j];
+17             if (lo > 0) f[i][j] = (f[i][j] - pre[lo - 1] + MOD) % MOD;
+18         }
+19     }
+20     cout << f[n][k] << "\n";
+21     return 0;
+22 }
+INPUT 1
+4 1
+OUTPUT 1
+3
+INPUT 2
+3 3
+OUTPUT 2
+1
+IDEA Check: permutations of 1..4 with one inversion are 2134, 1324, 1243: 3. Of 1..3 with three inversions only
+321: 1.
+KEY POINT Subtracting prefix sums under a modulus can go negative: add MOD before taking %. When the window is
+"everything up to j" (lo ≤ 0) no subtraction is needed.
+TRAP The rows only need the previous row; with n, k ≤ 1000 the full table is fine, but rolling two rows saves
+memory when it is not.
+18.2 优化转移
+Prefix	sums,	monotone	queues,	slope	optimisation.
+IDEA An optimisation keeps the same states and transitions but computes "min / max / sum over a range of
+previous states" faster. Look at the shape of that range and that cost.
+The transition takes … Tool Cost per state
+a sum over a window of the previous row prefix sums O(1)
+a min / max over a sliding	window of j monotone queue ( 单调队列 , 第 1 章 ) O(1) amortised
+min over j of f[j] + (something in i) × (something in j) slope optimisation / convex hull ( 斜率优化 ) O(1) amortised or O(log n)
+min / max over an arbitrary range of values segment tree or Fenwick tree O(log n)
+best split point that moves monotonically divide and conquer / quadrangle inequality O(log n) amortised
+
+=== page 3 ===
+3进阶篇  第 18 章  动态规划的设计与优化
+0
+j=1
+1
+j=2
+1
+j=3
+2
+j=4
+?
+i=5
+window of the last k = 3 trees
+queue keeps f increasing (ties: higher tree first)
+IDEA Little bird (P3572): from tree j the bird
+flies to any of the next k trees; landing
+on a tree that is not lower costs 1. f[i] =
+min over j in [i − k, i − 1] of f[j] + (h[j] ≤
+h[i]). The window slides by one each
+step: a monotone	queue.
+KEY POINT Only f matters first; among equal f a
+higher tree is better (it is less likely to
+cost 1). Keep the queue sorted by (f
+ascending, h descending): pop from the
+back anything worse than the new tree,
+pop from the front anything outside the
+window.
+
+=== page 4 ===
+4进阶篇  第 18 章  动态规划的设计与优化
+little_bird.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, h[1000005], f[1000005], q[1000005];
+5  
+6 int main() {
+7     ios::sync_with_stdio(false);
+8     cin.tie(nullptr);
+9     cin >> n;
+10     for (int i = 1; i <= n; i++) cin >> h[i];
+11     int Q;
+12     cin >> Q;
+13     while (Q--) {
+14         int k;
+15         cin >> k;
+16         int head = 0, tail = 0;                 // queue q[head..tail-1] of tree indices
+17         f[1] = 0;
+18         q[tail++] = 1;
+19         for (int i = 2; i <= n; i++) {
+20             while (q[head] < i - k) head++;     // left the window
+21             int j = q[head];                    // best start
+22             f[i] = f[j] + (h[j] <= h[i] ? 1 : 0);
+23             while (head < tail && (f[q[tail - 1]] > f[i] ||
+24                    (f[q[tail - 1]] == f[i] && h[q[tail - 1]] <= h[i]))) tail--;   // i is at least as 
+good
+25             q[tail++] = i;
+26         }
+27         cout << f[n] << "\n";
+28     }
+29     return 0;
+30 }
+INPUT 1
+5
+1 2 3 4 5
+2
+2
+1
+OUTPUT 1
+2
+4
+INPUT 2
+9
+4 6 3 6 3 7 2 6 5
+2
+9
+2
+OUTPUT 2
+1
+2
+IDEA Why the front is enough: the front has the smallest f, and among those the highest tree. Any other j in the
+window has f ≥ f[front]; if f is larger by 1 it can at best tie, so it never wins. O(n) per query.
+KEY POINT Multiple knapsack, stock trading with a cool-down (P2569) and the waltz on a moving floor (P2254) all
+have "best over the last k" transitions: the same queue.
+
+=== page 5 ===
+5进阶篇  第 18 章  动态规划的设计与优化
+18.2.1 Slope	optimisation
+never best
+dashed: slope 2a
+x = s[j]
+IDEA Toy boxes (P3195): put toys j+1..i in one
+box; the cost is (s[i] − s[j] − L′)² with s =
+prefix length + count and L′ = L + 1.
+Expand with a = s[i] − L′, b = s[j]: f[i] =
+a² + minj (f[j] + b² − 2ab). Each j is a
+point (b, f[j] + b²); for a given i we want
+the point that minimises y − 2a·x.
+KEY POINT That is a line of slope 2a touching the
+set of points from below: only the lower
+convex	hull matters. Here x = s[j] and
+the slope 2a both increase with i, so the
+hull is a queue: add new points at the
+back, and drop points from the front
+once the next one is better.
+toys.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n;
+5 long long L, s[50005], f[50005];
+6 int q[50005];
+7  
+8 long long X(int j) { return s[j]; }
+9 long long Y(int j) { return f[j] + s[j] * s[j]; }
+10  
+11 int main() {
+12     cin >> n >> L;
+13     L++;                                             // L' = L + 1
+14     for (int i = 1; i <= n; i++) { long long c; cin >> c; s[i] = s[i - 1] + c + 1; }
+15     int head = 0, tail = 0;
+16     q[tail++] = 0;                                   // j = 0: nothing packed yet
+17     for (int i = 1; i <= n; i++) {
+18         long long a = s[i] - L;
+19         // front is beaten by the next point while their slope <= 2a
+20         while (tail - head >= 2 &&
+21                Y(q[head + 1]) - Y(q[head]) <= 2 * a * (X(q[head + 1]) - X(q[head]))) head++;
+22         int j = q[head];
+23         f[i] = f[j] + (s[i] - s[j] - L) * (s[i] - s[j] - L);
+24         // keep the hull convex: remove the back while it is not below the segment
+25         while (tail - head >= 2 &&
+26                (Y(q[tail - 1]) - Y(q[tail - 2])) * (X(i) - X(q[tail - 1])) >=
+27                (Y(i) - Y(q[tail - 1])) * (X(q[tail - 1]) - X(q[tail - 2]))) tail--;
+28         q[tail++] = i;
+29     }
+30     cout << f[n] << "\n";
+31     return 0;
+32 }
+INPUT
+5 4
+3 4 2 1 4
+OUTPUT
+1
+
+=== page 6 ===
+6进阶篇  第 18 章  动态规划的设计与优化
+IDEA Compare slopes by cross-multiplying, never by dividing: x strictly increases here (every toy has length ≥
+1), so the signs are safe and there is no rounding. Each index enters and leaves the queue once: O(n).
+KEY POINT If the query slopes are not monotone ( 任务安排  P5785 allows negative times), keep the whole hull and
+binary-search the touching point: O(log n). If the points do not arrive in x order ( 货币兑换  P4027), use
+CDQ divide and conquer or a balanced tree.
+TRAP The products can reach (5·10⁷)² ≈ 2.5·10¹⁵: long long is required, and the cross-multiplied comparisons
+may need __int128 when values are larger.
+KEY POINT Other optimisations from the list: divide	and	conquer when the best split point is monotone ( 诗人小 G
+P1912, with a quadrangle-inequality proof); a segment	tree over the previous row when the cost adds to
+a range of j (The Bakery CF833B: distinct values in a segment); slope	optimisation	with	several	hulls
+when the cost depends on a colour ( 柠檬  P5504).
+18.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. State = exactly what the future decisions need. Last decision → transition.
+2. Build in a clever order (insert by size) to shrink the state.
+3. Window sums: prefix sums; subtract with + MOD.
+4. Sliding-window min/max: monotone queue; pop front by range, back by dominance.
+5. f[i] = min f[j] + A(i)·B(j) + …: points (B(j), …), lower hull, line of slope A(i).
+6. Monotone x and slopes: hull as a queue, O(n); otherwise binary search or CDQ.
+7. Compare slopes by cross-multiplying; watch overflow.
+18.3.1 Problems
+Problem Name Section What it tests
+P2513 逆序对数列 18.1 Insert by size; prefix sums.
+CF708E Student's Camp 18.1 Row intervals, probabilities, prefix sums.
+P3800 Power 收集 18.2 Per row, best over a window: monotone queue.
+CF833B The Bakery 18.2 Segment tree over the previous row.
+P5785 任务安排 18.2 Hull with binary search (negative times).
+P3648 序列分割 18.2 k rounds of slope optimisation.
+P4027 货币兑换 18.2 Points out of order: CDQ or balanced tree.
+AT_arc081_d Flip and Rectangles 18.1 Turn into largest all-good rectangle.
+P5464 缩小社交圈 18.1 Intervals of allowed values, counting.
+P4099 SAO 18.1 Tree DP on relative order, prefix sums.
+P3572 PTA-Little Bird 18.2 Monotone queue with a tie-break.
+P2254 瑰丽华尔兹 18.2 Per time block, window max.
+
+=== page 7 ===
+7进阶篇  第 18 章  动态规划的设计与优化
+Problem Name Section What it tests
+P2569 股票交易 18.2 Buy / sell windows, monotone queue.
+P1973 NOI 嘉年华 18.1 Pre / suffix DP over discretised time.
+P5504 柠檬 18.2 One hull (stack) per colour.
+P1912 诗人小 G 18.2 Monotone best split: divide and conquer.
+P3195 玩具装箱 18.2 Slope optimisation, monotone queue.
+P5468 回家路线 18.2 Hull per station over time.
+AT_arc066_d Contest with Drinks Hard 18.2 Prefix and suffix DP plus hulls.
+18.3.2 Practice	ladder
+1. Direct. P2513: prefix sums (18.1).
+2. One	twist. P3572: monotone queue (18.2).
+3. Idea	hidden. P3195: slope optimisation (18.2).
+4. Two	ideas. P2569: queue in two directions (18.2).
+5. Stretch. P5785: hull + binary search (18.2).
+18.3.3 Experiments
+1. Write the O(n²k) version of inversion_count.cpp and time both at n = k = 1000.
+2. In little_bird.cpp drop the tie-break on h and find an input where the answer gets worse.
+3. Write the O(n²) version of toys.cpp and compare outputs on random data.
+4. Print the hull queue of toys.cpp after each i and plot the points.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

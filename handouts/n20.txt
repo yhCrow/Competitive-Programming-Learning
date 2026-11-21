@@ -1,0 +1,272 @@
+# NOI篇 第20章 二分图匹配进阶  (N20)
+# source: NOI篇 第20章 二分图匹配进阶.pdf
+
+=== page 1 ===
+1NOI 篇  第 20 章  二分图匹配进阶
+第 20 章 	 二分图匹配进阶
+KM, Hall's theorem, Hopcroft–Karp, stable marriage Luogu (verified) 4 problems C++17 · all programs run
+20.1 KM 算法与  Hall 定理 20.2 Hopcroft–Karp
+20.3 稳定婚姻 20.4 课后习题与实验
+20.1 KM	 算法与 	Hall	 定理
+Labels,	tight	edges,	slack;	|N(S)|	≥	|S|.
+IDEA Maximum-weight	perfect	matching in a bipartite graph with n + n vertices: the KM	algorithm (Kuhn–
+Munkres, 匈牙利算法的带权版本 ) keeps labels lx[i] (left) and ly[j] (right) with lx[i] + ly[j] ≥ w(i, j) for
+every edge. Edges with equality are "tight"; a perfect matching using only tight edges is optimal. When the
+search for an augmenting path gets stuck, lower lx on the visited left vertices and raise ly on the visited
+right ones by the smallest slack, which creates a new tight edge.
+KEY POINT The BFS version with slack[j] = min over visited i of lx[i] + ly[j] − w(i, j) runs in O(n³) (P6577). Min-cost
+flow ( 拓展篇  第 1 章 ) solves the same problem more slowly but more flexibly; KM is the tool when n ≤
+500 and the graph is complete or dense.
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Find the maximum-weight perfect matching with labels and slacks, decide matching existence with Hall's
+condition, match large graphs in O(m√n) with Hopcroft–Karp, and find stable marriages.
+
+=== page 2 ===
+2NOI 篇  第 20 章  二分图匹配进阶
+km.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const ll INF = LLONG_MAX / 4;
+6 int n;
+7 ll w[505][505], lx[505], ly[505], slack[505];
+8 int matchY[505], pre[505];                       // matchY[j]: left vertex matched to right j
+9 bool visY[505];
+10  
+11 void augment(int start) {                         // BFS version, O(n^2) per start vertex
+12     fill(visY, visY + n + 1, false);
+13     fill(slack, slack + n + 1, INF);
+14     int y = 0;
+15     matchY[0] = start;                            // virtual right vertex 0 holds the new left vertex
+16     while (true) {
+17         visY[y] = true;
+18         int x = matchY[y], nextY = 0;
+19         ll delta = INF;
+20         for (int j = 1; j <= n; j++) {
+21             if (visY[j]) continue;
+22             ll gap = lx[x] + ly[j] - w[x][j];
+23             if (gap < slack[j]) { slack[j] = gap; pre[j] = y; }
+24             if (slack[j] < delta) { delta = slack[j]; nextY = j; }
+25         }
+26         for (int j = 0; j <= n; j++) {            // move labels: a new tight edge appears
+27             if (visY[j]) { lx[matchY[j]] -= delta; ly[j] += delta; }
+28             else slack[j] -= delta;
+29         }
+30         y = nextY;
+31         if (matchY[y] == 0) break;                // free right vertex reached
+32     }
+33     while (y) { matchY[y] = matchY[pre[y]]; y = pre[y]; }   // flip the path
+34 }
+35  
+36 int main() {
+37     cin >> n;
+38     for (int i = 1; i <= n; i++) for (int j = 1; j <= n; j++) cin >> w[i][j];
+39     for (int i = 1; i <= n; i++) { lx[i] = -INF; for (int j = 1; j <= n; j++) lx[i] = max(lx[i], w[i]
+[j]); }
+40     for (int i = 1; i <= n; i++) augment(i);
+41     ll total = 0;
+42     for (int j = 1; j <= n; j++) total += w[matchY[j]][j];
+43     cout << total << "\n";
+44     return 0;
+45 }
+INPUT 1
+3
+-9 -2 14
+10 26 4
+3 26 9
+OUTPUT 1
+50
+INPUT 2
+5
+16 19 10 26 8
+16 -3 26 -3 -9
+0 12 7 7 12
+-10 -9 28 15 -7
+18 -8 -7 23 -4
+OUTPUT 2
+98
+INPUT 3
+7
+1 12 13 -7 5 15 -3
+OUTPUT 3
+157
+
+=== page 3 ===
+3NOI 篇  第 20 章  二分图匹配进阶
+10 22 13 30 -10 22 30
+25 10 10 14 -5 30 0
+16 20 5 13 22 10 7
+-4 11 30 9 -3 21 -10
+-9 16 12 -10 -7 14 16
+11 -4 -1 19 -7 4 12
+KEY POINT Random weight matrices (including negatives), checked against trying all n! perfect matchings in Python.
+Starting with lx[i] = the largest weight in row i and ly = 0 satisfies the label condition.
+TRAP The DFS version of KM is O(n⁴) on bad inputs; use the BFS-with-slack version above. For a maximum-
+weight matching that need not be perfect, add zero-weight dummy edges first.
+IDEA Hall's	theorem (Hall 定理 ): a bipartite graph has a matching covering every left vertex iff every set S of
+left vertices has |N(S)| ≥ |S| (at least as many neighbours). It turns matching questions into inequalities
+that can be checked with data structures.
+KEY POINT Ice Skates (P3488): people of shoe size i may take skates of sizes i … i + d. Hall's condition only needs to
+be checked on contiguous size ranges: Σl..r (people − k) ≤ k·d for all l ≤ r, i.e. the maximum subarray sum
+of (counti − k) ≤ k·d, a segment tree with maximum subarray nodes ( 进阶篇  第 6 章 ) under point updates.
+20.2 Hopcroft–Karp
+Layered	BFS;	disjoint	shortest	paths;	O(m√n).
+IDEA Hopcroft–Karp: instead of one augmenting path at a time (Hungarian / Kuhn, O(nm)), each phase BFS-
+layers the graph from all free left vertices, then finds a maximal	set	of	vertex-disjoint	shortest
+augmenting	paths by DFS along the layers. There are only O(√n) phases, so the total is O(m√n).
+KEY POINT It is Dinic on the unit-capacity matching network written directly. Use it when n is large (10⁵) and Kuhn is
+too slow (P3386 in its big-data variants).
+
+=== page 4 ===
+4NOI 篇  第 20 章  二分图匹配进阶
+hopcroft_karp.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 int nl, nr, m, mL[N], mR[N], dis[N], it[N];
+6 vector<int> adj[N];
+7  
+8 bool bfs() {
+9     queue<int> q;
+10     bool found = false;
+11     for (int u = 1; u <= nl; u++) { if (!mL[u]) { dis[u] = 0; q.push(u); } else dis[u] = -1; }
+12     while (!q.empty()) {
+13         int u = q.front(); q.pop();
+14         for (int i = 0; i < int(adj[u].size()); i++) {
+15             int w = mR[adj[u][i]];
+16             if (!w) found = true;                       // a free right vertex is reachable
+17             else if (dis[w] < 0) { dis[w] = dis[u] + 1; q.push(w); }
+18         }
+19     }
+20     return found;
+21 }
+22 bool dfs(int u) {
+23     for (; it[u] < int(adj[u].size()); it[u]++) {
+24         int v = adj[u][it[u]], w = mR[v];
+25         if (!w || (dis[w] == dis[u] + 1 && dfs(w))) { mL[u] = v; mR[v] = u; return true; }
+26     }
+27     dis[u] = -1;                                        // dead end for this phase
+28     return false;
+29 }
+30  
+31 int main() {
+32     cin >> nl >> nr >> m;
+33     for (int i = 0; i < m; i++) { int u, v; cin >> u >> v; adj[u].push_back(v); }
+34     int res = 0;
+35     while (bfs()) {
+36         for (int u = 1; u <= nl; u++) it[u] = 0;
+37         for (int u = 1; u <= nl; u++) if (!mL[u] && dfs(u)) res++;
+38     }
+39     cout << res << "\n";
+40     return 0;
+41 }
+INPUT
+9 8 20
+1 7
+1 8
+2 7
+3 3
+3 4
+3 7
+3 8
+4 6
+4 8
+5 2
+5 6
+6 2
+7 2
+7 8
+8 1
+8 2
+8 4
+8 6
+OUTPUT
+6
+
+=== page 5 ===
+5NOI 篇  第 20 章  二分图匹配进阶
+8 8
+9 6
+KEY POINT Checked against Kuhn's algorithm in Python on a random bipartite graph.
+20.3 稳定婚姻
+Gale–Shapley	proposals;	proposer-optimal.
+IDEA Stable	marriage ( 稳定婚姻 , Gale–Shapley): n men and n women each rank the other side. A matching is
+stable if no man and woman both prefer each other to their partners. Free men propose down their lists; a
+woman keeps the best proposer so far and rejects the rest. It ends after at most n² proposals with a stable
+matching.
+KEY POINT The result is proposer-optimal: every man gets the best partner he has in any stable matching (and every
+woman the worst). P1407 asks the related question whether a given marriage is "unsafe" (an alternating
+cycle exists), solved with SCC.
+gale_shapley.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<vector<int>> pref(n + 1, vector<int>(n)), rk(n + 1, vector<int>(n + 1));
+8     for (int m = 1; m <= n; m++) for (int i = 0; i < n; i++) cin >> pref[m][i];
+9     for (int w = 1; w <= n; w++) for (int i = 0; i < n; i++) { int m; cin >> m; rk[w][m] = i; }   // 
+lower = better
+10     vector<int> nxt(n + 1, 0), wife(n + 1, 0), husb(n + 1, 0);
+11     queue<int> fr;
+12     for (int m = 1; m <= n; m++) fr.push(m);
+13     while (!fr.empty()) {
+14         int m = fr.front(); fr.pop();
+15         int w = pref[m][nxt[m]++];                       // propose to the next woman on the list
+16         if (!husb[w]) { husb[w] = m; wife[m] = w; }
+17         else if (rk[w][m] < rk[w][husb[w]]) { wife[husb[w]] = 0; fr.push(husb[w]); husb[w] = m; wife[m] 
+= w; }
+18         else fr.push(m);
+19     }
+20     for (int m = 1; m <= n; m++) cout << wife[m] << (m < n ? " " : "\n");
+21     return 0;
+22 }
+INPUT
+5
+3 4 1 2 5
+3 2 5 4 1
+4 5 1 3 2
+4 1 2 3 5
+1 2 5 4 3
+5 3 1 2 4
+3 2 5 4 1
+5 1 2 4 3
+3 1 2 5 4
+3 1 4 5 2
+OUTPUT
+3 2 4 5 1
+
+=== page 6 ===
+6NOI 篇  第 20 章  二分图匹配进阶
+KEY POINT Checked in Python by listing all n! matchings, keeping the stable ones, and giving each man his best stable
+partner: Gale–Shapley must produce exactly that.
+20.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. KM: labels lx + ly ≥ w; tight edges equal; perfect tight matching = optimal.
+2. Stuck: change labels by the smallest slack; BFS version O(n³).
+3. Hall: left side fully matchable ⇔ |N(S)| ≥ |S| for every S.
+4. Hopcroft–Karp: BFS layers from free left vertices, DFS disjoint shortest paths; O(√n) phases.
+5. Gale–Shapley: free men propose in order; women keep the best; ≤ n² proposals.
+20.4.1 Problems
+Problem Name Section What it tests
+P6577 【模板】二分图最大权完
+美匹配
+20.1 KM, BFS version.
+P3488 LYZ-Ice Skates 20.1 Hall on contiguous ranges.
+P3386 【模板】二分图最大匹配 20.2 Hopcroft–Karp.
+P1407 稳定婚姻 20.3 Alternating cycles with SCC.
+20.4.2 Practice	ladder
+1. Direct. P3386: Hopcroft–Karp (20.2).
+2. One	twist. P1407: stable marriage (20.3).
+3. Idea	hidden. P6577: KM (20.1).
+4. Two	ideas. P3488: Hall (20.1).
+20.4.3 Experiments
+1. Print lx and ly after each augmentation in km.cpp.
+2. Solve the same matrix with min-cost flow and compare.
+3. Find a bipartite graph violating Hall's condition and the set S that shows it.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

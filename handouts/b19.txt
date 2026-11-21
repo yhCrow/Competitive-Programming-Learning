@@ -1,0 +1,276 @@
+# 基础篇 第19章 位运算与进制转换  (基19)
+# source: 基础篇 第19章 位运算与进制转换.pdf
+
+=== page 1 ===
+1基础篇  第 19 章  位运算与进制转换
+第 19 章 	 位运算与进制转换
+Bits and number bases Luogu #117 (part) 4 problems C++17 · all programs run
+19.1 各种进制 19.2 二进制的深入探究
+19.3 逻辑命题与位运算 19.4 课后实验与习题
+19.1 各种进制
+Base	b	to	number	and	back;	letters	for	digits;	negative	bases.
+1
+2^3
+1
+2^2
+0
+2^1
+1
+2^0
+= 8 + 4 + 1
+= 13
+digit × base^position, added up
+IDEA In base b, each digit is worth b times the digit
+to its right: 1101 in base 2 is 1·8 + 1·4 + 0·2 +
+1·1 = 13. Bases above 10 use letters for the
+extra digits: A = 10, B = 11, … , F = 15 in
+hexadecimal.
+KEY POINT Base b → number: read digits from the left,
+value	=	value	×	b	+	digit. Number → base b:
+repeatedly take value	%	b as the next digit
+from the right and divide by b; reverse at the
+end.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 4 部 分  基 础 数 学 与 数 论
+Number bases and conversion, how integers really sit in binary, and bit operators as logic on 32 facts at
+once.
+
+=== page 2 ===
+2基础篇  第 19 章  位运算与进制转换
+base_convert.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int digitValue(char ch) {
+5     if ('0' <= ch && ch <= '9') return ch - '0';
+6     return ch - 'A' + 10;            // A = 10, B = 11, ...
+7 }
+8  
+9 int main() {
+10     int from, to;
+11     string s;
+12     cin >> from >> s >> to;
+13     long long value = 0;
+14     for (int i = 0; i < int(s.size()); i++)
+15         value = value * from + digitValue(s[i]);   // base 'from' -> number
+16     string out;
+17     do {
+18         int dg = value % to;                       // next digit from the right
+19         out += char(dg < 10 ? '0' + dg : 'A' + dg - 10);
+20         value /= to;
+21     } while (value > 0);
+22     reverse(out.begin(), out.end());
+23     cout << out << "\n";
+24     return 0;
+25 }
+INPUT 1
+16
+FF
+2
+OUTPUT 1
+11111111
+INPUT 2
+10
+255
+16
+OUTPUT 2
+FF
+negative_base.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     long long n, b;
+6     cin >> n >> b;                    // b is negative, e.g. -2
+7     long long orig = n;
+8     string out;
+9     if (n == 0) out = "0";
+10     while (n != 0) {
+11         long long r = n % b;
+12         n /= b;
+13         if (r < 0) { r -= b; n += 1; }  // force the digit into 0 .. |b|-1
+14         out += char(r < 10 ? '0' + r : 'A' + r - 10);
+15     }
+16     reverse(out.begin(), out.end());
+17     cout << orig << "=" << out << "(base" << b << ")\n";
+18     return 0;
+19 }
+INPUT 1
+30000 -2
+OUTPUT 1
+30000=11011010101110000(base-2)
+INPUT 2
+-15 -2
+OUTPUT 2
+-15=110001(base-2)
+
+=== page 3 ===
+3基础篇  第 19 章  位运算与进制转换
+KEY POINT Use do … while  so that 0 prints as "0". A negative base works the same way, except that C++ may give a
+negative remainder: add |b| to the digit and 1 to the quotient, which keeps n = q·b + r true (P1017).
+Converting through an ordinary long long  works while the value fits; longer numbers need 第 8 章 's big
+numbers (P1143 stays small).
+19.2 二进制的深入探究
+Two's	complement,	unsigned	wrap-around,	shifting	bits.
+IDEA A computer stores an int  as 32 bits. Non-negative values are plain binary. Negative values use two's
+complement: −x is stored as (232 − x), which is "flip every bit of x and add 1". That is why the top bit acts
+as a sign, and why int  runs from −231 to 231 − 1.
+bits_inside.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int a = 5, b = -5;
+6     cout << bitset<8>(a) << "\n";          // lowest 8 bits
+7     cout << bitset<8>(b) << "\n";          // flip 00000101, add 1
+8     unsigned int u = 0;
+9     u = u - 1;                             // unsigned wraps round
+10     cout << u << "\n";
+11     cout << INT_MAX << " " << INT_MIN << "\n";
+12     unsigned int x = 1314520;
+13     unsigned int swapped = (x >> 16) | (x << 16);   // high 16 <-> low 16
+14     cout << swapped << "\n";
+15     return 0;
+16 }
+OUTPUT
+00000101
+11111011
+4294967295
+2147483647 -2147483648
+249036820
+Fact Example
+bitset<k>(x) shows the lowest k bits bitset<8>(5)  → 00000101
+−x = ~x + 1 −5 → 11111011
+unsigned  has no sign, wraps mod 2³² 0 − 1 = 4294967295
+<<  / >>  move bits; bits pushed out are lost (x >> 16) | (x << 16)  swaps halves
+TRAP Signed overflow (INT_MAX + 1 ) is undefined behaviour in C++, not a guaranteed wrap. Use unsigned
+when you want wrapping, as in hashing ( 第 17 章 ) and bit swaps (P1100).
+19.3 逻辑命题与位运算
+and,	or,	xor,	not	on	bits;	bit	tricks;	truth	tables.
+
+=== page 4 ===
+4基础篇  第 19 章  位运算与进制转换
+Logic Bit operator 1 when
+and ( 且 ) a & b both bits are 1
+or ( 或 ) a | b at least one is 1
+xor ( 异或 ) a ^ b the bits differ
+not ( 非 ) ~a the bit is 0
+shift a << k , a >> k × 2k, ÷ 2k
+IDEA A proposition is true or false, a bit is 1 or
+0. The bit operators apply and / or / not /
+xor to all 32 bits at once, so one integer
+can hold 32 true/false facts, and one
+operation updates all of them.
+KEY POINT Implication "p → q" is !p || q . De
+Morgan: ~(a & b) == (~a | ~b)  and ~
+(a | b) == (~a & ~b) .
+bit_tricks.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int x = 12;                                  // 1100 in binary
+6     cout << (x & 1) << "\n";                     // odd? 0 = even
+7     cout << ((x >> 2) & 1) << "\n";              // is bit 2 set?
+8     cout << (x | (1 << 0)) << "\n";              // set bit 0   -> 13
+9     cout << (x & ~(1 << 3)) << "\n";             // clear bit 3 -> 4
+10     cout << (x ^ (1 << 1)) << "\n";              // flip bit 1  -> 14
+11     cout << (x & -x) << "\n";                    // lowest set bit -> 4
+12     cout << (x & (x - 1)) << "\n";               // remove lowest bit -> 8
+13     int cnt = 0;
+14     for (int t = x; t > 0; t &= t - 1) cnt++;    // count set bits
+15     cout << cnt << "\n";
+16     return 0;
+17 }
+OUTPUT
+0
+1
+13
+4
+14
+4
+8
+2
+
+=== page 5 ===
+5基础篇  第 19 章  位运算与进制转换
+odd_one_out.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     ios::sync_with_stdio(false);
+6     cin.tie(nullptr);
+7     int n;
+8     cin >> n;
+9     int x = 0;
+10     for (int i = 0; i < n; i++) {
+11         int a;
+12         cin >> a;
+13         x ^= a;                // pairs cancel: a ^ a = 0
+14     }
+15     cout << x << "\n";         // the one left without a partner
+16     return 0;
+17 }
+INPUT
+9
+2 2 1 3 3 3 2 3 1
+OUTPUT
+2
+KEY POINT XOR cancels pairs (a ^ a = 0 , a ^ 0 = a ) and does not care about order, so XOR-ing everything leaves
+the one value that appears an odd number of times, in O(1) memory (P1469). The subset masks of 第 10 章
+are these same tricks: mask >> i & 1  tests bit i.
+truth_table.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     cout << "p q | p&q p|q p^q p->q\n";
+6     for (int mask = 0; mask < 4; mask++) {       // every assignment of p, q
+7         int p = mask >> 1 & 1, q = mask & 1;
+8         cout << p << " " << q << " |  " << (p & q) << "   " << (p | q)
+9              << "   " << (p ^ q) << "   " << (!p || q) << "\n";
+10     }
+11     return 0;
+12 }
+OUTPUT
+p q | p&q p|q p^q p->q
+0 0 |  0   0   0   1
+0 1 |  0   1   1   1
+1 0 |  0   1   1   0
+1 1 |  1   1   0   1
+KEY POINT Enumerating masks 0 … 2k − 1 tries every true/false assignment of k propositions: the brute-force way to
+check a logic puzzle or prove two formulas equal.
+19.4 课后实验与习题
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 6 ===
+6基础篇  第 19 章  位运算与进制转换
+Key	points	to	memorise
+1. Base b → number: v	=	v	×	b	+	digit; number → base b: digits v	%	b, then reverse.
+2. Digits above 9: A = 10 … F = 15; print with do	…	while so 0 shows.
+3. Negative base: if r < 0, r −= b and q += 1.
+4. int is 32 bits; −x = ~x + 1 (two's complement); range −2³¹ … 2³¹ − 1.
+5. unsigned wraps mod 2³²; signed overflow is undefined.
+6. & and, | or, ^ xor, ~ not, << × 2ᵏ, >> ÷ 2ᵏ.
+7. Test bit i: x	>>	i	&	1; set: x	|	1	<<	i; clear: x	&	~(1	<<	i).
+8. Lowest set bit x	&	−x; remove it x	&	(x	−	1).
+9. XOR of all values leaves the one with odd count.
+19.4.1 Problems
+Problem Name Section What it tests
+P1143 进制转换 19.1 Base n string → number → base m.
+P1469 找筷子 19.3 XOR everything; pairs cancel.
+P1100 高低位交换 19.2 Swap 16-bit halves with shifts.
+P1017 进制转换 19.1 Negative base: fix negative remainders.
+19.4.2 Practice	ladder
+1. Direct. P1143: convert between bases (19.1).
+2. One	twist. P1100: shift and combine bits (19.2).
+3. Idea	hidden. P1469: XOR cancels pairs (19.3).
+4. Two	ideas. P1017: negative base (19.1).
+5. Stretch. P1143: redo it for 100-digit numbers with big numbers (19.1).
+19.4.3 Experiments
+1. Print bitset<32>(x) for x = 1, −1, INT_MAX and INT_MIN.
+2. Check by hand that 11011010101110000 in base −2 equals 30000.
+3. Count set bits of every number up to 10⁶ with the t &= t − 1 loop and time it.
+4. Use truth_table.cpp to check both De Morgan laws.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

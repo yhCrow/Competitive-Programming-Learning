@@ -1,0 +1,292 @@
+# NOI篇 第17章 DP 优化补充  (N17)
+# source: NOI篇 第17章 DP 优化补充.pdf
+
+=== page 1 ===
+1NOI 篇  第 17 章  DP 优化补充
+第 17 章 	DP	 优化补充
+Slope trick, D&C optimisation, (max,+) matrices, plug DP Luogu (verified) 3 problems
+C++17 · all programs run
+17.1 Slope trick 17.2 分治优化
+17.3 (max,+) 矩阵 17.4 插头  DP
+17.5 课后习题与实验
+17.1 Slope	trick
+Breakpoints	in	a	priority	queue.
+IDEA Slope	trick keeps a DP whose value is a convex	piecewise-linear function f(x) of one variable, not as an
+array but as the multiset of its breakpoints (points where the slope changes by 1). Adding |x − a| inserts a
+at both sides; taking a prefix minimum ("x may only increase") throws away the right side. A priority
+queue stores the breakpoints, so each step is O(log n).
+KEY POINT Classic: make an array non-decreasing with the fewest ±1 changes (P4597). fi(x) = min cost with bi = x.
+Keep a max-heap: push ai; if the top t > ai, pay t − ai, pop t and push ai again. The answer is the total paid.
+Strictly increasing: subtract i from ai first.
+slope_trick.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     priority_queue<long long> pq;              // breakpoints of the left (decreasing) part
+8     long long ans = 0;
+9     for (int i = 0; i < n; i++) {
+10         long long a; cin >> a;
+11         pq.push(a);
+12         if (pq.top() > a) {                    // the best value so far is above a: pull it down
+13             ans += pq.top() - a;
+14             pq.pop();
+15             pq.push(a);
+16         }
+17     }
+18     cout << ans << "\n";
+19     return 0;
+20 }
+INPUT
+10
+2 10 13 0 9 10 15 19 8 14
+OUTPUT
+26
+竞 赛 拓 展 专 题  · NOI 篇  · NOI 专 题
+Keep a convex DP as its breakpoints in a heap, compute layered DPs with monotone split points by divide
+and conquer, and power matrices over the (max, +) semiring.
+
+=== page 2 ===
+2NOI 篇  第 17 章  DP 优化补充
+IDEA Checked against the O(n·V) DP over final values in Python. The heap holds where the slope of f changes;
+its top is the point where f is smallest.
+KEY POINT Other slope-trick moves: adding a constant to all breakpoints (shift), keeping two heaps for both sides
+with lazy offsets, and merging heaps along a tree for tree versions.
+17.2 分治优化
+Middle	first;	opt	ranges	shrink.
+IDEA Divide-and-conquer	optimisation ( 分治优化 ): for f[g][i] = minj<i f[g−1][j] + cost(j, i), when the best j
+(opt) is monotone in i, compute the middle i first by scanning its whole allowed range of j, then recurse
+on the left half with j ≤ opt(mid) and on the right half with j ≥ opt(mid). Each layer costs O(n log n) instead
+of O(n²).
+KEY POINT Monotone opt holds when cost satisfies the quadrangle inequality ( 拓展篇  第 20 章 ); "sum of the segment
+squared" does. Splitting into k groups with the smallest Σ (group sum)² is 征途  (P4072, which also has a
+slope-optimisation solution).
+
+=== page 3 ===
+3NOI 篇  第 17 章  DP 优化补充
+dc_optimization.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 int n, k;
+6 ll s[100005], prevRow[100005], curRow[100005];
+7  
+8 ll cost(int j, int i) { return (s[i] - s[j]) * (s[i] - s[j]); }
+9 void solve(int l, int r, int optL, int optR) {   // fill curRow[l..r], best j in [optL, optR]
+10     if (l > r) return;
+11     int mid = (l + r) / 2, best = optL;
+12     ll bestVal = LLONG_MAX;
+13     for (int j = optL; j <= min(mid - 1, optR); j++) {
+14         if (prevRow[j] == LLONG_MAX) continue;
+15         ll v = prevRow[j] + cost(j, mid);
+16         if (v < bestVal) { bestVal = v; best = j; }
+17     }
+18     curRow[mid] = bestVal;
+19     solve(l, mid - 1, optL, best);              // left half: opt <= best
+20     solve(mid + 1, r, best, optR);              // right half: opt >= best
+21 }
+22  
+23 int main() {
+24     cin >> n >> k;
+25     for (int i = 1; i <= n; i++) { ll x; cin >> x; s[i] = s[i - 1] + x; }
+26     for (int i = 0; i <= n; i++) prevRow[i] = (i == 0 ? 0 : LLONG_MAX);
+27     for (int g = 1; g <= k; g++) {
+28         curRow[0] = LLONG_MAX;
+29         solve(1, n, 0, n - 1);
+30         for (int i = 0; i <= n; i++) prevRow[i] = curRow[i];
+31     }
+32     cout << prevRow[n] << "\n";
+33     return 0;
+34 }
+INPUT
+12 4
+7 8 7 4 4 7 1 7 8 8 1 9
+OUTPUT
+1289
+KEY POINT Twelve random values split into 4 groups; checked against the O(k n²) DP in Python. The recursion depth
+is log n and each level of one layer scans O(n) candidates in total.
+17.3 (max,+)	 矩阵
+Heaviest	walks	of	exactly	L	edges.
+IDEA Matrix	power	in	the	(max,	+)	semiring ( 广义矩阵乘法 ): replace "multiply" by "+" and "add" by "max":
+C[i][j] = maxk (A[i][k] + B[k][j]). It is still associative, so fast power works ( 进阶篇  第 22 章 ). AL[i][j] is
+the heaviest walk of exactly L edges from i to j; with (min, +) it is the lightest.
+KEY POINT Missing edges are −∞ (for max) or +∞ (for min); identity has 0 on the diagonal and −∞ elsewhere. This
+semiring view is also the engine behind dynamic DP ( 第 21 章 ): a DP step that is "max over choices of a
+sum" is a (max, +) matrix product.
+
+=== page 4 ===
+4NOI 篇  第 17 章  DP 优化补充
+maxplus_power.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 const ll NEG = LLONG_MIN / 4;
+6 int n;
+7 typedef vector<vector<ll>> Mat;
+8 Mat mul(const Mat &a, const Mat &b) {
+9     Mat c(n, vector<ll>(n, NEG));
+10     for (int i = 0; i < n; i++) for (int k = 0; k < n; k++) {
+11         if (a[i][k] == NEG) continue;
+12         for (int j = 0; j < n; j++) if (b[k][j] != NEG) c[i][j] = max(c[i][j], a[i][k] + b[k][j]);
+13     }
+14     return c;
+15 }
+16  
+17 int main() {
+18     long long L;
+19     cin >> n >> L;
+20     Mat A(n, vector<ll>(n, NEG));
+21     for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) { string s; cin >> s; if (s != "x") A[i][j] 
+= stoll(s); }
+22     Mat R(n, vector<ll>(n, NEG));
+23     for (int i = 0; i < n; i++) R[i][i] = 0;            // (max,+) identity
+24     for (; L > 0; L >>= 1, A = mul(A, A)) if (L & 1) R = mul(R, A);
+25     ll best = NEG;
+26     for (int i = 0; i < n; i++) for (int j = 0; j < n; j++) best = max(best, R[i][j]);
+27     if (best == NEG) cout << "none\n"; else cout << best << "\n";
+28     return 0;
+29 }
+INPUT
+4 7
+x 8 x -5
+x x x x
+x x 3 4
+4 x x x
+OUTPUT
+28
+KEY POINT Heaviest walk of exactly 7 edges in a random weighted digraph ("x" = no edge), checked by step-by-step
+DP in Python.
+17.4 插头 	DP
+Bracket	plugs	on	the	profile;	Hamiltonian	cycles.
+IDEA Plug	DP ( 插头  DP, broken-profile DP on connectivity): process the grid cell by cell; the state is the row of
+m + 1 "plugs" crossing the boundary between processed and unprocessed cells. To count Hamiltonian
+cycles (P5056), each plug is 0 (none), 1 (left end of a path) or 2 (right end), like brackets; paths never
+cross, so the bracket matching tells which ends are joined.
+KEY POINT At a cell with left plug L and up plug U: (0,0) start a new path going down and right (1, 2); one plug:
+continue it down or right; (1,1) or (2,2): join two paths, and the partner bracket of one end changes; (2,1):
+join simply; (1,2): closes a loop, allowed only at the last free cell. States are stored in a hash map, base 4.
+
+=== page 5 ===
+5NOI 篇  第 17 章  DP 优化补充
+plug_dp.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef long long ll;
+5 int n, m;
+6 char g[15][15];
+7  
+8 int main() {
+9     cin >> n >> m;
+10     int ex = -1, ey = -1;
+11     for (int i = 0; i < n; i++) for (int j = 0; j < m; j++) { cin >> g[i][j]; if (g[i][j] == '.') { ex = 
+i; ey = j; } }
+12     unordered_map<ll, ll> cur, nxt;
+13     cur[0] = 1;
+14     ll ans = 0;
+15     for (int i = 0; i < n; i++) {
+16         nxt.clear();
+17         for (unordered_map<ll, ll>::iterator it = cur.begin(); it != cur.end(); ++it) nxt[it->first << 
+2] += it->second;   // new row
+18         swap(cur, nxt);
+19         for (int j = 0; j < m; j++) {
+20             nxt.clear();
+21             bool down = i + 1 < n && g[i + 1][j] == '.', right = j + 1 < m && g[i][j + 1] == '.';
+22             for (unordered_map<ll, ll>::iterator it = cur.begin(); it != cur.end(); ++it) {
+23                 ll s = it->first, v = it->second;
+24                 ll L = (s >> (2 * j)) & 3, U = (s >> (2 * (j + 1))) & 3;
+25                 ll base = s - (L << (2 * j)) - (U << (2 * (j + 1)));
+26                 if (g[i][j] == '*') { if (!L && !U) nxt[s] += v; continue; }
+27                 if (!L && !U) { if (down && right) nxt[base | 1LL << (2 * j) | 2LL << (2 * (j + 1))] += 
+v; }
+28                 else if (!L || !U) {
+29                     ll c = L | U;
+30                     if (down) nxt[base | c << (2 * j)] += v;
+31                     if (right) nxt[base | c << (2 * (j + 1))] += v;
+32                 } else if (L == 1 && U == 1) {           // partner 2 of U becomes 1
+33                     int bal = 0;
+34                     for (int k = j + 1; ; k++) {
+35                         ll c = (s >> (2 * k)) & 3;
+36                         if (c == 1) bal++; else if (c == 2) bal--;
+37                         if (!bal) { nxt[base - (1LL << (2 * k))] += v; break; }
+38                     }
+39                 } else if (L == 2 && U == 2) {           // partner 1 of L becomes 2
+40                     int bal = 0;
+41                     for (int k = j; ; k--) {
+42                         ll c = (s >> (2 * k)) & 3;
+43                         if (c == 2) bal++; else if (c == 1) bal--;
+44                         if (!bal) { nxt[base + (1LL << (2 * k))] += v; break; }
+45                     }
+46                 } else if (L == 2 && U == 1) nxt[base] += v;
+47                 else if (i == ex && j == ey && base == 0) ans += v;   // L = 1, U = 2: close the loop
+48             }
+49             swap(cur, nxt);
+50         }
+51     }
+52     cout << ans << "\n";
+53     return 0;
+54 }
+INPUT 1
+4 4
+....
+....
+OUTPUT 1
+6
+
+=== page 6 ===
+6NOI 篇  第 17 章  DP 优化补充
+....
+....
+INPUT 2
+4 5
+.....
+.....
+.*...
+.....
+OUTPUT 2
+0
+INPUT 3
+5 5
+.....
+..*..
+.....
+...*.
+.....
+OUTPUT 3
+0
+KEY POINT Three grids, checked against a Python DFS that counts Hamiltonian cycles directly (each cycle found
+twice, once per direction). The bracket search starts at the plug itself, so the plug being changed is found
+as its own partner's match.
+TRAP Shift the state by one plug at the start of each row (the right plug of the last cell is always 0). Use 64-bit
+states once m + 1 plugs need more than 32 bits, and a hand-written hash table if unordered_map is too
+slow.
+17.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Slope trick: convex piecewise-linear f as breakpoints; push a, fix the top if above a.
+2. Strictly increasing: use a_i − i.
+3. D&C opt: solve mid over [optL, optR]; left gets ≤ best, right gets ≥ best.
+4. (max,+): C = max_k(A + B); identity 0 on diagonal, −∞ elsewhere; fast power works.
+5. Plug DP: plugs 0/1/2 as brackets; (1,1) and (2,2) fix the partner; (1,2) closes only at the last cell.
+17.5.1 Problems
+Problem Name Section What it tests
+P4597 序列  sequence 17.1 Non-decreasing with fewest ±1.
+P4072 征途 17.2 k groups, Σ squares.
+P5056 【模板】插头  DP 17.4 Count Hamiltonian cycles.
+17.5.2 Practice	ladder
+1. Direct. P4597: slope trick (17.1).
+2. One	twist. P4072: D&C optimisation (17.2).
+3. Idea	hidden. P5056: plug DP (17.4).
+17.5.3 Experiments
+1. Print the heap of slope_trick.cpp after each element.
+
+=== page 7 ===
+7NOI 篇  第 17 章  DP 优化补充
+2. Count candidate evaluations in dc_optimization.cpp vs k n².
+3. Switch maxplus_power.cpp to (min, +) and find shortest walks of length L.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

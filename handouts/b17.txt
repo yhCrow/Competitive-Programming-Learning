@@ -1,0 +1,369 @@
+# 基础篇 第17章 集合  (基17)
+# source: 基础篇 第17章 集合.pdf
+
+=== page 1 ===
+1基础篇  第 17 章  集合
+第 17 章 	 集合
+Sets: union-find and hashing Luogu #115 15 problems C++17 · all programs run
+17.1 并查集 17.2 Hash 表
+17.3 集合应用实例 17.4 课后习题与实验
+17.1 并查集
+find	and	union	with	path	compression.
+1
+2 5
+3
+4
+6
+each set is a tree; the root (green) names the set
+IDEA Union-find ( 并查集 , disjoint set union) keeps
+items split into groups and answers two
+questions fast: find "which group is x in?" and
+union "merge the groups of x and y". Each group
+is a tree stored in a parent[]  array; the root
+represents the group.
+KEY POINT Path	compression: while finding the root, point
+every node on the way straight at the root. After
+that, operations are almost O(1) each.
+深 入 浅 出 程 序 设 计 竞 赛  · 基 础 篇  · 第 3 部 分  简 单 数 据 结 构
+Union-find for merging groups, hashing for fast lookup, and set/map for sorted collections.
+
+=== page 2 ===
+2基础篇  第 17 章  集合
+relatives.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int parent[5005];
+5  
+6 int find(int x) {
+7     if (parent[x] != x) parent[x] = find(parent[x]);   // path compression
+8     return parent[x];
+9 }
+10  
+11 void unite(int a, int b) { parent[find(a)] = find(b); }
+12  
+13 int main() {
+14     int n, m, p;
+15     cin >> n >> m >> p;
+16     for (int i = 1; i <= n; i++) parent[i] = i;         // everyone alone
+17     for (int i = 0; i < m; i++) {
+18         int a, b;
+19         cin >> a >> b;
+20         unite(a, b);
+21     }
+22     for (int i = 0; i < p; i++) {
+23         int a, b;
+24         cin >> a >> b;
+25         cout << (find(a) == find(b) ? "Yes" : "No") << "\n";
+26     }
+27     return 0;
+28 }
+INPUT
+6 5 3
+1 2
+1 5
+3 4
+5 2
+1 3
+1 4
+2 3
+5 6
+OUTPUT
+Yes
+Yes
+No
+
+=== page 3 ===
+3基础篇  第 17 章  集合
+connect_villages.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int parent[1005];
+5  
+6 int find(int x) {
+7     if (parent[x] != x) parent[x] = find(parent[x]);
+8     return parent[x];
+9 }
+10  
+11 int main() {
+12     int n, m;
+13     while (cin >> n && n != 0) {
+14         cin >> m;
+15         for (int i = 1; i <= n; i++) parent[i] = i;
+16         int groups = n;
+17         for (int i = 0; i < m; i++) {
+18             int a, b;
+19             cin >> a >> b;
+20             int ra = find(a), rb = find(b);
+21             if (ra != rb) { parent[ra] = rb; groups--; }  // two groups merge
+22         }
+23         cout << groups - 1 << "\n";                       // roads still needed
+24     }
+25     return 0;
+26 }
+INPUT
+4 2
+1 3
+4 3
+3 3
+1 2
+1 3
+2 3
+5 2
+1 2
+3 5
+999 0
+0
+OUTPUT
+1
+0
+2
+998
+KEY POINT Relatives are a union-find on people (P1551). To connect g separate groups you need exactly g − 1 more
+roads, and every successful union lowers g by one (P1536). Family trees with names use map<string,
+string>  as the parent array (P2814).
+KEY POINT "The enemy of my enemy is my friend": give each person i a second node i + n meaning "i's enemies", and
+unite a with b + n, b with a + n (P1892). Checking constraints in the right order, equalities first, uses the
+same tool after compressing big numbers (P1955).
+17.2 Hash	 表
+String	hashing	and	the	unordered	containers.
+IDEA A hash turns a key (a number, a string) into a small index, so the key can be stored in or looked up from
+an array slot directly. Different keys may land on the same index (a collision); a good hash makes that
+rare, and a hash table keeps a short list per slot.
+
+=== page 4 ===
+4基础篇  第 17 章  集合
+string_hash.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 unsigned long long hashOf(const string &s) {
+5     unsigned long long h = 0;
+6     for (int i = 0; i < int(s.size()); i++)
+7         h = h * 131 + s[i];          // overflow wraps mod 2^64
+8     return h;
+9 }
+10  
+11 int main() {
+12     int n;
+13     cin >> n;
+14     vector<unsigned long long> h(n);
+15     for (int i = 0; i < n; i++) {
+16         string s;
+17         cin >> s;
+18         h[i] = hashOf(s);
+19     }
+20     sort(h.begin(), h.end());
+21     int distinct = unique(h.begin(), h.end()) - h.begin();
+22     cout << distinct << "\n";
+23     return 0;
+24 }
+INPUT
+5
+abc
+aaaa
+abc
+abcc
+12345
+OUTPUT
+4
+KEY POINT Read the string as a number in base 131 and let unsigned long long  overflow, which is arithmetic mod
+264. Equal strings always get equal hashes; different strings almost never do. Then count distinct values
+with sort + unique (P3370).
+TRAP A hash compares fingerprints, not the strings themselves: a collision gives a wrong answer silently. Use a
+large base and mod 264 (or two different hashes) to make it practically impossible.
+
+=== page 5 ===
+5基础篇  第 17 章  集合
+first_occurrences.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     ios::sync_with_stdio(false);
+6     cin.tie(nullptr);
+7     int t;
+8     cin >> t;
+9     while (t--) {
+10         int n;
+11         cin >> n;
+12         unordered_set<int> seen;           // hash set: O(1) on average
+13         for (int i = 0; i < n; i++) {
+14             int x;
+15             cin >> x;
+16             if (seen.count(x)) continue;   // already printed once
+17             seen.insert(x);
+18             cout << x << " ";
+19         }
+20         cout << "\n";
+21     }
+22     return 0;
+23 }
+INPUT
+2
+11
+1 2 18 3 3 19 2 3 6 5 4
+6
+1 2 3 4 5 6
+OUTPUT
+1 2 18 3 19 6 5 4 
+1 2 3 4 5 6
+Container Inside Insert / find Ordered?
+set<T> balanced search tree O(log n) yes
+map<K, V> balanced search tree O(log n) yes, by key
+unordered_set<T> hash table O(1) average no
+unordered_map<K, V> hash table O(1) average no
+KEY POINT Keep the first copy of each number: print it only if it was not seen before (P4305). Use the hash containers
+when order does not matter and speed does.
+17.3 集合应用实例
+set	and	map	in	practice:	nearest	values	and	records.
+IDEA set  keeps distinct values sorted; map  keeps (key, value) pairs sorted by key. Besides insert, find and
+erase in O(log n), they answer "nearest value" questions with lower_bound , which a hash table cannot do.
+
+=== page 6 ===
+6基础篇  第 17 章  集合
+timber_store.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     set<int> wood;
+8     while (n--) {
+9         int op, len;
+10         cin >> op >> len;
+11         if (op == 1) {
+12             if (wood.count(len)) cout << "Already Exist\n";
+13             else wood.insert(len);
+14             continue;
+15         }
+16         if (wood.empty()) { cout << "Empty\n"; continue; }
+17         set<int>::iterator it = wood.lower_bound(len);   // first >= len
+18         int pick;
+19         if (it == wood.end()) pick = *prev(it);          // all are smaller
+20         else if (it == wood.begin()) pick = *it;         // all are larger
+21         else {
+22             int big = *it, small = *prev(it);
+23             pick = (len - small <= big - len) ? small : big;   // tie: smaller
+24         }
+25         cout << pick << "\n";
+26         wood.erase(pick);
+27     }
+28     return 0;
+29 }
+INPUT
+7
+1 1
+1 5
+1 3
+2 3
+2 3
+2 3
+2 3
+OUTPUT
+3
+1
+5
+Empty
+
+=== page 7 ===
+7基础篇  第 17 章  集合
+student_records.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     map<string, int> score;
+8     while (n--) {
+9         int op;
+10         cin >> op;
+11         string name;
+12         if (op == 4) { cout << score.size() << "\n"; continue; }
+13         cin >> name;
+14         if (op == 1) {
+15             int s;
+16             cin >> s;
+17             score[name] = s;                      // insert or update
+18             cout << "OK\n";
+19         } else if (op == 2) {
+20             if (score.count(name)) cout << score[name] << "\n";
+21             else cout << "Not found\n";
+22         } else {
+23             if (score.erase(name)) cout << "Deleted successfully\n";
+24             else cout << "Not found\n";
+25         }
+26     }
+27     return 0;
+28 }
+INPUT
+5
+1 lxl 10
+2 lxl
+3 lxl
+2 lxl
+4
+OUTPUT
+OK
+10
+Deleted successfully
+Not found
+0
+KEY POINT lower_bound  points at the first value ≥ len; the closest value is that one or the one just before it
+(prev(it) ), as in 第 13 章  (P5250). map.erase(key)  returns how many entries it removed, which
+answers "did it exist?" (P5266).
+Problem shape Container
+word → which articles contain it (P3879) map<string, set<int>>
+count pairs of matching codes (P3405) map<string, int>
+value → its position (P1918) map<int, int>
+groups that merge (P1621, P1525) union-find
+17.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 8 ===
+8基础篇  第 17 章  集合
+Key	points	to	memorise
+1. Union-find: parent[x]	=	x at start; find the root; union = point one root at the other.
+2. Path compression: parent[x]	=	find(parent[x]).
+3. g groups need g − 1 links; each successful union lowers g by 1.
+4. Enemies: extra node i + n means "i's enemies".
+5. String hash: h = h × 131 + c in unsigned long long (mod 2⁶⁴).
+6. Hash containers: O(1) average, unordered; set/map: O(log n), sorted.
+7. Nearest value in a set: lower_bound and the element before it.
+8. map[key] creates a missing key; use count() to test, erase() returns how many removed.
+17.4.1 Problems
+Problem Name Section What it tests
+P1551 亲戚 17.1 Union-find on relatives.
+P1536 村村通 17.1 Components − 1 roads.
+P3370 【模板】字符串哈希 17.2 Polynomial hash, count distinct.
+P3405 Cities and States S 17.3 Count matching code pairs with map.
+P5250 木材仓库 17.3 set with lower_bound for the nearest length.
+P5266 学籍管理 17.3 map insert, query, delete, size.
+P1102 A-B 数对 17.3 Count values with map (or binary search).
+P1918 保龄球 17.3 Value → position with map.
+P1525 关押罪犯 17.1 Enemies with union-find, strongest conflicts first.
+P1621 集合 17.1 Unite numbers sharing a prime factor ≥ P.
+P1892 团伙 17.1 Enemy nodes i + n.
+P1955 程序自动分析 17.1 Equalities first, then check inequalities.
+P4305 不重复数字 17.2 unordered_set, keep first copies.
+P3879 阅读理解 17.3 map>.
+P2814 家谱 17.1 Union-find with names via map.
+17.4.2 Practice	ladder
+1. Direct. P1551: basic union-find (17.1).
+2. One	twist. P3370: string hashing (17.2).
+3. Idea	hidden. P5266: map operations (17.3).
+4. Two	ideas. P5250: set and lower_bound (17.3).
+5. Stretch. P1892: enemy nodes in union-find (17.1).
+17.4.3 Experiments
+1. Remove path compression from relatives.cpp and time a chain of 10⁶ unions.
+2. Change the base 131 in string_hash.cpp to 2 and find two different strings with the same hash.
+3. Replace unordered_set by set in first_occurrences.cpp and compare the time for 10⁶ numbers.
+4. Print the set in timber_store.cpp after each operation to watch it stay sorted.
+
+=== page 9 ===
+9基础篇  第 17 章  集合
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

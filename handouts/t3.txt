@@ -1,0 +1,353 @@
+# 拓展篇 第3章 字符串进阶  (拓3)
+# source: 拓展篇 第03章 字符串进阶.pdf
+
+=== page 1 ===
+1拓展篇  第 3 章  字符串进阶
+第 3 章 	 字符串进阶
+Hashing, Z, Manacher, suffix array, SAM Luogu (verified) 19 problems C++17 · all programs run
+3.1 字符串哈希 3.2 Z 函数与  Manacher
+3.3 后缀数组 3.4 后缀自动机
+3.5 课后习题与实验
+3.1 字符串哈希
+Prefix	hashes,	double	modulus.
+IDEA String	hashing ( 字符串哈希 ) turns a string into a number: h(s) = s1·Bn−1 + … + sn (mod M). With prefix
+hashes h[i] and powers p[i], the hash of any substring s[l..r] is h[r] − h[l−1]·p[r−l+1], in O(1). Equal
+strings always have equal hashes; different strings collide only rarely.
+KEY POINT Use two moduli (or one 61-bit modulus) to make collisions practically impossible. Hashing + binary
+search answers "longest common prefix of two substrings" in O(log n), which already solves many suffix-
+array problems more slowly but more simply.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 字 符 串 拓 展
+Compare substrings in O(1) by hashing, match prefixes with the Z-function, find palindromes with
+Manacher, sort all suffixes with their LCPs, and count substrings with the suffix automaton.
+
+=== page 2 ===
+2拓展篇  第 3 章  字符串进阶
+distinct_strings.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long M1 = 1000000007, M2 = 998244353, B = 131;
+5  
+6 pair<long long, long long> hashOf(const string &s) {
+7     long long a = 0, b = 0;
+8     for (int i = 0; i < int(s.size()); i++) {
+9         a = (a * B + s[i]) % M1;                 // two independent hashes
+10         b = (b * B + s[i]) % M2;
+11     }
+12     return make_pair(a, b);
+13 }
+14  
+15 int main() {
+16     int n;
+17     cin >> n;
+18     vector<pair<long long, long long>> h(n);
+19     for (int i = 0; i < n; i++) { string s; cin >> s; h[i] = hashOf(s); }
+20     sort(h.begin(), h.end());
+21     cout << unique(h.begin(), h.end()) - h.begin() << "\n";
+22     return 0;
+23 }
+INPUT
+5
+abc
+aaaa
+abc
+abcc
+12345
+OUTPUT
+4
+IDEA How many different strings (P3370): hash each, sort the pairs, count distinct. O(total length + n log n).
+KEY POINT Base B larger than the alphabet (131, 13331), moduli prime. On Codeforces, fixed bases can be attacked by
+hacks; pick B at random at run time there.
+3.2 Z	 函数与 	Manacher
+The	match	box;	the	mirror	palindrome.
+IDEA The Z-function (Z 函数 , 扩展  KMP): z[i] = length of the longest common prefix of s and s[i..]. Keep the
+rightmost match box [l, r): inside it, z[i] starts from min(r − i, z[i − l]), then extend by comparing
+characters. Every comparison either fails once or moves r right: O(n).
+KEY POINT To match b against a, compute the Z-function of b, then run the same loop over a using b's z values
+(P5410). Z and KMP's nxt carry the same information; use whichever feels natural.
+
+=== page 3 ===
+3拓展篇  第 3 章  字符串进阶
+z_function.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string a, b;
+6     cin >> a >> b;
+7     int n = a.size(), m = b.size();
+8     vector<int> z(m), ext(n);
+9     z[0] = m;
+10     for (int i = 1, l = 0, r = 0; i < m; i++) {          // box [l, r) matches b's prefix
+11         z[i] = (i < r) ? min(r - i, z[i - l]) : 0;
+12         while (i + z[i] < m && b[z[i]] == b[i + z[i]]) z[i]++;
+13         if (i + z[i] > r) { l = i; r = i + z[i]; }
+14     }
+15     for (int i = 0, l = 0, r = 0; i < n; i++) {          // lcp of a[i..] with b
+16         ext[i] = (i < r) ? min(r - i, z[i - l]) : 0;
+17         while (ext[i] < m && i + ext[i] < n && b[ext[i]] == a[i + ext[i]]) ext[i]++;
+18         if (i + ext[i] > r) { l = i; r = i + ext[i]; }
+19     }
+20     for (int i = 0; i < m; i++) cout << z[i] << " ";
+21     cout << "\n";
+22     for (int i = 0; i < n; i++) cout << ext[i] << " ";
+23     cout << "\n";
+24     return 0;
+25 }
+INPUT
+aaaabaa
+aaaaa
+OUTPUT
+5 4 3 2 1 
+4 3 2 1 0 2 1
+IDEA Inside the box, a[i..] looks like b[i − l..], whose answer z[i − l] is known; it is only trusted up to the end of
+the box r. Beyond r we compare by hand.
+KEY POINT Classic uses: all occurrences of b in a (ext[i] == m); the shortest period; checking which prefixes are also
+suffixes.
+IDEA Manacher ( 马拉车 ) finds the longest palindrome around every centre in O(n). Insert a separator between
+characters (#a#b#a#) so even and odd palindromes look the same. Keep the palindrome reaching furthest
+right, centre c, right end r: a centre i < r starts from the radius of its mirror 2c − i, capped by r − i, then
+extends.
+
+=== page 4 ===
+4拓展篇  第 3 章  字符串进阶
+manacher.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string s;
+6     cin >> s;
+7     string t = "^#";                                  // sentinels: no bounds checks needed
+8     for (int i = 0; i < int(s.size()); i++) { t += s[i]; t += '#'; }
+9     t += '$';
+10     int n = t.size();
+11     vector<int> p(n, 0);                              // radius in t
+12     int c = 0, r = 0, best = 0;
+13     for (int i = 1; i < n - 1; i++) {
+14         if (i < r) p[i] = min(r - i, p[2 * c - i]);   // mirror inside the known palindrome
+15         while (t[i + p[i] + 1] == t[i - p[i] - 1]) p[i]++;
+16         if (i + p[i] > r) { c = i; r = i + p[i]; }
+17         best = max(best, p[i]);                       // radius in t = length in s
+18     }
+19     cout << best << "\n";
+20     return 0;
+21 }
+INPUT 1
+aaa
+OUTPUT 1
+3
+INPUT 2
+babad
+OUTPUT 2
+3
+INPUT 3
+cbbd
+OUTPUT 3
+2
+IDEA With separators, a radius p[i] in t is exactly the length of the palindrome in the original string. The
+different end characters ^ and $ stop the extension without index checks (P3805).
+KEY POINT Longest double palindrome (P4555): for each separator, the longest palindrome ending there plus the
+longest starting there, both read off p[]. Counting palindromes = Σ ⌈p[i] / 2⌉ over the right centres.
+3.3 后缀数组
+Doubling	with	counting	sort;	height	by	Kasai.
+IDEA The suffix	array ( 后缀数组 ) lists the starting positions of all suffixes in sorted order. Build it by
+doubling: sort by the first 1, 2, 4, … characters, using the ranks from the previous round as pairs (rank of
+i, rank of i + k). With counting sort each round is O(n): O(n log n) total (P3809).
+KEY POINT The height (LCP) array: height[i] = lcp of the suffixes at sorted positions i − 1 and i. Kasai's trick
+computes it in O(n): going through suffixes in text order, the lcp drops by at most 1 each step. Number of
+distinct substrings = n(n + 1)/2 − Σ height (P2408).
+Sorted Start Suffix height
+1 5 a 0
+2 3 aba 1
+3 1 ababa 3
+4 4 ba 0
+
+=== page 5 ===
+5拓展篇  第 3 章  字符串进阶
+Sorted Start Suffix height
+5 2 baba 2
+suffix_array.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     string s;
+6     cin >> s;
+7     int n = s.size(), m = 128;                        // m: number of different ranks
+8     vector<int> sa(n), rk(n), tmp(n), cnt(max(n, m) + 1);
+9     for (int i = 0; i < n; i++) cnt[rk[i] = s[i]]++;
+10     for (int i = 1; i <= m; i++) cnt[i] += cnt[i - 1];
+11     for (int i = n - 1; i >= 0; i--) sa[--cnt[rk[i]]] = i;
+12     for (int k = 1; ; k <<= 1) {
+13         int p = 0;                                    // order by the second key (rank of i + k)
+14         for (int i = n - k; i < n; i++) tmp[p++] = i;            // no second half: smallest
+15         for (int i = 0; i < n; i++) if (sa[i] >= k) tmp[p++] = sa[i] - k;
+16         fill(cnt.begin(), cnt.end(), 0);              // stable counting sort by the first key
+17         for (int i = 0; i < n; i++) cnt[rk[i]]++;
+18         for (int i = 1; i <= m; i++) cnt[i] += cnt[i - 1];
+19         for (int i = n - 1; i >= 0; i--) sa[--cnt[rk[tmp[i]]]] = tmp[i];
+20         tmp[sa[0]] = 1; p = 1;                        // new ranks (tmp reused)
+21         for (int i = 1; i < n; i++) {
+22             int a = sa[i - 1], b = sa[i];
+23             bool same = rk[a] == rk[b] && (a + k < n ? rk[a + k] : -1) == (b + k < n ? rk[b + k] : -1);
+24             tmp[b] = same ? p : ++p;
+25         }
+26         rk = tmp;
+27         if (p == n) break;                            // all ranks distinct: done
+28         m = p;
+29     }
+30     for (int i = 0; i < n; i++) rk[sa[i]] = i;        // 0-based rank
+31     vector<int> height(n, 0);
+32     for (int i = 0, h = 0; i < n; i++) {              // Kasai: text order
+33         if (rk[i] == 0) { h = 0; continue; }
+34         if (h > 0) h--;
+35         int j = sa[rk[i] - 1];
+36         while (i + h < n && j + h < n && s[i + h] == s[j + h]) h++;
+37         height[rk[i]] = h;
+38     }
+39     long long distinct = 1LL * n * (n + 1) / 2;
+40     for (int i = 0; i < n; i++) { cout << sa[i] + 1 << " "; distinct -= height[i]; }
+41     cout << "\n" << distinct << "\n";
+42     return 0;
+43 }
+INPUT
+ababa
+OUTPUT
+5 3 1 4 2 
+9
+IDEA Each round sorts by (rank[i], rank[i + k]) with two counting sorts: first by the second key (suffixes with
+no second half come first), then stably by the first key. Stop early when all ranks are different.
+KEY POINT Height answers lcp questions: lcp of any two suffixes = minimum of height between their sorted positions
+(with an ST table, 第 3 章 ). Longest substring occurring ≥ k times (P2852) = the best minimum over k − 1
+consecutive heights.
+
+=== page 6 ===
+6拓展篇  第 3 章  字符串进阶
+3.4 后缀自动机
+States,	links,	clones;	counting	with	the	link	tree.
+IDEA The suffix	automaton ( 后缀自动机 , SAM) is the smallest automaton accepting exactly the substrings of
+s, with at most 2n states. Each state is a class of substrings with the same set of end positions; len[v] = the
+longest of them, link[v] = the state of the longest suffix in a different class. Built online, one character at a
+time, in amortised O(n).
+KEY POINT Each state v contains substrings of lengths len[link[v]] + 1 … len[v], so distinct substrings = Σ (len[v] −
+len[link[v]]). The suffix links form a tree; the number of occurrences of a state = number of prefix-end
+states in its link subtree.
+
+=== page 7 ===
+7拓展篇  第 3 章  字符串进阶
+sam.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 2000005;
+5 int len_[N], link_[N], nxt[N][26], cnt[N], sz = 1, last = 0;   // state 0 = empty string
+6  
+7 void extend(int c) {
+8     int cur = sz++;
+9     len_[cur] = len_[last] + 1;
+10     cnt[cur] = 1;                                     // a new end position
+11     int p = last;
+12     while (p != -1 && !nxt[p][c]) { nxt[p][c] = cur; p = link_[p]; }
+13     if (p == -1) link_[cur] = 0;
+14     else {
+15         int q = nxt[p][c];
+16         if (len_[p] + 1 == len_[q]) link_[cur] = q;
+17         else {                                        // split q: clone keeps the shorter strings
+18             int cl = sz++;
+19             len_[cl] = len_[p] + 1;
+20             memcpy(nxt[cl], nxt[q], sizeof(nxt[q]));
+21             link_[cl] = link_[q];
+22             while (p != -1 && nxt[p][c] == q) { nxt[p][c] = cl; p = link_[p]; }
+23             link_[q] = link_[cur] = cl;
+24         }
+25     }
+26     last = cur;
+27 }
+28  
+29 int main() {
+30     string s;
+31     cin >> s;
+32     link_[0] = -1;
+33     for (int i = 0; i < int(s.size()); i++) extend(s[i] - 'a');
+34     vector<int> order_(sz), bucket(s.size() + 1, 0);
+35     for (int v = 0; v < sz; v++) bucket[len_[v]]++;  // sort states by len (counting sort)
+36     for (int i = 1; i <= int(s.size()); i++) bucket[i] += bucket[i - 1];
+37     for (int v = sz - 1; v >= 0; v--) order_[--bucket[len_[v]]] = v;
+38     long long best = 0, distinct = 0;
+39     for (int i = sz - 1; i > 0; i--) {                // longest first: children before parents
+40         int v = order_[i];
+41         cnt[link_[v]] += cnt[v];
+42         if (cnt[v] > 1) best = max(best, 1LL * cnt[v] * len_[v]);
+43         distinct += len_[v] - len_[link_[v]];
+44     }
+45     cout << best << "\n" << distinct << "\n";
+46     return 0;
+47 }
+INPUT
+abab
+OUTPUT
+4
+7
+KEY POINT P3804 asks for the largest (occurrences × length) over substrings occurring more than once: "ab" occurs
+twice, 2 × 2 = 4. "abab" has 7 distinct substrings: a, b, ab, ba, aba, bab, abab.
+TRAP The clone step is the part everyone gets wrong: the clone copies q's transitions and link, takes len = len[p]
++ 1, gets no occurrence count of its own, and both q and cur then link to it. Size the arrays as 2n states.
+
+=== page 8 ===
+8拓展篇  第 3 章  字符串进阶
+KEY POINT Which structure? Hashing for quick equality tests; Z / KMP for one pattern; Manacher for palindromes; AC
+automaton for many patterns; suffix array for sorted suffixes and lcp ranges; SAM for counting substrings
+and occurrences online ( 生成魔咒  P4070 adds characters one by one).
+3.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Substring hash: h[r] − h[l−1]·p[len]; two moduli.
+2. Z: box [l, r); z[i] from min(r − i, z[i − l]), then extend.
+3. Manacher: # separators, mirror 2c − i, radius in t = length in s.
+4. SA doubling: sort by (rank[i], rank[i + k]) with two counting sorts.
+5. Kasai: height drops at most 1 per step in text order.
+6. Distinct substrings: n(n+1)/2 − Σ height = Σ (len[v] − len[link[v]]).
+7. SAM clone: copy transitions and link, len = len[p] + 1, no count; q and cur link to it.
+8. Occurrences: sum counts up the link tree, longest states first.
+3.5.1 Problems
+Problem Name Section What it tests
+P3370 【模板】字符串哈希 3.1 Double hash, sort, count.
+P5410 【模板】扩展  KMP /
+exKMP （ Z 函数）
+3.2 Z of b, then b against a.
+P3805 【模板】 Manacher 3.2 Longest palindrome.
+P3809 【模板】后缀排序（ SA ） 3.3 Doubling SA.
+P3804 【模板】后缀自动机
+（ SAM ）
+3.4 Occurrences × length on the link tree.
+P2408 不同子串个数 3.3 n(n+1)/2 − Σ height (or SAM).
+P1368 工艺 3.2 Minimum rotation (minimal representation).
+P4555 最长双回文串 3.2 Manacher, ends and starts per position.
+P4051 字符加密 3.3 SA of the doubled string.
+P2852 Milk Patterns G 3.3 k − 1 consecutive heights.
+P2870 Best Cow Line G 3.3 Compare the string with its reverse.
+P2743 乐曲主题 Musical Themes 3.3 Differences, non-overlapping repeat.
+P3975 弦论 3.4 k-th smallest substring on the SAM.
+P4070 生成魔咒 3.4 Distinct substrings after each append.
+P3181 找相同字符 3.4 Common substrings counted with SAM or SA.
+P2463 Sandy 的卡片 3.3 Several strings, differences, binary search.
+P3763 DNA 3.1 Hash + LCP jumps with ≤ 3 mismatches.
+P6216 回文匹配 3.2 Manacher + prefix sums of matches.
+P1659 拉拉队排练 3.2 Odd palindromes counted by length.
+
+=== page 9 ===
+9拓展篇  第 3 章  字符串进阶
+3.5.2 Practice	ladder
+1. Direct. P3370: hashing (3.1).
+2. One	twist. P3805: Manacher (3.2).
+3. Idea	hidden. P5410: Z-function (3.2).
+4. Two	ideas. P3809: suffix array (3.3).
+5. Stretch. P3804: suffix automaton (3.4).
+3.5.3 Experiments
+1. Find two different strings with the same single hash mod 1e9+7 by brute force over short strings.
+2. Print p[] of manacher.cpp for "abacaba" and mark each palindrome.
+3. Print sa and rank after every doubling round of suffix_array.cpp for "banana".
+4. Count states and transitions of the SAM for random strings of length 10⁵; compare with 2n and 3n.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

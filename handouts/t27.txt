@@ -1,0 +1,270 @@
+# 拓展篇 第27章 树与图补充  (拓27)
+# source: 拓展篇 第27章 树与图补充.pdf
+
+=== page 1 ===
+1拓展篇  第 27 章  树与图补充
+第 27 章 	 树与图补充
+Tarjan LCA, pseudotrees, Kosaraju, centroid trees Luogu (verified) 5 problems C++17 · all programs run
+27.1 Tarjan 离线求  LCA 27.2 基环树
+27.3 Kosaraju 算法 27.4 动态点分治
+27.5 课后习题与实验
+27.1 Tarjan	 离线求 	LCA
+Join	finished	vertices;	find	answers.
+IDEA Tarjan's	offline	LCA answers all LCA queries in one DFS with a DSU, O((n + q) α(n)). When the DFS
+finishes a vertex, join it to its parent in the DSU. For a query (u, v): when the DFS is at u and v is already
+finished, LCA(u, v) = find(v), the highest ancestor of v whose subtree the DFS is still inside.
+KEY POINT It needs all queries in advance (offline). Binary lifting ( 进阶篇  第 9 章 ) is online and easier to reuse; Tarjan
+is the fastest when there are millions of queries.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 图 论 补 充
+Answer all LCA queries offline with a DSU, solve graphs with exactly one cycle by cutting it, find SCCs with
+two DFS passes, and keep centroid ancestors for dynamic path queries.
+
+=== page 2 ===
+2拓展篇  第 27 章  树与图补充
+tarjan_lca.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 500005;
+5 vector<int> g[N];
+6 vector<pair<int, int>> qs[N];                     // (other vertex, query id)
+7 int fa[N], ans[N];
+8 bool done[N];
+9 int find(int x) { return fa[x] == x ? x : fa[x] = find(fa[x]); }
+10  
+11 void dfs(int u, int p) {
+12     for (int k = 0; k < int(g[u].size()); k++) {
+13         int v = g[u][k];
+14         if (v == p) continue;
+15         dfs(v, u);
+16         fa[v] = u;                                // v finished: join it to its parent
+17     }
+18     done[u] = true;
+19     for (int k = 0; k < int(qs[u].size()); k++) {
+20         int v = qs[u][k].first;
+21         if (done[v]) ans[qs[u][k].second] = find(v);
+22     }
+23 }
+24  
+25 int main() {
+26     int n, q;
+27     cin >> n >> q;
+28     for (int i = 2; i <= n; i++) { int p; cin >> p; g[p].push_back(i); g[i].push_back(p); }
+29     for (int i = 0; i < q; i++) {
+30         int a, b; cin >> a >> b;
+31         qs[a].push_back(make_pair(b, i)); qs[b].push_back(make_pair(a, i));   // seen from both ends
+32     }
+33     for (int i = 1; i <= n; i++) fa[i] = i;
+34     dfs(1, 0);
+35     for (int i = 0; i < q; i++) cout << ans[i] << "\n";
+36     return 0;
+37 }
+INPUT
+9 6
+1
+2
+2
+2
+2
+6
+1
+6
+9 8
+2 6
+9 1
+7 3
+8 7
+3 9
+OUTPUT
+1
+2
+1
+2
+1
+2
+IDEA A random tree given by parents, checked against walking up the parent chain in Python.
+KEY POINT Store each query at both ends: whichever end finishes second answers it. Mark done[u] before scanning
+u's queries so a query (u, u) also works.
+
+=== page 3 ===
+3拓展篇  第 27 章  树与图补充
+27.2 基环树
+One	cycle:	cut	an	edge,	DP	twice.
+IDEA A pseudotree ( 基环树 ) is a connected graph with n vertices and n edges: a tree plus one extra edge, so
+exactly one	cycle. When every vertex has exactly one outgoing edge (a functional graph, "each knight hates
+one other"), every component is a pseudotree. The standard trick: find the cycle, cut	one	cycle	edge (u,
+v), and solve a tree problem with u or v forced.
+KEY POINT Knights ( 骑士  P2607): choose a maximum-power set with no hating pair. After cutting the cycle edge (u,
+v), run the "party" tree DP ( 进阶篇  第 16 章 ) twice: once forbidding u, once forbidding v; the better of the
+two respects the cut edge. Sum over components.
+
+=== page 4 ===
+4拓展篇  第 27 章  树与图补充
+pseudotree.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 1000005;
+5 int n, hate[N], cu, cv, cutId;
+6 long long w[N], f[N][2];
+7 vector<pair<int, int>> g[N];                     // (neighbour, edge id)
+8 bool vis[N];
+9  
+10 void findCycle(int u, int fromEdge) {            // any edge reaching a visited vertex closes the cycle
+11     vis[u] = true;
+12     for (int k = 0; k < int(g[u].size()); k++) {
+13         int v = g[u][k].first, id = g[u][k].second;
+14         if (id == fromEdge) continue;
+15         if (vis[v]) { cu = u; cv = v; cutId = id; }
+16         else findCycle(v, id);
+17     }
+18 }
+19 void dp(int u, int fromEdge) {
+20     f[u][0] = 0; f[u][1] = w[u];
+21     for (int k = 0; k < int(g[u].size()); k++) {
+22         int v = g[u][k].first, id = g[u][k].second;
+23         if (id == fromEdge || id == cutId) continue;   // the cut edge does not exist
+24         dp(v, id);
+25         f[u][0] += max(f[v][0], f[v][1]);
+26         f[u][1] += f[v][0];
+27     }
+28 }
+29  
+30 int main() {
+31     cin >> n;
+32     for (int i = 1; i <= n; i++) {
+33         cin >> w[i] >> hate[i];
+34         g[i].push_back(make_pair(hate[i], i));      // edge id = i (one per knight)
+35         g[hate[i]].push_back(make_pair(i, i));
+36     }
+37     long long total = 0;
+38     for (int i = 1; i <= n; i++) {
+39         if (vis[i]) continue;
+40         cutId = -1;
+41         findCycle(i, 0);
+42         dp(cu, 0); long long a = f[cu][0];          // cu not chosen
+43         dp(cv, 0); long long b = f[cv][0];          // cv not chosen
+44         total += max(a, b);
+45     }
+46     cout << total << "\n";
+47     return 0;
+48 }
+INPUT
+8
+9 3
+10 7
+22 2
+30 7
+22 2
+26 8
+28 2
+29 6
+OUTPUT
+103
+
+=== page 5 ===
+5拓展篇  第 27 章  树与图补充
+KEY POINT A random functional graph of 8 knights, checked against trying all 2⁸ subsets. Two knights hating each
+other make a 2-cycle with two parallel edges; edge ids keep them apart. Recursion depth can reach n: use
+an explicit stack for n = 10⁶.
+27.3 Kosaraju	 算法
+Finish	order,	then	the	reversed	graph.
+IDEA Kosaraju's	algorithm finds SCCs with two DFS passes: (1) DFS the graph, recording vertices in order of
+finishing; (2) DFS the reversed graph, starting from vertices in decreasing finish time; each DFS of pass 2
+collects exactly one SCC.
+KEY POINT Why it works: the vertex that finishes last lies in a "source" SCC; in the reversed graph nothing leaves that
+SCC, so pass 2 cannot spill into another one. Tarjan ( 进阶篇  第 12 章 ) does it in one pass; Kosaraju is easier
+to remember and also gives the SCCs in topological order.
+kosaraju.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005;
+5 vector<int> g[N], rg[N], order_;
+6 int comp[N], cnt = 0;
+7 bool vis[N];
+8  
+9 void dfs1(int u) { vis[u] = true; for (int k = 0; k < int(g[u].size()); k++) if (!vis[g[u][k]]) 
+dfs1(g[u][k]); order_.push_back(u); }
+10 void dfs2(int u, int c) { comp[u] = c; for (int k = 0; k < int(rg[u].size()); k++) if (!comp[rg[u][k]]) 
+dfs2(rg[u][k], c); }
+11  
+12 int main() {
+13     int n, m;
+14     cin >> n >> m;
+15     for (int i = 0; i < m; i++) { int a, b; cin >> a >> b; g[a].push_back(b); rg[b].push_back(a); }
+16     for (int i = 1; i <= n; i++) if (!vis[i]) dfs1(i);
+17     for (int i = n - 1; i >= 0; i--) if (!comp[order_[i]]) dfs2(order_[i], ++cnt);   // latest finish 
+first
+18     vector<int> sz(cnt + 1, 0);
+19     for (int i = 1; i <= n; i++) sz[comp[i]]++;
+20     sort(sz.begin() + 1, sz.end());
+21     cout << cnt << "\n";
+22     for (int c = 1; c <= cnt; c++) cout << sz[c] << (c < cnt ? " " : "");
+23     cout << "\n";
+24     return 0;
+25 }
+INPUT
+8 10
+8 4
+3 4
+8 1
+3 7
+6 8
+8 3
+7 2
+1 6
+7 5
+4 1
+OUTPUT
+4
+1 1 1 5
+
+=== page 6 ===
+6拓展篇  第 27 章  树与图补充
+IDEA Number of SCCs and their sizes for a random graph, checked against mutual reachability computed in
+Python.
+KEY POINT The Cow Prom (P2863) counts SCCs with more than one vertex.
+27.4 动态点分治
+Centroid	tree;	O(log	n)	ancestors.
+IDEA Dynamic	centroid	decomposition ( 动态点分治  / 点分树 ): record, for every vertex, its parent in the
+centroid recursion ( 第 6 章 ). This "centroid tree" has depth O(log n), and every path u–v in the original tree
+passes through LCAcentroid tree(u, v). So a query about all vertices near u only looks at u's O(log n)
+centroid ancestors, and an update changes data at those same ancestors.
+KEY POINT At each centroid c keep a data structure of its subtree indexed by distance to c (a Fenwick tree), plus a
+second one indexed by distance to c's centroid parent, to subtract the part counted twice. Each query /
+update: O(log² n) ( 震波  P6329: sum of values within distance k, with point updates).
+TRAP Distances in the centroid tree are not tree distances; always use the original tree distance (precomputed
+with LCA) between u and each centroid ancestor.
+27.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Tarjan LCA: after finishing v, fa[v] = parent; query answer = find(other) if done.
+2. Pseudotree: n vertices, n edges, one cycle; functional graphs are forests of them.
+3. Cut a cycle edge (u, v); tree DP forbidding u, then forbidding v.
+4. Kosaraju: finish order on G, then DFS on reversed G by decreasing finish time.
+5. Centroid tree depth O(log n); path u–v passes their centroid-tree LCA.
+27.5.1 Problems
+Problem Name Section What it tests
+P3379 【模板】最近公共祖先
+（ LCA ）
+27.1 Tarjan offline.
+P2607 骑士 27.2 Pseudotree DP.
+P1453 城市环路 27.2 One cycle, cut and DP.
+P2863 The Cow Prom S 27.3 Count SCCs of size > 1.
+P6329 【模板】点分树  / 震波 27.4 Dynamic centroid decomposition.
+27.5.2 Practice	ladder
+1. Direct. P3379: Tarjan LCA (27.1).
+2. One	twist. P2863: Kosaraju (27.3).
+
+=== page 7 ===
+7拓展篇  第 27 章  树与图补充
+3. Idea	hidden. P1453: pseudotree (27.2).
+4. Two	ideas. P2607: many pseudotrees (27.2).
+5. Stretch. P6329: centroid tree (27.4).
+27.5.3 Experiments
+1. Compare tarjan_lca.cpp with binary lifting on 10⁶ random queries.
+2. Draw the functional graph of the random knights and mark the cut edges.
+3. Print the finish order of kosaraju.cpp and check the first SCC found is a source.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

@@ -1,0 +1,376 @@
+# 进阶篇 第3章 分治与倍增  (进3)
+# source: 进阶篇 第03章 分治与倍增.pdf
+
+=== page 1 ===
+1进阶篇  第 3 章  分治与倍增
+第 3 章 	 分治与倍增
+Divide and conquer, binary lifting Luogu #202 18 problems C++17 · all programs run
+3.1 归并排序与快速幂 3.2 其他序列上的分治
+3.3 倍增与  ST 表 3.4 课后习题与实验
+3.1 归并排序与快速幂
+Merge	sort	with	inversion	counting;	a^b	in	O(log	b).
+5 4 2 6 3 1
+5 4 2 → 2 4 5 6 3 1 → 1 3 6
+merge → 1 2 3 4 5 6
+IDEA Divide	and	conquer ( 分治 ): split the
+problem into halves, solve each half
+recursively, then combine the two answers. If
+combining costs O(n), the whole thing costs
+O(n log n): there are log n levels, each doing
+O(n) work.
+KEY POINT Merge sort is the model: sort both halves,
+then merge two sorted lists. Anything that can
+be counted while merging, such as
+inversions, comes for free.
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 1 部 分  进 阶 技 巧 与 思 想
+Split into halves and combine; precompute blocks of length 2ᵏ and jump by powers of two.
+
+=== page 2 ===
+2进阶篇  第 3 章  分治与倍增
+inversions.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int a[500005], tmp[500005];
+5 long long inv = 0;
+6  
+7 void mergeSort(int l, int r) {             // sorts a[l..r]
+8     if (l >= r) return;
+9     int m = (l + r) / 2;
+10     mergeSort(l, m);
+11     mergeSort(m + 1, r);
+12     int i = l, j = m + 1, k = l;
+13     while (i <= m && j <= r) {
+14         if (a[i] <= a[j]) tmp[k++] = a[i++];
+15         else { tmp[k++] = a[j++]; inv += m - i + 1; }   // a[i..m] all > a[j]
+16     }
+17     while (i <= m) tmp[k++] = a[i++];
+18     while (j <= r) tmp[k++] = a[j++];
+19     for (int t = l; t <= r; t++) a[t] = tmp[t];
+20 }
+21  
+22 int main() {
+23     ios::sync_with_stdio(false);
+24     cin.tie(nullptr);
+25     int n;
+26     cin >> n;
+27     for (int i = 0; i < n; i++) cin >> a[i];
+28     mergeSort(0, n - 1);
+29     cout << inv << "\n";
+30     return 0;
+31 }
+INPUT
+6
+5 4 2 6 3 1
+OUTPUT
+11
+KEY POINT When a[j] from the right half is placed before a[i] from the left half, it is smaller than every remaining
+a[i..m]: that is m − i + 1 inversions at once (P1908). Use long long : n = 5 × 10⁵ can give 1.25 × 10¹¹
+inversions. Two rows of matches need as many adjacent swaps as there are inversions after matching
+ranks (P1966).
+3.1.1 Fast	power
+1
+2³
+0
+2²
+1
+2¹
+0
+2⁰
+b = 10 = 8 + 2
+a¹⁰ = a⁸ · a²
+square a each step, multiply in when the bit is 1
+
+=== page 3 ===
+3进阶篇  第 3 章  分治与倍增
+fast_power.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long power(long long a, long long b, long long p) {
+5     long long res = 1 % p;
+6     a %= p;
+7     while (b > 0) {
+8         if (b & 1) res = res * a % p;   // this bit of b is 1
+9         a = a * a % p;                   // a, a^2, a^4, a^8, ...
+10         b >>= 1;
+11     }
+12     return res;
+13 }
+14  
+15 int main() {
+16     long long a, b, p;
+17     cin >> a >> b >> p;
+18     cout << a << "^" << b << " mod " << p << "=" << power(a, b, p) << "\n";
+19     return 0;
+20 }
+INPUT 1
+2 10 9
+OUTPUT 1
+2^10 mod 9=7
+INPUT 2
+3 0 1
+OUTPUT 2
+3^0 mod 1=0
+IDEA ab by multiplying b times is O(b), hopeless for b = 10⁹. Write b in binary: ab is the product of a2ᵏ over the
+1-bits of b, and a2ᵏ comes from squaring. O(log b) multiplications (P1226).
+TRAP Take % p  after every multiplication, and keep values in long long  so a product of two numbers below p
+(up to about 3 × 10⁹) fits. Start from 1 % p , so p = 1 gives 0. With big numbers instead of mod, the same
+loop computes 2ᴾ (P1045).
+3.2 其他序列上的分治
+Answers	left,	right,	or	crossing	the	middle;	closest	pair	of	points.
+IDEA Many sequence problems split the same way: the answer lies entirely in the left half, entirely in the right
+half, or crosses the middle. Recursion handles the first two; only the crossing case needs new code, and it
+usually has a simple shape because it must touch the middle.
+
+=== page 4 ===
+4进阶篇  第 3 章  分治与倍增
+max_subarray_dc.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 long long a[200005];
+5  
+6 long long best(int l, int r) {
+7     if (l == r) return a[l];
+8     int m = (l + r) / 2;
+9     long long res = max(best(l, m), best(m + 1, r));   // inside one half
+10     long long s = 0, leftBest = LLONG_MIN, rightBest = LLONG_MIN;
+11     for (int i = m; i >= l; i--) { s += a[i]; leftBest = max(leftBest, s); }
+12     s = 0;
+13     for (int i = m + 1; i <= r; i++) { s += a[i]; rightBest = max(rightBest, s); }
+14     return max(res, leftBest + rightBest);              // crossing the middle
+15 }
+16  
+17 int main() {
+18     int n;
+19     cin >> n;
+20     for (int i = 0; i < n; i++) cin >> a[i];
+21     cout << best(0, n - 1) << "\n";
+22     return 0;
+23 }
+INPUT
+7
+2 -4 3 -1 2 -4 3
+OUTPUT
+4
+KEY POINT A crossing subarray = (best sum ending at m, going left) + (best sum starting at m + 1, going right). Two
+linear scans per level: O(n log n). The O(n) method of 第 1 章  is faster, but this pattern carries over to
+problems that have no simple scan (P1115).
+
+=== page 5 ===
+5进阶篇  第 3 章  分治与倍增
+closest_pair.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct P { double x, y; };
+5 P p[10005];
+6  
+7 double dist(P a, P b) { return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
+8  
+9 double solve(int l, int r) {              // p[l..r] sorted by x
+10     if (r - l <= 2) {                     // tiny: try all pairs
+11         double d = 1e18;
+12         for (int i = l; i <= r; i++)
+13             for (int j = i + 1; j <= r; j++) d = min(d, dist(p[i], p[j]));
+14         return d;
+15     }
+16     int m = (l + r) / 2;
+17     double midX = p[m].x;
+18     double d = min(solve(l, m), solve(m + 1, r));
+19     vector<P> strip;                      // points within d of the middle line
+20     for (int i = l; i <= r; i++)
+21         if (fabs(p[i].x - midX) < d) strip.push_back(p[i]);
+22     sort(strip.begin(), strip.end(), [](const P &a, const P &b) { return a.y < b.y; });
+23     for (int i = 0; i < int(strip.size()); i++)
+24         for (int j = i + 1; j < int(strip.size()) && strip[j].y - strip[i].y < d; j++)
+25             d = min(d, dist(strip[i], strip[j]));   // only a few j per i
+26     return d;
+27 }
+28  
+29 int main() {
+30     int n;
+31     cin >> n;
+32     for (int i = 0; i < n; i++) cin >> p[i].x >> p[i].y;
+33     sort(p, p + n, [](const P &a, const P &b) { return a.x < b.x; });
+34     cout << fixed << setprecision(4) << solve(0, n - 1) << "\n";
+35     return 0;
+36 }
+INPUT 1
+3
+1 1
+1 2
+2 2
+OUTPUT 1
+1.0000
+INPUT 2
+4
+0 0
+10 10
+3 4
+10 11
+OUTPUT 2
+1.0000
+KEY POINT Closest pair of points: after solving both halves with best distance d, a crossing pair must lie within d of
+the dividing line, and sorted by y each point only needs to be compared with the next few points closer
+than d vertically: O(n log² n) (P1257). Sums over all pairs such as MooFest (P2345) are also counted
+across the middle while merging.
+3.3 倍增与 	ST	 表
+Sparse	tables	for	O(1)	range	max/min;	jumping	2ᵏ	steps.
+
+=== page 6 ===
+6进阶篇  第 3 章  分治与倍增
+1 7 3 4 2 5
+length 2 blocks
+length 4 blocks
+IDEA Binary	lifting ( 倍增 ): precompute the
+answer for blocks of length 1, 2, 4, 8, …;
+any length is a sum of powers of two, so a
+few precomputed blocks cover it. A
+sparse	table (ST 表 ) stores mx[k][i] =
+max of a[i … i + 2ᵏ − 1].
+KEY POINT A range max/min query [l, r] is covered
+by two overlapping blocks of length 2ᵏ,
+with k = ⌊log₂(r − l + 1)⌋: one starting at l,
+one ending at r. Overlap is harmless for
+max and min, so each query is O(1) after
+O(n log n) preparation.
+sparse_table.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int mx[17][50005], mn[17][50005], lg[50005];
+5  
+6 int main() {
+7     ios::sync_with_stdio(false);
+8     cin.tie(nullptr);
+9     int n, q;
+10     cin >> n >> q;
+11     for (int i = 1; i <= n; i++) { cin >> mx[0][i]; mn[0][i] = mx[0][i]; }
+12     for (int i = 2; i <= n; i++) lg[i] = lg[i / 2] + 1;          // floor(log2 i)
+13     for (int k = 1; (1 << k) <= n; k++)
+14         for (int i = 1; i + (1 << k) - 1 <= n; i++) {
+15             mx[k][i] = max(mx[k - 1][i], mx[k - 1][i + (1 << (k - 1))]);   // two halves
+16             mn[k][i] = min(mn[k - 1][i], mn[k - 1][i + (1 << (k - 1))]);
+17         }
+18     while (q--) {
+19         int l, r;
+20         cin >> l >> r;
+21         int k = lg[r - l + 1];
+22         int hi = max(mx[k][l], mx[k][r - (1 << k) + 1]);   // two overlapping blocks
+23         int lo = min(mn[k][l], mn[k][r - (1 << k) + 1]);
+24         cout << hi - lo << "\n";
+25     }
+26     return 0;
+27 }
+INPUT
+6 3
+1
+7
+3
+4
+2
+5
+1 5
+4 6
+2 2
+OUTPUT
+6
+3
+0
+
+=== page 7 ===
+7进阶篇  第 3 章  分治与倍增
+KEY POINT A block of length 2ᵏ is two blocks of length 2ᵏ⁻¹, so each table row comes from the row before. The tallest
+minus the shortest cow in a range (P2880) and the most loyal (smallest) account in a range (P1816) are
+direct ST-table queries. Sums do not work with overlapping blocks; use prefix sums for those.
+3.3.1 Jumping	2ᵏ	steps	at	a	time
+jump_steps.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int nxt[61][100005];                      // nxt[k][i]: where 2^k steps from i lead
+5  
+6 int main() {
+7     int n, q;
+8     cin >> n >> q;
+9     for (int i = 1; i <= n; i++) cin >> nxt[0][i];
+10     for (int k = 1; k <= 60; k++)
+11         for (int i = 1; i <= n; i++) nxt[k][i] = nxt[k - 1][nxt[k - 1][i]];   // 2^(k-1) twice
+12     while (q--) {
+13         int s;
+14         long long t;
+15         cin >> s >> t;
+16         for (int k = 0; k <= 60; k++)
+17             if (t >> k & 1) s = nxt[k][s];      // use the 1-bits of t
+18         cout << s << "\n";
+19     }
+20     return 0;
+21 }
+INPUT
+5 2
+2 3 4 5 1
+1 7
+3 1000000000000
+OUTPUT
+3
+3
+IDEA When every position has exactly one "next" position, 2ᵏ steps = two jumps of 2ᵏ⁻¹ steps. With the table, t
+steps (even t = 10¹²) take one jump per 1-bit of t: O(log t) per query, the same binary idea as fast power.
+KEY POINT Water falling through fountains (P7167), the fewest guards to cover a circle (P4155) and frogs jumping k
+times (P3509) all build such a jump table and then jump by powers of two. In 第 9 章  the same table finds
+lowest common ancestors in trees.
+3.4 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+
+=== page 8 ===
+8进阶篇  第 3 章  分治与倍增
+Key	points	to	memorise
+1. Divide and conquer: split, solve halves, combine; O(n) combine → O(n log n).
+2. Inversions: while merging, taking a[j] from the right adds m − i + 1; use long long.
+3. Fast power: if (b & 1) res = res·a % p; a = a·a % p; b >>= 1.
+4. Start from 1 % p; mod after every multiplication.
+5. Crossing case: best ending at m (going left) + best starting at m + 1.
+6. Closest pair: strip of width d around the middle, sorted by y, few checks per point.
+7. ST table: mx[k][i] from two halves of length 2ᵏ⁻¹; query with k = log₂(len), two overlapping blocks.
+8. Overlap is fine for max/min/gcd, not for sums.
+9. Jump table: nxt[k][i] = nxt[k−1][nxt[k−1][i]]; jump by the 1-bits of t.
+3.4.1 Problems
+Problem Name Section What it tests
+P1177 【模板】排序 3.1 Merge sort, always O(n log n).
+P1908 逆序对 3.1 Count inversions while merging.
+P1966 火柴排队 3.1 Match ranks, then count inversions.
+P1226 【模板】快速幂 3.1 Square and multiply, mod p.
+P1045 麦森数 3.1 Fast power with truncated big numbers.
+P1115 最大子段和 3.2 Left, right, or crossing the middle.
+P2880 Balanced Lineup G 3.3 ST table: range max − min.
+P7167 Fountain 3.3 Next-larger jump table plus binary lifting.
+P2415 集合求和 3.2 Each element in half of the subsets.
+P1257 平面上的最接近点对 3.2 Closest pair by divide and conquer.
+P1228 地毯填补问题 3.2 Centre L-shape, four quarters.
+P2345 MooFest G 3.2 Pair sums counted across the middle.
+P3509 ZAB-Frog 3.3 k-th nearest neighbour, then jump m times by doubling.
+P3517 WYK-Plot 3.3 Binary search with doubling block sizes.
+P4155 国旗计划 3.3 Unroll the circle; jump table over intervals.
+P1816 忠诚 3.3 ST table: range minimum.
+P6648 Triangle: The Data
+Structure
+3.3 Overlapping triangles of size 2ᵏ.
+P7562 Event Hopping 2 3.3 Greedy choice plus jump tables.
+3.4.2 Practice	ladder
+1. Direct. P1226: fast power (3.1).
+2. One	twist. P1908: inversions by merge sort (3.1).
+3. Idea	hidden. P2880: sparse table (3.3).
+4. Two	ideas. P1257: closest pair by divide and conquer (3.2).
+5. Stretch. P4155: jump table on a circle (3.3).
+
+=== page 9 ===
+9进阶篇  第 3 章  分治与倍增
+3.4.3 Experiments
+1. Count inversions of 10⁵ random numbers by the O(n²) double loop and by inversions.cpp; time both.
+2. Print a and res at every step of fast_power.cpp for 3¹³ mod 1000.
+3. Answer range sums with the sparse table idea and find why overlapping blocks break it.
+4. Check jump_steps.cpp against simply walking t steps for t ≤ 1000.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

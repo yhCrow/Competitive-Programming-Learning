@@ -1,0 +1,227 @@
+# 拓展篇 第8章 FFT 与 NTT  (拓8)
+# source: 拓展篇 第08章 FFT 与 NTT.pdf
+
+=== page 1 ===
+1拓展篇  第 8 章  FFT 与  NTT
+第 8 章 	FFT	 与 	NTT
+Fast polynomial multiplication Luogu (verified) 9 problems C++17 · all programs run
+8.1 快速傅里叶变换 8.2 快速数论变换与卷积
+8.3 课后习题与实验
+8.1 快速傅里叶变换
+Evaluate,	multiply,	interpolate;	the	butterfly.
+coefficients values at ωᵏ product values
+FFT multiply
+inverse FFT: back to coefficients
+IDEA Multiplying two polynomials of degree
+n directly is O(n²). But a polynomial of
+degree < N is fixed by its values at N
+points, and values	multiply	point	by
+point. So: evaluate both at N special
+points, multiply the values, and turn the
+products back into coefficients. FFT ( 快
+速傅里叶变换 ) does the evaluation and
+its inverse in O(N log N).
+KEY POINT The special points are the N-th roots of
+unity ωk. Splitting A(x) = Aeven(x²) +
+x·Aodd(x²) halves the problem, because
+the squares of the N roots are the N/2
+roots, each twice. The inverse transform
+is the same algorithm with ω⁻¹, divided
+by N.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 学 拓 展
+Multiply polynomials in O(n log n) by evaluating at roots of unity, multiplying values and transforming
+back; NTT does the same exactly modulo a prime, for big numbers and every convolution.
+
+=== page 2 ===
+2拓展篇  第 8 章  FFT 与  NTT
+fft.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 typedef complex<double> cd;
+5 const double PI = acos(-1.0);
+6  
+7 void fft(vector<cd> &a, bool invert) {
+8     int n = a.size();
+9     for (int i = 1, j = 0; i < n; i++) {               // bit-reversal order: leaves of the recursion
+10         int bit = n >> 1;
+11         for (; j & bit; bit >>= 1) j ^= bit;
+12         j ^= bit;
+13         if (i < j) swap(a[i], a[j]);
+14     }
+15     for (int len = 2; len <= n; len <<= 1) {           // combine halves of size len / 2
+16         double ang = 2 * PI / len * (invert ? -1 : 1);
+17         cd wl(cos(ang), sin(ang));
+18         for (int i = 0; i < n; i += len) {
+19             cd w(1);
+20             for (int j = 0; j < len / 2; j++) {
+21                 cd u = a[i + j], v = a[i + j + len / 2] * w;   // butterfly
+22                 a[i + j] = u + v;
+23                 a[i + j + len / 2] = u - v;
+24                 w *= wl;
+25             }
+26         }
+27     }
+28     if (invert) for (int i = 0; i < n; i++) a[i] /= n;
+29 }
+30  
+31 int main() {
+32     int n, m;
+33     cin >> n >> m;                                     // degrees
+34     int N = 1;
+35     while (N < n + m + 1) N <<= 1;                     // room for the product, power of two
+36     vector<cd> a(N), b(N);
+37     for (int i = 0; i <= n; i++) { int x; cin >> x; a[i] = x; }
+38     for (int i = 0; i <= m; i++) { int x; cin >> x; b[i] = x; }
+39     fft(a, false); fft(b, false);
+40     for (int i = 0; i < N; i++) a[i] *= b[i];          // multiply the values
+41     fft(a, true);
+42     for (int i = 0; i <= n + m; i++) cout << llround(a[i].real()) << " ";   // round off errors
+43     cout << "\n";
+44     return 0;
+45 }
+INPUT
+1 2
+1 2
+1 2 1
+OUTPUT
+1 4 5 2
+KEY POINT (1 + 2x)(1 + 2x + x²) = 1 + 4x + 5x² + 2x³ (P3803). The size N must be a power of two of at least n + m + 1,
+and results are rounded with llround because doubles carry small errors.
+TRAP Floating-point FFT loses precision when coefficients or N are large (products near 10¹⁵ and beyond). For
+exact answers modulo a prime, use NTT (8.2); for an arbitrary modulus, split numbers into 15-bit halves
+or use three NTT primes (P4245).
+
+=== page 3 ===
+3拓展篇  第 8 章  FFT 与  NTT
+8.2 快速数论变换与卷积
+NTT	mod	998244353;	big-number	multiplication.
+IDEA NTT ( 快速数论变换 ) is FFT done modulo a prime p = c·2k + 1, such as 998244353 = 119·2²³ + 1. A
+primitive root g (3 for 998244353) gives g(p−1)/N, which behaves exactly like an N-th root of unity mod p.
+Same code, integer arithmetic, no rounding errors.
+KEY POINT Convolution is everywhere: big-number multiplication (digits as coefficients, P1919), counting pairs with
+a given sum, matching with wildcards, and the "force" sums of P3338 after reversing one array. Whenever
+ck = Σi+j=k aibj appears, think convolution.
+
+=== page 4 ===
+4拓展篇  第 8 章  FFT 与  NTT
+big_multiply.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long MOD = 998244353, G = 3;
+5  
+6 long long power(long long a, long long b) {
+7     long long r = 1;
+8     for (a %= MOD; b > 0; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD;
+9     return r;
+10 }
+11  
+12 void ntt(vector<long long> &a, bool invert) {
+13     int n = a.size();
+14     for (int i = 1, j = 0; i < n; i++) {
+15         int bit = n >> 1;
+16         for (; j & bit; bit >>= 1) j ^= bit;
+17         j ^= bit;
+18         if (i < j) swap(a[i], a[j]);
+19     }
+20     for (int len = 2; len <= n; len <<= 1) {
+21         long long wl = power(G, (MOD - 1) / len);      // a len-th root of unity mod p
+22         if (invert) wl = power(wl, MOD - 2);
+23         for (int i = 0; i < n; i += len) {
+24             long long w = 1;
+25             for (int j = 0; j < len / 2; j++) {
+26                 long long u = a[i + j], v = a[i + j + len / 2] * w % MOD;
+27                 a[i + j] = (u + v) % MOD;
+28                 a[i + j + len / 2] = (u - v + MOD) % MOD;
+29                 w = w * wl % MOD;
+30             }
+31         }
+32     }
+33     if (invert) {
+34         long long inv = power(n, MOD - 2);
+35         for (int i = 0; i < n; i++) a[i] = a[i] * inv % MOD;
+36     }
+37 }
+38  
+39 int main() {
+40     string s, t;
+41     cin >> s >> t;
+42     int N = 1;
+43     while (N < int(s.size() + t.size())) N <<= 1;
+44     vector<long long> a(N, 0), b(N, 0);
+45     for (int i = 0; i < int(s.size()); i++) a[i] = s[s.size() - 1 - i] - '0';   // lowest digit first
+46     for (int i = 0; i < int(t.size()); i++) b[i] = t[t.size() - 1 - i] - '0';
+47     ntt(a, false); ntt(b, false);
+48     for (int i = 0; i < N; i++) a[i] = a[i] * b[i] % MOD;
+49     ntt(a, true);
+50     for (int i = 0; i + 1 < N; i++) { a[i + 1] += a[i] / 10; a[i] %= 10; }       // carries
+51     int top = N - 1;
+52     while (top > 0 && a[top] == 0) top--;
+53     for (int i = top; i >= 0; i--) cout << a[i];
+54     cout << "\n";
+55     return 0;
+56 }
+INPUT 1
+12
+34
+OUTPUT 1
+408
+INPUT 2 OUTPUT 2
+1219326311370217952237463801111263526900
+
+=== page 5 ===
+5拓展篇  第 8 章  FFT 与  NTT
+12345678901234567890
+98765432109876543210
+IDEA Each digit position of the product is a convolution of digits, at most 9·9·(length) ≈ 8·10⁷ for 10⁶ digits,
+safely below the prime, so the result is exact. Carries are handled once at the end.
+KEY POINT The second test is checked against Python's exact big-integer product. Reverse the strings so index i is the
+10i digit, and strip leading zeros (but keep one for a product of 0).
+Further polynomial tools Idea
+divide-and-conquer FFT ( 分治  FFT, P4721) f[i] = Σ f[j]g[i−j] with f on both sides: CDQ, each half convolved once
+polynomial inverse (P4238) Newton iteration doubling the precision: B ← B(2 − AB)
+circular / correlation sums (P3723 礼物 ) reverse one array and double the other, read the needed coefficients
+repeated convolution (P3321) fast power of a polynomial, NTT inside
+8.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Values at N points determine a degree < N polynomial; values multiply pointwise.
+2. FFT: split even / odd; roots of unity square to half as many roots; O(N log N).
+3. Iterative: bit-reversal order, then butterflies u ± w·v for len = 2, 4, ….
+4. Inverse: ω⁻¹ and divide by N. N = power of two ≥ n + m + 1.
+5. NTT: p = 998244353, g = 3, root g^((p−1)/len); exact, no rounding.
+6. c_k = Σ_{i+j=k} a_i b_j ⇒ convolution; reverse an array for differences i − j.
+8.3.1 Problems
+Problem Name Section What it tests
+P3803 【模板】多项式乘法
+（ FFT ）
+8.1 FFT or NTT.
+P1919 【模板】高精度乘法  / A*B
+Problem 升级版
+8.2 Digits as coefficients.
+P3338 力 8.2 Reverse one array: a convolution.
+P3723 礼物 8.2 Expand the square; cyclic correlation.
+P4245 【模板】任意模数多项式
+乘法
+8.1 Split into 15-bit halves or three primes.
+P4721 【模板】分治  FFT 8.2 CDQ + NTT.
+P4238 【模板】多项式乘法逆 8.2 Newton iteration.
+P5488 差分与前缀和 8.2 k-fold prefix sums as one convolution.
+P3321 序列统计 8.2 Multiplication as addition of discrete logs; fast power.
+
+=== page 6 ===
+6拓展篇  第 8 章  FFT 与  NTT
+8.3.2 Practice	ladder
+1. Direct. P3803: FFT template (8.1).
+2. One	twist. P1919: big numbers (8.2).
+3. Idea	hidden. P3338: spot a convolution (8.2).
+4. Two	ideas. P3723: correlation trick (8.2).
+5. Stretch. P4238: polynomial inverse (8.2).
+8.3.3 Experiments
+1. Multiply two random polynomials of degree 2000 with fft.cpp and with the O(n²) loop; compare.
+2. Feed fft.cpp coefficients near 10⁶ with degree 10⁶ and look for rounding errors.
+3. Check that power(3, (998244353 − 1) / N) has order exactly N for N = 2, 4, 8.
+4. Time big_multiply.cpp against school multiplication for numbers with 10⁵ digits.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

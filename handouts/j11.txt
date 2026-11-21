@@ -1,0 +1,424 @@
+# 进阶篇 第11章 最小生成树  (进11)
+# source: 进阶篇 第11章 最小生成树.pdf
+
+=== page 1 ===
+1进阶篇  第 11 章  最小生成树
+第 11 章 	 最小生成树
+Minimum spanning trees Luogu #209 11 problems C++17 · all programs run
+11.1 最小生成树及其应用 11.2 次小生成树 ( 选读 )
+11.3 课后习题与实验
+11.1 最小生成树及其应用
+Kruskal,	Prim,	virtual	nodes,	bottleneck	paths.
+2
+2
+3
+3
+4
+1 2
+3 4
+sorted: 2, 2, 3, 3, 4 → take 3 edges, total 7
+IDEA A spanning	tree ( 生成树 ) uses n − 1
+edges to connect all n nodes; a
+minimum	spanning	tree (MST) has
+the smallest total weight. Kruskal: sort
+the edges by weight; take an edge if its
+ends are in different components
+(union-find, 基础篇  第 17 章 ), otherwise
+skip it. Stop after n − 1 edges.
+KEY POINT Cut	property: for any split of the nodes
+into two groups, the lightest edge
+crossing it belongs to some MST.
+Kruskal's next edge is always the
+lightest edge leaving its component, so
+every taken edge is safe. O(m log m) for
+the sort.
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 3 部 分  图 论
+Connect every node as cheaply as possible with Kruskal or Prim, turn per-node costs into a virtual node,
+answer bottleneck queries on the spanning tree, and find the strict second-best tree.
+
+=== page 2 ===
+2进阶篇  第 11 章  最小生成树
+kruskal.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Edge { int u, v, w; };
+5 bool byWeight(const Edge &a, const Edge &b) { return a.w < b.w; }
+6  
+7 int fa[5005];
+8 int find(int x) { return fa[x] == x ? x : fa[x] = find(fa[x]); }   // path compression
+9  
+10 int main() {
+11     int n, m;
+12     cin >> n >> m;
+13     vector<Edge> e(m);
+14     for (int i = 0; i < m; i++) cin >> e[i].u >> e[i].v >> e[i].w;
+15     sort(e.begin(), e.end(), byWeight);
+16     for (int i = 1; i <= n; i++) fa[i] = i;
+17     long long total = 0;
+18     int used = 0;
+19     for (int i = 0; i < m && used < n - 1; i++) {
+20         int a = find(e[i].u), b = find(e[i].v);
+21         if (a == b) continue;                 // same component: would make a cycle
+22         fa[a] = b;
+23         total += e[i].w;
+24         used++;
+25     }
+26     if (used < n - 1) cout << "orz\n";        // graph not connected
+27     else cout << total << "\n";
+28     return 0;
+29 }
+INPUT 1
+4 5
+1 2 2
+1 3 2
+1 4 3
+2 3 4
+3 4 3
+OUTPUT 1
+7
+INPUT 2
+3 1
+1 2 5
+OUTPUT 2
+orz
+IDEA Check connectivity: if fewer than n − 1 edges were taken, there is no spanning tree (P3366 prints orz).
+Stopping at n − 1 edges saves time but is not needed for correctness.
+KEY POINT Kruskal also builds a minimum spanning forest: stop early when exactly k components remain, and the
+remaining components are the best k clusters (P1195 口袋的天空 ). The k − 1 heaviest MST edges cut are
+the "largest gaps" between clusters.
+
+=== page 3 ===
+3进阶篇  第 11 章  最小生成树
+prim.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long INF = 1e18;
+5 long long w[505][505], d[505];
+6 bool in[505];
+7  
+8 int main() {
+9     int n, m;
+10     cin >> n >> m;
+11     for (int i = 1; i <= n; i++) for (int j = 1; j <= n; j++) w[i][j] = INF;
+12     for (int i = 0; i < m; i++) {
+13         int u, v;
+14         long long c;
+15         cin >> u >> v >> c;
+16         w[u][v] = w[v][u] = min(w[u][v], c);
+17     }
+18     for (int i = 1; i <= n; i++) d[i] = INF;
+19     d[1] = 0;
+20     long long total = 0;
+21     for (int step = 0; step < n; step++) {
+22         int u = 0;
+23         for (int i = 1; i <= n; i++)          // closest node not yet in the tree
+24             if (!in[i] && (u == 0 || d[i] < d[u])) u = i;
+25         if (d[u] == INF) { cout << "orz\n"; return 0; }
+26         in[u] = true;
+27         total += d[u];
+28         for (int v = 1; v <= n; v++)          // d[v] = cheapest edge from the tree to v
+29             if (!in[v] && w[u][v] < d[v]) d[v] = w[u][v];
+30     }
+31     cout << total << "\n";
+32     return 0;
+33 }
+INPUT
+4 5
+1 2 2
+1 3 2
+1 4 3
+2 3 4
+3 4 3
+OUTPUT
+7
+IDEA Prim grows one tree from node 1, always adding the node with the cheapest edge into the tree, exactly like
+Dijkstra but with d[v] = one	edge weight instead of a path length.
+KEY POINT The plain O(n²) version is best for dense graphs given as a matrix (m ≈ n²), where sorting all edges for
+Kruskal would cost more. With a heap it is O(m log n), but on sparse graphs Kruskal is simpler.
+
+=== page 4 ===
+4进阶篇  第 11 章  最小生成树
+11.1.1 Two	common	tricks
+watering_hole.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 struct Edge { int u, v, w; };
+5 bool byWeight(const Edge &a, const Edge &b) { return a.w < b.w; }
+6 int fa[305];
+7 int find(int x) { return fa[x] == x ? x : fa[x] = find(fa[x]); }
+8  
+9 int main() {
+10     int n;
+11     cin >> n;
+12     vector<Edge> e;
+13     for (int i = 1; i <= n; i++) {
+14         int c;
+15         cin >> c;
+16         e.push_back(Edge{0, i, c});           // dig a well at i = edge to node 0
+17     }
+18     for (int i = 1; i <= n; i++)
+19         for (int j = 1; j <= n; j++) {
+20             int c;
+21             cin >> c;
+22             if (i < j) e.push_back(Edge{i, j, c});   // pipe between i and j
+23         }
+24     sort(e.begin(), e.end(), byWeight);
+25     for (int i = 0; i <= n; i++) fa[i] = i;
+26     long long total = 0;
+27     for (int i = 0; i < int(e.size()); i++) {
+28         int a = find(e[i].u), b = find(e[i].v);
+29         if (a != b) { fa[a] = b; total += e[i].w; }
+30     }
+31     cout << total << "\n";
+32     return 0;
+33 }
+INPUT
+4
+5
+4
+4
+3
+0 2 2 2
+2 0 3 3
+2 3 0 4
+2 3 4 0
+OUTPUT
+9
+IDEA Virtual	node ( 超级源点 ): a cost paid at a node by itself (dig a well, build a power station) becomes an
+edge from a new node 0. Every field must be connected to water, i.e. to node 0, so the answer is an MST on
+n + 1 nodes (P1550, CF1245D).
+KEY POINT Similar: buying items where a coupon makes item j cheaper after item i (P1194 买礼物 ) is an MST with a
+virtual node whose edges cost the full price.
+
+=== page 5 ===
+5进阶篇  第 11 章  最小生成树
+trucks.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 10005, LOG = 15;
+5 struct Edge { int u, v, w; };
+6 bool heavier(const Edge &a, const Edge &b) { return a.w > b.w; }
+7 int fa[N], dep[N], up[N][LOG], low[N][LOG], comp[N];
+8 vector<pair<int, int>> g[N];
+9 int find(int x) { return fa[x] == x ? x : fa[x] = find(fa[x]); }
+10  
+11 void dfs(int u, int p, int w, int c) {
+12     comp[u] = c;
+13     up[u][0] = p; low[u][0] = w;               // low = smallest edge on the jump
+14     for (int k = 1; k < LOG; k++) {
+15         up[u][k] = up[up[u][k - 1]][k - 1];
+16         low[u][k] = min(low[u][k - 1], low[up[u][k - 1]][k - 1]);
+17     }
+18     for (int i = 0; i < int(g[u].size()); i++) {
+19         int v = g[u][i].first;
+20         if (v != p) { dep[v] = dep[u] + 1; dfs(v, u, g[u][i].second, c); }
+21     }
+22 }
+23  
+24 int query(int u, int v) {                      // smallest edge on the tree path u..v
+25     int r = INT_MAX;
+26     if (dep[u] < dep[v]) swap(u, v);
+27     for (int k = LOG - 1; k >= 0; k--)
+28         if (dep[u] - (1 << k) >= dep[v]) { r = min(r, low[u][k]); u = up[u][k]; }
+29     if (u == v) return r;
+30     for (int k = LOG - 1; k >= 0; k--)
+31         if (up[u][k] != up[v][k]) { r = min(r, min(low[u][k], low[v][k])); u = up[u][k]; v = up[v][k]; }
+32     return min(r, min(low[u][0], low[v][0]));
+33 }
+34  
+35 int main() {
+36     int n, m;
+37     cin >> n >> m;
+38     vector<Edge> e(m);
+39     for (int i = 0; i < m; i++) cin >> e[i].u >> e[i].v >> e[i].w;
+40     sort(e.begin(), e.end(), heavier);         // MAXIMUM spanning forest
+41     for (int i = 1; i <= n; i++) fa[i] = i;
+42     for (int i = 0; i < m; i++) {
+43         int a = find(e[i].u), b = find(e[i].v);
+44         if (a == b) continue;
+45         fa[a] = b;
+46         g[e[i].u].push_back(make_pair(e[i].v, e[i].w));
+47         g[e[i].v].push_back(make_pair(e[i].u, e[i].w));
+48     }
+49     for (int i = 0; i < LOG; i++) low[0][i] = INT_MAX;
+50     for (int i = 1; i <= n; i++) if (!comp[i]) dfs(i, 0, INT_MAX, i);   // each tree
+51     int q;
+52     cin >> q;
+53     while (q--) {
+54         int x, y;
+55         cin >> x >> y;
+56         if (comp[x] != comp[y]) cout << -1 << "\n";
+57         else cout << query(x, y) << "\n";
+58     }
+59     return 0;
+60 }
+INPUT OUTPUT
+
+=== page 6 ===
+6进阶篇  第 11 章  最小生成树
+4 3
+1 2 4
+2 3 3
+3 1 1
+3
+1 3
+1 4
+1 3
+3
+-1
+3
+KEY POINT Bottleneck	paths: the route between x and y whose smallest edge is as large as possible always runs
+along the maximum spanning tree (P1967 货车运输 ). So build that tree once, then answer each query as
+the minimum edge on a tree path, with binary lifting as in 第 9 章  (low[u][k] next to up[u][k]). The
+minimum spanning tree likewise minimises the largest edge (P1396 营救 ).
+TRAP The graph may be disconnected: run the DFS from every unvisited node, keep a component id, and answer
+−1 across components. Node 0 is the sentinel above every root, so its low[] must be +∞.
+11.2 次小生成树 ( 选读 )
+Swap	one	edge;	largest	and	strict	second	largest	on	a	path.
+IDEA The second-best	spanning	tree ( 次小生成树 ): every other spanning tree is reached from the MST by
+adding one non-tree edge (u, v, w) and removing an edge on the tree path u–v. To keep the total as small as
+possible, remove the largest path edge: new total = MST − max + w.
+KEY POINT For the strict second-best (P4180), the result must be larger than the MST. If w equals the path maximum,
+remove the largest path edge that is strictly	smaller than w instead. So each binary-lifting jump stores the
+largest and the strictly second-largest edge.
+
+=== page 7 ===
+7进阶篇  第 11 章  最小生成树
+second_mst.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const int N = 100005, LOG = 17;
+5 struct Edge { int u, v; long long w; bool inTree; };
+6 bool byWeight(const Edge &a, const Edge &b) { return a.w < b.w; }
+7 int fa[N], dep[N], up[N][LOG];
+8 long long m1[N][LOG], m2[N][LOG];               // largest, strictly second largest
+9 vector<pair<int, long long>> g[N];
+10 int find(int x) { return fa[x] == x ? x : fa[x] = find(fa[x]); }
+11  
+12 void add(long long &a, long long &b, long long x) {   // put x into the pair (a > b)
+13     if (x > a) { b = a; a = x; }
+14     else if (x < a && x > b) b = x;
+15 }
+16  
+17 void dfs(int u, int p) {
+18     for (int k = 1; k < LOG; k++) {
+19         int mid = up[u][k - 1];
+20         up[u][k] = up[mid][k - 1];
+21         m1[u][k] = m1[u][k - 1]; m2[u][k] = m2[u][k - 1];
+22         add(m1[u][k], m2[u][k], m1[mid][k - 1]);
+23         add(m1[u][k], m2[u][k], m2[mid][k - 1]);
+24     }
+25     for (int i = 0; i < int(g[u].size()); i++) {
+26         int v = g[u][i].first;
+27         if (v == p) continue;
+28         dep[v] = dep[u] + 1; up[v][0] = u; m1[v][0] = g[u][i].second; m2[v][0] = -1;
+29         dfs(v, u);
+30     }
+31 }
+32  
+33 void pathMax(int u, int v, long long &a, long long &b) {   // top two on path u..v
+34     a = b = -1;
+35     if (dep[u] < dep[v]) swap(u, v);
+36     for (int k = LOG - 1; k >= 0; k--)
+37         if (dep[u] - (1 << k) >= dep[v]) { add(a, b, m1[u][k]); add(a, b, m2[u][k]); u = up[u][k]; }
+38     if (u == v) return;
+39     for (int k = LOG - 1; k >= 0; k--)
+40         if (up[u][k] != up[v][k]) {
+41             add(a, b, m1[u][k]); add(a, b, m2[u][k]); add(a, b, m1[v][k]); add(a, b, m2[v][k]);
+42             u = up[u][k]; v = up[v][k];
+43         }
+44     add(a, b, m1[u][0]); add(a, b, m1[v][0]);
+45 }
+46  
+47 int main() {
+48     int n, m;
+49     cin >> n >> m;
+50     vector<Edge> e(m);
+51     for (int i = 0; i < m; i++) { cin >> e[i].u >> e[i].v >> e[i].w; e[i].inTree = false; }
+52     sort(e.begin(), e.end(), byWeight);
+53     for (int i = 1; i <= n; i++) fa[i] = i;
+54     long long mst = 0;
+55     for (int i = 0; i < m; i++) {
+56         int a = find(e[i].u), b = find(e[i].v);
+57         if (a == b) continue;
+58         fa[a] = b; mst += e[i].w; e[i].inTree = true;
+59         g[e[i].u].push_back(make_pair(e[i].v, e[i].w));
+60         g[e[i].v].push_back(make_pair(e[i].u, e[i].w));
+61     }
+62     for (int k = 0; k < LOG; k++) m1[1][k] = m2[1][k] = -1;
+
+=== page 8 ===
+8进阶篇  第 11 章  最小生成树
+63     dfs(1, 0);
+64     long long best = LLONG_MAX;
+65     for (int i = 0; i < m; i++) {
+66         if (e[i].inTree || e[i].u == e[i].v) continue;
+67         long long a, b;
+68         pathMax(e[i].u, e[i].v, a, b);
+69         if (e[i].w > a) best = min(best, mst - a + e[i].w);           // swap out the largest
+70         else if (b != -1) best = min(best, mst - b + e[i].w);        // w == a: use the second
+71     }
+72     cout << best << "\n";
+73     return 0;
+74 }
+INPUT
+5 6
+1 2 1
+1 3 2
+2 4 3
+3 5 4
+3 4 3
+4 5 6
+OUTPUT
+11
+KEY POINT MST = 1 + 2 + 3 + 4 = 10. Edge 3–4 (w = 3) closes the cycle 3–1–2–4 whose edges are 2, 1, 3: the largest
+equals w, so swap out the strict second, 2: 10 − 2 + 3 = 11. Edge 4–5 (w = 6) gives 10 − 4 + 6 = 12. Answer
+11.
+TRAP Merging two (largest, second) pairs must keep the second strictly smaller: the add  helper ignores a value
+equal to the current largest. Weights are non-negative here, so −1 can mean "none".
+11.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. MST: n − 1 edges, minimum total; cut property: lightest crossing edge is safe.
+2. Kruskal: sort edges, take if find(u) ≠ find(v); O(m log m).
+3. Fewer than n − 1 edges taken ⇒ not connected.
+4. Prim: grow from one node, d[v] = cheapest single edge into the tree; O(n²) for dense graphs.
+5. Per-node cost ⇒ edge to a virtual node 0.
+6. Best bottleneck path lies on the maximum (or minimum) spanning tree.
+7. Second MST: add a non-tree edge w, remove the largest path edge: MST − max + w.
+8. Strict: if w == max, remove the strict second largest instead.
+11.3.1 Problems
+Problem Name Section What it tests
+P3366 【模板】最小生成树 11.1 Kruskal; orz when disconnected.
+P1194 买礼物 11.1 Full price as a virtual-node edge.
+P4180 严格次小生成树 11.2 Top two edges on tree paths.
+P1396 营救 11.1 Minimise the largest edge: Kruskal until s, t join.
+
+=== page 9 ===
+9进阶篇  第 11 章  最小生成树
+Problem Name Section What it tests
+P1195 口袋的天空 11.1 Stop at k components.
+P1550 Watering Hole G 11.1 Wells as edges to node 0.
+P1967 货车运输 11.1 Maximum spanning tree + path minimum.
+P2700 逐个击破 11.1 Keep heaviest edges that do not join two enemies.
+CF1245D Shichikuji and Power Grid 11.1 Power stations as a virtual node; print the plan.
+P3623 免费道路 11.1 Exactly k cobblestone roads: forced edges first.
+CF1120D Power Tree 11.1 Leaves as a sequence; MST on difference edges.
+11.3.2 Practice	ladder
+1. Direct. P3366: write Kruskal (11.1).
+2. One	twist. P1550: virtual node (11.1).
+3. Idea	hidden. P1195: stop at k parts (11.1).
+4. Two	ideas. P1967: bottleneck queries (11.1).
+5. Stretch. P4180: strict second MST (11.2).
+11.3.3 Experiments
+1. Print each edge Kruskal takes or skips on the sample and compare with the diagram.
+2. Make all weights equal in kruskal.cpp: how many different MSTs can a 4-cycle have?
+3. Time prim.cpp and kruskal.cpp on a complete graph with n = 2000.
+4. Change second_mst.cpp to the non-strict version and find an input where the answers differ.
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

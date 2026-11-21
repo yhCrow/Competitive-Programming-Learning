@@ -1,0 +1,457 @@
+# 进阶篇 第7章 字符串  (进7)
+# source: 进阶篇 第07章 字符串.pdf
+
+=== page 1 ===
+1进阶篇  第 7 章  字符串
+第 7 章 	 字符串
+Strings: KMP and tries Luogu #203 16 problems C++17 · all programs run
+7.1 KMP 算法 7.2 字典树
+7.3 课后习题与实验
+7.1 KMP	 算法
+Borders,	the	nxt	array,	matching	in	O(n	+	m),	periods.
+a
+1
+b
+2
+a
+3
+b
+4
+a
+5
+c
+6
+a
+7
+0 0 1 2 3 0 1
+p
+nxt
+ both a prefix and a suffix of "ababa"
+IDEA Find pattern p (length m) inside text s
+(length n). Brute force restarts after each
+mismatch: O(nm). KMP never moves
+backwards in s. It precomputes, for
+every prefix p[1..i], nxt[i] = the length
+of its longest border ( 前缀函数  / 失配
+数组 ): a proper prefix that is also a
+suffix.
+KEY POINT On a mismatch after j matched
+characters, the last nxt[j] characters of s
+still match the first nxt[j] of p, so set j =
+nxt[j] and try again; no character of s is
+read twice. Total O(n + m).
+深 入 浅 出 程 序 设 计 竞 赛  · 进 阶 篇  · 第 2 部 分  进 阶 数 据 结 构
+Match a pattern without ever stepping back, read periods straight off the border array, and store many
+words, or many binary numbers, in one tree.
+
+=== page 2 ===
+2进阶篇  第 7 章  字符串
+kmp.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int nxt[1000005];
+5  
+6 int main() {
+7     string s, p;
+8     cin >> s >> p;
+9     int n = s.size(), m = p.size();
+10     s = " " + s;                                     // 1-based
+11     p = " " + p;
+12     // nxt: match p against itself
+13     for (int i = 2, j = 0; i <= m; i++) {
+14         while (j > 0 && p[i] != p[j + 1]) j = nxt[j];   // fall back along borders
+15         if (p[i] == p[j + 1]) j++;
+16         nxt[i] = j;
+17     }
+18     // search: j = how many characters of p match the end of s[1..i]
+19     for (int i = 1, j = 0; i <= n; i++) {
+20         while (j > 0 && s[i] != p[j + 1]) j = nxt[j];
+21         if (s[i] == p[j + 1]) j++;
+22         if (j == m) {
+23             cout << i - m + 1 << "\n";               // start position
+24             j = nxt[j];                              // keep going: overlaps allowed
+25         }
+26     }
+27     for (int i = 1; i <= m; i++) cout << nxt[i] << " ";
+28     cout << "\n";
+29     return 0;
+30 }
+INPUT 1
+ABABABC
+ABA
+OUTPUT 1
+1
+3
+0 0 1
+INPUT 2
+ababacababaca
+ababaca
+OUTPUT 2
+1
+7
+0 0 1 2 3 0 1
+KEY POINT Both loops are the same	code: building nxt is "searching p in itself". The while-loop looks slow, but j
+rises by at most 1 per step and every fallback lowers it, so the total work is O(n + m) (P3375).
+TRAP Use p[j + 1] with 1-based strings and remember j = nxt[j] after a full match, otherwise overlapping
+matches (ABA in ABABA) are lost. Compare j with m, not with the string's size after adding the padding
+space.
+C C LANGUAGE · ADDITIONAL INFORMATION
+In C the strings are char arrays read with scanf("%s", s + 1)  so that s[1] is the first letter, and the length is strlen(s
++ 1) . The two loops are identical. C++ string  with a leading space gives the same 1-based layout.
+
+=== page 3 ===
+3进阶篇  第 7 章  字符串
+7.1.1 What	nxt	tells	you	about	periods
+period.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int nxt[1000005];
+5  
+6 int main() {
+7     int n;
+8     string s;
+9     cin >> n >> s;
+10     s = " " + s;
+11     for (int i = 2, j = 0; i <= n; i++) {
+12         while (j > 0 && s[i] != s[j + 1]) j = nxt[j];
+13         if (s[i] == s[j + 1]) j++;
+14         nxt[i] = j;
+15     }
+16     cout << n - nxt[n] << "\n";       // shortest period
+17     return 0;
+18 }
+INPUT 1
+8
+cabcabca
+OUTPUT 1
+3
+INPUT 2
+5
+aaaaa
+OUTPUT 2
+1
+IDEA If a string has a border of length b, shifting it by n − b lines it up with itself, so n	−	b	is	a	period. The
+longest border nxt[n] gives the shortest	period n − nxt[n] (P4391: "cabcabca" is a cut of "cab" repeated).
+KEY POINT The string is an exact repetition of its shortest period only when n % (n − nxt[n]) == 0. Following nxt[n],
+nxt[nxt[n]], … lists every border from longest to shortest.
+
+=== page 4 ===
+4进阶篇  第 7 章  字符串
+word_periods.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int nxt[1000005], shortest[1000005];
+5  
+6 int main() {
+7     int n;
+8     string s;
+9     cin >> n >> s;
+10     s = " " + s;
+11     for (int i = 2, j = 0; i <= n; i++) {
+12         while (j > 0 && s[i] != s[j + 1]) j = nxt[j];
+13         if (s[i] == s[j + 1]) j++;
+14         nxt[i] = j;
+15     }
+16     long long ans = 0;
+17     for (int i = 1; i <= n; i++) {
+18         // shortest non-empty border of s[1..i]: the end of the nxt chain
+19         if (nxt[i] == 0) shortest[i] = 0;
+20         else if (shortest[nxt[i]] > 0) shortest[i] = shortest[nxt[i]];
+21         else shortest[i] = nxt[i];
+22         if (shortest[i] > 0) ans += i - shortest[i];   // longest "period" of this prefix
+23     }
+24     cout << ans << "\n";
+25     return 0;
+26 }
+INPUT
+8
+babababa
+OUTPUT
+24
+IDEA The shortest non-empty border is the last stop on the chain i → nxt[i] → nxt[nxt[i]] → …. Walking the
+chain each time can be slow, so store it: shortest[i] copies shortest[nxt[i]] (P3435).
+KEY POINT Counting borders with extra conditions (P2375 动物园 : borders no longer than half) also walks the nxt
+chain, with a second pointer that never grows past i / 2.
+7.2 字典树
+Tries	for	words	and	prefixes;	the	0-1	trie	for	maximum	xor.
+0
+a
+b
+c
+d
+d
+words: a, b, ad, acd
+green = a word ends here
+IDEA A trie ( 字典树 ) stores a set of strings as
+paths from the root, one edge per letter.
+Words with a common prefix share the
+start of their path. Node numbers are
+handed out as needed: ch[u][c]  is the
+child of u along letter c, 0 if missing.
+KEY POINT Insert and look-up both walk the word
+letter by letter: O(length), independent
+of how many words are stored. Mark the
+node where a word ends, otherwise
+"ad" would wrongly count "a" as present
+when only "ad" was inserted.
+
+=== page 5 ===
+5进阶篇  第 7 章  字符串
+roll_call.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int ch[500005][26], tot = 0;     // node 0 is the root
+5 int state[500005];               // 0 none, 1 a name, 2 a name already called
+6  
+7 void insert(const string &w) {
+8     int u = 0;
+9     for (int i = 0; i < int(w.size()); i++) {
+10         int c = w[i] - 'a';
+11         if (!ch[u][c]) ch[u][c] = ++tot;     // new node
+12         u = ch[u][c];
+13     }
+14     state[u] = 1;                            // a word ends here
+15 }
+16  
+17 int find(const string &w) {                  // node of w, or -1
+18     int u = 0;
+19     for (int i = 0; i < int(w.size()); i++) {
+20         u = ch[u][w[i] - 'a'];
+21         if (!u) return -1;
+22     }
+23     return u;
+24 }
+25  
+26 int main() {
+27     ios::sync_with_stdio(false);
+28     cin.tie(nullptr);
+29     int n, m;
+30     cin >> n;
+31     for (int i = 0; i < n; i++) { string w; cin >> w; insert(w); }
+32     cin >> m;
+33     for (int i = 0; i < m; i++) {
+34         string w;
+35         cin >> w;
+36         int u = find(w);
+37         if (u == -1 || state[u] == 0) cout << "WRONG\n";
+38         else if (state[u] == 1) { cout << "OK\n"; state[u] = 2; }
+39         else cout << "REPEAT\n";
+40     }
+41     return 0;
+42 }
+INPUT
+5
+a
+b
+c
+ad
+acd
+3
+a
+a
+e
+OUTPUT
+OK
+REPEAT
+WRONG
+KEY POINT The array size is the total	number	of	letters inserted plus one, not the number of words. Each node
+keeps whatever the problem needs: an end mark, a counter, a "visited" state (P2580). set<string>  would
+also work here, but the trie also answers prefix questions.
+
+=== page 6 ===
+6进阶篇  第 7 章  字符串
+prefix_chain.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int ch[300005][26], tot = 0, endHere[300005];
+5  
+6 int main() {
+7     int n;
+8     cin >> n;
+9     vector<string> w(n);
+10     for (int i = 0; i < n; i++) {
+11         cin >> w[i];
+12         int u = 0;
+13         for (int k = 0; k < int(w[i].size()); k++) {
+14             int c = w[i][k] - 'a';
+15             if (!ch[u][c]) ch[u][c] = ++tot;
+16             u = ch[u][c];
+17         }
+18         endHere[u]++;
+19     }
+20     int best = 0;
+21     for (int i = 0; i < n; i++) {        // words on the path of w[i] = its prefixes
+22         int u = 0, cnt = 0;
+23         for (int k = 0; k < int(w[i].size()); k++) {
+24             u = ch[u][w[i][k] - 'a'];
+25             cnt += endHere[u];
+26         }
+27         best = max(best, cnt);
+28     }
+29     cout << best << "\n";
+30     return 0;
+31 }
+INPUT
+7
+i
+int
+intern
+internet
+in
+integer
+internal
+OUTPUT
+5
+IDEA Prefix questions are natural on a trie: the words that are prefixes of w are exactly the word-ends on w's
+path. The longest chain "each word is a prefix of the next" ends at some word, and has as many words as
+there are word-ends on its path: i → in → int → intern → internet (P1481).
+KEY POINT Count in the other direction too: store how many words pass	through each node, and "how many words
+start with this prefix" is one look-up (P2922 Secret Message uses both counts).
+
+=== page 7 ===
+7进阶篇  第 7 章  字符串
+7.2.1 The	0-1	trie	for	XOR
+1
+bit 2
+0
+bit 1
+1
+bit 0
+0
+want 0
+1
+want 1
+0
+want 0
+x = 5
+go the opposite way at each bit, from the highest
+IDEA Write numbers in binary from the highest bit
+and insert them into a trie with two letters, 0
+and 1. To find the stored y that makes x	xor	y
+largest, walk from the top bit and take the
+opposite bit whenever that child exists: a 1 in
+a higher bit beats everything below it.
+KEY POINT Insert all numbers, then query each one: the
+largest xor of a pair in O(n · 31). The greedy
+is right because bit k is worth more than bits
+0 … k − 1 together.
+
+=== page 8 ===
+8进阶篇  第 7 章  字符串
+xor_path.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int n, ch[3200005][2], tot = 0;
+5 int dis[100005];                          // xor of edge weights from node 1
+6 vector<pair<int, int>> g[100005];
+7  
+8 void dfs(int u, int parent) {
+9     for (int k = 0; k < int(g[u].size()); k++) {
+10         int v = g[u][k].first, w = g[u][k].second;
+11         if (v != parent) { dis[v] = dis[u] ^ w; dfs(v, u); }
+12     }
+13 }
+14  
+15 void insert(int x) {
+16     int u = 0;
+17     for (int b = 30; b >= 0; b--) {
+18         int c = (x >> b) & 1;
+19         if (!ch[u][c]) ch[u][c] = ++tot;
+20         u = ch[u][c];
+21     }
+22 }
+23  
+24 int best(int x) {                         // max of x ^ y over inserted y
+25     int u = 0, r = 0;
+26     for (int b = 30; b >= 0; b--) {
+27         int c = (x >> b) & 1;
+28         if (ch[u][c ^ 1]) { r |= 1 << b; u = ch[u][c ^ 1]; }   // opposite bit
+29         else u = ch[u][c];
+30     }
+31     return r;
+32 }
+33  
+34 int main() {
+35     cin >> n;
+36     for (int i = 1; i < n; i++) {
+37         int u, v, w;
+38         cin >> u >> v >> w;
+39         g[u].push_back(make_pair(v, w));
+40         g[v].push_back(make_pair(u, w));
+41     }
+42     dfs(1, 0);
+43     int ans = 0;
+44     for (int i = 1; i <= n; i++) insert(dis[i]);
+45     for (int i = 1; i <= n; i++) ans = max(ans, best(dis[i]));
+46     cout << ans << "\n";
+47     return 0;
+48 }
+INPUT
+4
+1 2 3
+2 3 4
+2 4 6
+OUTPUT
+7
+IDEA The xor of the path u → v equals dis[u] xor dis[v], where dis is the xor from the root: the shared part above
+their meeting point cancels (x xor x = 0). So "longest xor path in a tree" becomes "largest xor of two
+numbers" (P4551).
+
+=== page 9 ===
+9进阶篇  第 7 章  字符串
+KEY POINT Size the 0-1 trie as (number of values) × (bits) + 1 nodes. A persistent 0-1 trie answers the same question
+inside a range of the array (P4735, P4592); the k largest pair xors use a heap on top (P5283).
+7.3 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Border: a proper prefix that is also a suffix. nxt[i] = longest border of p[1..i].
+2. Build nxt and search with the same loop: while mismatch, j = nxt[j]; if match, j++.
+3. After a full match set j = nxt[j] to find overlapping matches. O(n + m).
+4. Shortest period = n − nxt[n]; a full repetition only if it divides n.
+5. All borders: nxt[n], nxt[nxt[n]], … down to 0.
+6. Trie: ch[u][c], nodes = total letters + 1; mark word ends.
+7. Prefixes of w = word-ends on w's path; words starting with w = pass count at w's node.
+8. 0-1 trie: insert bits from high to low; for max xor take the opposite bit when possible.
+9. Tree path xor = dis[u] xor dis[v].
+7.3.1 Problems
+Problem Name Section What it tests
+P3375 【模板】 KMP 7.1 All matches plus the border array.
+P4391 Radio Transmission 无线传
+输
+7.1 Shortest period n − nxt[n].
+P1481 魔族密码 7.2 Longest prefix chain: word-ends on a path.
+P2580 于是他错误的点名开始了 7.2 Trie with a called / not-called state.
+P4551 最长异或路径 7.2 Root xor distances, then a 0-1 trie.
+P5283 异或粽子 7.2 k largest range xors: 0-1 trie + heap.
+P1470 最长前缀  Longest Prefix 7.2 Which prefixes can be built from the pieces: trie + DP.
+CF25E Test 7.1 Shortest string containing three strings: overlaps by KMP.
+P3435 OKR-Periods of Words 7.1 Shortest non-empty border, memoised along nxt.
+P2375 动物园 7.1 Borders not longer than half the prefix.
+P2922 Secret Message G 7.2 Pass-through and end counts per node.
+P3879 阅读理解 7.2 Which texts contain each word.
+P4735 最大异或和 7.2 Persistent 0-1 trie over prefix xors.
+P4592 异或 7.2 Persistent 0-1 trie on a tree.
+P3369 【模板】普通平衡树 7.2 Ranks and k-th via a 0-1 trie over values.
+P6824 可乐 7.2 Count x with a[i] xor x ≤ k, walking the 0-1 trie.
+7.3.2 Practice	ladder
+1. Direct. P3375: write KMP (7.1).
+2. One	twist. P2580: write a trie (7.2).
+
+=== page 10 ===
+10进阶篇  第 7 章  字符串
+3. Idea	hidden. P4391: periods from nxt (7.1).
+4. Two	ideas. P4551: the 0-1 trie (7.2).
+5. Stretch. P3435: walking the nxt chain (7.1).
+7.3.3 Experiments
+1. Print j after every character in the search loop of kmp.cpp and watch it fall back.
+2. Count the steps of brute-force matching and of KMP on s = a…ab (10⁵ letters), p = a…ab (10³).
+3. Insert 10⁵ random words into the trie and print tot: compare it with the total length.
+4. In xor_path.cpp take the same bit instead of the opposite one: what does best() find now?
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.

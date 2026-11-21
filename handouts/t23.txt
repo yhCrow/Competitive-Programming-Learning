@@ -1,0 +1,290 @@
+# 拓展篇 第23章 计数补充  (拓23)
+# source: 拓展篇 第23章 计数补充.pdf
+
+=== page 1 ===
+1拓展篇  第 23 章  计数补充
+第 23 章 	 计数补充
+Interpolation, Prüfer, Burnside, matrix-tree Luogu (verified) 6 problems C++17 · all programs run
+23.1 拉格朗日插值 23.2 Prüfer 序列
+23.3 Burnside 与  Pólya 23.4 矩阵树定理
+23.5 课后习题与实验
+23.1 拉格朗日插值
+Polynomial	through	n	points;	evaluate	at	k.
+IDEA Lagrange	interpolation ( 拉格朗日插值 ): the unique polynomial of degree < n through n points (xi, yi) is
+f(x) = Σi yi · Πj≠i (x − xj)/(xi − xj). Each term is 1 at xi and 0 at every other xj. Evaluating at one k costs
+O(n²), or O(n) when the xi are 0, 1, …, n − 1 (prefix and suffix products).
+KEY POINT Use it when an answer is known to be a polynomial in k of small degree (sums of powers 1d + … + kd
+have degree d + 1): compute it for d + 2 small k by brute force, then interpolate to a huge k.
+竞 赛 拓 展 专 题  · 拓 展 篇  · 数 学 拓 展
+Recover a polynomial from points, count labelled trees with Prüfer sequences, count colourings up to
+symmetry with Burnside and Pólya, and count spanning trees with a determinant.
+
+=== page 2 ===
+2拓展篇  第 23 章  计数补充
+lagrange.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long MOD = 998244353;
+5 long long power(long long a, long long b) {
+6     long long r = 1;
+7     for (a = (a % MOD + MOD) % MOD; b > 0; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD;
+8     return r;
+9 }
+10  
+11 int main() {
+12     int n;
+13     long long k;
+14     cin >> n >> k;
+15     vector<long long> x(n), y(n);
+16     for (int i = 0; i < n; i++) cin >> x[i] >> y[i];
+17     long long ans = 0;
+18     for (int i = 0; i < n; i++) {
+19         long long num = y[i] % MOD, den = 1;
+20         for (int j = 0; j < n; j++) {
+21             if (j == i) continue;
+22             num = num * ((k - x[j]) % MOD + MOD) % MOD;
+23             den = den * ((x[i] - x[j]) % MOD + MOD) % MOD;
+24         }
+25         ans = (ans + num * power(den, MOD - 2)) % MOD;      // one division per term
+26     }
+27     cout << ans << "\n";
+28     return 0;
+29 }
+INPUT
+4 10
+1 4
+2 9
+3 20
+5 104
+OUTPUT
+1189
+IDEA Four points of a cubic, evaluated at k = 10 modulo 998244353 (P4781). Checked with exact fractions in
+Python.
+KEY POINT Keep numerator and denominator separately and invert once per term: n inverses in total instead of n².
+23.2 Prüfer	 序列
+Smallest-leaf	encoding;	Cayley	n^(n−2).
+IDEA A Prüfer	sequence (Prüfer 序列 ) encodes a labelled tree on n vertices as a list of n − 2 labels: repeatedly
+remove the smallest	leaf and write down its neighbour. Decoding reverses it. The map is a bijection, so
+there are exactly nn−2 labelled trees (Cayley's	formula).
+KEY POINT A vertex appears in the sequence exactly (degree − 1) times. So the number of trees with given degrees d1,
+…, dn is (n − 2)! / Π (di − 1)! ( 树的计数  P2290). Both directions run in O(n) with a moving pointer to the
+smallest leaf (P6086).
+
+=== page 3 ===
+3拓展篇  第 23 章  计数补充
+prufer.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 int main() {
+5     int n;
+6     cin >> n;
+7     vector<int> fa(n + 1, 0), deg(n + 1, 0);
+8     for (int i = 1; i < n; i++) { int a, b; cin >> a >> b; fa[a] = b; }    // edges given child -> 
+parent (root n)
+9     for (int i = 1; i < n; i++) deg[fa[i]]++;                              // number of children
+10     vector<int> code;
+11     int ptr = 1;
+12     while (deg[ptr] != 0) ptr++;                    // smallest leaf
+13     int leaf = ptr;
+14     for (int i = 0; i < n - 2; i++) {
+15         int f = fa[leaf];
+16         code.push_back(f);
+17         if (--deg[f] == 0 && f < ptr) leaf = f;     // the parent became a smaller leaf: use it now
+18         else { ptr++; while (deg[ptr] != 0) ptr++; leaf = ptr; }   // next smallest leaf
+19     }
+20     for (int i = 0; i < n - 2; i++) cout << code[i] << " ";
+21     cout << "\n";
+22     return 0;
+23 }
+INPUT
+7
+1 4
+2 4
+3 4
+4 5
+5 6
+6 7
+OUTPUT
+4 4 4 5 6
+IDEA Tree: 1, 2, 3 hang on 4; then 4 – 5 – 6 – 7, rooted at 7. Removing smallest leaves writes 4, 4, 4, 5, 6
+(checked in Python). The trick: when a removed leaf's parent becomes a leaf with a smaller label than the
+pointer, it is the next smallest leaf, so use it immediately.
+KEY POINT With the root fixed at n (never removed), edges can be stored as parent pointers, which makes O(n)
+encoding a single pass.
+23.3 Burnside	 与 	Pólya
+Average	fixed	colourings;	necklaces.
+IDEA Burnside's	lemma (Burnside 引理 ): the number of colourings that are different up to a group of
+symmetries = the average number of colourings fixed by each symmetry. For rotations of an n-bead
+necklace with m colours, rotation by k fixes mgcd(k, n) colourings: answer = (1/n) Σk mgcd(k, n).
+KEY POINT Pólya (Pólya 定理 ) is the same count written with cycles: each symmetry fixes m(number of cycles)
+colourings. Grouping rotations by d = gcd(k, n) gives (1/n) Σd | n φ(n/d) md, fast even for n = 10⁹ (P4980).
+
+=== page 4 ===
+4拓展篇  第 23 章  计数补充
+polya.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long MOD = 1000000007;
+5 long long power(long long a, long long b) {
+6     long long r = 1;
+7     for (a %= MOD; b > 0; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD;
+8     return r;
+9 }
+10 long long phi(long long n) {
+11     long long r = n;
+12     for (long long p = 2; p * p <= n; p++)
+13         if (n % p == 0) { r = r / p * (p - 1); while (n % p == 0) n /= p; }
+14     if (n > 1) r = r / n * (n - 1);
+15     return r;
+16 }
+17  
+18 int main() {
+19     int T;
+20     cin >> T;
+21     while (T--) {
+22         long long n;
+23         cin >> n;                                       // n beads, n colours, rotations only
+24         long long ans = 0;
+25         for (long long d = 1; d * d <= n; d++)
+26             if (n % d == 0) {
+27                 ans = (ans + phi(n / d) % MOD * power(n, d)) % MOD;          // gcd = d: phi(n/d) 
+rotations
+28                 if (d * d != n) ans = (ans + phi(d) % MOD * power(n, n / d)) % MOD;
+29             }
+30         cout << ans * power(n, MOD - 2) % MOD << "\n";  // divide by the n rotations
+31     }
+32     return 0;
+33 }
+INPUT
+4
+1
+2
+3
+6
+OUTPUT
+1
+3
+11
+7826
+IDEA Checked against the direct Burnside sum over all n rotations in Python. With reflections too (bracelets),
+add the n reflections' fixed counts and divide by 2n.
+KEY POINT Dividing by n modulo a prime needs n not divisible by the prime; here n ≤ 10⁹ < MOD.
+23.4 矩阵树定理
+Laplacian	minor	determinant.
+IDEA The matrix-tree	theorem ( 矩阵树定理 , Kirchhoff): build the Laplacian L = D − A (degrees on the
+diagonal, −1 per edge off the diagonal, multi-edges counted). The number of spanning trees equals the
+determinant of L with any one row and the same column removed. Weighted edges give the sum over
+spanning trees of the product of weights.
+
+=== page 5 ===
+5拓展篇  第 23 章  计数补充
+KEY POINT The determinant is Gaussian elimination ( 进阶篇  第 22 章 ), mod a prime with inverses or mod anything
+with row-Euclid. Directed versions count arborescences (out-trees / in-trees) using in- or out-degrees
+(P6178).
+matrix_tree.cpp
+1 #include <bits/stdc++.h>
+2 using namespace std;
+3  
+4 const long long MOD = 1000000007;
+5 long long power(long long a, long long b) {
+6     long long r = 1;
+7     for (a %= MOD; b > 0; b >>= 1, a = a * a % MOD) if (b & 1) r = r * a % MOD;
+8     return r;
+9 }
+10  
+11 int main() {
+12     int n, m;
+13     cin >> n >> m;
+14     vector<vector<long long>> L(n, vector<long long>(n, 0));
+15     for (int i = 0; i < m; i++) {
+16         int u, v; cin >> u >> v; u--; v--;
+17         L[u][u]++; L[v][v]++;                         // degrees
+18         L[u][v] = (L[u][v] - 1 + MOD) % MOD;          // -1 per edge
+19         L[v][u] = (L[v][u] - 1 + MOD) % MOD;
+20     }
+21     int k = n - 1;                                    // drop the last row and column
+22     long long det = 1;
+23     for (int c = 0; c < k; c++) {
+24         int piv = -1;
+25         for (int r = c; r < k; r++) if (L[r][c]) { piv = r; break; }
+26         if (piv < 0) { cout << 0 << "\n"; return 0; } // disconnected graph
+27         if (piv != c) { swap(L[piv], L[c]); det = (MOD - det) % MOD; }
+28         det = det * L[c][c] % MOD;
+29         long long inv = power(L[c][c], MOD - 2);
+30         for (int r = c + 1; r < k; r++) {
+31             long long f = L[r][c] * inv % MOD;
+32             for (int j = c; j < k; j++) L[r][j] = ((L[r][j] - f * L[c][j]) % MOD + MOD) % MOD;
+33         }
+34     }
+35     cout << det << "\n";
+36     return 0;
+37 }
+INPUT 1
+5 7
+1 2
+1 3
+2 3
+2 4
+3 4
+4 5
+3 5
+OUTPUT 1
+21
+INPUT 2
+4 6
+1 2
+1 3
+1 4
+2 3
+2 4
+3 4
+OUTPUT 2
+16
+
+=== page 6 ===
+6拓展篇  第 23 章  计数补充
+IDEA The first graph is checked by trying every set of n − 1 edges in Python; the complete graph K4 has 44−2 =
+16 spanning trees (Cayley, 23.2).
+KEY POINT 小  Z 的房间  (P4111) needs the determinant modulo a non-prime: use the row-Euclid elimination from 进
+阶篇  第 22 章  instead of inverses.
+23.5 课后习题与实验
+The	Luogu	problems	for	this	chapter,	a	ladder	through	them,	and	experiments	to	try	yourself.
+Key	points	to	memorise
+1. Lagrange: f(k) = Σ yᵢ Π (k − xⱼ)/(xᵢ − xⱼ); O(n²), one inverse per term.
+2. Polynomial of degree d: compute d + 1 values, interpolate to any k.
+3. Prüfer: remove smallest leaf, write its neighbour; vertex appears deg − 1 times.
+4. Cayley: n^(n−2) labelled trees; given degrees: (n−2)!/Π(dᵢ − 1)!.
+5. Burnside: average of fixed colourings; rotation by k fixes m^gcd(k, n).
+6. Pólya: (1/n) Σ_{d|n} φ(n/d) m^d for necklaces.
+7. Matrix-tree: det of the Laplacian minus one row and column.
+23.5.1 Problems
+Problem Name Section What it tests
+P4781 【模板】拉格朗日插值 23.1 Evaluate at k mod p.
+P6086 【模板】 Prüfer （ Prufer ）
+序列
+23.2 Encode and decode in O(n).
+P2290 树的计数 23.2 Trees with given degrees.
+P4980 【模板】 Pólya （ Polya ）定
+理
+23.3 Necklaces under rotation.
+P6178 【模板】 Matrix-Tree 定理 23.4 Weighted, directed variants.
+P4111 小  Z 的房间 23.4 Determinant mod a non-prime.
+23.5.2 Practice	ladder
+1. Direct. P4781: interpolation (23.1).
+2. One	twist. P2290: Prüfer counting (23.2).
+3. Idea	hidden. P4980: Pólya (23.3).
+4. Two	ideas. P6178: matrix-tree (23.4).
+5. Stretch. P4111: non-prime determinant (23.4).
+23.5.3 Experiments
+1. Interpolate 1² + … + k² from 4 points and check the formula k(k+1)(2k+1)/6.
+2. Decode a random Prüfer sequence back to a tree and re-encode it.
+3. Count 4-bead necklaces with 2 colours by hand (6) and with polya.cpp's formula.
+4. Check matrix_tree.cpp on cycles: a cycle of n vertices has n spanning trees.
+
+=== page 7 ===
+7拓展篇  第 23 章  计数补充
+Problem summaries are from memory of the problems, checked against their titles only. Programs are demos of each idea, run on the
+inputs shown; they are not submissions.
