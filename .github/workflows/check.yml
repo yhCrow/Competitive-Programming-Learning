@@ -1,0 +1,16 @@
+name: Check the site
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: The page script parses
+        run: node -e "const s=require('fs').readFileSync('index.html','utf8');const m=[...s.matchAll(/<script>([\s\S]*?)<\/script>/g)];if(!m.length)throw new Error('no inline script');m.forEach(x=>new Function(x[1]));console.log('script parses')"
+      - name: The data files are valid JSON
+        run: node -e "['atlas.json','problems.json','manifest.webmanifest'].forEach(f=>JSON.parse(require('fs').readFileSync(f,'utf8')));console.log('json ok')"
+      - name: Every chapter has its text and PDF
+        run: node -e "const fs=require('fs');const A=JSON.parse(fs.readFileSync('atlas.json','utf8'));const miss=A.flatMap(c=>['.flow.json','.pdf'].map(x=>'handouts/'+c.slug+x)).filter(f=>!fs.existsSync(f));if(miss.length){console.error('missing:',miss);process.exit(1)}console.log(A.length+' chapters complete')"

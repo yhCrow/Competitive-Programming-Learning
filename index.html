@@ -8,7 +8,13 @@
 <meta property="og:url" content="https://yhcrow.github.io/Competitive-Programming-Learning/">
 <meta property="og:title" content="Contest Chapter Atlas">
 <meta property="og:description" content="A map of all 101 深入浅出程序设计竞赛 chapters for C++ contest students: prerequisites, key ideas, tested code and 16,000 Luogu and Codeforces problems.">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://yhcrow.github.io/Competitive-Programming-Learning/share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#121417">
 <title>Contest Chapter Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,12 +43,12 @@ img { max-width: 100%; }
   --line-strong: rgba(17, 24, 39, 0.18);
   --fg: #151a22;
   --fg-2: #4a5362;
-  --muted: #6b7382;
+  --muted: #5d6573;
   --accent: #2f5fd0;
-  --lv-b: #1f8a4c;
+  --lv-b: #1a7a43;
   --lv-j: #2f5fd0;
   --lv-t: #9b3fb5;
-  --lv-n: #c85d0b;
+  --lv-n: #ad4f09;
   --trap: #c2372f;
   --code-bg: #f8f9fb;
   --k-kw: #8a3fb0;
@@ -417,7 +423,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 
 
 /* visualizer colour grammar, shared by every visualizer */
-:root { --v-cur: #4f5fd6; --v-cmp: #c98a00; --v-done: #2b8a57; --v-bad: #d0453b; }
+:root { --v-cur: #4f5fd6; --v-cmp: #c98a00; --v-done: #237a4b; --v-bad: #d0453b; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --v-cur: #8f9bff; --v-cmp: #f0b429; --v-done: #4cc38a; --v-bad: #ff7b72; } }
 :root[data-theme="dark"] { --v-cur: #8f9bff; --v-cmp: #f0b429; --v-done: #4cc38a; --v-bad: #ff7b72; }
 .vkey { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
@@ -472,9 +478,9 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 .readbar { position: fixed; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + var(--bar-h, 57px)); height: 2px; background: var(--accent); transform-origin: left; transform: scaleX(0); opacity: 0; z-index: 6; transition: opacity .2s ease; }
 
 /* themes picked by hand: light, dark, warm paper (the default follows the system) */
-:root[data-skin="light"] { --bg: #f6f7f9; --surface: #ffffff; --raised: #eef0f3; --line: rgba(17, 24, 39, 0.10); --line-strong: rgba(17, 24, 39, 0.18); --fg: #151a22; --fg-2: #4a5362; --muted: #6b7382; --accent: #2f5fd0; --lv-b: #1f8a4c; --lv-j: #2f5fd0; --lv-t: #9b3fb5; --lv-n: #c85d0b; --trap: #c2372f; --code-bg: #f8f9fb; --k-kw: #8a3fb0; --k-ty: #1f6fb0; --k-str: #2c7a3f; --k-num: #b45309; --k-com: #7b8594; --k-pre: #b0306a; --v-cur: #4f5fd6; --v-cmp: #c98a00; --v-done: #2b8a57; --v-bad: #d0453b; color-scheme: light; }
+:root[data-skin="light"] { --bg: #f6f7f9; --surface: #ffffff; --raised: #eef0f3; --line: rgba(17, 24, 39, 0.10); --line-strong: rgba(17, 24, 39, 0.18); --fg: #151a22; --fg-2: #4a5362; --muted: #5d6573; --accent: #2f5fd0; --lv-b: #1a7a43; --lv-j: #2f5fd0; --lv-t: #9b3fb5; --lv-n: #ad4f09; --trap: #c2372f; --code-bg: #f8f9fb; --k-kw: #8a3fb0; --k-ty: #1f6fb0; --k-str: #2c7a3f; --k-num: #b45309; --k-com: #7b8594; --k-pre: #b0306a; --v-cur: #4f5fd6; --v-cmp: #c98a00; --v-done: #237a4b; --v-bad: #d0453b; color-scheme: light; }
 :root[data-skin="dark"] { --bg: #0b0f17; --surface: #111827; --raised: #1b2433; --line: rgba(226, 232, 240, 0.08); --line-strong: rgba(226, 232, 240, 0.16); --fg: #e2e8f0; --fg-2: #b4bfcd; --muted: #8b96a8; --accent: #8ea8ff; --lv-b: #4cc47e; --lv-j: #8ea8ff; --lv-t: #c98be0; --lv-n: #f2994a; --trap: #ff7b72; --code-bg: #0d131d; --k-kw: #d2a8ff; --k-ty: #79c0ff; --k-str: #7ee787; --k-num: #f2b35a; --k-com: #7d8896; --k-pre: #ff8fc0; --v-cur: #8f9bff; --v-cmp: #f0b429; --v-done: #4cc38a; --v-bad: #ff7b72; color-scheme: dark; }
-:root[data-skin="paper"] { --bg: #f4efe4; --surface: #fbf8f1; --raised: #ece5d6; --line: rgba(60, 45, 20, 0.12); --line-strong: rgba(60, 45, 20, 0.22); --fg: #2b2418; --fg-2: #574c3a; --muted: #7d705b; --accent: #9a5b13; --lv-b: #3f7d3a; --lv-j: #2f5f9a; --lv-t: #8a3f8f; --lv-n: #b5520f; --trap: #b23b2e; --code-bg: #f6f1e6; --k-kw: #7d3f93; --k-ty: #2a5d8f; --k-str: #3f6e2c; --k-num: #9a5b13; --k-com: #8a7c66; --k-pre: #a0375f; --v-cur: #2f5f9a; --v-cmp: #b07a00; --v-done: #3f7d3a; --v-bad: #b23b2e; color-scheme: light; }
+:root[data-skin="paper"] { --bg: #f4efe4; --surface: #fbf8f1; --raised: #ece5d6; --line: rgba(60, 45, 20, 0.12); --line-strong: rgba(60, 45, 20, 0.22); --fg: #2b2418; --fg-2: #574c3a; --muted: #665a46; --accent: #8a5110; --lv-b: #346a30; --lv-j: #2f5f9a; --lv-t: #8a3f8f; --lv-n: #9c460c; --trap: #b23b2e; --code-bg: #f6f1e6; --k-kw: #7d3f93; --k-ty: #2a5d8f; --k-str: #3f6e2c; --k-num: #9a5b13; --k-com: #8a7c66; --k-pre: #a0375f; --v-cur: #2f5f9a; --v-cmp: #b07a00; --v-done: #346a30; --v-bad: #b23b2e; color-scheme: light; }
 @media (max-width: 560px) { .mrow { grid-template-columns: 140px minmax(0, 1fr) 40px; } .prefs { order: 2; } }
 @media (prefers-reduced-motion: reduce) { .sk, .mbar i { animation: none; } }
 
@@ -502,10 +508,10 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 @media (max-width: 767px) {
   /* a blurred header would pin the fixed tab bar to itself, so phones get a solid header */
   .bar { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: repeat(4, 1fr); border-radius: 0; gap: 4px;
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-radius: 0; gap: 4px;
     padding: 6px max(8px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-right, 0px));
     background: color-mix(in srgb, var(--surface) 88%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
-  .nav a { min-height: 44px; display: grid; place-items: center; font-size: 13px; }
+  .nav a { min-height: 44px; display: grid; place-items: center; font-size: 12px; padding: 4px 2px; }
   main { padding-bottom: 96px; }
   .toast { bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
 }
@@ -628,6 +634,61 @@ svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
   .node:hover rect.box { transform: none; }
 }
 
+
+/* ---- round 5: practice hub, calculator, goal, self-check, mistakes, sharing ---- */
+.storewarn { margin-top: 12px; padding: 10px 16px; border: 1px solid var(--trap); border-radius: var(--r-card); color: var(--fg); background: color-mix(in srgb, var(--trap) 10%, var(--surface)); }
+.practice-page { display: grid; gap: 24px; max-width: 960px; }
+.ptitle { font-family: var(--f-cjk); font-size: clamp(26px, 3.4vw, 34px); margin: 0; }
+.practice-page .lead { color: var(--fg-2); margin: 0; max-width: 64ch; line-height: 1.7; }
+.phub { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.hubcard { text-decoration: none; color: var(--fg); transition: border-color .15s var(--ease), transform .2s var(--ease); }
+.hubcard p:last-child { margin: 0; color: var(--fg-2); }
+.hubcard:hover { border-color: var(--line-strong); }
+@media (hover: hover) and (pointer: fine) { .hubcard:hover { transform: translateY(-2px); } }
+.dash2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.dash2:empty { display: none; }
+.daily .nexttitle { display: block; }
+.calc { margin-top: 16px; }
+.calcin { display: flex; gap: 12px 24px; flex-wrap: wrap; margin-bottom: 12px; }
+.calcin input { width: 110px; height: 32px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--surface); padding: 0 8px; font-family: var(--f-mono); }
+.calchead { margin: 0 0 8px; }
+.crows { display: grid; gap: 4px; }
+.crow { display: grid; grid-template-columns: 120px 1fr 80px auto; gap: 12px; align-items: center; padding: 4px 8px; border-radius: var(--r-ctl); font-size: 14.5px; }
+.crow.fits { background: color-mix(in srgb, var(--v-done) 12%, transparent); }
+.crow.tight { background: color-mix(in srgb, var(--v-cmp) 14%, transparent); }
+.crow.slow { color: var(--muted); }
+.crow .verdict { font-weight: 600; }
+.glossq { height: 36px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--surface); padding: 0 12px; max-width: 420px; width: 100%; }
+table.gloss td.cjk { font-size: 16px; white-space: nowrap; }
+.flash { display: grid; gap: 4px; border-left: 4px solid var(--c); }
+.flash .label a { text-decoration: none; color: inherit; }
+.cue { font-size: 18px; line-height: 1.6; margin: 4px 0 8px; color: var(--fg); }
+.checkcard { display: block; border-left: 4px solid var(--accent); }
+.contest .ctime { font-family: var(--f-mono); font-size: clamp(40px, 7vw, 64px); font-weight: 600; margin: 0 0 16px; font-variant-numeric: tabular-nums; }
+.cprobs { display: grid; gap: 10px; padding-left: 0; list-style: none; margin: 0; }
+.cprobs li { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.cprobs a { text-decoration: none; color: var(--fg); }
+.mlist { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 4px; }
+.mlist li { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 6px 10px; background: var(--raised); border-radius: var(--r-ctl); font-size: 14.5px; }
+.madd { display: flex; gap: 8px; }
+.madd input { flex: 1; min-width: 0; height: 32px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--surface); padding: 0 10px; }
+.mybox ul { margin: 0; padding-left: 20px; }
+.sol { font-size: 13px; margin-left: 6px; }
+.goalblock { border-left: 3px solid var(--accent); padding-left: 12px; }
+.node.goal rect.box { stroke: var(--accent); stroke-width: 2.2; }
+.node.goalend rect.box { stroke-width: 3.5; }
+.edge.goaledge { stroke: var(--accent); stroke-width: 2.2; opacity: .85; }
+svg.searching .node:not(.match) { opacity: .22; }
+.node.match rect.box { stroke: var(--accent); stroke-width: 3; }
+.foldtxt { font-family: var(--f-cjk); font-size: 15px; fill: var(--fg-2); }
+.listmap { margin-bottom: 16px; padding: 8px; }
+.listmap svg { display: block; width: 100%; height: auto; max-height: 180px; }
+.listmap rect.hl { stroke: var(--fg); stroke-width: 14; opacity: 1 !important; }
+.sharebanner { border-left: 4px solid var(--accent); margin-bottom: 16px; }
+.shared .frame { margin-top: 16px; overflow: auto; }
+.shared .frame svg { width: 100%; height: auto; min-width: 900px; }
+@media (max-width: 767px) { .crow { grid-template-columns: 96px 1fr 64px; } .crow .links, .crow > a { display: none; } }
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -746,6 +807,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       <a href="#tree" id="nav-tree" data-t="tree" title="Tree · key 2">Tree</a>
       <a href="#list" id="nav-list" data-t="list" title="Chapters · key 3">Chapters</a>
       <a href="#progress" id="nav-progress" data-t="progress" title="Progress · key 4">Progress</a>
+      <a href="#practice" id="nav-practice" data-t="practice" title="Practice · key 5">Practice</a>
     </nav>
     <div class="prefs"><button class="btn sm" id="langBtn" data-lang aria-label="Switch interface language">中</button><button class="btn sm" id="skinBtn" data-skin aria-label="Change theme">Auto</button></div>
     <div class="search" role="search">
@@ -799,12 +861,15 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   let prog = store.get("progress", {});
   let solved = new Set(store.get("solved", []));
   let notes = store.get("notes", {});
-  const statusOf = id => prog[id] || "none";
+  let mistakes = store.get("mistakes", {}), checks = store.get("checks", {}), goal = store.get("goal", null);
+  let shareProg = null; // someone else's progress, shown read-only on #shared
+  const statusOf = id => (shareProg || prog)[id] || "none";
   function setStatus(id, s) {
     const key = id.replace(/\d+$/, ""), full = () => A.filter(c => c.id.startsWith(key)).every(c => statusOf(c.id) === "learned");
     const was = full();
     if (s === "none") delete prog[id]; else prog[id] = s;
     store.set("progress", prog);
+    layout = null; // folded levels depend on status
     if (s === "learned") { justLearned = id; setTimeout(() => (justLearned = null), 700); }
     if (s === "learned") { learnedAt[id] = Date.now(); delete reviews[id]; store.set("learnedAt", learnedAt); store.set("reviews", reviews); }
     logDay();
@@ -834,10 +899,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     return x ? { judge: x[0], p: x[1], label: (x[0] === "luogu" ? "" : "CF ") + x[1].id, url: problemUrl(x[0], x[1].id) } : null;
   }
   function resumeHtml() {
-    const cur = A.find(c => statusOf(c.id) === "learning") || A.find(isReady) || A.find(c => statusOf(c.id) !== "learned");
+    const gp = goalPath(), gnext = gp.length ? byId[gp.find(id => isReady(byId[id])) || gp[0]] : null;
+    const cur = gnext || A.find(c => statusOf(c.id) === "learning") || A.find(isReady) || A.find(c => statusOf(c.id) !== "learned");
     if (!cur) return "";
     const s = nextStar(cur);
-    return `<p class="resume">Continue: <a href="#ch-${cur.slug}"><span class="lv ${lvClass(cur)}">${cur.id}</span> <span class="cjk">${esc(cur.title)}</span></a>${s ? ` → next ★ <a href="${s.url}" target="_blank" rel="noopener" class="mono">${esc(s.label)}</a> <span class="cjk">${esc(s.p.name)}</span>` : ""}</p>`;
+    return `<p class="resume">${gnext ? `Toward ${esc(goal)}: ` : "Continue: "}<a href="#ch-${cur.slug}"><span class="lv ${lvClass(cur)}">${cur.id}</span> <span class="cjk">${esc(cur.title)}</span></a>${s ? ` → next ★ <a href="${s.url}" target="_blank" rel="noopener" class="mono">${esc(s.label)}</a> <span class="cjk">${esc(s.p.name)}</span>` : ""}</p>`;
   }
   // FLIP: draw the full-size map at the clicked box's old size, then let it grow into place.
   function zoomFrom(before, id) {
@@ -875,7 +941,10 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 
   // ---- lane layout: one horizontal lane per level, columns = prerequisite depth ----
   const W = 212, H = 56, COLW = 244, ROWH = 68, LANEW = 28, PADY = 14, LANEGAP = 16, LANEPAD = 14;
-  let layout = null;
+  let layout = null, foldDone = store.get("foldDone", false), readyOnly = false, phoneOpened = false;
+  const FOLDH = 40;
+  const folded = key => foldDone && A.filter(c => c.id.startsWith(key)).every(c => statusOf(c.id) === "learned");
+  const isFoldedId = id => !!(layout && layout.lanes.find(l => l.folded && id.startsWith(l.level.key)));
   function computeLayout() {
     const order = A.map(c => c.id);
     const maxD = Math.max(...A.map(c => depthOf(c.id)));
@@ -887,8 +956,13 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const place = () => {
       let y = PADY;
       lanes = LEVELS.map(l => {
-        const rows = Math.max(1, ...cells[l.key].map(col => col.length));
         const top = y;
+        if (folded(l.key)) { // a finished level shrinks to one bar; its nodes sit on the bar so sort keys still work
+          cells[l.key].forEach((col, d) => col.forEach(id => (xy[id] = { x: LANEW + d * COLW, y: top })));
+          y += FOLDH + LANEGAP;
+          return { level: l, top, height: FOLDH, folded: true };
+        }
+        const rows = Math.max(1, ...cells[l.key].map(col => col.length));
         cells[l.key].forEach((col, d) => col.forEach((id, i) => (xy[id] = { x: LANEW + d * COLW, y: top + LANEPAD + i * ROWH })));
         y += rows * ROWH + LANEPAD * 2 - (ROWH - H) + LANEGAP;
         return { level: l, top, height: y - top - LANEGAP };
@@ -907,7 +981,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
 
   function svgTree() {
+    if (!layout) computeLayout();
     const { xy, width, height, lanes, maxD } = layout;
+    const goalSet = goal && byId[goal] ? new Set([goal, ...pathTo(goal)]) : null;
     const anc = selected ? ancestors(selected) : null, desc = selected ? descendants(selected) : null;
     const hot = selected ? new Set([selected, ...anc, ...desc]) : null;
     let out = "";
@@ -915,25 +991,27 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const list = A.filter(c => c.id.startsWith(l.key));
       const done = list.filter(c => statusOf(c.id) === "learned").length;
       out += `<g style="--c: var(--lv-${l.slug})"><rect class="lane-bg" data-lv="${l.key}" x="0" y="${top}" width="${width}" height="${h}"/>
-        <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/></g>`;
+        <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/>${lanes.find(x => x.level === l).folded ? `<text class="foldtxt" x="${LANEW + 8}" y="${top + 25}">${l.name} · all ${list.length} chapters learned · folded</text>` : ""}</g>`;
     });
     A.forEach(c => c.pre.forEach(p => {
+      if (isFoldedId(c.id) || isFoldedId(p)) return;
       const a = xy[p], b = xy[c.id];
       const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = x1 + Math.max(24, (x2 - x1) / 2);
       const inc = selected && ((c.id === selected && anc.has(p)) || (anc.has(c.id) && anc.has(p)));
       const outg = selected && (p === selected || (desc.has(c.id) && desc.has(p)));
       const on = inc || outg;
       const filtered = levelFilter !== "all" && !(c.id.startsWith(levelFilter) || p.startsWith(levelFilter));
-      out += `<path data-f="${p}" data-t="${c.id}" class="edge${on ? " hot" + (inc ? " in" : " out") : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}"/>`;
+      out += `<path data-f="${p}" data-t="${c.id}" class="edge${on ? " hot" + (inc ? " in" : " out") : ""}${goalSet && goalSet.has(p) && goalSet.has(c.id) ? " goaledge" : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}"/>`;
     }));
     A.forEach(c => {
+      if (isFoldedId(c.id)) return;
       const { x, y } = xy[c.id];
       const st = statusOf(c.id);
-      const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter)) || (topicFilter !== "all" && c.fam !== topicFilter);
+      const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter)) || (topicFilter !== "all" && c.fam !== topicFilter) || (readyOnly && !(isReady(c) || st === "learning"));
       const title = c.title.length > 15 ? c.title.slice(0, 14) + "…" : c.title;
       const en = c.en.length > 30 ? c.en.slice(0, 29) + "…" : c.en;
       const locked = st === "none" && !isReady(c) && c.pre.length > 0;
-      out += `<g class="node ${st}${isReady(c) ? " ready" : ""}${locked ? " locked" : ""}${startPick === c.id ? " startpick" : ""}${selected === c.id ? " sel" : ""}${dim ? " dim" : ""}${justLearned === c.id ? " pop" : ""}" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(c.id + " " + c.title + ", " + c.en + ", " + (st === "none" ? "not started" : st))}" style="--c: var(--${lvClass(c)}); --d:${depthOf(c.id)}" transform="translate(${x},${y})">
+      out += `<g class="node ${st}${isReady(c) ? " ready" : ""}${locked ? " locked" : ""}${startPick === c.id ? " startpick" : ""}${goalSet && goalSet.has(c.id) ? (c.id === goal ? " goal goalend" : " goal") : ""}${selected === c.id ? " sel" : ""}${dim ? " dim" : ""}${justLearned === c.id ? " pop" : ""}" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(c.id + " " + c.title + ", " + c.en + ", " + (st === "none" ? "not started" : st))}" style="--c: var(--${lvClass(c)}); --d:${depthOf(c.id)}" transform="translate(${x},${y})">
         <title>${esc(c.id + " " + c.title + " · " + c.en)}</title>
         <rect class="box" width="${W}" height="${H}" rx="8"/>
         <text class="id" x="12" y="18">${esc(c.id)}</text>
@@ -971,6 +1049,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         <p>Each lane is one level of the course. A line runs from a chapter to the chapters that build on it, left to right. Click a chapter to trace its path.</p>
         <div class="legend"><span><i class="sw locked"></i>Locked</span><span><i class="sw ready"></i>Ready</span><span><i class="sw learning"></i>In progress</span><span><i class="sw learned"></i>Mastered ✓</span><span><i class="ln in"></i>needs</span><span><i class="ln out"></i>unlocks</span></div>
         <p class="hint" style="margin-top:12px">Prerequisites are estimated from the chapter contents</p></div>
+        ${goalHtml()}
         <div class="block"><p class="label">Ready to learn next</p>${ready.length ? pathList(ready) : `<p class="hint">Everything is learned</p>`}</div>`;
     }
     const c = byId[selected];
@@ -981,7 +1060,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       <p class="hint" style="margin:0 0 12px">${esc(c.summary)}</p>
       ${statusButtons(c.id)}
       <div class="btns even"><a class="btn primary" href="#ch-${c.slug}">Open chapter</a><a class="btn" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a></div>
-      <div class="btns"><button class="btn" data-clear>Clear selection</button></div></div>
+      <div class="btns"><button class="btn" data-clear>Clear selection</button><button class="btn" data-goal="${c.id}">${goal === c.id ? "Clear goal" : "Set as my goal"}</button></div></div>
       <div><div class="block"><p class="label">Needs</p><div class="links">${c.pre.length ? c.pre.map(chLink).join("") : '<span class="hint">Nothing, a starting point</span>'}</div></div>
       <div class="block"><p class="label">Unlocks</p><div class="links">${(kids[c.id] || []).length ? kids[c.id].map(chLink).join("") : '<span class="hint">Nothing further in the course</span>'}</div></div>
       </div>
@@ -1096,15 +1175,21 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         <div class="chipset" role="group" aria-label="Show a level">
           <button class="chip" data-level="all" aria-pressed="${levelFilter === "all"}">All levels</button>
           ${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}
-        </div><span class="hint">Drag to move · Ctrl + scroll or pinch to zoom</span></div>
+        </div>
+        <div class="chipset" role="group" aria-label="Map options"><button class="chip" data-readyonly aria-pressed="${readyOnly}">Ready only</button><button class="chip" data-fold aria-pressed="${foldDone}">Fold finished levels</button></div>
+        <span class="hint">Drag to move · Ctrl + scroll or pinch to zoom</span></div>
       <div class="tools">${topicPills()}</div>
       <div class="treeview"><div class="mapwrap"><div class="lanerail" id="laneRail">${railHtml()}</div><div class="mapcol"><div class="steprow" id="stepRow">${stepHtml()}</div><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}</div></div><aside class="side" id="side">${sideCard()}</aside></div>`;
     wireCanvas($("#canvas"));
     wireMinimap();
+    // phones open close enough to read the boxes, on the chapter you're up to; Fit still shows everything
+    if (!phoneOpened && zoomS === null && innerWidth < 768) zoomS = 0.6;
+    phoneOpened = true;
     placeCanvas();
     updateMinimap();
   }
   function refreshTree() {
+    if (!layout) computeLayout();
     const canvas = $("#canvas");
     if (!canvas) return viewTree();
     const sl = canvas.scrollLeft, st = canvas.scrollTop;
@@ -1144,6 +1229,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const table = list => `<div class="tablewrap"><table class="syl"><thead><tr><th>#</th><th>Chapter</th><th>Topic</th><th>Difficulty</th><th>Status</th><th style="text-align:right">Problems</th><th></th></tr></thead><tbody>
       ${list.map(c => `<tr class="${statusOf(c.id)}"><td><span class="lv ${lvClass(c)}">${c.id}</span></td><td><a href="#ch-${c.slug}" class="cjk">${esc(c.title)}</a> <small class="hint">${esc(c.en)}</small></td><td class="fam">${icon(c.fam)}${famOf(c.fam).name}</td><td>${tierPill(c)}</td><td>${statusOf(c.id) === "none" ? (isReady(c) ? "ready" : "—") : statusOf(c.id)}</td><td class="num">${(c.counts.luogu + c.counts.codeforces).toLocaleString("en-US")}</td><td><button class="iconbtn" data-locate="${c.id}" aria-label="Locate ${c.id} in the tree">⌖</button></td></tr>`).join("")}</tbody></table></div>`;
     $("#view").innerHTML = `${stripHtml()}
+      ${listMapHtml()}
       ${queue.length ? `<div class="card queue-card"><p class="label">Study queue · ${queue.length}/5</p><div class="qrow">${queue.map(id => `<a class="qitem" href="#ch-${byId[id].slug}"><span class="lv ${lvClass(byId[id])}">${id}</span> <span class="cjk">${esc(byId[id].title)}</span></a>`).join("")}</div></div>` : ""}
       <div class="tools">${seg("data-lstatus", listStatus, [["all", "All"], ["ready", "Ready"], ["learning", "In progress"], ["learned", "Completed"], ["queue", "Queued"]])}${seg("data-lview", listView, [["grid", "Cards"], ["table", "Table"]])}<span class="hint">${shown.length} of ${A.length} chapters</span></div>
       <div class="tools">${topicPills()}</div>
@@ -1164,8 +1250,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       <div class="block"><p class="label">Learned · ${learned.length}</p><div class="links">${learned.map(c => chLink(c.id)).join("") || '<span class="hint">Nothing marked yet. Open a chapter and press Learned, or select it in the tree</span>'}</div></div>
       <div class="block"><p class="label">Learning · ${learning.length}</p><div class="links">${learning.map(c => chLink(c.id)).join("") || '<span class="hint">None</span>'}</div></div>
       <div class="block"><p class="label">Ready to learn · ${ready.length}</p><div class="links">${ready.map(c => chLink(c.id)).join("")}</div></div>
-      ${(() => { const due = dueReviews(); return due.length ? `<div class="card"><p class="label">Due for review · ${due.length}</p><p style="margin:0 0 12px">You marked these learned a while ago (reviews come at 7, 21 and 60 days). Reread each chapter's key points, then mark the review done.</p>
-        <ol class="path">${due.map(({ c, d }) => `<li><a href="#ch-${c.slug}"><span class="lv ${lvClass(c)}">${c.id}</span> <span class="cjk">${esc(c.title)}</span></a> <span class="hint">${d}-day review</span> <button class="linkish" data-reviewed="${c.id}:${d}">Mark done</button></li>`).join("")}</ol></div>` : ""; })()}
+      ${reviewsHtml()}
       <div class="block"><p class="label">Mastery by topic</p><div class="mastery">${FAMILIES.map(f => { const all = A.filter(c => c.fam === f.key), done = all.filter(c => statusOf(c.id) === "learned").length; return `<div class="mrow"><span class="fam">${icon(f.key)}${f.name}</span><span class="mbar"><i style="width:${(done / all.length) * 100}%"></i></span><span class="n">${done}/${all.length}</span></div>`; }).join("")}</div></div>
       ${nextChapterCard()}
       <div class="block"><p class="label">Study days · last 12 months</p>${heatmapHtml()}</div>
@@ -1173,13 +1258,16 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       <div class="block"><p class="label">Problems ticked · ${solved.size}</p><div class="links">${[...solved].slice(0, 200).map(p => `<span class="pill">${esc(p)}</span>`).join("") || '<span class="hint">None yet</span>'}</div></div>
       <div class="card"><p class="label">Send to CP Coach</p><p style="margin:0 0 12px">Progress here is saved in this browser only. To copy it into the CP Coach mod, paste this to Claude.</p>
         <div class="cc">${esc(cc)}</div><div class="btns"><button class="btn primary" data-copy-cc>Copy</button></div></div>
-      <div class="card"><p class="label">Back up your progress</p><p style="margin:0 0 12px">Copy a backup and keep it somewhere safe, or paste one here to move your progress to another browser or device.</p>
-        <div class="btns" style="margin:0 0 12px"><button class="btn primary" data-backup="copy">Copy backup</button></div>
+      ${allMistakesHtml()}
+      <div class="card"><p class="label">Share your progress</p><p style="margin:0 0 12px">A read-only link: whoever opens it sees your map coloured by what you've learned, and their own progress isn't touched. Or save a picture of it.</p>
+        <div class="cc" id="shareLink">${esc(shareLink())}</div><div class="btns"><button class="btn primary" data-copy-share>Copy link</button><button class="btn" data-card-img>Download progress picture</button></div></div>
+      <div class="card"><p class="label">Back up your progress</p><p style="margin:0 0 12px">Save a backup file and keep it somewhere safe, or load one to move your progress to another browser or device.</p>
+        <div class="btns" style="margin:0 0 12px"><button class="btn primary" data-backup="download">Download backup file</button><label class="btn">Load a backup file<input type="file" id="restoreFile" accept=".json,application/json" hidden></label><button class="btn" data-backup="copy">Copy as text</button></div>
         <textarea class="notes" id="restoreText" style="min-height:80px" placeholder="Paste a backup here" aria-label="Backup to restore"></textarea>
         <div class="btns"><button class="btn" data-backup="restore">Restore from backup</button></div>
         <p class="hint" id="restoreNote" hidden>Press Restore again to replace everything in this browser with the backup.</p></div>
       <div class="block"><p class="label">Mark a whole level learned</p><div class="btns" style="margin-top:0">${LEVELS.map(l => `<button class="btn" data-bulk="${l.key}">${l.name}</button>`).join("")}<button class="btn" data-bulk="reset">Reset everything</button></div>
-        <p class="hint" id="resetNote" hidden>Press Reset everything again to confirm. This clears chapter status, ticked problems and notes in this browser.</p></div>
+        <p class="hint" id="resetNote" hidden>Press Reset everything again to confirm. This clears chapter status, ticked problems, your goal and your mistake notes in this browser.</p></div>
       </div>`;
     $("#view").dataset.cc = cc;
   }
@@ -1244,7 +1332,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     return { html: rows.length ? `<div class="tablewrap"><table><thead><tr><th>Done</th><th>Problem</th><th>Name</th><th>${judge === "luogu" ? "Difficulty" : "Rating"}</th><th class="ptag">Tags</th><th style="text-align:right">${judge === "luogu" ? "Accepted" : "Solved"}</th></tr></thead><tbody>
       ${rows.map(p => `<tr class="${solved.has(p.id) ? "solved" : ""}"><td><label class="tick"><input type="checkbox" id="s-${judge}-${esc(p.id)}" data-solve="${esc(p.id)}" ${solved.has(p.id) ? "checked" : ""} aria-label="Mark ${esc(p.id)} solved"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" pathLength="1"/></svg></label></td>
         <td class="id">${p.star ? '<span class="star" title="Tests exactly this chapter\'s technique">★</span> ' : ""}<a href="${problemUrl(judge, p.id)}" target="_blank" rel="noopener">${judge === "luogu" ? esc(p.id) : "CF " + esc(p.id)}</a></td>
-        <td class="cjk">${esc(p.name)}</td><td>${diff(p)}</td><td class="hint ptag">${esc(p.tags.slice(0, 4).join(", "))}</td><td class="num">${p.ac.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="empty">No problems match these filters</p>`, done, total: list.length, shown: rows.length };
+        <td class="cjk">${esc(p.name)}${judge === "luogu" ? (solved.has(p.id) ? ` <a class="sol" href="${solutionUrl(p.id)}" target="_blank" rel="noopener">题解</a>` : ` <button class="linkish sol" data-stuck="${esc(p.id)}">Stuck?</button>`) : ""}</td><td>${diff(p)}</td><td class="hint ptag">${esc(p.tags.slice(0, 4).join(", "))}</td><td class="num">${p.ac.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="empty">No problems match these filters</p>`, done, total: list.length, shown: rows.length };
   }
 
   let pstate = { judge: "luogu", star: false, hide: false, d: "", q: "" };
@@ -1274,7 +1362,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (tab !== "problems") tab = "concepts"; // old links to the Code, Handout and Notes tabs land on the chapter
     const i = A.indexOf(c), prev = A[i - 1], next = A[i + 1];
     const tabs = [["concepts", "Learn", `${c.boxes.length} ideas · ${c.programs.length} programs`], ["problems", "Problems", c.counts.luogu + c.counts.codeforces]];
-    const body = tab === "problems" ? problemsTab(c) : concepts(c);
+    const body = tab === "problems" ? problemsTab(c) : myMistakesBox(c) + concepts(c);
     const need = pathTo(c.id), star = nextStar(c);
     $("#view").innerHTML = `<div class="chapter" style="--c: var(--${lvClass(c)})">
       <div style="min-width:0">
@@ -1288,7 +1376,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       </div>
       <aside class="aside">
         <div class="block"><p class="label">Status</p>${statusButtons(c.id)}
-          <div class="btns even"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a><a class="btn" href="#tree" data-select="${c.id}">Show in tree</a></div></div>
+          <div class="btns even"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a><a class="btn" href="#tree" data-select="${c.id}">Show in tree</a></div>
+          <div class="btns"><button class="btn" data-goal="${c.id}">${goal === c.id ? "Clear goal" : "Set as my goal"}</button></div></div>
+        ${mistakesHtml(c)}
         ${star ? `<div class="block"><p class="label">Next ★ problem</p><a class="btn" style="width:100%;justify-content:flex-start" href="${star.url}" target="_blank" rel="noopener"><span class="mono">${esc(star.label)}</span><span class="cjk" style="overflow:hidden;text-overflow:ellipsis">${esc(star.p.name)}</span></a></div>` : ""}
         <div class="block"><p class="label">On this page</p><ol class="outline">${outline(c)}</ol></div>
         <div class="block"><p class="label">Needs</p><div class="links">${c.pre.length ? c.pre.map(chLink).join("") : '<span class="hint">Nothing, a starting point</span>'}</div></div>
@@ -1709,6 +1799,122 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       };
     },
   };
+
+  // Union-find with path compression. 基17.
+  VIS["基17"] = {
+    title: "Union-find: union, then find with path compression",
+    frames() {
+      const fa = [...Array(8).keys()], F = [];
+      const snap = (marks, text) => F.push({ rows: [{ label: "parent", vals: [...fa], marks }], text });
+      const walk = x => { const p = [x]; while (fa[p[p.length - 1]] !== p[p.length - 1]) p.push(fa[p[p.length - 1]]); return p; };
+      snap({}, "Every element starts as its own set: parent[i] = i, so each one is a root");
+      const union = (a, b) => { const ra = walk(a).pop(), rb = walk(b).pop(); if (ra === rb) { snap({ [a]: "on", [b]: "on" }, `${a} and ${b} already share root ${ra}: nothing to do`); return; } fa[ra] = rb; snap({ [ra]: "hit" }, `union(${a}, ${b}): their roots are ${ra} and ${rb}, so set parent[${ra}] = ${rb}`); };
+      [[0, 1], [2, 3], [1, 3], [4, 5], [6, 7], [5, 7], [3, 7]].forEach(([a, b]) => union(a, b));
+      const p = walk(0), root = p[p.length - 1];
+      snap(Object.fromEntries(p.map(x => [x, "on"])), `find(0) walks ${p.join(" → ")}: ${p.length - 1} steps to the root ${root}`);
+      p.forEach(x => { if (x !== root) fa[x] = root; });
+      snap(Object.fromEntries(p.slice(0, -1).map(x => [x, "hit"])), `Path compression: every node on that walk now points straight at ${root}, so the next find(0) is one step`);
+      union(0, 6);
+      snap({}, "With path compression (and union by size) each operation is almost O(1): O(α(n)) amortised");
+      return F;
+    },
+    mount: rowsMount,
+  };
+  // Sliding window maximum with a monotonic queue. 进1.
+  VIS["进1"] = {
+    title: "Monotonic queue: the maximum of every window of 3",
+    frames() {
+      const a = [1, 3, -1, -3, 5, 3, 6, 7], k = 3, q = [], out = [], F = [];
+      const snap = (i, text) => F.push({ rows: [
+        { label: "a", vals: a, marks: Object.fromEntries(a.map((_, j) => [j, j === i ? "hit" : i >= 0 && j > i - k && j <= i ? "on" : ""])) },
+        { label: "deque (a[i])", vals: q.map(j => a[j]), idx: [...q] },
+        { label: "window max", vals: [...out], idx: out.map((_, j) => j + k - 1) },
+      ], text });
+      snap(-1, "The deque keeps indexes whose values decrease from front to back, so the front is always the window's maximum");
+      a.forEach((x, i) => {
+        while (q.length && q[0] <= i - k) { const j = q.shift(); snap(i, `Index ${j} has left the window [${i - k + 1}, ${i}]: drop it from the front`); }
+        while (q.length && a[q[q.length - 1]] <= x) { const j = q.pop(); snap(i, `a[${j}] = ${a[j]} ≤ ${x}: it can never be a maximum again, pop it from the back`); }
+        q.push(i);
+        if (i >= k - 1) { out.push(a[q[0]]); snap(i, `Push ${i}. Window [${i - k + 1}, ${i}]: the maximum is the front, a[${q[0]}] = ${a[q[0]]}`); }
+        else snap(i, `Push index ${i} (${x}) at the back`);
+      });
+      snap(-1, "Each index enters and leaves the deque once, so all windows together cost O(n)");
+      return F;
+    },
+    mount: rowsMount,
+  };
+  // Sparse table range minimum. 进3.
+  VIS["进3"] = {
+    title: "Sparse table: range minimum in O(1)",
+    frames() {
+      const a = [5, 2, 8, 1, 9, 3, 7, 4], n = a.length, st = [a.slice()], F = [];
+      const rows = marks => st.map((r, j) => ({ label: `len ${1 << j}`, vals: r.concat(Array(n - r.length).fill("")), marks: marks[j] || {} }));
+      F.push({ rows: rows({}), text: "Row j holds the minimum of each block of length 2ʲ. Row 0 is the array itself" });
+      for (let j = 1; 1 << j <= n; j++) {
+        st[j] = [];
+        for (let i = 0; i + (1 << j) <= n; i++) st[j][i] = Math.min(st[j - 1][i], st[j - 1][i + (1 << (j - 1))]);
+        F.push({ rows: rows({ [j]: Object.fromEntries(st[j].map((_, i) => [i, "on"])) }), text: `Row ${j}: min of two neighbouring blocks from row ${j - 1}, st[${j}][i] = min(st[${j - 1}][i], st[${j - 1}][i + ${1 << (j - 1)}])` });
+      }
+      const l = 2, r = 6, k = Math.floor(Math.log2(r - l + 1));
+      F.push({ rows: rows({ [k]: { [l]: "hit", [r - (1 << k) + 1]: "hit" } }), text: `min(a[${l}..${r}]): length ${r - l + 1}, so k = ${k}. Two blocks of ${1 << k} cover it: min(st[${k}][${l}], st[${k}][${r - (1 << k) + 1}]) = ${Math.min(st[k][l], st[k][r - (1 << k) + 1])}` });
+      F.push({ rows: rows({}), text: "Overlap is fine for min and max. O(n log n) to build, O(1) per query, but no updates" });
+      return F;
+    },
+    mount: rowsMount,
+  };
+  // Longest increasing subsequence with binary search. 进14.
+  VIS["进14"] = {
+    title: "Longest increasing subsequence in O(n log n)",
+    frames() {
+      const a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3], d = [], F = [];
+      const snap = (i, pos, text) => F.push({ rows: [{ label: "a", vals: a, marks: i >= 0 ? { [i]: "hit" } : {} }, { label: "tails", vals: [...d], idx: d.map((_, k) => `len ${k + 1}`), marks: pos >= 0 ? { [pos]: "on" } : {} }], text });
+      snap(-1, -1, "tails[k] = the smallest last value of any increasing subsequence of length k + 1 seen so far. It is always sorted");
+      a.forEach((x, i) => {
+        let lo = 0, hi = d.length; while (lo < hi) { const m = (lo + hi) >> 1; if (d[m] < x) lo = m + 1; else hi = m; }
+        if (lo === d.length) { d.push(x); snap(i, lo, `${x} is bigger than every tail: extend, length ${d.length}`); }
+        else { const old = d[lo]; d[lo] = x; snap(i, lo, `lower_bound finds tails[${lo}] = ${old} ≥ ${x}: replace it with ${x}, a smaller end for length ${lo + 1}`); }
+      });
+      snap(-1, -1, `The LIS has length ${d.length}. n binary searches: O(n log n), against O(n²) for the plain DP`);
+      return F;
+    },
+    mount: rowsMount,
+  };
+  // Linear (Euler) sieve. 基21.
+  VIS["基21"] = {
+    title: "Linear sieve up to 30: each composite crossed out once",
+    frames() {
+      const N = 30, lpf = Array(N + 1).fill(0), primes = [], F = [];
+      const rows = (cur, hit) => [2, 17].map(s => { const nums = [...Array(Math.min(15, N - s + 1)).keys()].map(k => s + k); return { label: s === 2 ? "2–16" : "17–30", vals: nums.map(x => (lpf[x] === x ? "P" : lpf[x] ? "×" + lpf[x] : "")), idx: nums, marks: Object.fromEntries(nums.map((x, k) => [k, x === cur ? "on" : hit.includes(x) ? "hit" : lpf[x] === x ? "done" : ""])) }; });
+      F.push({ rows: rows(0, []), text: "Walk i from 2 to 30. An empty cell when we reach it means i is prime" });
+      for (let i = 2; i <= N; i++) {
+        let fresh = false;
+        if (!lpf[i]) { lpf[i] = i; primes.push(i); fresh = true; }
+        const hit = [];
+        for (const p of primes) { if (p > lpf[i] || i * p > N) break; lpf[i * p] = p; hit.push(i * p); }
+        if (fresh || hit.length) F.push({ rows: rows(i, hit), text: `${fresh ? `${i} is prime. ` : ""}${hit.length ? `Cross out ${hit.map(x => `${x} = ${i}×${x / i}`).join(", ")}: each by its smallest prime factor, stopping at p = ${lpf[i]}` : "Nothing new to cross out"}` });
+      }
+      F.push({ rows: rows(0, []), text: `${primes.length} primes. Every composite is crossed out exactly once, by its smallest prime factor, so the sieve is O(n)` });
+      return F;
+    },
+    mount: rowsMount,
+  };
+  // Base conversion by repeated division. 基19.
+  VIS["基19"] = {
+    title: "156 in binary and hexadecimal",
+    frames() {
+      const F = [], ns = [], rs = [];
+      let n = 156;
+      const snap = (text, mark) => F.push({ rows: [{ label: "n", vals: [...ns] }, { label: "n mod 2", vals: [...rs], marks: mark >= 0 ? { [mark]: "hit" } : {} }], text });
+      snap("Divide by 2 again and again; each remainder is the next binary digit, lowest first", -1);
+      while (n > 0) { ns.push(n); rs.push(n % 2); snap(`${n} = 2 × ${n >> 1} + ${n % 2}: write ${n % 2}, carry on with ${n >> 1}`, rs.length - 1); n >>= 1; }
+      const bin = rs.slice().reverse().join("");
+      snap(`Read the remainders from last to first: 156 = ${bin}₂`, -1);
+      snap(`Group the bits in fours from the right: ${bin.match(/.{1,4}/g).join(" ")} = 9 C, so 156 = 0x9C. Each hex digit is exactly four bits`, -1);
+      return F;
+    },
+    mount: rowsMount,
+  };
+
   function mountVis(c) {
     clearInterval(visTimer); visTimer = null;
     const spec = VIS[c.id], host = document.getElementById("vis");
@@ -1748,10 +1954,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 
   // ---- tree minimap: the whole course small, with the visible part outlined; click or drag to move ----
   function minimapHtml() {
+    if (!layout) computeLayout();
     const { xy, width, height, lanes } = layout;
     return `<svg class="minimap" id="minimap" viewBox="0 0 ${width} ${height}" role="img" aria-label="Overview of the map; click to move there">
       ${lanes.map(({ level: l, top, height: h }) => `<rect x="0" y="${top}" width="${width}" height="${h}" style="fill: var(--lv-${l.slug}); opacity: .12"/>`).join("")}
-      ${A.map(c => `<rect x="${xy[c.id].x}" y="${xy[c.id].y}" width="${W}" height="${H}" rx="10" style="fill: var(--${lvClass(c)}); opacity: ${statusOf(c.id) === "learned" ? 0.95 : 0.4}"/>`).join("")}
+      ${A.filter(c => !isFoldedId(c.id)).map(c => `<rect x="${xy[c.id].x}" y="${xy[c.id].y}" width="${W}" height="${H}" rx="10" style="fill: var(--${lvClass(c)}); opacity: ${statusOf(c.id) === "learned" ? 0.95 : 0.4}"/>`).join("")}
       <rect class="mm-view" id="mmView" x="0" y="0" width="0" height="0"/></svg>`;
   }
   function updateMinimap() {
@@ -1806,12 +2013,13 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
 
   // ---- backup: progress lives in one browser, so let it travel as text ----
-  const backupJson = () => JSON.stringify({ app: "contest-chapter-atlas", v: 1, progress: prog, solved: [...solved], notes, days, learnedAt, reviews });
+  const backupJson = () => JSON.stringify({ app: "contest-chapter-atlas", v: 2, progress: prog, solved: [...solved], notes, days, learnedAt, reviews, queue, start: startPick, mistakes, checks, goal, contests: store.get("contests", []) });
   function restoreBackup(text) {
     const b = JSON.parse(text);
     if (!b || b.app !== "contest-chapter-atlas" || typeof b.progress !== "object" || !Array.isArray(b.solved)) throw new Error("not an Atlas backup");
     prog = b.progress; solved = new Set(b.solved); notes = b.notes || {}; days = b.days || {}; learnedAt = b.learnedAt || {}; reviews = b.reviews || {};
-    [["progress", prog], ["solved", [...solved]], ["notes", notes], ["days", days], ["learnedAt", learnedAt], ["reviews", reviews]].forEach(([k, v]) => store.set(k, v));
+    queue = b.queue || []; startPick = b.start || null; mistakes = b.mistakes || {}; checks = b.checks || {}; goal = b.goal || null; layout = null;
+    [["progress", prog], ["solved", [...solved]], ["notes", notes], ["days", days], ["learnedAt", learnedAt], ["reviews", reviews], ["queue", queue], ["start", startPick], ["mistakes", mistakes], ["checks", checks], ["goal", goal], ["contests", b.contests || []]].forEach(([k, v]) => store.set(k, v));
   }
 
   // ---- search aliases: English names and short forms for the Chinese chapter titles ----
@@ -1835,7 +2043,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   const cheatHtml = () => `<section class="showcase">
       <div><h2>Read the constraints first</h2><p class="lead">A judge runs about 10⁸ simple steps a second. The limit on n tells you how fast the solution must be, and so which chapter's technique to reach for.</p></div>
       <div class="tablewrap"><table class="cheat"><thead><tr><th>Input size</th><th>Fits in 1 s</th><th>Typical approach</th><th>Chapter</th></tr></thead><tbody>
-        ${CHEAT.map(([n, o, how, id], k) => `<tr style="--i:${k}"><td class="mono">${n}</td><td><code class="bigo">${o}</code></td><td>${how}</td><td>${chLink(id)}</td></tr>`).join("")}</tbody></table></div>
+        ${CHEAT.map(([n, o, how, id], k) => `<tr style="--i:${k}"><td class="mono">${n}</td><td><code class="bigo">${o}</code></td><td>${how}</td><td>${chLink(id)}</td></tr>`).join("")}</tbody></table>
+      ${calcCard()}</div>
     </section>`;
 
   // Big-O in prose reads as code: O(n log n), O(n²), O((n + m) log n)
@@ -1896,8 +2105,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     return `<div class="ladder">${tiers.map(([zh, en, xs]) => `<div class="tier"><p class="label"><span class="cjk">${zh}</span> ${en}</p>${xs.map(x => `<a class="tp" href="${problemUrl(x.j, x.p.id)}" target="_blank" rel="noopener">${x.p.star ? "★ " : ""}<span class="mono">${x.j === "luogu" ? esc(x.p.id) : "CF " + esc(x.p.id)}</span> <span class="cjk">${esc(x.p.name)}</span></a>`).join("") || '<span class="hint">All done here</span>'}</div>`).join("")}</div>`;
   }
   // ---- interface language (labels only; chapter content stays as written) ----
-  const ZH = { home: "首页", tree: "知识树", list: "章节目录", progress: "学习进度", Learn: "学习", Problems: "练习" };
-  const EN = { home: "Home", tree: "Tree", list: "Chapters", progress: "Progress" };
+  const ZH = { home: "首页", tree: "知识树", list: "章节目录", progress: "学习进度", practice: "训练", Learn: "学习", Problems: "练习" };
+  const EN = { home: "Home", tree: "Tree", list: "Chapters", progress: "Progress", practice: "Practice" };
   let lang = store.get("lang", "en");
   function setLang(l) {
     lang = l; store.set("lang", l);
@@ -2005,6 +2214,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         <div class="stat"><b data-count="${dueReviews().length}">${dueReviews().length}</b><span>reviews due</span></div>
       </div>
     </section>
+    <section class="dash2">${dailyHtml()}${reviewsHtml()}</section>
     <section>
       <h2>Four tracks, one after another</h2>
       <div class="tracks">${LEVELS.map(l => { const list = A.filter(c => c.id.startsWith(l.key)), done = list.filter(c => statusOf(c.id) === "learned").length; const fams = [...new Set(list.map(c => c.fam))]; return `<a class="trackcard" href="#tree?level=${encodeURIComponent(l.key)}" style="--c: var(--lv-${l.slug})">
@@ -2045,6 +2255,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 
   // ---- map overlays: the level rail and the step row stay readable at any zoom ----
   function railHtml() {
+    if (!layout) computeLayout();
     return layout.lanes.map(({ level: l }) => {
       const list = A.filter(c => c.id.startsWith(l.key)), done = list.filter(c => statusOf(c.id) === "learned").length;
       return `<button class="rail-item" data-railfit="${l.key}" style="--c: var(--lv-${l.slug})" title="Fit ${l.name} in view"><span class="rail-label">
@@ -2092,12 +2303,369 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     });
   }
 
+
+  // ================= round 5: goal, self-check, mistakes, practice hub, sharing =================
+  const SITE = "https://yhcrow.github.io/Competitive-Programming-Learning/";
+  const solutionUrl = id => `https://www.luogu.com.cn/problem/solution/${id}`;
+  function download(name, blob) {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  // A cue for recall: the opening words of a box, the rest hidden until you ask.
+  function cueOf(text) {
+    const cut = text.search(/[,:;，：；]\s/);
+    return cut >= 25 && cut <= 90 ? text.slice(0, cut) + " …" : text.split(/\s+/).slice(0, 9).join(" ") + " …";
+  }
+
+  // ---- goal: pick a chapter to reach; the map and "Continue" follow the shortest unlearned chain ----
+  const goalPath = () => (goal && byId[goal] && statusOf(goal) !== "learned" ? [...pathTo(goal), goal] : []);
+  function goalHtml() {
+    if (!goal || !byId[goal]) return "";
+    const gp = goalPath(), c = byId[goal];
+    return `<div class="block goalblock"><p class="label">Your goal · ${chLink(goal)} <span class="cjk">${esc(c.title)}</span></p>
+      ${gp.length ? `<p class="hint" style="margin:0 0 8px">${gp.length} chapter${gp.length === 1 ? "" : "s"} to go, in this order. They're outlined on the map</p>${pathList(gp)}
+      <div class="btns"><button class="btn primary" data-goalqueue>Put the next ${Math.min(5, gp.length)} in my study queue</button><button class="btn" data-goal="">Clear goal</button></div>`
+        : `<p>Reached. Every chapter on the way is learned.</p><div class="btns"><button class="btn" data-goal="">Clear goal</button></div>`}</div>`;
+  }
+
+  // ---- self-check before Learned: recall three of the chapter's boxes, then say honestly whether you knew them ----
+  let check = null;
+  function startCheck(id) {
+    const c = byId[id];
+    const pool = [...c.boxes.filter(b => b.kind === "KEY POINT" || b.kind === "TRAP"), ...c.boxes.filter(b => b.kind === "IDEA")];
+    const items = pool.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+    check = { id, items, i: 0, knew: 0, shown: false };
+    drawCheck(true);
+  }
+  function drawCheck(scroll) {
+    const bar = document.querySelector(".donebar");
+    if (!bar || !check) return;
+    const { items, i, shown } = check, b = items[i], k = CALLOUT[b.kind] || CALLOUT.NOTE;
+    bar.outerHTML = `<div class="donebar checkcard card" aria-live="polite"><p class="label">Quick self-check before marking ${check.id} learned · ${i + 1} of ${items.length}</p>
+      <p style="margin:0 0 8px">Recall this ${k.en.toLowerCase()} (<span class="cjk">${k.zh}</span>) in your own words, then check:</p><p class="cue">${bigO(esc(cueOf(b.text)))}</p>
+      ${shown ? `<div class="box ${k.cls}"><b>${k.icon}<span>${k.zh}</span><span class="hint">${k.en}</span></b><div>${bigO(esc(b.text))}</div></div>
+        <div class="btns"><button class="btn primary" data-chk="1">I knew it</button><button class="btn" data-chk="0">Not yet</button></div>`
+      : `<div class="btns"><button class="btn primary" data-chk="show">Show the answer</button><button class="btn" data-chk="cancel">Cancel</button><button class="linkish" data-chk="skip">Mark learned without the check</button></div>`}</div>`;
+    if (scroll) document.querySelector(".checkcard").scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  }
+  function answerCheck(v) {
+    if (v === "show") { check.shown = true; return drawCheck(); }
+    if (v === "cancel") { check = null; return route(); }
+    const id = check.id;
+    if (v === "skip") { check = null; setStatus(id, "learned"); return route(); }
+    if (v === "1") check.knew++;
+    check.i++; check.shown = false;
+    if (check.i < check.items.length) return drawCheck();
+    const { knew, items } = check; check = null;
+    if (knew === items.length) { checks[id] = Date.now(); store.set("checks", checks); setStatus(id, "learned"); toast(`${id} learned · ${knew}/${items.length} recalled`); }
+    else { setStatus(id, "learning"); toast(`${knew}/${items.length} recalled. Reread the boxes you missed, then try again`); }
+    route();
+  }
+
+  // ---- mistake log: your own bug patterns, shown at the top of the chapter next time ----
+  function mistakesHtml(c) {
+    const list = mistakes[c.id] || [];
+    return `<div class="block mblock" data-mblock="${c.id}"><p class="label">My mistakes here · ${list.length}</p>
+      ${list.length ? `<ul class="mlist">${list.map((m, k) => `<li><span>${esc(m.t)}</span><button class="iconbtn" data-mdel="${c.id}:${k}" aria-label="Delete this note">×</button></li>`).join("")}</ul>` : `<p class="hint">Write down a bug you made with this technique, and it shows at the top of the chapter next time</p>`}
+      <form class="madd" data-madd="${c.id}"><input type="text" name="m" maxlength="200" placeholder="e.g. forgot to reset vis between test cases" aria-label="A mistake to remember"><button class="btn sm">Add</button></form></div>`;
+  }
+  function myMistakesBox(c) {
+    const list = mistakes[c.id] || [];
+    if (!list.length) return "";
+    const k = CALLOUT.TRAP;
+    return `<div class="box ${k.cls} mybox"><b>${k.icon}<span>我的易错点</span><span class="hint">Mistakes you noted here before</span></b><ul>${list.map(m => `<li>${esc(m.t)}</li>`).join("")}</ul></div>`;
+  }
+  function allMistakesHtml() {
+    const ids = A.map(c => c.id).filter(id => (mistakes[id] || []).length);
+    return ids.length ? `<div class="block"><p class="label">My mistakes · ${ids.reduce((n, id) => n + mistakes[id].length, 0)}</p>
+      <ul class="mlist">${ids.flatMap(id => mistakes[id].map(m => `<li><span>${chLink(id)} ${esc(m.t)}</span></li>`)).join("")}</ul></div>` : "";
+  }
+  document.addEventListener("submit", e => {
+    const f = e.target.closest("[data-madd]");
+    if (!f) return;
+    e.preventDefault();
+    const id = f.dataset.madd, v = f.m.value.trim();
+    if (!v) return;
+    (mistakes[id] = mistakes[id] || []).push({ t: v, at: Date.now() }); store.set("mistakes", mistakes); logDay();
+    f.closest(".mblock").outerHTML = mistakesHtml(byId[id]);
+    toast("Noted");
+  });
+
+  // ---- daily problem: one starred problem a day from where you are, stable until midnight ----
+  function dailyPick() {
+    const tiers = [A.filter(c => statusOf(c.id) === "learning" || isReady(c)), A.filter(c => statusOf(c.id) === "learned"), A.slice(0, 5)];
+    const today = dayKey(Date.now());
+    let seed = 0; for (const ch of today) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+    for (const cs of tiers) {
+      const pool = cs.flatMap(c => [...c.stars.luogu.map(p => ({ p, j: "luogu", c })), ...c.stars.codeforces.map(p => ({ p, j: "codeforces", c }))]).filter(x => !solved.has(x.p.id));
+      if (pool.length) return pool[seed % pool.length];
+    }
+    return null;
+  }
+  const diffPill = x => x.j === "luogu" ? `<span class="diff" style="background:${LUOGU[x.p.d][1]}">${LUOGU[x.p.d][0]}</span>` : `<span class="diff" style="background:${cfColor(x.p.r)}">${x.p.r}</span>`;
+  function dailyHtml() {
+    const x = dailyPick();
+    if (!x) return "";
+    return `<div class="card daily"><p class="label">Today's problem · ${dayKey(Date.now())}</p>
+      <a class="nexttitle" href="${problemUrl(x.j, x.p.id)}" target="_blank" rel="noopener">★ <span class="mono">${x.j === "luogu" ? esc(x.p.id) : "CF " + esc(x.p.id)}</span> <span class="cjk">${esc(x.p.name)}</span></a>
+      <p class="hint" style="margin:6px 0 0">${diffPill(x)} from ${chLink(x.c.id)} <span class="cjk">${esc(x.c.title)}</span>. A new one tomorrow; tick it on the chapter's Problems tab when you solve it</p></div>`;
+  }
+  function reviewsHtml() {
+    const due = dueReviews();
+    return due.length ? `<div class="card"><p class="label">Due for review · ${due.length}</p><p style="margin:0 0 12px">You marked these learned a while ago (reviews come at 7, 21 and 60 days). Reread each chapter's key points, then mark the review done.</p>
+      <ol class="path">${due.map(({ c, d }) => `<li><a href="#ch-${c.slug}"><span class="lv ${lvClass(c)}">${c.id}</span> <span class="cjk">${esc(c.title)}</span></a> <span class="hint">${d}-day review</span> <button class="linkish" data-reviewed="${c.id}:${d}">Mark done</button></li>`).join("")}</ol></div>` : "";
+  }
+
+  // ---- constraint calculator: n and the time limit decide which complexities fit ----
+  const parseN = s => { s = String(s).replace(/[\s,_]/g, "").replace(/^10\^/, "1e").replace(/[×x*·]10\^?/, "e"); const v = Number(s); return isFinite(v) && v >= 1 ? v : null; };
+  const fact = n => { let f = 1; for (let i = 2; i <= n; i++) f *= i; return f; };
+  const CX = [
+    ["O(log n)", n => Math.log2(n), "进19"], ["O(√n)", n => Math.sqrt(n), "基21"], ["O(n)", n => n, "进2"], ["O(n log n)", n => n * Math.log2(Math.max(2, n)), "进6"],
+    ["O(n√n)", n => n * Math.sqrt(n), "拓5"], ["O(n²)", n => n * n, "进14"], ["O(n³)", n => n ** 3, "进15"], ["O(2ⁿ · n)", n => (n > 70 ? Infinity : 2 ** n * n), "进17"], ["O(n!)", n => (n > 25 ? Infinity : fact(n)), "基10"],
+  ];
+  const fmtOps = v => !isFinite(v) ? "∞" : v < 1e4 ? Math.round(v).toLocaleString("en-US") : v.toExponential(1).replace("e+", "e");
+  function calcHtml(nS, tS) {
+    const n = parseN(nS), t = Number(tS) > 0 ? Number(tS) : 1;
+    if (!n) return `<p class="hint">Type n as 200000, 2e5 or 10^5</p>`;
+    const budget = 1e8 * t, rows = CX.map(([o, f, id]) => { const v = f(n); return { o, v, id, cls: v <= budget ? "fits" : v <= budget * 5 ? "tight" : "slow" }; });
+    const best = [...rows].reverse().find(r => r.cls === "fits");
+    return `<p class="calchead">${best ? `Aim for <code class="bigo">${best.o}</code> or faster` : "Even O(log n) is too slow: recheck n"} <span class="hint">· budget ≈ ${fmtOps(budget)} steps</span></p>
+      <div class="crows">${rows.map(r => `<div class="crow ${r.cls}"><code class="bigo">${r.o}</code><span class="mono">≈ ${fmtOps(r.v)}</span><span class="verdict">${r.cls === "fits" ? "fits" : r.cls === "tight" ? "tight" : "too slow"}</span>${chLink(r.id)}</div>`).join("")}</div>`;
+  }
+  const calcCard = () => `<div class="calc card"><p class="label">Constraint calculator</p>
+    <div class="calcin"><label>n ≤ <input id="calcN" value="2e5" inputmode="decimal" aria-label="Largest n"></label><label>time limit <input id="calcT" value="1" inputmode="decimal" aria-label="Time limit in seconds"> s</label></div>
+    <div id="calcOut">${calcHtml("2e5", "1")}</div></div>`;
+
+  // ---- glossary: Chinese and English terms as the handouts pair them, "segment tree (线段树)" ----
+  let gloss = null, glossQ = "";
+  function buildGloss() {
+    const rx = /((?:[A-Za-z][A-Za-z0-9'\-]*\s){0,3}[A-Za-z][A-Za-z0-9'\-]*)\s*[(（]([一-鿿][一-鿿0-9A-Za-z\-·]{0,11})[)）]/g;
+    const stop = new Set("a an the of and or uses use with is are called its this that to for in on by as every each it be can we so if then when one two new their which plain gives needs must equivalent basis".split(" "));
+    const m = new Map();
+    A.forEach(c => c.boxes.forEach(b => { for (const x of b.text.matchAll(rx)) {
+      const zh = x[2]; if (/第\d+章|篇/.test(zh)) continue;
+      const w = x[1].split(/\s+/); while (w.length && stop.has(w[0].toLowerCase())) w.shift();
+      if (!w.length) continue;
+      const en = w.join(" "), key = /^[A-Z0-9]+$/.test(en) ? en : en.toLowerCase();
+      const g = m.get(zh) || { zh, en: new Map(), ch: [] };
+      g.en.set(key, (g.en.get(key) || 0) + 1);
+      if (!g.ch.includes(c.id)) g.ch.push(c.id);
+      m.set(zh, g);
+    } }));
+    gloss = [...m.values()].map(g => ({ zh: g.zh, en: [...g.en].sort((a, b) => b[1] - a[1] || a[0].split(" ").length - b[0].split(" ").length)[0][0], ch: g.ch }));
+  }
+  const glossRows = () => { const l = gloss.filter(g => !glossQ || (g.zh + " " + g.en).toLowerCase().includes(glossQ)); return l.length ? l.map(g => `<tr><td class="cjk">${esc(g.zh)}</td><td>${esc(g.en)}</td><td><span class="links">${g.ch.slice(0, 4).map(chLink).join("")}</span></td></tr>`).join("") : `<tr><td colspan="3" class="empty">No term matches</td></tr>`; };
+  function viewGlossary() {
+    if (!gloss) buildGloss();
+    $("#view").innerHTML = `<div class="practice-page"><p class="crumbs"><a href="#practice">Practice</a><span>/</span><span>Glossary</span></p>
+      <h1 class="ptitle">术语表 · Glossary</h1><p class="lead">${gloss.length} terms as the handouts pair them, in course order, with the chapters that use them. Handy for reading Chinese problem statements in English, and the other way round.</p>
+      <input type="search" id="glossQ" class="glossq" placeholder="Filter: 线段树, lazy, sieve…" aria-label="Filter terms" value="${esc(glossQ)}">
+      <div class="tablewrap"><table class="gloss"><thead><tr><th>中文</th><th>English</th><th>Chapters</th></tr></thead><tbody id="glossBody">${glossRows()}</tbody></table></div></div>`;
+    window.scrollTo(0, 0);
+  }
+
+  // ---- flashcards: the handouts' traps and key points, flipped one at a time ----
+  let deck = null, cardI = 0, cardShown = false, cardKnew = 0;
+  const cardOpts = { level: "all", learned: false, kind: "TRAP" };
+  function buildDeck() {
+    deck = A.filter(c => (cardOpts.level === "all" || c.id.startsWith(cardOpts.level)) && (!cardOpts.learned || statusOf(c.id) === "learned"))
+      .flatMap(c => c.boxes.filter(b => cardOpts.kind === "both" ? b.kind === "TRAP" || b.kind === "KEY POINT" : b.kind === cardOpts.kind).map(b => ({ c, b })))
+      .sort(() => Math.random() - 0.5);
+    cardI = 0; cardShown = false; cardKnew = 0;
+  }
+  function viewCards() {
+    if (!deck) buildDeck();
+    const x = deck[cardI], k = x && (CALLOUT[x.b.kind] || CALLOUT.NOTE);
+    $("#view").innerHTML = `<div class="practice-page"><p class="crumbs"><a href="#practice">Practice</a><span>/</span><span>Flashcards</span></p>
+      <h1 class="ptitle">闪卡 · Flashcards</h1>
+      <div class="ptools"><select data-cardopt="kind" aria-label="Which boxes"><option value="TRAP" ${cardOpts.kind === "TRAP" ? "selected" : ""}>Traps</option><option value="KEY POINT" ${cardOpts.kind === "KEY POINT" ? "selected" : ""}>Key points</option><option value="both" ${cardOpts.kind === "both" ? "selected" : ""}>Both</option></select>
+        <select data-cardopt="level" aria-label="Level"><option value="all">All levels</option>${LEVELS.map(l => `<option value="${l.key}" ${cardOpts.level === l.key ? "selected" : ""}>${l.name}</option>`).join("")}</select>
+        <label><input type="checkbox" data-cardopt="learned" ${cardOpts.learned ? "checked" : ""}> Only chapters I've learned</label>
+        <span class="hint">${deck.length ? `${Math.min(cardI + 1, deck.length)} / ${deck.length} · knew ${cardKnew}` : ""}</span></div>
+      ${!deck.length ? `<p class="empty">No cards for these options${cardOpts.learned ? ". Mark some chapters learned first, or untick the box" : ""}</p>`
+        : !x ? `<div class="card flash"><p class="label">Deck done</p><p>You knew ${cardKnew} of ${deck.length}. Cards you marked Again came round a second time.</p><div class="btns"><button class="btn primary" data-cards="again">Shuffle and start over</button></div></div>`
+        : `<div class="card flash" style="--c: var(--${lvClass(x.c)})"><p class="label"><a href="#ch-${x.c.slug}"><span class="lv ${lvClass(x.c)}">${x.c.id}</span> <span class="cjk">${esc(x.c.title)}</span></a> · ${k.en}</p>
+          <p class="cue">${bigO(esc(cueOf(x.b.text)))}</p>
+          ${cardShown ? `<div class="box ${k.cls}"><b>${k.icon}<span>${k.zh}</span><span class="hint">${k.en}</span></b><div>${bigO(esc(x.b.text))}</div></div>
+            <div class="btns"><button class="btn primary" data-cardgrade="1">Knew it</button><button class="btn" data-cardgrade="0">Again</button></div>`
+          : `<div class="btns"><button class="btn primary" data-cardflip>Show the answer</button><span class="hint">or press Space</span></div>`}</div>`}</div>`;
+  }
+  document.addEventListener("keydown", e => {
+    if (location.hash !== "#cards" || e.key !== " " || (e.target.closest && e.target.closest("input, select, textarea, button"))) return;
+    e.preventDefault();
+    if (deck && deck[cardI] && !cardShown) { cardShown = true; viewCards(); }
+  });
+
+  // ---- contest mode: four starred problems from what you've learned, against the clock ----
+  let contest = store.get("contest", null), contestTimer = null;
+  const ratingX = x => (x.j === "luogu" ? [800, 1000, 1200, 1500, 1800, 2100, 2500, 3000][x.p.d] : x.p.r);
+  function contestPool() {
+    let cs = A.filter(c => statusOf(c.id) === "learned");
+    if (cs.length < 2) cs = A.filter(c => statusOf(c.id) !== "none" || isReady(c));
+    return cs.flatMap(c => [...c.stars.luogu.map(p => ({ p, j: "luogu", c })), ...c.stars.codeforces.map(p => ({ p, j: "codeforces", c }))]).filter(x => !solved.has(x.p.id)).sort((a, b) => ratingX(a) - ratingX(b));
+  }
+  function startContest(mins) {
+    const pool = contestPool();
+    if (!pool.length) { toast("No unsolved starred problems in your chapters yet"); return; }
+    const picks = [];
+    [0.1, 0.35, 0.6, 0.85].forEach(q => { const x = pool[Math.min(pool.length - 1, Math.floor(q * pool.length))]; if (!picks.includes(x)) picks.push(x); });
+    contest = { start: Date.now(), dur: mins, probs: picks.map(x => ({ j: x.j, id: x.p.id, name: x.p.name, d: x.p.d, r: x.p.r, cid: x.c.id })), done: [], end: null };
+    store.set("contest", contest); viewContest();
+  }
+  function endContest() {
+    contest.end = Math.min(Date.now(), contest.start + contest.dur * 60e3);
+    const hist = store.get("contests", []); hist.unshift({ at: contest.start, dur: contest.dur, solved: contest.done.length, of: contest.probs.length, took: contest.end - contest.start }); store.set("contests", hist.slice(0, 20));
+    store.set("contest", contest); viewContest();
+  }
+  function contestTick(id, on) {
+    contest.done = on ? [...new Set([...contest.done, id])] : contest.done.filter(x => x !== id);
+    if (on !== solved.has(id)) toggleSolved(id);
+    store.set("contest", contest);
+    if (contest.done.length === contest.probs.length) endContest();
+  }
+  const clock = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`; };
+  function viewContest() {
+    const head = `<p class="crumbs"><a href="#practice">Practice</a><span>/</span><span>Contest mode</span></p><h1 class="ptitle">模拟赛 · Contest mode</h1>`;
+    const hist = store.get("contests", []);
+    const histHtml = hist.length ? `<div class="block"><p class="label">Past contests</p><ul class="mlist">${hist.map(h => `<li><span>${dayKey(h.at)} · ${h.solved}/${h.of} solved in ${clock(h.took)} of ${h.dur} min</span></li>`).join("")}</ul></div>` : "";
+    if (contest && !contest.end && Date.now() >= contest.start + contest.dur * 60e3) return endContest();
+    if (!contest || contest.end) {
+      const last = contest && contest.end ? `<div class="card"><p class="label">Last contest</p><p style="margin:0">${contest.done.length} of ${contest.probs.length} solved in ${clock(contest.end - contest.start)}.</p></div>` : "";
+      $("#view").innerHTML = `<div class="practice-page">${head}<p class="lead">Four starred problems from chapters you've learned, spread from easy to hard, against a timer. Solve them on Luogu or Codeforces and tick each one here. The timer keeps running if you close the tab.</p>
+        ${last}<div class="card"><p class="label">New contest · ${contestPool().length} problems to draw from</p><div class="btns">${[60, 120, 180].map(m => `<button class="btn${m === 120 ? " primary" : ""}" data-contest="start:${m}">${m / 60} hour${m > 60 ? "s" : ""}</button>`).join("")}</div></div>${histHtml}</div>`;
+      return;
+    }
+    const left = () => contest.start + contest.dur * 60e3 - Date.now();
+    $("#view").innerHTML = `<div class="practice-page">${head}<div class="card contest"><p class="label">Time left</p><p class="ctime" id="ctime">${clock(left())}</p>
+      <ol class="cprobs">${contest.probs.map(p => { const x = { j: p.j, p }; return `<li><label class="tick"><input type="checkbox" data-csolve="${esc(p.id)}" ${contest.done.includes(p.id) ? "checked" : ""} aria-label="Solved ${esc(p.id)}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" pathLength="1"/></svg></label>
+        <a href="${problemUrl(p.j, p.id)}" target="_blank" rel="noopener"><span class="mono">${p.j === "luogu" ? esc(p.id) : "CF " + esc(p.id)}</span> <span class="cjk">${esc(p.name)}</span></a> ${diffPill(x)} <span class="hint">${esc(p.cid)}</span></li>`; }).join("")}</ol>
+      <div class="btns"><button class="btn" data-contest="end">Finish now</button></div></div>${histHtml}</div>`;
+    contestTimer = setInterval(() => { const el = $("#ctime"); if (!el) return clearInterval(contestTimer); if (left() <= 0) { clearInterval(contestTimer); endContest(); } else el.textContent = clock(left()); }, 1000);
+  }
+
+  // ---- the practice hub ----
+  function viewPractice() {
+    $("#view").innerHTML = `<div class="practice-page"><h1 class="ptitle">训练 · Practice</h1>
+      <div class="phub">${dailyHtml()}
+        <a class="card hubcard" href="#contest"><p class="label">模拟赛 · Contest mode</p><p>Four starred problems from your learned chapters, easy to hard, against a 1 to 3 hour timer</p></a>
+        <a class="card hubcard" href="#cards"><p class="label">闪卡 · Flashcards</p><p>Every Trap and Key point box in the course, one card at a time</p></a>
+        <a class="card hubcard" href="#glossary"><p class="label">术语表 · Glossary</p><p>The Chinese and English names of every technique, with the chapters that use them</p></a></div>
+      ${calcCard()}${reviewsHtml()}</div>`;
+    window.scrollTo(0, 0);
+  }
+
+  // ---- search highlights matching chapters on the map ----
+  function markMapSearch(ids) {
+    const svg = document.querySelector("#canvas svg");
+    if (!svg) return;
+    svg.classList.toggle("searching", !!ids && ids.size > 0);
+    svg.querySelectorAll(".node").forEach(n => n.classList.toggle("match", !!ids && ids.has(n.dataset.id)));
+  }
+
+  // ---- sharing: progress packed into a link, two bits a chapter ----
+  function shareCode(p = prog) {
+    const bytes = new Uint8Array(Math.ceil(A.length / 4));
+    A.forEach((c, i) => { bytes[i >> 2] |= ({ learning: 1, learned: 2 }[p[c.id]] || 0) << ((i & 3) * 2); });
+    return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function shareDecode(code) {
+    const bin = atob(code.replace(/-/g, "+").replace(/_/g, "/")), p = {};
+    A.forEach((c, i) => { const v = (bin.charCodeAt(i >> 2) >> ((i & 3) * 2)) & 3; if (v === 1) p[c.id] = "learning"; if (v === 2) p[c.id] = "learned"; });
+    return p;
+  }
+  const shareLink = () => `${SITE}#shared?p=${shareCode()}`;
+  function viewShared(code) {
+    let p;
+    try { p = shareDecode(code); } catch (e) { $("#view").innerHTML = `<p class="empty">That progress link is broken. Ask for it again</p>`; return; }
+    shareProg = p; layout = null;
+    const sel = selected; selected = null;
+    const map = svgTree(); selected = sel;
+    const n = A.filter(c => p[c.id] === "learned").length;
+    $("#view").innerHTML = `<div class="shared"><div class="card sharebanner"><p class="label">Shared progress · read-only</p><p style="margin:0">Someone shared their map: <b>${n}</b> of ${A.length} chapters learned. Your own progress isn't changed by opening this.</p>
+      <div class="btns"><a class="btn primary" href="#home">Back to my own map</a></div></div>
+      ${stripHtml(true).replace(/<p class="resume">[\s\S]*<\/p>$/, "")}<div class="frame">${map}</div></div>`;
+    window.scrollTo(0, 0);
+  }
+
+  // ---- progress picture: a 1200 x 630 card to post anywhere ----
+  function progressPicture() {
+    const cv = document.createElement("canvas"); cv.width = 1200; cv.height = 630;
+    const g = cv.getContext("2d"), css = getComputedStyle(document.documentElement), v = k => css.getPropertyValue(k).trim();
+    const font = (w, px, fam) => `${w} ${px}px ${fam || '"JetBrains Mono", monospace'}`;
+    const cjk = '"Atlas CJK", "Atlas CJK Sys", "Noto Sans SC", sans-serif';
+    g.fillStyle = v("--bg"); g.fillRect(0, 0, 1200, 630);
+    g.fillStyle = v("--fg"); g.font = font(600, 34); g.fillText("Contest Chapter Atlas", 64, 92);
+    g.fillStyle = v("--muted"); g.font = font(400, 24, cjk); g.fillText("深入浅出程序设计竞赛 · 101 章", 64, 132);
+    const n = learnedN();
+    g.fillStyle = v("--fg"); g.font = font(700, 96); g.fillText(`${n}`, 64, 262);
+    const w = g.measureText(`${n}`).width;
+    g.font = font(400, 30); g.fillStyle = v("--fg-2"); g.fillText(`/ ${A.length} chapters learned`, 64 + w + 16, 262);
+    LEVELS.forEach((l, k) => {
+      const list = A.filter(c => c.id.startsWith(l.key)), done = list.filter(c => statusOf(c.id) === "learned").length, y = 330 + k * 56;
+      g.fillStyle = v("--lv-" + l.slug); g.font = font(600, 26, cjk); g.fillText(l.name, 64, y + 20);
+      g.fillStyle = v("--raised"); g.fillRect(230, y, 760, 22);
+      g.fillStyle = v("--lv-" + l.slug); g.fillRect(230, y, 760 * done / list.length, 22);
+      g.fillStyle = v("--fg-2"); g.font = font(400, 24); g.fillText(`${done}/${list.length}`, 1010, y + 19);
+    });
+    g.fillStyle = v("--muted"); g.font = font(400, 22);
+    g.fillText(`${solved.size} problems ticked · ${longestStreak()}-day best streak · yhcrow.github.io/Competitive-Programming-Learning`, 64, 590);
+    cv.toBlob(b => download(`atlas-progress-${dayKey(Date.now())}.png`, b), "image/png");
+  }
+
+  // ---- Chapters page: the course map in miniature, each box a link ----
+  function listMapHtml() {
+    if (!layout) computeLayout();
+    const { xy, width, height, lanes } = layout;
+    return `<div class="listmap card"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Where each chapter sits on the course map">
+      ${lanes.map(({ level: l, top, height: h }) => `<rect x="0" y="${top}" width="${width}" height="${h}" style="fill: var(--lv-${l.slug}); opacity: .1"/>`).join("")}
+      ${A.filter(c => !isFoldedId(c.id)).map(c => `<a href="#ch-${c.slug}"><rect data-id="${c.id}" x="${xy[c.id].x}" y="${xy[c.id].y}" width="${W}" height="${H}" rx="10" style="fill: var(--${lvClass(c)}); opacity: ${statusOf(c.id) === "learned" ? 0.95 : statusOf(c.id) === "learning" ? 0.65 : 0.3}"><title>${esc(c.id + " " + c.title)}</title></rect></a>`).join("")}</svg></div>`;
+  }
+  document.addEventListener("mouseover", e => {
+    const tl = e.target.closest && e.target.closest(".tile");
+    const svg = document.querySelector(".listmap svg");
+    if (!svg) return;
+    const id = tl && (A.find(c => tl.getAttribute("href") === "#ch-" + c.slug) || {}).id;
+    svg.querySelectorAll("rect.hl").forEach(r => r.classList.remove("hl"));
+    if (id) { const r = svg.querySelector(`rect[data-id="${id}"]`); if (r) r.classList.add("hl"); }
+  });
+
+  // ---- clicks for everything above ----
+  function extraClick(el, e) {
+    const d = el.dataset;
+    if ("readyonly" in d) { readyOnly = !readyOnly; el.setAttribute("aria-pressed", String(readyOnly)); refreshTree(); return true; }
+    if ("fold" in d) { foldDone = !foldDone; store.set("foldDone", foldDone); layout = null; viewTree(); return true; }
+    if ("goal" in d) {
+      goal = d.goal && goal !== d.goal ? d.goal : null; store.set("goal", goal);
+      toast(goal ? `Goal set: ${goal}` : "Goal cleared");
+      $("#canvas") ? refreshTree() : route(); return true;
+    }
+    if ("goalqueue" in d) { queue = goalPath().filter(id => statusOf(id) !== "learned").slice(0, 5); store.set("queue", queue); toast(`Study queue: ${queue.join(" ")}`); return true; }
+    if ("chk" in d) { answerCheck(d.chk); return true; }
+    if ("mdel" in d) {
+      const [id, k] = d.mdel.split(":"); mistakes[id].splice(+k, 1); store.set("mistakes", mistakes);
+      el.closest(".mblock").outerHTML = mistakesHtml(byId[id]); return true;
+    }
+    if ("stuck" in d) { el.outerHTML = `<a class="sol" href="${solutionUrl(d.stuck)}" target="_blank" rel="noopener">题解</a>`; return true; }
+    if ("copyShare" in d) { copy(shareLink()); return true; }
+    if ("cardImg" in d) { progressPicture(); return true; }
+    if ("cardflip" in d) { cardShown = true; viewCards(); return true; }
+    if ("cardgrade" in d) {
+      if (d.cardgrade === "1") cardKnew++; else deck.push(deck[cardI]);
+      cardI++; cardShown = false; viewCards(); return true;
+    }
+    if ("cards" in d) { deck = null; viewCards(); return true; }
+    if ("contest" in d) { if (d.contest === "end") endContest(); else startContest(+d.contest.split(":")[1]); return true; }
+    return false;
+  }
+
   // ---- routing ----
   let skipHash = false;
   function route() {
     clearInterval(visTimer); visTimer = null; // a visualizer stops playing when you leave its chapter
+    clearInterval(contestTimer); contestTimer = null;
+    if (shareProg) { shareProg = null; layout = null; }
     const full = location.hash.slice(1) || "home";
-    ["home", "tree", "list", "progress"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
+    ["home", "tree", "list", "progress", "practice"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
     const [base, query] = full.split("?");
     const qp = new URLSearchParams(query || "");
     if (base === "home") { $("#nav-home").setAttribute("aria-current", "page"); return viewHome(); }
@@ -2107,6 +2675,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (qp.has("view")) listView = qp.get("view");
     }
     if (base === "tree" && qp.has("level")) { levelFilter = qp.get("level"); $("#nav-tree").setAttribute("aria-current", "page"); viewTree(); fitLane($("#canvas"), levelFilter); return; }
+    const PRACTICE = { practice: () => viewPractice(), glossary: () => viewGlossary(), cards: () => viewCards(), contest: () => viewContest() };
+    if (PRACTICE[base]) { $("#nav-practice").setAttribute("aria-current", "page"); return PRACTICE[base](); }
+    if (base === "shared") return viewShared(qp.get("p") || "");
     const h = base === "list" || base === "tree" ? base : full;
     const m = h.match(/^ch-([a-z]\d+)(?:-(code|problems|handout|notes))?(?:\?sec=([\w-]+))?$/);
     if (m) return viewChapter(m[1], m[2], m[3]);
@@ -2161,15 +2732,18 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       document.querySelectorAll("[data-topic]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.topic === topicFilter)));
       return;
     }
+    const ex = e.target.closest("[data-readyonly],[data-fold],[data-goal],[data-goalqueue],[data-chk],[data-mdel],[data-stuck],[data-copy-share],[data-card-img],[data-cardflip],[data-cardgrade],[data-cards],[data-contest],[data-csolve-btn]");
+    if (ex && extraClick(ex, e)) return;
     const rv = e.target.closest("[data-reviewed]");
     if (rv) {
       const [id, d] = rv.dataset.reviewed.split(":");
       reviews[id] = [...(reviews[id] || []), +d]; store.set("reviews", reviews); logDay();
-      toast(`${id} reviewed`); viewProgress(); return;
+      toast(`${id} reviewed`); route(); return;
     }
     const bk = e.target.closest("[data-backup]");
     if (bk) {
       if (bk.dataset.backup === "copy") { copy(backupJson()); return; }
+      if (bk.dataset.backup === "download") { download(`contest-atlas-backup-${dayKey(Date.now())}.json`, new Blob([backupJson()], { type: "application/json" })); return; }
       const note = $("#restoreNote"), text = $("#restoreText").value.trim();
       if (!text) { toast("Paste a backup first"); return; }
       if (note.hidden) { note.hidden = false; return; }
@@ -2197,6 +2771,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (selected && curS < 0.99) { const before = t.getBoundingClientRect(); zoomS = 1; viewTree(); zoomFrom(before, id); return; }
       refreshTree(); return;
     }
+    if (t.dataset.status === "learned" && /^#ch-/.test(location.hash) && statusOf(t.dataset.id) !== "learned" && !checks[t.dataset.id] && byId[t.dataset.id].boxes.length) { startCheck(t.dataset.id); return; }
     if (t.dataset.status) { setStatus(t.dataset.id, t.dataset.status); route(); return; }
     if (t.dataset.level) {
       levelFilter = t.dataset.level; selected = null; viewTree();
@@ -2221,21 +2796,27 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (t.dataset.bulk === "reset") {
         const note = $("#resetNote");
         if (note.hidden) { note.hidden = false; return; }
-        prog = {}; solved = new Set(); notes = {}; store.set("progress", prog); store.set("solved", []); store.set("notes", notes); toast("Cleared"); route(); return;
+        prog = {}; solved = new Set(); notes = {}; mistakes = {}; checks = {}; goal = null; layout = null;
+        store.set("progress", prog); store.set("solved", []); store.set("notes", notes); store.set("mistakes", mistakes); store.set("checks", checks); store.set("goal", null); toast("Cleared"); route(); return;
       }
-      A.filter(x => x.id.startsWith(t.dataset.bulk)).forEach(x => (prog[x.id] = "learned")); store.set("progress", prog); toast(`${LEVELS.find(l => l.key === t.dataset.bulk).name} marked learned`); route();
+      A.filter(x => x.id.startsWith(t.dataset.bulk)).forEach(x => (prog[x.id] = "learned")); store.set("progress", prog); layout = null; toast(`${LEVELS.find(l => l.key === t.dataset.bulk).name} marked learned`); route();
     }
   });
   document.addEventListener("change", e => {
     const t = e.target;
     if (t.dataset.solve) { toggleSolved(t.dataset.solve); t.closest("tr").classList.toggle("solved", solved.has(t.dataset.solve)); return; }
     if (t.id === "pdiff") { pstate.d = t.value; route(); }
+    if (t.id === "restoreFile" && t.files[0]) { t.files[0].text().then(txt => { $("#restoreText").value = txt; $("#restoreNote").hidden = false; toast("Backup loaded. Press Restore to apply it"); }); }
+    if (t.dataset.csolve) { contestTick(t.dataset.csolve, t.checked); }
+    if (t.dataset.cardopt) { cardOpts[t.dataset.cardopt] = t.type === "checkbox" ? t.checked : t.value; deck = null; viewCards(); }
     if (t.id === "pstar") { pstate.star = t.checked; route(); }
     if (t.id === "phide") { pstate.hide = t.checked; route(); }
   });
   let pqTimer = 0;
   document.addEventListener("input", e => {
     const t = e.target;
+    if (t.id === "calcN" || t.id === "calcT") { const o = $("#calcOut"); if (o) o.innerHTML = calcHtml($("#calcN").value, $("#calcT").value); return; }
+    if (t.id === "glossQ") { glossQ = t.value.trim().toLowerCase(); const b = $("#glossBody"); if (b) b.innerHTML = glossRows(); return; }
     if (t.id === "pq") { clearTimeout(pqTimer); pqTimer = setTimeout(() => { pstate.q = t.value.trim().toLowerCase(); const pos = t.selectionStart; route(); const n = $("#pq"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 250); }
   });
   document.addEventListener("keydown", e => {
@@ -2256,7 +2837,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]"))) return;
     if (e.key === "/") { e.preventDefault(); $("#q").focus(); return; }
     if (e.key === "t") { location.hash = "tree"; return; }
-    const views = { 1: "home", 2: "tree", 3: "list", 4: "progress" };
+    const views = { 1: "home", 2: "tree", 3: "list", 4: "progress", 5: "practice" };
     if (views[e.key]) { location.hash = views[e.key]; return; }
     if (e.key === "j" || e.key === "k" || e.key === "]" || e.key === "[") {
       const m = location.hash.match(/^#ch-([a-z]\d+)/);
@@ -2280,6 +2861,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   let hits = [], hi = 0;
   function search() {
     const s = q.value.trim().toLowerCase();
+    if (!s) markMapSearch(null);
     if (!s) { res.innerHTML = `<div class="none">Search chapters, concept boxes, programs and starred problems. Try 懒标记, dijkstra or P3372.<br>Start with # to find problems by tag: #线段树, #dp, #greedy</div>`; res.hidden = false; return; }
     const tagQ = s.match(/^(?:#|tag:)\s*(.*)$/);
     if (tagQ) return tagSearch(tagQ[1]);
@@ -2287,6 +2869,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const extra = Object.keys(ALIAS).filter(k => (" " + s + " ").includes(" " + k + " ")).map(k => ALIAS[k].toLowerCase());
     hits = index.filter(x => { const t = x.text.toLowerCase(); return words.every(w => t.includes(w)) || extra.some(a => t.includes(a)); });
     hits.sort((a, b) => (a.kind === "Chapter" ? 0 : 1) - (b.kind === "Chapter" ? 0 : 1));
+    markMapSearch(new Set(hits.map(h => h.c.id)));
     hits = hits.slice(0, 30); hi = 0;
     const snip = t => { const i = t.toLowerCase().indexOf(words[0]); const a = Math.max(0, i - 40); return (a ? "…" : "") + t.slice(a, a + 140) + (t.length > a + 140 ? "…" : ""); };
     res.innerHTML = hits.length ? hits.map((x, i) => `<a href="${x.href}" data-loc="${x.c.id}" class="${i === 0 ? "on" : ""}"><span class="lv ${lvClass(x.c)}">${x.c.id}</span> <span class="cjk">${esc(x.c.title)}</span> <span class="pill">${esc(x.kind)}</span><small>${esc(snip(x.show))}</small></a>`).join("") : `<div class="none">No matches for “${esc(q.value)}”</div>`;
@@ -2326,11 +2909,14 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if ((e.key === "ArrowDown" || e.key === "ArrowUp") && links.length) { e.preventDefault(); hi = (hi + (e.key === "ArrowDown" ? 1 : -1) + links.length) % links.length; links.forEach((l, i) => l.classList.toggle("on", i === hi)); links[hi].scrollIntoView({ block: "nearest" }); }
     if (e.key === "Enter" && e.shiftKey && links[hi] && links[hi].dataset.loc) { e.preventDefault(); res.hidden = true; q.blur(); locate(links[hi].dataset.loc); return; }
     if (e.key === "Enter" && links[hi]) { e.preventDefault(); links[hi].click(); res.hidden = true; q.blur(); }
-    if (e.key === "Escape") { res.hidden = true; q.blur(); }
+    if (e.key === "Escape") { res.hidden = true; q.blur(); markMapSearch(null); }
   });
   document.addEventListener("click", e => { if (!e.target.closest(".search") || e.target.closest(".results a")) res.hidden = true; });
 
   // ---- boot ----
+  try { localStorage.setItem("atlas.__t", "1"); localStorage.removeItem("atlas.__t"); }
+  catch (e) { $("#view").insertAdjacentHTML("beforebegin", `<p class="storewarn wrap" role="status">This browser is blocking saved data (a private window?), so your progress will be lost when you close the tab. Progress → Download backup file keeps a copy.</p>`); }
+  if ("serviceWorker" in navigator && document.querySelector('link[rel="manifest"]')) addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   { const sk = skeletonHtml((location.hash.slice(1) || "home").split("?")[0]); if (sk) $("#view").innerHTML = sk; }
   addEventListener("hashchange", () => setTimeout(rollCounters, 30));
   fetch("atlas.json").then(r => r.json()).then(data => {
