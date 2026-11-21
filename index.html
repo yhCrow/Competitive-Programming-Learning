@@ -151,7 +151,8 @@ main { max-width: 1500px; margin: 0 auto; padding-block: 18px 60px; }
 .btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .btn:hover { border-color: var(--fg); }
 .status { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-.status button { border: 0; background: transparent; padding: 5px 10px; font-size: 13px; color: var(--muted); }
+.status { max-width: 100%; }
+.status button { border: 0; background: transparent; padding: 5px 8px; font-size: 12px; color: var(--muted); white-space: nowrap; flex: 1 1 auto; }
 .status button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 .links { display: flex; flex-wrap: wrap; gap: 6px; }
 .links a { font-family: var(--f-mono); font-size: 12px; text-decoration: none; padding: 2px 8px; border-radius: 6px; background: var(--sunk); color: var(--fg); }
