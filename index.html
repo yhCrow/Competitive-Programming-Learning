@@ -127,9 +127,11 @@ main { max-width: 1520px; margin: 0 auto; padding-block: 24px 64px; }
 /* tree */
 .treeview { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
 .canvas { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow: auto; max-height: calc(100vh - 200px); min-height: 320px; position: relative; }
-.canvas.fit { overflow: hidden; }
 .canvas svg { display: block; }
-.canvas.fit svg { width: 100%; height: auto; }
+.canvas { cursor: grab; touch-action: pan-x pan-y; }
+.canvas.dragging { cursor: grabbing; user-select: none; }
+.zoom button { min-width: 32px; }
+.zoom .pct { display: inline-flex; align-items: center; justify-content: center; min-width: 52px; font-size: 12px; color: var(--fg-2); font-variant-numeric: tabular-nums; border-inline: 1px solid var(--line-strong); }
 .lane-bg { fill: var(--c); opacity: .045; }
 .lane-rule { stroke: var(--line); stroke-width: 1; }
 .lane-name { font-family: var(--f-cjk); font-size: 15px; font-weight: 500; fill: var(--c); }
@@ -218,6 +220,22 @@ ol.path a:hover .cjk { text-decoration: underline; }
 .box.trap b { color: var(--trap); }
 .jump { font-size: 12px; color: var(--muted); text-decoration: none; }
 .jump:hover { color: var(--fg); }
+.flow { display: grid; gap: 12px; max-width: 72ch; }
+.flow .sec { margin: 32px 0 0; }
+.flow .sec:first-child { margin-top: 0; }
+.flow .box { max-width: none; }
+.sub { font-family: var(--f-cjk); font-size: 14px; margin: 20px 0 0; }
+.sub .n, .outline .n { font-family: var(--f-mono); color: var(--muted); font-weight: 400; }
+.lede { color: var(--muted); margin: -4px 0 0; font-size: 13px; }
+.para { margin: 0; line-height: 1.75; }
+.para.li { padding-left: 2.2em; text-indent: -2.2em; }
+.tbl { display: grid; gap: 4px; }
+.tbl pre { margin: 0; font-family: var(--f-mono); font-size: 12px; line-height: 1.7; background: var(--raised); border-radius: var(--r-card); padding: 12px 16px; overflow-x: auto; }
+.fig { justify-self: start; }
+.outline { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.outline li.h3 { padding-left: 16px; }
+.linkish { border: 0; background: none; padding: 2px 0; text-align: left; color: var(--fg-2); font-size: 13px; cursor: pointer; }
+.linkish:hover { color: var(--fg); }
 .recap { background: var(--raised); border-radius: var(--r-card); padding: 16px; max-width: 72ch; margin-top: 32px; line-height: 1.7; }
 .recap h3 { margin: 0 0 8px; font-size: 14px; }
 .recap p { margin: 4px 0; font-size: 13px; }
@@ -319,6 +337,8 @@ tr td { transition: opacity .15s var(--ease); }
   .strip { gap: 4px 16px; font-size: 12px; }
   .strip .meter, .strip .en { display: none; }
   .canvas { max-height: 64vh; min-height: 200px; }
+  .frame .top span + span, .tools .hint { display: none; }
+  .ptag { display: none; }
   .results { min-width: 0; }
 }
 /* Reduced motion: drop movement, keep the fades and colour changes that confirm an action. */
@@ -367,7 +387,9 @@ tr td { transition: opacity .15s var(--ease); }
   const KIND = { "IDEA": "Idea", "KEY POINT": "Key point", "TRAP": "Trap", "NOTE": "Note", "TIP": "Tip", "WARNING": "Warning" };
 
   let A = [], byId = {}, bySlug = {}, kids = {};
-  let problems = null, selected = null, levelFilter = "all", zoom = "fit";
+  let problems = null, selected = null, levelFilter = "all";
+  let zoomS = null, curS = 1; // chosen map scale (null = fit) and the one drawn now
+  const ZMIN = 0.2, ZSTEPS = [0.2, 0.3, 0.45, 0.6, 0.8, 1];
   const texts = {};
 
   // ---- per-viewer storage (this browser only) ----
@@ -563,24 +585,99 @@ tr td { transition: opacity .15s var(--ease); }
   }
 
   // ---- views ----
+  // ---- map zoom: the svg is redrawn at width x scale, so text stays sharp and the canvas scrolls natively ----
+  const clampS = s => Math.min(1, Math.max(ZMIN, s));
+  const viewH = () => Math.max(320, innerHeight - 200);
+  const fitScale = canvas => clampS((canvas.clientWidth - 2) / layout.width);
+  function sizeSvg(canvas, s) {
+    const svg = canvas.querySelector("svg");
+    curS = s;
+    svg.setAttribute("width", Math.round(layout.width * s));
+    svg.setAttribute("height", Math.round(layout.height * s));
+    const pct = $("#zoomPct");
+    if (pct) pct.textContent = Math.round(s * 100) + "%";
+  }
+  // Zoom keeping the map point under (ax, ay), canvas coordinates, where it is.
+  function zoomAt(canvas, s, ax = canvas.clientWidth / 2, ay = canvas.clientHeight / 2) {
+    s = clampS(s);
+    const mx = (canvas.scrollLeft + ax) / curS, my = (canvas.scrollTop + ay) / curS;
+    sizeSvg(canvas, s);
+    zoomS = s;
+    canvas.scrollLeft = mx * s - ax;
+    canvas.scrollTop = my * s - ay;
+  }
+  function fitBox(canvas, x0, y0, x1, y1) {
+    const s = clampS(Math.min(canvas.clientWidth / (x1 - x0), viewH() / (y1 - y0)));
+    sizeSvg(canvas, s);
+    zoomS = s;
+    canvas.scrollLeft = x0 * s;
+    canvas.scrollTop = y0 * s;
+  }
+  function fitLane(canvas, key) {
+    const ids = A.filter(c => c.id.startsWith(key)).map(c => layout.xy[c.id]);
+    const lane = layout.lanes.find(l => l.level.key === key);
+    fitBox(canvas, Math.min(...ids.map(p => p.x)) - 24, lane.top, Math.max(...ids.map(p => p.x)) + W + 24, lane.top + lane.height);
+  }
   function placeCanvas() {
     const canvas = $("#canvas");
-    if (!canvas || zoom === "fit") return;
+    if (!canvas) return;
+    sizeSvg(canvas, zoomS ?? fitScale(canvas));
+    if (zoomS === null) return;
     const focusId = selected || (A.find(c => statusOf(c.id) !== "learned") || A[0]).id;
     const p = layout.xy[focusId];
-    canvas.scrollLeft = Math.max(0, p.x - (selected ? canvas.clientWidth / 2 - W / 2 : LANEW));
-    canvas.scrollTop = Math.max(0, p.y - canvas.clientHeight / 2 + H / 2);
+    canvas.scrollLeft = Math.max(0, p.x * curS - (selected ? canvas.clientWidth / 2 - W * curS / 2 : LANEW * curS));
+    canvas.scrollTop = Math.max(0, p.y * curS - canvas.clientHeight / 2 + H * curS / 2);
+  }
+  // Drag to pan with a mouse; pinch to zoom on touch (one finger still scrolls natively).
+  let dragMoved = false;
+  function wireCanvas(canvas) {
+    let drag = null;
+    const touches = new Map();
+    let pinch = null;
+    canvas.addEventListener("pointerdown", e => {
+      if (e.pointerType === "mouse" && e.button === 0) drag = { x: e.clientX, y: e.clientY, sl: canvas.scrollLeft, st: canvas.scrollTop };
+      if (e.pointerType === "touch") {
+        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (touches.size === 2) { const [a, b] = [...touches.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: curS }; }
+      }
+    });
+    canvas.addEventListener("pointermove", e => {
+      if (drag) {
+        const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+        if (!dragMoved && Math.abs(dx) + Math.abs(dy) > 4) { dragMoved = true; canvas.classList.add("dragging"); }
+        if (dragMoved) { canvas.scrollLeft = drag.sl - dx; canvas.scrollTop = drag.st - dy; }
+      }
+      if (pinch && touches.has(e.pointerId)) {
+        touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        const [a, b] = [...touches.values()], r = canvas.getBoundingClientRect();
+        zoomAt(canvas, pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+      }
+    });
+    const end = e => {
+      drag = null; canvas.classList.remove("dragging");
+      setTimeout(() => (dragMoved = false)); // let the click that ends a drag see the flag first
+      touches.delete(e.pointerId); if (touches.size < 2) pinch = null;
+    };
+    canvas.addEventListener("pointerup", end);
+    canvas.addEventListener("pointercancel", end);
+    canvas.addEventListener("wheel", e => {
+      if (!e.ctrlKey) return; // plain wheel scrolls; Ctrl+wheel and trackpad pinch zoom
+      e.preventDefault();
+      const r = canvas.getBoundingClientRect();
+      zoomAt(canvas, curS * Math.exp(-e.deltaY * 0.002), e.clientX - r.left, e.clientY - r.top);
+    }, { passive: false });
   }
   function viewTree() {
     if (!layout) computeLayout();
     $("#view").innerHTML = `${stripHtml()}
       <div class="tools">
-        <div class="seg" role="group" aria-label="Map size"><button data-zoom="fit" aria-pressed="${zoom === "fit"}">Whole course</button><button data-zoom="full" aria-pressed="${zoom === "full"}">Actual size</button></div>
-        <div class="chipset" role="group" aria-label="Highlight a level">
+        <div class="seg zoom" role="group" aria-label="Map zoom"><button data-zoomstep="-1" aria-label="Zoom out">−</button><span class="pct" id="zoomPct" aria-live="polite">100%</span><button data-zoomstep="1" aria-label="Zoom in">+</button><button data-zoomfit>Fit</button></div>
+        <div class="chipset" role="group" aria-label="Show a level">
           <button class="chip" data-level="all" aria-pressed="${levelFilter === "all"}">All levels</button>
           ${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}
-        </div></div>
-      <div class="treeview"><div class="canvas${zoom === "fit" ? " fit" : ""}" id="canvas">${svgTree()}</div><aside class="side" id="side">${sideCard()}</aside></div>`;
+        </div><span class="hint">Drag to move · Ctrl + scroll or pinch to zoom</span></div>
+      <div class="treeview"><div class="canvas" id="canvas">${svgTree()}</div><aside class="side" id="side">${sideCard()}</aside></div>`;
+    wireCanvas($("#canvas"));
     placeCanvas();
   }
   function refreshTree() {
@@ -588,6 +685,7 @@ tr td { transition: opacity .15s var(--ease); }
     if (!canvas) return viewTree();
     const sl = canvas.scrollLeft, st = canvas.scrollTop;
     canvas.innerHTML = svgTree();
+    sizeSvg(canvas, curS);
     canvas.scrollLeft = sl; canvas.scrollTop = st;
     $("#side").innerHTML = sideCard();
     const s = document.querySelector(".strip"), r = document.querySelector(".resume");
@@ -636,19 +734,28 @@ tr td { transition: opacity .15s var(--ease); }
     return out.join("");
   }
 
+  // The handout in reading order: headings, paragraphs, boxes, tables, numbered points, program links.
+  const secId = num => "sec-" + num.replace(/\./g, "-");
   function concepts(c) {
-    const bySec = {};
-    c.boxes.forEach(b => (bySec[b.section] = bySec[b.section] || []).push(b));
-    const secs = c.sections.filter(s => bySec[s.num] || c.programs.some(p => p.section === s.num));
-    const box = b => `<div class="box${b.kind === "TRAP" ? " trap" : ""}"><b>${KIND[b.kind] || b.kind}</b>${esc(b.text)}</div>`;
-    const recap = c.exercises.filter(l => /^\d+\./.test(l));
-    let html = (bySec[""] || []).map(box).join("");
-    html += secs.map(s => `<div class="sec"><span class="n">${s.num}</span><h3>${esc(s.title)}</h3></div>
-      <div class="boxes">${(bySec[s.num] || []).map(box).join("")}
-      ${c.programs.filter(p => p.section === s.num).map(p => `<a class="jump" href="#ch-${c.slug}-code" data-jump="${esc(p.file)}">Program <span class="mono">${esc(p.file)}</span> →</a>`).join("")}</div>`).join("");
-    if (recap.length) html += `<div class="recap"><h3>Key points to memorise</h3>${recap.map(l => `<p>${esc(l)}</p>`).join("")}</div>`;
-    return html || `<p class="empty">No concept boxes were found in this handout. The Handout tab has its full text</p>`;
+    const pdf = page => `handouts/${c.slug}.pdf#page=${page}`;
+    const html = (c.flow || []).map(b => {
+      switch (b.t) {
+        case "h2": return `<div class="sec" id="${secId(b.num)}"><span class="n">${b.num}</span><h3>${esc(b.title)}</h3></div>`;
+        case "h3": return `<h4 class="sub" id="${secId(b.num)}"><span class="n">${b.num}</span> ${esc(b.title)}</h4>`;
+        case "lede": return `<p class="lede">${esc(b.text)}</p>`;
+        case "p": return `<p class="para">${esc(b.text)}</p>`;
+        case "li": return `<p class="para li">${esc(b.text)}</p>`;
+        case "box": return `<div class="box${b.kind === "TRAP" ? " trap" : ""}"><b>${KIND[b.kind] || b.kind}</b>${esc(b.text)}</div>`;
+        case "pre": return `<div class="tbl"><pre>${esc(b.lines.join("\n"))}</pre><a class="jump" href="${pdf(b.page)}" target="_blank" rel="noopener">Laid out properly in the PDF, page ${b.page} →</a></div>`;
+        case "fig": return `<a class="jump fig" href="${pdf(b.page)}" target="_blank" rel="noopener">Diagram on PDF page ${b.page} →</a>`;
+        case "prog": return `<a class="jump" href="#ch-${c.slug}-code" data-jump="${esc(b.file)}">Program <span class="mono">${esc(b.file)}</span> →</a>`;
+        default: return "";
+      }
+    }).join("");
+    return html ? `<div class="flow">${html}</div>` : `<p class="empty">This handout's text could not be read. Open the PDF instead</p>`;
   }
+  const outline = c => (c.flow || []).filter(b => b.t === "h2" || b.t === "h3")
+    .map(b => `<li class="${b.t}"><button class="linkish" data-goto="${secId(b.num)}"><span class="n">${b.num}</span> <span class="cjk">${esc(b.title)}</span></button></li>`).join("");
 
   function programs(c) {
     if (!c.programs.length) return `<p class="empty">No programs in this handout</p>`;
@@ -664,10 +771,10 @@ tr td { transition: opacity .15s var(--ease); }
     const url = p => judge === "luogu" ? `https://www.luogu.com.cn/problem/${p.id}` : (m => m ? `https://codeforces.com/problemset/problem/${m[1]}/${m[2]}` : "#")(p.id.match(/^(\d+)([A-Z]\d?)$/));
     const diff = p => judge === "luogu" ? `<span class="diff" style="background:${LUOGU[p.d][1]}">${LUOGU[p.d][0]}</span>` : `<span class="diff" style="background:${cfColor(p.r)}">${p.r}</span>`;
     const done = list.filter(p => solved.has(p.id)).length;
-    return { html: rows.length ? `<div class="tablewrap"><table><thead><tr><th>Done</th><th>Problem</th><th>Name</th><th>${judge === "luogu" ? "Difficulty" : "Rating"}</th><th>Tags</th><th style="text-align:right">${judge === "luogu" ? "Accepted" : "Solved"}</th></tr></thead><tbody>
+    return { html: rows.length ? `<div class="tablewrap"><table><thead><tr><th>Done</th><th>Problem</th><th>Name</th><th>${judge === "luogu" ? "Difficulty" : "Rating"}</th><th class="ptag">Tags</th><th style="text-align:right">${judge === "luogu" ? "Accepted" : "Solved"}</th></tr></thead><tbody>
       ${rows.map(p => `<tr class="${solved.has(p.id) ? "solved" : ""}"><td><input type="checkbox" id="s-${judge}-${esc(p.id)}" data-solve="${esc(p.id)}" ${solved.has(p.id) ? "checked" : ""} aria-label="Mark ${esc(p.id)} solved"></td>
         <td class="id">${p.star ? '<span class="star" title="Tests exactly this chapter\'s technique">★</span> ' : ""}<a href="${url(p)}" target="_blank" rel="noopener">${judge === "luogu" ? esc(p.id) : "CF " + esc(p.id)}</a></td>
-        <td class="cjk">${esc(p.name)}</td><td>${diff(p)}</td><td class="hint">${esc(p.tags.slice(0, 4).join(", "))}</td><td class="num">${p.ac.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="empty">No problems match these filters</p>`, done, total: list.length, shown: rows.length };
+        <td class="cjk">${esc(p.name)}</td><td>${diff(p)}</td><td class="hint ptag">${esc(p.tags.slice(0, 4).join(", "))}</td><td class="num">${p.ac.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="empty">No problems match these filters</p>`, done, total: list.length, shown: rows.length };
   }
 
   let pstate = { judge: "luogu", star: false, hide: false, d: "", q: "" };
@@ -722,7 +829,7 @@ tr td { transition: opacity .15s var(--ease); }
         <div class="block"><p class="label">Status</p>${statusButtons(c.id)}
           <div class="btns even"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a><a class="btn" href="#tree" data-select="${c.id}">Show in tree</a></div></div>
         ${star ? `<div class="block"><p class="label">Next ★ problem</p><a class="btn" style="width:100%;justify-content:flex-start" href="${star.url}" target="_blank" rel="noopener"><span class="mono">${esc(star.label)}</span><span class="cjk" style="overflow:hidden;text-overflow:ellipsis">${esc(star.p.name)}</span></a></div>` : ""}
-        <div class="block"><p class="label">Sections</p><ol class="path">${c.sections.map(s => `<li class="cjk">${esc(s.title)}</li>`).join("")}</ol></div>
+        <div class="block"><p class="label">On this page</p><ol class="outline">${outline(c)}</ol></div>
         <div class="block"><p class="label">Needs</p><div class="links">${c.pre.length ? c.pre.map(chLink).join("") : '<span class="hint">Nothing, a starting point</span>'}</div></div>
         <div class="block"><p class="label">Unlocks</p><div class="links">${(kids[c.id] || []).map(chLink).join("") || '<span class="hint">Nothing further</span>'}</div></div>
         ${need.length ? `<div class="block"><p class="label">Still to learn first · ${need.length}</p><div class="links">${need.map(chLink).join("")}</div></div>` : ""}
@@ -799,21 +906,34 @@ tr td { transition: opacity .15s var(--ease); }
 
   // ---- events ----
   document.addEventListener("click", e => {
-    const t = e.target.closest("[data-status],[data-level],[data-zoom],[data-clear],[data-copy-prog],[data-copy-io],[data-judge],[data-copy-cc],[data-bulk],[data-select],[data-jump],.node,[data-solve]");
+    const g = e.target.closest("[data-goto]");
+    if (g) { const el = document.getElementById(g.dataset.goto); if (el) el.scrollIntoView({ block: "start" }); return; }
+    const t = e.target.closest("[data-status],[data-level],[data-zoomstep],[data-zoomfit],[data-clear],[data-copy-prog],[data-copy-io],[data-judge],[data-copy-cc],[data-bulk],[data-select],[data-jump],.node,[data-solve]");
     if (!t) return;
     if (t.classList.contains("node")) {
       const id = t.dataset.id;
       if (e.detail >= 2) { location.hash = "ch-" + byId[id].slug; return; }
-      if (!$("#canvas")) { selected = id; zoom = "full"; location.hash = "tree"; return; } // the front-page map
+      if (!$("#canvas")) { selected = id; zoomS = 1; location.hash = "tree"; return; } // the front-page map
+      if (dragMoved) return; // the end of a drag, not a click
       selected = selected === id ? null : id;
-      if (selected && zoom === "fit") { const before = t.getBoundingClientRect(); zoom = "full"; viewTree(); zoomFrom(before, id); return; }
+      if (selected && curS < 0.99) { const before = t.getBoundingClientRect(); zoomS = 1; viewTree(); zoomFrom(before, id); return; }
       refreshTree(); return;
     }
     if (t.dataset.status) { setStatus(t.dataset.id, t.dataset.status); route(); return; }
-    if (t.dataset.level) { levelFilter = t.dataset.level; viewTree(); return; }
-    if (t.dataset.zoom) { zoom = t.dataset.zoom; viewTree(); return; }
+    if (t.dataset.level) {
+      levelFilter = t.dataset.level; selected = null; viewTree();
+      if (levelFilter === "all") { zoomS = null; placeCanvas(); } else fitLane($("#canvas"), levelFilter);
+      return;
+    }
+    if (t.dataset.zoomstep) {
+      const up = t.dataset.zoomstep === "1";
+      const next = up ? ZSTEPS.find(z => z > curS + 0.01) : [...ZSTEPS].reverse().find(z => z < curS - 0.01);
+      zoomAt($("#canvas"), next ?? (up ? 1 : ZMIN));
+      return;
+    }
+    if (t.hasAttribute("data-zoomfit")) { zoomS = null; placeCanvas(); $("#canvas").scrollTo(0, 0); return; }
     if (t.hasAttribute("data-clear")) { selected = null; refreshTree(); return; }
-    if (t.dataset.select) { selected = t.dataset.select; zoom = "full"; }
+    if (t.dataset.select) { selected = t.dataset.select; zoomS = 1; }
     if (t.dataset.jump) { const name = t.dataset.jump; setTimeout(() => { const ch = bySlug[(location.hash.match(/ch-([a-z]\d+)/) || [])[1]]; const i = ch ? ch.programs.findIndex(p => p.file === name) : -1; const el = document.getElementById("prog-" + i); if (el) el.scrollIntoView({ block: "start" }); }, 30); }
     const c = bySlug[(location.hash.match(/ch-([a-z]\d+)/) || [])[1]];
     if (t.dataset.copyProg !== undefined && c) copy(c.programs[+t.dataset.copyProg].code);
@@ -847,9 +967,9 @@ tr td { transition: opacity .15s var(--ease); }
     if (n && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       if (selected === n.dataset.id && e.key === "Enter") { location.hash = "ch-" + byId[n.dataset.id].slug; return; }
-      if (!$("#canvas")) { selected = n.dataset.id; zoom = "full"; location.hash = "tree"; return; }
+      if (!$("#canvas")) { selected = n.dataset.id; zoomS = 1; location.hash = "tree"; return; }
       selected = n.dataset.id;
-      if (zoom === "fit") { const before = n.getBoundingClientRect(); zoom = "full"; viewTree(); zoomFrom(before, n.dataset.id); } else refreshTree();
+      if (curS < 0.99) { const before = n.getBoundingClientRect(); zoomS = 1; viewTree(); zoomFrom(before, n.dataset.id); } else refreshTree();
       const again = document.querySelector(`.node[data-id="${n.dataset.id}"]`); if (again) again.focus();
     }
   });
