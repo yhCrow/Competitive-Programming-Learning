@@ -213,7 +213,6 @@ ol.path a:hover .cjk { text-decoration: underline; }
 .sec:first-child { margin-top: 0; }
 .sec .n { font-family: var(--f-mono); color: var(--muted); font-size: 13px; }
 .sec h3 { margin: 0; font-family: var(--f-cjk); font-size: 17px; }
-.boxes { display: grid; gap: 12px; }
 .box { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-card); padding: 12px 16px; max-width: 72ch; line-height: 1.7; }
 .box b { font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: var(--muted); display: block; margin-bottom: 4px; }
 .box.trap { border-color: color-mix(in srgb, var(--trap) 35%, var(--line)); }
@@ -236,9 +235,6 @@ ol.path a:hover .cjk { text-decoration: underline; }
 .outline li.h3 { padding-left: 16px; }
 .linkish { border: 0; background: none; padding: 2px 0; text-align: left; color: var(--fg-2); font-size: 13px; cursor: pointer; }
 .linkish:hover { color: var(--fg); }
-.recap { background: var(--raised); border-radius: var(--r-card); padding: 16px; max-width: 72ch; margin-top: 32px; line-height: 1.7; }
-.recap h3 { margin: 0 0 8px; font-size: 14px; }
-.recap p { margin: 4px 0; font-size: 13px; }
 .prog { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); margin: 0 0 16px; overflow: hidden; }
 .prog header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 12px 8px 16px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .prog header .mono { font-weight: 600; }
@@ -737,6 +733,11 @@ tr td { transition: opacity .15s var(--ease); }
   // The handout in reading order: headings, paragraphs, boxes, tables, numbered points, program links.
   const secId = num => "sec-" + num.replace(/\./g, "-");
   function concepts(c) {
+    // Each chapter's text is its own file, fetched the first time the chapter opens.
+    if (c.flow === undefined) {
+      fetch(`handouts/${c.slug}.flow.json`).then(r => r.json()).then(f => { c.flow = f; route(); }).catch(() => { c.flow = null; route(); });
+      return `<p class="empty">Loading the chapter text</p>`;
+    }
     const pdf = page => `handouts/${c.slug}.pdf#page=${page}`;
     const html = (c.flow || []).map(b => {
       switch (b.t) {
@@ -768,12 +769,11 @@ tr td { transition: opacity .15s var(--ease); }
   function problemRows(c, judge, filter) {
     const list = (problems && problems[c.id] && problems[c.id][judge]) || [];
     const rows = list.filter(p => (!filter.star || p.star) && (!filter.hide || !solved.has(p.id)) && (filter.d === "" || (judge === "luogu" ? String(p.d) === filter.d : String(Math.floor(p.r / 400) * 400) === filter.d)) && (!filter.q || (p.name + " " + p.id + " " + p.tags.join(" ")).toLowerCase().includes(filter.q)));
-    const url = p => judge === "luogu" ? `https://www.luogu.com.cn/problem/${p.id}` : (m => m ? `https://codeforces.com/problemset/problem/${m[1]}/${m[2]}` : "#")(p.id.match(/^(\d+)([A-Z]\d?)$/));
     const diff = p => judge === "luogu" ? `<span class="diff" style="background:${LUOGU[p.d][1]}">${LUOGU[p.d][0]}</span>` : `<span class="diff" style="background:${cfColor(p.r)}">${p.r}</span>`;
     const done = list.filter(p => solved.has(p.id)).length;
     return { html: rows.length ? `<div class="tablewrap"><table><thead><tr><th>Done</th><th>Problem</th><th>Name</th><th>${judge === "luogu" ? "Difficulty" : "Rating"}</th><th class="ptag">Tags</th><th style="text-align:right">${judge === "luogu" ? "Accepted" : "Solved"}</th></tr></thead><tbody>
       ${rows.map(p => `<tr class="${solved.has(p.id) ? "solved" : ""}"><td><input type="checkbox" id="s-${judge}-${esc(p.id)}" data-solve="${esc(p.id)}" ${solved.has(p.id) ? "checked" : ""} aria-label="Mark ${esc(p.id)} solved"></td>
-        <td class="id">${p.star ? '<span class="star" title="Tests exactly this chapter\'s technique">★</span> ' : ""}<a href="${url(p)}" target="_blank" rel="noopener">${judge === "luogu" ? esc(p.id) : "CF " + esc(p.id)}</a></td>
+        <td class="id">${p.star ? '<span class="star" title="Tests exactly this chapter\'s technique">★</span> ' : ""}<a href="${problemUrl(judge, p.id)}" target="_blank" rel="noopener">${judge === "luogu" ? esc(p.id) : "CF " + esc(p.id)}</a></td>
         <td class="cjk">${esc(p.name)}</td><td>${diff(p)}</td><td class="hint ptag">${esc(p.tags.slice(0, 4).join(", "))}</td><td class="num">${p.ac.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="empty">No problems match these filters</p>`, done, total: list.length, shown: rows.length };
   }
 
