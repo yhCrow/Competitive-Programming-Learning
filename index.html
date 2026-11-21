@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Prerequisite tree of all 101 深入浅出程序设计竞赛 chapters, with each handout's concepts, programs, Luogu and Codeforces problem lists, and PDFs.">
+<meta name="description" content="A map of all 101 深入浅出程序设计竞赛 chapters for C++ contest students, with each handout's concepts, programs, Luogu and Codeforces problem lists, and PDFs.">
 <title>Contest Chapter Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -167,7 +167,7 @@ main { max-width: 1520px; margin: 0 auto; padding-block: 24px 64px; }
 .block p { margin: 0 0 8px; }
 .block + .block { margin-top: 20px; }
 .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.btn { border: 1px solid var(--line-strong); background: var(--surface); height: 32px; padding: 0 12px; border-radius: var(--r-ctl); font-size: 13px; text-decoration: none; color: var(--fg); display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: background-color .15s var(--ease), border-color .15s var(--ease); }
+.btn { border: 1px solid var(--line-strong); background: var(--surface); height: 32px; padding: 0 12px; border-radius: var(--r-ctl); font-size: 13px; text-decoration: none; color: var(--fg); display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; transition: background-color .15s var(--ease), border-color .15s var(--ease), transform .12s var(--ease); }
 .btn.primary { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .btn:hover { border-color: var(--fg); }
 .btn:active { transform: scale(.98); }
@@ -266,16 +266,50 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
 .pager a:hover { border-color: var(--line-strong); }
 .pager a small { display: block; color: var(--muted); font-size: 12px; }
 .pager a.next { text-align: right; }
-.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: var(--r-ctl); font-size: 13px; z-index: 20; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 8px); opacity: 0; pointer-events: none; background: var(--fg); color: var(--bg); padding: 8px 16px; border-radius: var(--r-ctl); font-size: 13px; z-index: 20; transition: opacity .2s var(--ease), transform .2s var(--ease); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+/* motion: press feedback, solved-row fade, map zoom origin */
+.status button:active, .copy:active, .chip:active, .seg button:active { transform: scale(.97); }
+.copy, .chip, .seg button { transition: background-color .15s var(--ease), transform .12s var(--ease); }
+tr td { transition: opacity .15s var(--ease); }
+.canvas svg { transform-origin: 0 0; }
+.resume { font-size: 13px; color: var(--fg-2); margin: -4px 0 16px; }
+.resume a { text-decoration: none; }
+.resume a:hover .cjk { text-decoration: underline; }
+/* front page */
+.home { display: grid; gap: 96px; }
+.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; min-height: calc(100vh - 160px); }
+.hero > * { animation: rise .32s var(--ease) both; }
+.hero > * + * { animation-delay: .06s; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+.home h1 { font-family: var(--f-cjk); font-size: clamp(30px, 4vw, 44px); line-height: 1.15; margin: 0 0 16px; text-wrap: balance; letter-spacing: -0.01em; }
+.home h2 { font-family: var(--f-cjk); font-size: clamp(22px, 2.6vw, 28px); line-height: 1.25; margin: 0 0 12px; text-wrap: balance; }
+.home .fact { font-size: 13px; color: var(--fg); font-variant-numeric: tabular-nums; margin: 0 0 16px; }
+.home .lead { color: var(--fg-2); max-width: 56ch; line-height: 1.7; margin: 0 0 24px; }
+.frame { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; min-width: 0; }
+.frame .top { display: flex; justify-content: space-between; gap: 12px; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.frame svg { display: block; width: 100%; height: auto; }
+.showcase { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: start; }
+.showcase .prog { margin: 0; }
+.stars { display: grid; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
+.stars li { display: flex; gap: 12px; align-items: center; font-size: 13px; }
+.stars a { font-weight: 600; text-decoration: none; }
+.term { background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px; font-family: var(--f-mono); font-size: 13px; line-height: 1.9; }
+.term .p { color: var(--muted); }
+.outlinks { display: flex; gap: 8px 20px; flex-wrap: wrap; font-size: 13px; }
+.close { border-top: 1px solid var(--line); padding-top: 48px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+.close h2 { margin: 0; }
 .empty { color: var(--muted); padding: 24px; text-align: center; }
 .status { display: flex; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); overflow: hidden; }
-.status button { flex: 1 1 auto; border: 0; background: transparent; height: 32px; padding: 0 8px; font-size: 12px; color: var(--fg-2); white-space: nowrap; transition: background-color .15s var(--ease); }
+.status button { flex: 1 1 auto; border: 0; background: transparent; height: 32px; padding: 0 8px; font-size: 12px; color: var(--fg-2); white-space: nowrap; transition: background-color .15s var(--ease), transform .12s var(--ease); }
 .status button:hover { background: var(--raised); }
 .status button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 .progress-page { display: grid; gap: 32px; max-width: 880px; }
 
 @media (max-width: 1000px) {
-  .treeview, .chapter { grid-template-columns: minmax(0, 1fr); }
+  .treeview, .chapter, .hero, .showcase { grid-template-columns: minmax(0, 1fr); }
+  .hero { min-height: 0; }
+  .home { gap: 64px; }
   .side, .aside { position: static; }
 }
 @media (max-width: 560px) {
@@ -287,13 +321,13 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
   .canvas { max-height: 64vh; min-height: 200px; }
   .results { min-width: 0; }
 }
-@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
 <body>
 <header class="bar">
   <div class="bar-in wrap">
-    <a class="brand" href="#tree"><b>Contest Chapter Atlas</b><span>深入浅出程序设计竞赛 · 101 章</span></a>
+    <a class="brand" href="#home"><b>Contest Chapter Atlas</b><span>深入浅出程序设计竞赛 · 101 章</span></a>
     <nav class="nav" aria-label="Views">
       <a href="#tree" id="nav-tree">Tree</a>
       <a href="#list" id="nav-list">Chapters</a>
@@ -308,7 +342,7 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
 </header>
 
 <main class="wrap" id="view"><p class="empty">Loading the atlas</p></main>
-<div class="toast" id="toast" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>
@@ -349,7 +383,33 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
   const lvClass = c => "lv-" + lvOf(c).slug;
   const isReady = c => statusOf(c.id) !== "learned" && c.pre.every(p => statusOf(p) === "learned");
   let toastTimer = 0;
-  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 1800); }
+  function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 1800); }
+  const problemUrl = (judge, id) => judge === "luogu" ? `https://www.luogu.com.cn/problem/${id}` : (m => m ? `https://codeforces.com/problemset/problem/${m[1]}/${m[2]}` : "#")(id.match(/^(\d+)([A-Z]\d?)$/));
+  // First starred problem of a chapter not ticked yet (the stars in atlas.json, so no extra fetch).
+  function nextStar(c) {
+    const x = [...c.stars.luogu.map(p => ["luogu", p]), ...c.stars.codeforces.map(p => ["codeforces", p])].find(([, p]) => !solved.has(p.id));
+    return x ? { judge: x[0], p: x[1], label: (x[0] === "luogu" ? "" : "CF ") + x[1].id, url: problemUrl(x[0], x[1].id) } : null;
+  }
+  function resumeHtml() {
+    const cur = A.find(c => statusOf(c.id) === "learning") || A.find(isReady) || A.find(c => statusOf(c.id) !== "learned");
+    if (!cur) return "";
+    const s = nextStar(cur);
+    return `<p class="resume">Continue: <a href="#ch-${cur.slug}"><span class="lv ${lvClass(cur)}">${cur.id}</span> <span class="cjk">${esc(cur.title)}</span></a>${s ? ` → next ★ <a href="${s.url}" target="_blank" rel="noopener" class="mono">${esc(s.label)}</a> <span class="cjk">${esc(s.p.name)}</span>` : ""}</p>`;
+  }
+  // FLIP: draw the full-size map at the clicked box's old size, then let it grow into place.
+  function zoomFrom(before, id) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const svg = document.querySelector("#canvas svg"), node = document.querySelector(`.node[data-id="${id}"]`);
+    if (!svg || !node) return;
+    const after = node.getBoundingClientRect(), o = svg.getBoundingClientRect(), s = before.width / after.width;
+    const tx = before.left - o.left - s * (after.left - o.left), ty = before.top - o.top - s * (after.top - o.top);
+    svg.style.transition = "none";
+    svg.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+    svg.getBoundingClientRect();
+    svg.style.transition = "transform 280ms var(--ease)";
+    svg.style.transform = "";
+    svg.addEventListener("transitionend", () => (svg.style.transition = ""), { once: true });
+  }
   async function copy(text) {
     try { await navigator.clipboard.writeText(text); toast("Copied"); }
     catch (e) {
@@ -450,7 +510,7 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
       const done = list.filter(c => statusOf(c.id) === "learned").length;
       const half = list.filter(c => statusOf(c.id) === "learning").length;
       return `<span class="item lv-${l.slug}" style="--c: var(--lv-${l.slug})"><span class="lv lv-${l.slug}">${l.key}</span><span class="name">${l.name}</span><span class="meter"><i style="width:${done / list.length * 100}%"></i><i class="half" style="width:${half / list.length * 100}%"></i></span><span class="n">${done}/${list.length}</span></span>`;
-    }).join("")}</div>`;
+    }).join("")}</div>${resumeHtml()}`;
   }
   const chLink = id => `<a class="${statusOf(id) === "learned" ? "done" : ""}" href="#ch-${byId[id].slug}" title="${esc(byId[id].title + " · " + byId[id].en)}">${esc(id)}</a>`;
   function statusButtons(id) {
@@ -511,7 +571,8 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
     canvas.innerHTML = svgTree();
     canvas.scrollLeft = sl; canvas.scrollTop = st;
     $("#side").innerHTML = sideCard();
-    const s = document.querySelector(".strip");
+    const s = document.querySelector(".strip"), r = document.querySelector(".resume");
+    if (r) r.remove();
     if (s) s.outerHTML = stripHtml();
   }
 
@@ -629,7 +690,7 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
     const i = A.indexOf(c), prev = A[i - 1], next = A[i + 1];
     const tabs = [["concepts", "Concepts", c.boxes.length], ["code", "Code", c.programs.length], ["problems", "Problems", c.counts.luogu + c.counts.codeforces], ["handout", "Handout", c.pages + "p"], ["notes", "Notes", notes[c.id] ? "✎" : ""]];
     const body = tab === "code" ? programs(c) : tab === "problems" ? problemsTab(c) : tab === "handout" ? handoutTab(c) : tab === "notes" ? notesTab(c) : concepts(c);
-    const need = pathTo(c.id);
+    const need = pathTo(c.id), star = nextStar(c);
     $("#view").innerHTML = `<div class="chapter" style="--c: var(--${lvClass(c)})">
       <div style="min-width:0">
         <div class="crumbs"><a href="#tree" data-select="${c.id}">Tree</a><span>/</span><a href="#list">${lvOf(c).name}</a><span>/</span><span>${c.id}</span></div>
@@ -641,6 +702,7 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
       <aside class="aside">
         <div class="block"><p class="label">Status</p>${statusButtons(c.id)}
           <div class="btns even"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a><a class="btn" href="#tree" data-select="${c.id}">Show in tree</a></div></div>
+        ${star ? `<div class="block"><p class="label">Next ★ problem</p><a class="btn" style="width:100%;justify-content:flex-start" href="${star.url}" target="_blank" rel="noopener"><span class="mono">${esc(star.label)}</span><span class="cjk" style="overflow:hidden;text-overflow:ellipsis">${esc(star.p.name)}</span></a></div>` : ""}
         <div class="block"><p class="label">Sections</p><ol class="path">${c.sections.map(s => `<li class="cjk">${esc(s.title)}</li>`).join("")}</ol></div>
         <div class="block"><p class="label">Needs</p><div class="links">${c.pre.length ? c.pre.map(chLink).join("") : '<span class="hint">Nothing, a starting point</span>'}</div></div>
         <div class="block"><p class="label">Unlocks</p><div class="links">${(kids[c.id] || []).map(chLink).join("") || '<span class="hint">Nothing further</span>'}</div></div>
@@ -650,9 +712,60 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
     window.scrollTo(0, 0);
   }
 
+  // ---- front page: what the site is, shown with its own map, one chapter and the CP Coach link ----
+  function viewHome() {
+    if (!layout) computeLayout();
+    const sel = selected; selected = null;
+    const map = svgTree();
+    selected = sel;
+    const programsN = A.reduce((s, c) => s + c.programs.length, 0);
+    const lg = A.reduce((s, c) => s + c.counts.luogu, 0), cf = A.reduce((s, c) => s + c.counts.codeforces, 0);
+    const c = byId["进6"], key = c.boxes.find(b => b.kind === "KEY POINT") || c.boxes[0], p = c.programs[0];
+    const code = p.code.split("\n").slice(0, 18).join("\n");
+    const stars = c.stars.luogu.slice(0, 3);
+    $("#view").innerHTML = `<div class="home">
+      <section class="hero">
+        <div>
+          <h1>A map of all ${A.length} 深入浅出程序设计竞赛 chapters, for C++ contest students</h1>
+          <p class="fact">${A.length} chapters · ${programsN} C++ programs · ${lg.toLocaleString("en-US")} Luogu and ${cf.toLocaleString("en-US")} Codeforces problems</p>
+          <p class="lead">Each chapter shows what it needs, what it unlocks, its key ideas, its tested code and a ladder of problems from 入门 to NOI.</p>
+          <div class="btns"><a class="btn primary" href="#tree">Open the tree</a><a class="btn" href="#list">Browse chapters</a></div>
+          ${resumeHtml().replace('class="resume"', 'class="resume" style="margin:24px 0 0"')}
+        </div>
+        <div class="frame"><div class="top"><span>Whole course · four levels</span><span>Click a chapter to trace its path</span></div>${map}</div>
+      </section>
+
+      <section class="showcase">
+        <div>
+          <h2>Every chapter: its ideas, its code, its problems</h2>
+          <p class="lead">A chapter page collects the handout's Idea, Key point and Trap boxes, every program with its sample input and output, and the chapter's Luogu and Codeforces lists, starred where a problem tests exactly that technique.</p>
+          <div class="box"><b>Key point · ${c.id} ${esc(c.title)}</b>${esc(key.text)}</div>
+          <ul class="stars">${stars.map(s => `<li><span class="diff" style="background:${LUOGU[s.d][1]}">${LUOGU[s.d][0]}</span><a href="${problemUrl("luogu", s.id)}" target="_blank" rel="noopener">★ ${esc(s.id)}</a><span class="cjk">${esc(s.name)}</span></li>`).join("")}</ul>
+          <div class="btns"><a class="btn" href="#ch-${c.slug}">Open ${c.id} ${esc(c.title)}</a></div>
+        </div>
+        <article class="prog"><header><span><span class="mono">${esc(p.file)}</span> <small>§${esc(p.section)} · first 18 of ${p.code.split("\n").length} lines</small></span><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#ch-${c.slug}-code">All programs</a></header>
+          <pre class="code"><code>${codeHtml(code)}</code></pre>
+          ${p.samples.length ? `<div class="io">${p.samples.map(s => `<div><b><span>${esc(s.label)}</span></b><pre>${esc(s.text)}</pre></div>`).join("")}</div>` : ""}</article>
+      </section>
+
+      <section class="showcase">
+        <div>
+          <h2>Track your progress, then practise with CP Coach</h2>
+          <p class="lead">Mark chapters learned and tick problems as you solve them. Progress stays in this browser. If you use the CP Coach mod in Claude Code, these two commands teach a chapter from its handout and pick its next problems.</p>
+          <div class="outlinks"><a href="https://www.luogu.com.cn/" target="_blank" rel="noopener">Luogu</a><a href="https://codeforces.com/" target="_blank" rel="noopener">Codeforces</a><a href="https://github.com/yhCrow/Competitive-Programming-Learning" target="_blank" rel="noopener">Source on GitHub</a></div>
+        </div>
+        <div>${stripHtml().replace(/<p class="resume">[\s\S]*<\/p>$/, "")}<div class="term"><div><span class="p">&gt;</span> /learn ${c.id}</div><div><span class="p">&gt;</span> /practice ${c.id}</div></div></div>
+      </section>
+
+      <section class="close"><h2>Start at 基1, or jump to the chapter you're on</h2><a class="btn primary" href="#tree">Open the tree</a></section>
+    </div>`;
+    window.scrollTo(0, 0);
+  }
+
   // ---- routing ----
   function route() {
-    const h = location.hash.slice(1) || "tree";
+    const h = location.hash.slice(1) || "home";
+    if (h === "home") { ["tree", "list", "progress"].forEach(k => $("#nav-" + k).removeAttribute("aria-current")); return viewHome(); }
     ["tree", "list", "progress"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
     const m = h.match(/^ch-([a-z]\d+)(?:-(code|problems|handout|notes))?$/);
     if (m) return viewChapter(m[1], m[2]);
@@ -672,8 +785,9 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
     if (t.classList.contains("node")) {
       const id = t.dataset.id;
       if (e.detail >= 2) { location.hash = "ch-" + byId[id].slug; return; }
+      if (!$("#canvas")) { selected = id; zoom = "full"; location.hash = "tree"; return; } // the front-page map
       selected = selected === id ? null : id;
-      if (selected && zoom === "fit") { zoom = "full"; viewTree(); return; }
+      if (selected && zoom === "fit") { const before = t.getBoundingClientRect(); zoom = "full"; viewTree(); zoomFrom(before, id); return; }
       refreshTree(); return;
     }
     if (t.dataset.status) { setStatus(t.dataset.id, t.dataset.status); route(); return; }
@@ -714,9 +828,23 @@ textarea.notes { width: 100%; min-height: 260px; border: 1px solid var(--line-st
     if (n && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       if (selected === n.dataset.id && e.key === "Enter") { location.hash = "ch-" + byId[n.dataset.id].slug; return; }
+      if (!$("#canvas")) { selected = n.dataset.id; zoom = "full"; location.hash = "tree"; return; }
       selected = n.dataset.id;
-      if (zoom === "fit") { zoom = "full"; viewTree(); } else refreshTree();
+      if (zoom === "fit") { const before = n.getBoundingClientRect(); zoom = "full"; viewTree(); zoomFrom(before, n.dataset.id); } else refreshTree();
       const again = document.querySelector(`.node[data-id="${n.dataset.id}"]`); if (again) again.focus();
+    }
+  });
+
+  // Keys: / search, t tree, j / k next and previous chapter. Instant on purpose: shortcuts never animate.
+  document.addEventListener("keydown", e => {
+    if (e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]"))) return;
+    if (e.key === "/") { e.preventDefault(); $("#q").focus(); return; }
+    if (e.key === "t") { location.hash = "tree"; return; }
+    if (e.key === "j" || e.key === "k") {
+      const m = location.hash.match(/^#ch-([a-z]\d+)/);
+      const c = m && bySlug[m[1]];
+      const next = c && A[A.indexOf(c) + (e.key === "j" ? 1 : -1)];
+      if (next) location.hash = "ch-" + next.slug;
     }
   });
 
