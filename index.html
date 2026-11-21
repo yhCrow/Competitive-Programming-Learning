@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="A map of all 101 深入浅出程序设计竞赛 chapters for C++ contest students, with each handout's concepts, programs, Luogu and Codeforces problem lists, and PDFs.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://yhcrow.github.io/Competitive-Programming-Learning/">
+<meta property="og:title" content="Contest Chapter Atlas">
+<meta property="og:description" content="A map of all 101 深入浅出程序设计竞赛 chapters for C++ contest students: prerequisites, key ideas, tested code and 16,000 Luogu and Codeforces problems.">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#121417">
 <title>Contest Chapter Atlas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -320,6 +326,88 @@ tr td { transition: opacity .15s var(--ease); }
 .status button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 .progress-page { display: grid; gap: 32px; max-width: 880px; }
 
+/* loading skeleton: the page's own outline, still (no shimmer) */
+.skeleton { display: grid; gap: 24px; }
+.sk { background: var(--raised); border-radius: var(--r-ctl); }
+.sk-strip { height: 16px; width: min(560px, 100%); }
+.sk-hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; min-height: calc(100vh - 220px); }
+.sk-h1 { height: 40px; margin-bottom: 12px; } .sk-h1.short { width: 60%; }
+.sk-line { height: 14px; margin-top: 16px; width: 90%; }
+.sk-btns { height: 32px; width: 260px; margin-top: 24px; }
+.sk-map { height: 340px; border-radius: var(--r-card); }
+
+/* topic icons and pills */
+.ficon { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.fam { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+.ichip { display: inline-flex; align-items: center; gap: 6px; }
+
+/* minimap */
+.mapwrap { position: relative; min-width: 0; }
+.minimap { position: absolute; right: 12px; bottom: 12px; width: 200px; height: auto; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-ctl); box-shadow: 0 4px 12px rgba(0, 0, 0, .12); cursor: pointer; touch-action: none; }
+.mm-view { fill: color-mix(in srgb, var(--accent) 14%, transparent); stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+
+/* visualizers */
+.vis { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); padding: 16px; display: grid; gap: 12px; margin-bottom: 20px; }
+.vis-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+.vis-head b { font-weight: 500; }
+.vis-stage { min-height: 120px; overflow-x: auto; position: relative; }
+.vis-cap { margin: 0; min-height: 3.2em; color: var(--fg-2); line-height: 1.6; }
+.vis-ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.vis-ctl input[type="range"] { flex: 1 1 160px; accent-color: var(--accent); }
+.bars { height: 172px; min-width: 352px; }
+.vbar { position: absolute; bottom: 24px; left: 0; width: 36px; background: var(--raised); border: 1px solid var(--line-strong); border-radius: 6px 6px 0 0; transition: transform .3s cubic-bezier(0.77, 0, 0.175, 1), background-color .15s ease; }
+.vbar span { position: absolute; bottom: -22px; width: 100%; text-align: center; font-size: 12px; color: var(--fg-2); }
+.vbar.done { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }
+.vbar.on { background: var(--accent); border-color: var(--accent); }
+.cells .row { display: flex; gap: 4px; }
+.cell { width: 36px; height: 44px; flex: none; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 6px; font-size: 13px; position: relative; transition: opacity .15s ease, background-color .15s ease; }
+.cell small { position: absolute; top: 2px; left: 4px; font-size: 9px; color: var(--muted); }
+.cell.out { opacity: .3; }
+.cell.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface)); }
+.cell.hit { background: var(--accent); color: var(--bg); }
+.ptrs { position: relative; height: 24px; margin-top: 6px; }
+.ptr { position: absolute; left: 0; width: 36px; text-align: center; font-size: 11px; color: var(--accent); transition: transform .3s cubic-bezier(0.77, 0, 0.175, 1), opacity .15s ease; }
+.ptr.lo, .ptr.hi { color: var(--muted); }
+.ptr.mid { top: 10px; }
+.gsvg, .tsvg { width: 100%; max-width: 480px; height: auto; display: block; }
+.gsvg line, .tsvg line { stroke: var(--line-strong); stroke-width: 1.5; }
+.gn circle { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.5; transition: fill .15s ease; }
+.gn text { text-anchor: middle; font-size: 12px; fill: var(--fg); font-family: var(--f-mono); }
+.gn text.d { fill: var(--accent); font-size: 11px; }
+.gn.seen circle { fill: color-mix(in srgb, var(--accent) 22%, var(--surface)); stroke: var(--accent); }
+.gn.cur circle { fill: var(--accent); }
+.gn.cur text:not(.d) { fill: var(--bg); }
+.queue { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; margin-top: 8px; font-size: 12px; }
+.qcell { border: 1px solid var(--accent); border-radius: 4px; padding: 2px 8px; font-family: var(--f-mono); }
+.tn rect { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.2; transition: fill .15s ease; }
+.tn text { text-anchor: middle; font-family: var(--f-mono); fill: var(--fg); }
+.tn .rg { font-size: 10px; } .tn .sm { font-size: 9px; fill: var(--muted); }
+.tn.full rect { fill: var(--accent); stroke: var(--accent); }
+.tn.full text { fill: var(--bg); }
+.tn.split rect { stroke: var(--accent); stroke-width: 2; }
+.tn.out { opacity: .35; }
+.mem { display: grid; gap: 12px; }
+.memrow { display: flex; gap: 12px; align-items: center; }
+.memrow .hint, .ptrlbl { width: 64px; flex: none; font-size: 12px; }
+.ptrlbl { color: var(--accent); font-family: var(--f-mono); }
+.blk { display: flex; gap: 3px; flex-wrap: wrap; }
+.mc { width: 26px; height: 26px; border: 1px solid var(--line-strong); border-radius: 4px; display: grid; place-items: center; font-size: 11px; font-family: var(--f-mono); }
+.mc.f { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); border-color: var(--accent); }
+.memrow.old .mc { opacity: .45; text-decoration: line-through; }
+
+/* heatmap, cheat-sheet, Big-O */
+.heat { display: grid; grid-template-rows: repeat(7, 12px); grid-auto-flow: column; grid-auto-columns: 12px; gap: 3px; overflow-x: auto; }
+.hm { border-radius: 2px; background: var(--raised); }
+.hm.l1 { background: color-mix(in srgb, var(--accent) 30%, var(--raised)); }
+.hm.l2 { background: color-mix(in srgb, var(--accent) 60%, var(--raised)); }
+.hm.l3 { background: var(--accent); }
+.cheat td, .cheat th { white-space: nowrap; }
+code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--raised); border-radius: 4px; padding: 0 4px; white-space: nowrap; }
+
+/* the one animated view change: list card title into chapter heading */
+::view-transition-group(chtitle) { animation-duration: .25s; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .15s; }
+
 @media (max-width: 1000px) {
   .treeview, .chapter, .hero, .showcase { grid-template-columns: minmax(0, 1fr); }
   .hero { min-height: 0; }
@@ -333,6 +421,8 @@ tr td { transition: opacity .15s var(--ease); }
   .strip { gap: 4px 16px; font-size: 12px; }
   .strip .meter, .strip .en { display: none; }
   .canvas { max-height: 64vh; min-height: 200px; }
+  .minimap { width: 120px; }
+  .sk-hero { grid-template-columns: minmax(0, 1fr); min-height: 0; }
   .frame .top span + span, .tools .hint { display: none; }
   .ptag { display: none; }
   .results { min-width: 0; }
@@ -362,7 +452,12 @@ tr td { transition: opacity .15s var(--ease); }
   </div>
 </header>
 
-<main class="wrap" id="view"><p class="empty">Loading the atlas</p></main>
+<main class="wrap" id="view" aria-busy="true">
+  <div class="skeleton" aria-label="Loading">
+    <div class="sk sk-strip"></div>
+    <div class="sk-hero"><div><div class="sk sk-h1"></div><div class="sk sk-h1 short"></div><div class="sk sk-line"></div><div class="sk sk-line"></div><div class="sk sk-btns"></div></div><div class="sk sk-map"></div></div>
+  </div>
+</main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -402,6 +497,8 @@ tr td { transition: opacity .15s var(--ease); }
     const was = full();
     if (s === "none") delete prog[id]; else prog[id] = s;
     store.set("progress", prog);
+    if (s === "learned") { learnedAt[id] = Date.now(); delete reviews[id]; store.set("learnedAt", learnedAt); store.set("reviews", reviews); }
+    logDay();
     toast(`${id} · ${s === "none" ? "not started" : s}`);
     if (!was && full()) setTimeout(() => celebrate(key)); // after the caller re-renders
   }
@@ -412,7 +509,7 @@ tr td { transition: opacity .15s var(--ease); }
     const lane = document.querySelector(`.lane-bg[data-lv="${key}"]`);
     if (lane) lane.animate([{ opacity: 0.045 }, { opacity: 0.22 }, { opacity: 0.045 }], { duration: 900, easing: "cubic-bezier(0.23, 1, 0.32, 1)" });
   }
-  function toggleSolved(pid) { solved.has(pid) ? solved.delete(pid) : solved.add(pid); store.set("solved", [...solved]); }
+  function toggleSolved(pid) { solved.has(pid) ? solved.delete(pid) : solved.add(pid); store.set("solved", [...solved]); logDay(); }
 
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -525,7 +622,7 @@ tr td { transition: opacity .15s var(--ease); }
     A.forEach(c => {
       const { x, y } = xy[c.id];
       const st = statusOf(c.id);
-      const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter));
+      const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter)) || (topicFilter !== "all" && c.fam !== topicFilter);
       const title = c.title.length > 15 ? c.title.slice(0, 14) + "…" : c.title;
       const en = c.en.length > 30 ? c.en.slice(0, 29) + "…" : c.en;
       out += `<g class="node ${st}${isReady(c) ? " ready" : ""}${selected === c.id ? " sel" : ""}${dim ? " dim" : ""}" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(c.id + " " + c.title + ", " + c.en + ", " + (st === "none" ? "not started" : st))}" style="--c: var(--${lvClass(c)})" transform="translate(${x},${y})">
@@ -592,6 +689,7 @@ tr td { transition: opacity .15s var(--ease); }
     svg.setAttribute("height", Math.round(layout.height * s));
     const pct = $("#zoomPct");
     if (pct) pct.textContent = Math.round(s * 100) + "%";
+    requestAnimationFrame(updateMinimap); // after the caller has moved the scroll position
   }
   // Zoom keeping the map point under (ax, ay), canvas coordinates, where it is.
   function zoomAt(canvas, s, ax = canvas.clientWidth / 2, ay = canvas.clientHeight / 2) {
@@ -672,9 +770,12 @@ tr td { transition: opacity .15s var(--ease); }
           <button class="chip" data-level="all" aria-pressed="${levelFilter === "all"}">All levels</button>
           ${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}
         </div><span class="hint">Drag to move · Ctrl + scroll or pinch to zoom</span></div>
-      <div class="treeview"><div class="canvas" id="canvas">${svgTree()}</div><aside class="side" id="side">${sideCard()}</aside></div>`;
+      <div class="tools">${topicPills()}</div>
+      <div class="treeview"><div class="mapwrap"><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}</div><aside class="side" id="side">${sideCard()}</aside></div>`;
     wireCanvas($("#canvas"));
+    wireMinimap();
     placeCanvas();
+    updateMinimap();
   }
   function refreshTree() {
     const canvas = $("#canvas");
@@ -683,6 +784,8 @@ tr td { transition: opacity .15s var(--ease); }
     canvas.innerHTML = svgTree();
     sizeSvg(canvas, curS);
     canvas.scrollLeft = sl; canvas.scrollTop = st;
+    const mm = $("#minimap");
+    if (mm) { mm.outerHTML = minimapHtml(); wireMinimap(); updateMinimap(); }
     $("#side").innerHTML = sideCard();
     const s = document.querySelector(".strip"), r = document.querySelector(".resume");
     if (r) r.remove();
@@ -690,11 +793,12 @@ tr td { transition: opacity .15s var(--ease); }
   }
 
   function viewList() {
-    $("#view").innerHTML = `${stripHtml()}<div class="levels">${LEVELS.map(l => {
-      const list = A.filter(c => c.id.startsWith(l.key));
+    $("#view").innerHTML = `${stripHtml()}<div class="tools">${topicPills()}</div><div class="levels">${LEVELS.map(l => {
+      const list = A.filter(c => c.id.startsWith(l.key) && (topicFilter === "all" || c.fam === topicFilter));
+      if (!list.length) return "";
       return `<section class="level"><h2><span class="lv lv-${l.slug}">${l.key}</span> ${l.name} <span class="hint">${l.en} · ${list.length} chapters</span></h2>
         <div class="grid">${list.map(c => `<a class="tile ${statusOf(c.id)}" style="--c: var(--${lvClass(c)})" href="#ch-${c.slug}">
-          <span class="row"><span class="lv ${lvClass(c)}">${c.id}</span><span class="pill">${statusOf(c.id) === "none" ? (isReady(c) ? "ready" : c.pages + " pages") : statusOf(c.id)}</span></span>
+          <span class="row"><span class="lv ${lvClass(c)}">${c.id}</span><span class="fam" title="${famOf(c.fam).name}">${icon(c.fam)}<span class="pill">${statusOf(c.id) === "none" ? (isReady(c) ? "ready" : c.pages + " pages") : statusOf(c.id)}</span></span></span>
           <span class="t">${esc(c.title)}</span><small>${esc(c.en)}</small>
           <small>${c.boxes.length} concepts · ${c.programs.length} programs · ${c.counts.luogu + c.counts.codeforces} problems</small></a>`).join("")}</div></section>`;
     }).join("")}</div>`;
@@ -709,9 +813,17 @@ tr td { transition: opacity .15s var(--ease); }
       <div class="block"><p class="label">Learned · ${learned.length}</p><div class="links">${learned.map(c => chLink(c.id)).join("") || '<span class="hint">Nothing marked yet. Open a chapter and press Learned, or select it in the tree</span>'}</div></div>
       <div class="block"><p class="label">Learning · ${learning.length}</p><div class="links">${learning.map(c => chLink(c.id)).join("") || '<span class="hint">None</span>'}</div></div>
       <div class="block"><p class="label">Ready to learn · ${ready.length}</p><div class="links">${ready.map(c => chLink(c.id)).join("")}</div></div>
+      ${(() => { const due = dueReviews(); return due.length ? `<div class="card"><p class="label">Due for review · ${due.length}</p><p style="margin:0 0 12px">You marked these learned ${due.some(x => x.d === 30) ? "a week or a month" : "a week"} ago. Reread each chapter's key points, then mark the review done.</p>
+        <ol class="path">${due.map(({ c, d }) => `<li><a href="#ch-${c.slug}"><span class="lv ${lvClass(c)}">${c.id}</span> <span class="cjk">${esc(c.title)}</span></a> <span class="hint">${d}-day review</span> <button class="linkish" data-reviewed="${c.id}:${d}">Mark done</button></li>`).join("")}</ol></div>` : ""; })()}
+      <div class="block"><p class="label">Study days · last 20 weeks</p>${heatmapHtml()}</div>
       <div class="block"><p class="label">Problems ticked · ${solved.size}</p><div class="links">${[...solved].slice(0, 200).map(p => `<span class="pill">${esc(p)}</span>`).join("") || '<span class="hint">None yet</span>'}</div></div>
       <div class="card"><p class="label">Send to CP Coach</p><p style="margin:0 0 12px">Progress here is saved in this browser only. To copy it into the CP Coach mod, paste this to Claude.</p>
         <div class="cc">${esc(cc)}</div><div class="btns"><button class="btn primary" data-copy-cc>Copy</button></div></div>
+      <div class="card"><p class="label">Back up your progress</p><p style="margin:0 0 12px">Copy a backup and keep it somewhere safe, or paste one here to move your progress to another browser or device.</p>
+        <div class="btns" style="margin:0 0 12px"><button class="btn primary" data-backup="copy">Copy backup</button></div>
+        <textarea class="notes" id="restoreText" style="min-height:80px" placeholder="Paste a backup here" aria-label="Backup to restore"></textarea>
+        <div class="btns"><button class="btn" data-backup="restore">Restore from backup</button></div>
+        <p class="hint" id="restoreNote" hidden>Press Restore again to replace everything in this browser with the backup.</p></div>
       <div class="block"><p class="label">Mark a whole level learned</p><div class="btns" style="margin-top:0">${LEVELS.map(l => `<button class="btn" data-bulk="${l.key}">${l.name}</button>`).join("")}<button class="btn" data-bulk="reset">Reset everything</button></div>
         <p class="hint" id="resetNote" hidden>Press Reset everything again to confirm. This clears chapter status, ticked problems and notes in this browser.</p></div>
       </div>`;
@@ -739,14 +851,15 @@ tr td { transition: opacity .15s var(--ease); }
       return `<p class="empty">Loading the chapter text</p>`;
     }
     const pdf = page => `handouts/${c.slug}.pdf#page=${page}`;
-    const html = (c.flow || []).map(b => {
+    const vis = VIS[c.id] ? `<div class="vis" id="vis"></div>` : "";
+    const html = vis + (c.flow || []).map(b => {
       switch (b.t) {
         case "h2": return `<div class="sec" id="${secId(b.num)}"><span class="n">${b.num}</span><h3>${esc(b.title)}</h3></div>`;
         case "h3": return `<h4 class="sub" id="${secId(b.num)}"><span class="n">${b.num}</span> ${esc(b.title)}</h4>`;
-        case "lede": return `<p class="lede">${esc(b.text)}</p>`;
-        case "p": return `<p class="para">${esc(b.text)}</p>`;
-        case "li": return `<p class="para li">${esc(b.text)}</p>`;
-        case "box": return `<div class="box${b.kind === "TRAP" ? " trap" : ""}"><b>${KIND[b.kind] || b.kind}</b>${esc(b.text)}</div>`;
+        case "lede": return `<p class="lede">${bigO(esc(b.text))}</p>`;
+        case "p": return `<p class="para">${bigO(esc(b.text))}</p>`;
+        case "li": return `<p class="para li">${bigO(esc(b.text))}</p>`;
+        case "box": return `<div class="box${b.kind === "TRAP" ? " trap" : ""}"><b>${KIND[b.kind] || b.kind}</b>${bigO(esc(b.text))}</div>`;
         case "pre": return `<div class="tbl"><pre>${esc(b.lines.join("\n"))}</pre><a class="jump" href="${pdf(b.page)}" target="_blank" rel="noopener">Laid out properly in the PDF, page ${b.page} →</a></div>`;
         case "fig": return `<a class="jump fig" href="${pdf(b.page)}" target="_blank" rel="noopener">Diagram on PDF page ${b.page} →</a>`;
         case "prog": return `<a class="jump" href="#ch-${c.slug}-code" data-jump="${esc(b.file)}">Program <span class="mono">${esc(b.file)}</span> →</a>`;
@@ -820,7 +933,7 @@ tr td { transition: opacity .15s var(--ease); }
     $("#view").innerHTML = `<div class="chapter" style="--c: var(--${lvClass(c)})">
       <div style="min-width:0">
         <div class="crumbs"><a href="#tree" data-select="${c.id}">Tree</a><span>/</span><a href="#list">${lvOf(c).name}</a><span>/</span><span>${c.id}</span></div>
-        <div class="chead"><span class="lv ${lvClass(c)}">${c.id} · ${lvOf(c).name} 第${c.num}章</span><h1>${esc(c.title)}</h1><p class="en">${esc(c.en)}</p><p class="sum">${esc(c.summary)}</p></div>
+        <div class="chead"><span class="lv ${lvClass(c)}">${c.id} · ${lvOf(c).name} 第${c.num}章</span> <span class="fam hint">${icon(c.fam)}${famOf(c.fam).name}</span><h1 style="view-transition-name: chtitle">${esc(c.title)}</h1><p class="en">${esc(c.en)}</p><p class="sum">${esc(c.summary)}</p></div>
         <nav class="tabs" aria-label="Chapter sections">${tabs.map(([k, label, n]) => `<a href="#ch-${c.slug}${k === "concepts" ? "" : "-" + k}" ${(tab || "concepts") === k ? 'aria-current="page"' : ""}>${label}<small>${n}</small></a>`).join("")}</nav>
         <div id="tabbody">${body}</div>
         <div class="pager">${prev ? `<a href="#ch-${prev.slug}"><small>← ${prev.id}</small><span class="cjk">${esc(prev.title)}</span></a>` : "<span></span>"}${next ? `<a class="next" href="#ch-${next.slug}"><small>${next.id} →</small><span class="cjk">${esc(next.title)}</span></a>` : "<span></span>"}</div>
@@ -835,6 +948,7 @@ tr td { transition: opacity .15s var(--ease); }
         ${need.length ? `<div class="block"><p class="label">Still to learn first · ${need.length}</p><div class="links">${need.map(chLink).join("")}</div></div>` : ""}
         <div class="block"><p class="label">With CP Coach</p><div class="cc">/learn ${c.id}</div><div class="cc">/practice ${c.id}</div><p class="hint" style="margin-top:8px">Type these in Claude Code to study this chapter or get its next problems</p></div>
       </aside></div>`;
+    if ((tab || "concepts") === "concepts") mountVis(c);
     window.scrollTo(0, 0);
   }
 
@@ -860,6 +974,8 @@ tr td { transition: opacity .15s var(--ease); }
         </div>
         <div class="frame"><div class="top"><span>Whole course · four levels</span><span>Click a chapter to trace its path</span></div>${map}</div>
       </section>
+
+      ${cheatHtml()}
 
       <section class="showcase">
         <div>
@@ -888,8 +1004,309 @@ tr td { transition: opacity .15s var(--ease); }
     window.scrollTo(0, 0);
   }
 
+  // ---- topic families: one classification drives the icons, the topic pills and part of search ----
+  const FAMILIES = [
+    { key: "basics", name: "Basics", icon: '<path d="M6 3C4 3 4 4.5 4 6s-1 2-2 2c1 0 2 .5 2 2s0 3 2 3M10 3c2 0 2 1.5 2 3s1 2 2 2c-1 0-2 .5-2 2s0 3-2 3"/>' },
+    { key: "algo", name: "Algorithms", icon: '<path d="M3 13V9M6.5 13V5M10 13V7M13.5 13V3"/>' },
+    { key: "ds", name: "Data structures", icon: '<rect x="2.5" y="2.5" width="11" height="4" rx="1"/><rect x="2.5" y="9.5" width="5" height="4" rx="1"/><rect x="8.5" y="9.5" width="5" height="4" rx="1"/>' },
+    { key: "graph", name: "Graphs and trees", icon: '<circle cx="4" cy="4" r="1.8"/><circle cx="12" cy="5" r="1.8"/><circle cx="7" cy="12" r="1.8"/><path d="M5.7 4.3l4.5.5M5 5.6l1.4 4.7M11 6.6l-2.9 3.9"/>' },
+    { key: "dp", name: "Dynamic programming", icon: '<rect x="2.5" y="2.5" width="11" height="11" rx="1"/><path d="M2.5 8h11M8 2.5v11M5 5l6 6"/>' },
+    { key: "math", name: "Math", icon: '<path d="M12 3H4l4.5 5L4 13h8"/>' },
+    { key: "str", name: "Strings", icon: '<path d="M3 5h10M3 8h10M3 11h6"/>' },
+    { key: "geo", name: "Geometry", icon: '<path d="M8 2.5l5.5 10.5h-11z"/>' },
+  ];
+  function familyOf(c) {
+    const t = `${c.title} ${c.en}`;
+    if (/^基[1-8]$/.test(c.id)) return "basics";
+    if (/几何/.test(t)) return "geo";
+    if (/线段树|树状数组|平衡树|堆|并查集|分块|莫队|数据结构|K-D|LCT|动态树|链表|线性表|集合|二叉树|存图|可持久化/.test(t)) return "ds";
+    if (/字符串|自动机|KMP|回文|后缀/.test(t)) return "str";
+    if (/动态规划|DP/.test(t)) return "dp";
+    if (/数论|整除|组合|计数|概率|代数|多项式|FFT|反演|筛|莫比乌斯|博弈|单纯形|BM 算法|进制|容斥|LGV|线性基/.test(t)) return "math";
+    if (/图|最短路|生成树|连通|网络流|匹配|支配|树/.test(t)) return "graph";
+    return "algo";
+  }
+  const famOf = key => FAMILIES.find(f => f.key === key);
+  const icon = key => `<svg class="ficon" viewBox="0 0 16 16" aria-hidden="true">${famOf(key).icon}</svg>`;
+  let topicFilter = "all";
+  const topicPills = () => `<div class="chipset" role="group" aria-label="Show a topic">
+    <button class="chip" data-topic="all" aria-pressed="${topicFilter === "all"}">All topics</button>
+    ${FAMILIES.map(f => `<button class="chip ichip" data-topic="${f.key}" aria-pressed="${topicFilter === f.key}">${icon(f.key)}${f.name}</button>`).join("")}</div>`;
+
+  // ---- visualizers: a step player plus five small pieces, each tied to the chapter it teaches ----
+  let visTimer = null;
+  const VIS = {};
+  VIS["基9"] = {
+    title: "Insertion sort, step by step",
+    frames() {
+      const a = [5, 2, 9, 1, 6, 3, 8, 4].map((v, id) => ({ v, id })), F = [];
+      const snap = (text, active, sorted) => F.push({ order: a.map(x => x.id), active: active.map(p => a[p].id), sorted, text });
+      snap("Everything left of the sorted part is in order. One value alone is already sorted", [], 1);
+      for (let i = 1; i < a.length; i++) {
+        snap(`Take ${a[i].v} and slide it left past every bigger value`, [i], i);
+        let j = i;
+        while (j > 0 && a[j - 1].v > a[j].v) { [a[j - 1], a[j]] = [a[j], a[j - 1]]; j--; snap(`${a[j + 1].v} > ${a[j].v}, so swap them`, [j], i); }
+        snap(`${a[j].v} is in place. The first ${i + 1} values are sorted`, [j], i + 1);
+      }
+      snap("Sorted. Worst case is O(n²) swaps; an already-sorted array takes O(n)", [], a.length);
+      return F;
+    },
+    mount(stage) {
+      const vals = [5, 2, 9, 1, 6, 3, 8, 4];
+      stage.classList.add("bars");
+      stage.innerHTML = vals.map((v, k) => `<div class="vbar" style="height:${v * 14 + 10}px"><span>${v}</span></div>`).join("");
+      const els = [...stage.children];
+      return f => f.order.forEach((id, pos) => {
+        els[id].style.transform = `translateX(${pos * 44}px)`;
+        els[id].classList.toggle("on", f.active.includes(id));
+        els[id].classList.toggle("done", pos < f.sorted && !f.active.includes(id));
+      });
+    },
+  };
+  VIS["基13"] = {
+    title: "Binary search for 45",
+    frames() {
+      const a = [2, 5, 8, 12, 16, 23, 38, 45, 56, 67, 72, 91], F = [];
+      let lo = 0, hi = a.length - 1, steps = 0;
+      F.push({ lo, hi, mid: -1, text: `The answer, if present, lies in [lo, hi] = [0, ${hi}]` });
+      while (lo <= hi) {
+        const mid = lo + ((hi - lo) >> 1); steps++;
+        F.push({ lo, hi, mid, text: `mid = lo + (hi - lo) / 2 = ${mid}, and a[${mid}] = ${a[mid]}. Writing it this way avoids overflow when lo + hi passes 2³¹` });
+        if (a[mid] === 45) { F.push({ lo, hi, mid, found: true, text: `Found 45 at index ${mid} after ${steps} looks; a linear scan would need ${mid + 1}. O(log n)` }); break; }
+        if (a[mid] < 45) { lo = mid + 1; F.push({ lo, hi, mid, text: `${a[mid]} < 45, so the left half is out: lo = ${lo}` }); }
+        else { hi = mid - 1; F.push({ lo, hi, mid, text: `${a[mid]} > 45, so the right half is out: hi = ${hi}` }); }
+      }
+      return F;
+    },
+    mount(stage) {
+      const a = [2, 5, 8, 12, 16, 23, 38, 45, 56, 67, 72, 91];
+      stage.classList.add("cells");
+      stage.innerHTML = `<div class="row">${a.map((v, k) => `<div class="cell"><small>${k}</small>${v}</div>`).join("")}</div>
+        <div class="ptrs">${["lo", "mid", "hi"].map(p => `<span class="ptr ${p}">${p}</span>`).join("")}</div>`;
+      const cells = [...stage.querySelectorAll(".cell")], ptr = n => stage.querySelector(".ptr." + n);
+      return f => {
+        cells.forEach((el, k) => { el.classList.toggle("out", k < f.lo || k > f.hi); el.classList.toggle("on", k === f.mid); el.classList.toggle("hit", !!f.found && k === f.mid); });
+        [["lo", f.lo], ["mid", f.mid], ["hi", f.hi]].forEach(([n, k]) => { ptr(n).style.transform = `translateX(${Math.max(0, Math.min(11, k)) * 40}px)`; ptr(n).style.opacity = k < 0 || k > 11 ? 0 : 1; });
+      };
+    },
+  };
+  const G = { names: "ABCDEFGH", pos: [[40, 100], [130, 40], [130, 160], [220, 20], [220, 100], [220, 180], [310, 60], [310, 150]], edges: [[0, 1], [0, 2], [1, 3], [1, 4], [2, 4], [2, 5], [3, 6], [4, 6], [5, 7], [6, 7]] };
+  VIS["基14"] = VIS["基18"] = {
+    title: "Breadth-first search from A",
+    frames() {
+      const adj = G.names.split("").map(() => []);
+      G.edges.forEach(([u, v]) => { adj[u].push(v); adj[v].push(u); });
+      adj.forEach(l => l.sort((x, y) => x - y));
+      const dist = Array(8).fill(-1), q = [0], F = [];
+      dist[0] = 0;
+      F.push({ dist: [...dist], q: [...q], cur: -1, text: "Put A in the queue at distance 0" });
+      while (q.length) {
+        const u = q.shift();
+        F.push({ dist: [...dist], q: [...q], cur: u, text: `Take ${G.names[u]} from the front of the queue` });
+        for (const v of adj[u]) if (dist[v] < 0) { dist[v] = dist[u] + 1; q.push(v); F.push({ dist: [...dist], q: [...q], cur: u, text: `${G.names[v]} is new: distance ${dist[v]}, add it to the back` }); }
+      }
+      F.push({ dist: [...dist], q: [], cur: -1, text: "Queue empty. Each distance is the fewest edges from A, found in O(V + E)" });
+      return F;
+    },
+    mount(stage) {
+      stage.innerHTML = `<svg viewBox="0 0 350 200" class="gsvg">${G.edges.map(([u, v]) => `<line x1="${G.pos[u][0]}" y1="${G.pos[u][1]}" x2="${G.pos[v][0]}" y2="${G.pos[v][1]}"/>`).join("")}
+        ${G.pos.map(([x, y], k) => `<g class="gn" transform="translate(${x},${y})"><circle r="16"/><text dy="4">${G.names[k]}</text><text class="d" dy="-22"></text></g>`).join("")}</svg><div class="queue"></div>`;
+      const nodes = [...stage.querySelectorAll(".gn")], queue = stage.querySelector(".queue");
+      return f => {
+        nodes.forEach((n, k) => { n.classList.toggle("seen", f.dist[k] >= 0); n.classList.toggle("cur", f.cur === k); n.querySelector(".d").textContent = f.dist[k] >= 0 ? f.dist[k] : ""; });
+        queue.innerHTML = `<span class="hint">Queue</span>${f.q.map(k => `<span class="qcell">${G.names[k]}</span>`).join("") || '<span class="hint">empty</span>'}`;
+      };
+    },
+  };
+  VIS["进6"] = {
+    title: "Segment tree: sum of a[2..6]",
+    frames() {
+      const a = [5, 3, 7, 2, 6, 4, 1, 8], sum = {}, F = [], st = {};
+      const build = (p, l, r) => { if (l === r) return (sum[p] = a[l - 1]); const m = (l + r) >> 1; return (sum[p] = build(2 * p, l, m) + build(2 * p + 1, m + 1, r)); };
+      build(1, 1, 8);
+      let total = 0, used = 0;
+      const query = (p, l, r) => {
+        if (6 < l || r < 2) { st[p] = "out"; F.push({ st: { ...st }, text: `[${l},${r}] misses [2,6]: ignore it` }); return; }
+        if (2 <= l && r <= 6) { st[p] = "full"; total += sum[p]; used++; F.push({ st: { ...st }, text: `[${l},${r}] lies inside [2,6]: use its sum ${sum[p]} (running total ${total})` }); return; }
+        st[p] = "split"; F.push({ st: { ...st }, text: `[${l},${r}] overlaps [2,6] partly: go into both halves` });
+        const m = (l + r) >> 1; query(2 * p, l, m); query(2 * p + 1, m + 1, r);
+      };
+      F.push({ st: {}, text: "Each node stores the sum of its range. Query the sum of positions 2 to 6" });
+      query(1, 1, 8);
+      F.push({ st: { ...st }, text: `Sum = ${total} from just ${used} whole nodes. Any range needs O(log n) of them` });
+      return F.map(f => ({ ...f, sum }));
+    },
+    mount(stage) {
+      const nodes = [];
+      const lay = (p, l, r, depth, x0, x1) => { nodes.push({ p, l, r, x: (x0 + x1) / 2, y: 22 + depth * 52 }); if (l < r) { const m = (l + r) >> 1; lay(2 * p, l, m, depth + 1, x0, (x0 + x1) / 2); lay(2 * p + 1, m + 1, r, depth + 1, (x0 + x1) / 2, x1); } };
+      lay(1, 1, 8, 0, 0, 480);
+      const parentOf = n => nodes.find(m => m.p === n.p >> 1);
+      stage.innerHTML = `<svg viewBox="0 0 480 210" class="tsvg">${nodes.filter(n => n.p > 1).map(n => { const q = parentOf(n); return `<line x1="${q.x}" y1="${q.y + 13}" x2="${n.x}" y2="${n.y - 13}"/>`; }).join("")}
+        ${nodes.map(n => `<g class="tn" data-p="${n.p}" transform="translate(${n.x},${n.y})"><rect x="-26" y="-14" width="52" height="28" rx="6"/><text class="rg" dy="-2">[${n.l},${n.r}]</text><text class="sm" dy="10"></text></g>`).join("")}</svg>`;
+      const els = [...stage.querySelectorAll(".tn")];
+      return f => els.forEach(el => { const p = +el.dataset.p; el.setAttribute("class", "tn " + (f.st[p] || "")); el.querySelector(".sm").textContent = "Σ" + f.sum[p]; });
+    },
+  };
+  VIS["基15"] = {
+    title: "vector memory: push_back and capacity",
+    frames() {
+      const F = [];
+      let cap = 1, size = 0, copies = 0;
+      F.push({ size, cap, old: 0, text: "An empty vector owns a block of capacity 1. data points at the block" });
+      for (let v = 1; v <= 9; v++) {
+        if (size === cap) { copies += size; F.push({ size, cap: cap * 2, old: cap, text: `Full. Allocate a block twice as big (${cap * 2}), copy ${size} values, free the old one. Pointers into the old block now dangle` }); cap *= 2; }
+        size++;
+        F.push({ size, cap, old: 0, text: `push_back(${v}): size ${size}, capacity ${cap}. ${copies} copies so far` });
+      }
+      F.push({ size, cap, old: 0, text: `9 pushes cost ${copies} copies, fewer than 2n: amortised O(1) per push. reserve(n) avoids the copies` });
+      return F;
+    },
+    mount(stage) {
+      stage.classList.add("mem");
+      stage.innerHTML = `<div class="memrow old"><span class="hint">old block</span><div class="blk"></div></div><div class="memrow"><span class="ptrlbl">data →</span><div class="blk"></div></div>`;
+      const [oldRow, row] = stage.querySelectorAll(".memrow");
+      const cells = (n, filled) => Array.from({ length: n }, (_, k) => `<span class="mc ${k < filled ? "f" : ""}">${k < filled ? k + 1 : ""}</span>`).join("");
+      return f => {
+        row.querySelector(".blk").innerHTML = cells(f.cap, f.old ? f.size : f.size);
+        oldRow.style.visibility = f.old ? "visible" : "hidden";
+        oldRow.querySelector(".blk").innerHTML = f.old ? cells(f.old, f.old) : "";
+      };
+    },
+  };
+  function mountVis(c) {
+    clearInterval(visTimer); visTimer = null;
+    const spec = VIS[c.id], host = document.getElementById("vis");
+    if (!spec || !host) return;
+    const frames = spec.frames();
+    let i = 0;
+    host.innerHTML = `<div class="vis-head"><b>${spec.title}</b><span class="hint">Step through it or drag the slider</span></div>
+      <div class="vis-stage" id="visStage"></div><p class="vis-cap" id="visCap" aria-live="polite"></p>
+      <div class="vis-ctl"><button class="btn" data-v="prev" aria-label="Previous step">‹</button><button class="btn" data-v="play">Play</button><button class="btn" data-v="next" aria-label="Next step">›</button>
+      <input type="range" id="visRange" min="0" max="${frames.length - 1}" value="0" aria-label="Step"><span class="hint" id="visN"></span></div>`;
+    const update = spec.mount(host.querySelector("#visStage"));
+    const playBtn = host.querySelector('[data-v="play"]');
+    const stop = () => { clearInterval(visTimer); visTimer = null; playBtn.textContent = "Play"; };
+    const show = k => {
+      i = Math.max(0, Math.min(frames.length - 1, k));
+      update(frames[i]);
+      host.querySelector("#visCap").textContent = frames[i].text;
+      host.querySelector("#visRange").value = i;
+      host.querySelector("#visN").textContent = `${i + 1} / ${frames.length}`;
+    };
+    host.onclick = e => {
+      const b = e.target.closest("[data-v]");
+      if (!b) return;
+      if (b.dataset.v === "prev") { stop(); show(i - 1); }
+      if (b.dataset.v === "next") { stop(); show(i + 1); }
+      if (b.dataset.v === "play") {
+        if (visTimer) return stop();
+        if (i === frames.length - 1) show(0);
+        playBtn.textContent = "Pause";
+        visTimer = setInterval(() => (i >= frames.length - 1 ? stop() : show(i + 1)), 900);
+      }
+    };
+    host.querySelector("#visRange").oninput = e => { stop(); show(+e.target.value); };
+    show(0);
+  }
+
+  // ---- tree minimap: the whole course small, with the visible part outlined; click or drag to move ----
+  function minimapHtml() {
+    const { xy, width, height, lanes } = layout;
+    return `<svg class="minimap" id="minimap" viewBox="0 0 ${width} ${height}" role="img" aria-label="Overview of the map; click to move there">
+      ${lanes.map(({ level: l, top, height: h }) => `<rect x="0" y="${top}" width="${width}" height="${h}" style="fill: var(--lv-${l.slug}); opacity: .12"/>`).join("")}
+      ${A.map(c => `<rect x="${xy[c.id].x}" y="${xy[c.id].y}" width="${W}" height="${H}" rx="10" style="fill: var(--${lvClass(c)}); opacity: ${statusOf(c.id) === "learned" ? 0.95 : 0.4}"/>`).join("")}
+      <rect class="mm-view" id="mmView" x="0" y="0" width="0" height="0"/></svg>`;
+  }
+  function updateMinimap() {
+    const canvas = $("#canvas"), mm = $("#minimap"), v = $("#mmView");
+    if (!canvas || !mm || !v) return;
+    const w = canvas.clientWidth / curS, h = canvas.clientHeight / curS;
+    mm.style.display = w >= layout.width - 1 && h >= layout.height - 1 ? "none" : "";
+    v.setAttribute("x", canvas.scrollLeft / curS); v.setAttribute("y", canvas.scrollTop / curS);
+    v.setAttribute("width", w); v.setAttribute("height", h);
+  }
+  function wireMinimap() {
+    const mm = $("#minimap"), canvas = $("#canvas");
+    if (!mm) return;
+    let down = false;
+    const go = e => {
+      const r = mm.getBoundingClientRect();
+      const mx = (e.clientX - r.left) / r.width * layout.width, my = (e.clientY - r.top) / r.height * layout.height;
+      canvas.scrollLeft = mx * curS - canvas.clientWidth / 2;
+      canvas.scrollTop = my * curS - canvas.clientHeight / 2;
+    };
+    mm.addEventListener("pointerdown", e => { down = true; mm.setPointerCapture(e.pointerId); go(e); });
+    mm.addEventListener("pointermove", e => down && go(e));
+    mm.addEventListener("pointerup", () => (down = false));
+    canvas.addEventListener("scroll", updateMinimap, { passive: true });
+  }
+
+  // ---- study log: active days for the heatmap, learned dates for spaced review ----
+  let days = store.get("days", {}), learnedAt = store.get("learnedAt", {}), reviews = store.get("reviews", {});
+  const dayKey = ms => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  function logDay() { const k = dayKey(Date.now()); days[k] = (days[k] || 0) + 1; store.set("days", days); }
+  function dueReviews() {
+    const now = Date.now();
+    return A.filter(c => statusOf(c.id) === "learned" && learnedAt[c.id]).flatMap(c => {
+      const age = (now - learnedAt[c.id]) / 864e5, done = reviews[c.id] || [];
+      return [7, 30].filter(d => age >= d && !done.includes(d)).slice(-1).map(d => ({ c, d }));
+    });
+  }
+  function heatmapHtml() {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const start = new Date(today); start.setDate(start.getDate() - (7 * 20 - 1) - start.getDay()); // 20 weeks, Sunday-aligned
+    const cells = [];
+    let streak = 0;
+    for (let d = new Date(start); d <= today; d.setDate(d.getDate() + 1)) {
+      const n = days[dayKey(d.getTime())] || 0;
+      cells.push(`<i class="hm l${n === 0 ? 0 : n === 1 ? 1 : n <= 3 ? 2 : 3}" title="${dayKey(d.getTime())}: ${n} action${n === 1 ? "" : "s"}"></i>`);
+    }
+    for (let d = new Date(today); days[dayKey(d.getTime())]; d.setDate(d.getDate() - 1)) streak++;
+    const active = Object.keys(days).length;
+    return `<div class="heat" role="img" aria-label="Study days over the last 20 weeks">${cells.join("")}</div>
+      <p class="hint" style="margin:8px 0 0">${streak ? `${streak}-day streak · ` : ""}${active} active day${active === 1 ? "" : "s"} in total · a day counts when you mark a chapter or tick a problem</p>`;
+  }
+
+  // ---- backup: progress lives in one browser, so let it travel as text ----
+  const backupJson = () => JSON.stringify({ app: "contest-chapter-atlas", v: 1, progress: prog, solved: [...solved], notes, days, learnedAt, reviews });
+  function restoreBackup(text) {
+    const b = JSON.parse(text);
+    if (!b || b.app !== "contest-chapter-atlas" || typeof b.progress !== "object" || !Array.isArray(b.solved)) throw new Error("not an Atlas backup");
+    prog = b.progress; solved = new Set(b.solved); notes = b.notes || {}; days = b.days || {}; learnedAt = b.learnedAt || {}; reviews = b.reviews || {};
+    [["progress", prog], ["solved", [...solved]], ["notes", notes], ["days", days], ["learnedAt", learnedAt], ["reviews", reviews]].forEach(([k, v]) => store.set(k, v));
+  }
+
+  // ---- search aliases: English names and short forms for the Chinese chapter titles ----
+  const ALIAS = {
+    "dynamic programming": "动态规划", dp: "动态规划", knapsack: "背包", bitmask: "状态压缩", "digit dp": "数位",
+    dijkstra: "最短路", spfa: "最短路", floyd: "最短路", "shortest path": "最短路", bfs: "搜索", dfs: "搜索",
+    "segment tree": "线段树", fenwick: "树状数组", bit: "树状数组", dsu: "并查集", "union find": "并查集", "union-find": "并查集",
+    mst: "最小生成树", kruskal: "最小生成树", prim: "最小生成树", "network flow": "网络流", "max flow": "网络流", matching: "匹配",
+    greedy: "贪心", "binary search": "二分", "prefix sum": "前缀和", "two pointers": "双指针", heap: "堆", "priority queue": "堆",
+    stack: "栈", queue: "队列", sieve: "筛", mobius: "莫比乌斯", "game theory": "博弈", geometry: "几何", hash: "哈希",
+    sa: "后缀数组", "suffix array": "后缀数组", sam: "后缀自动机", "aho-corasick": "AC 自动机", scc: "强连通", tarjan: "Tarjan",
+  };
+
+  const CHEAT = [
+    ["n ≤ 12", "O(n!)", "try every order", "基10"], ["n ≤ 20", "O(2ⁿ · n)", "every subset, bitmask DP", "进17"],
+    ["n ≤ 40", "O(2ⁿᐟ²)", "meet in the middle", "进4"], ["n ≤ 500", "O(n³)", "Floyd, interval DP", "进15"],
+    ["n ≤ 5000", "O(n²)", "pairwise DP", "进14"], ["n ≤ 10⁵ to 10⁶", "O(n log n)", "sort, binary search, segment tree", "进6"],
+    ["n ≤ 10⁷", "O(n)", "prefix sums, two pointers", "进2"], ["n ≤ 10¹²", "O(√n)", "divisors, factoring", "基21"],
+    ["n ≤ 10¹⁸", "O(log n)", "fast power, matrix power", "进19"],
+  ];
+  const cheatHtml = () => `<section class="showcase">
+      <div><h2>Read the constraints first</h2><p class="lead">A judge runs about 10⁸ simple steps a second. The limit on n tells you how fast the solution must be, and so which chapter's technique to reach for.</p></div>
+      <div class="tablewrap"><table class="cheat"><thead><tr><th>Input size</th><th>Fits in 1 s</th><th>Typical approach</th><th>Chapter</th></tr></thead><tbody>
+        ${CHEAT.map(([n, o, how, id]) => `<tr><td class="mono">${n}</td><td><code class="bigo">${o}</code></td><td>${how}</td><td>${chLink(id)}</td></tr>`).join("")}</tbody></table></div>
+    </section>`;
+
+  // Big-O in prose reads as code: O(n log n), O(n²), O((n + m) log n)
+  const bigO = html => html.replace(/O\((?:[^()]|\([^()]*\))*\)/g, m => `<code class="bigo">${m}</code>`);
+
   // ---- routing ----
+  let skipHash = false;
   function route() {
+    clearInterval(visTimer); visTimer = null; // a visualizer stops playing when you leave its chapter
     const h = location.hash.slice(1) || "home";
     if (h === "home") { ["tree", "list", "progress"].forEach(k => $("#nav-" + k).removeAttribute("aria-current")); return viewHome(); }
     ["tree", "list", "progress"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
@@ -902,10 +1319,40 @@ tr td { transition: opacity .15s var(--ease); }
     $("#nav-tree").setAttribute("aria-current", "page");
     return viewTree();
   }
-  window.addEventListener("hashchange", route);
+  window.addEventListener("hashchange", () => (skipHash ? (skipHash = false) : route()));
 
   // ---- events ----
   document.addEventListener("click", e => {
+    // The one animated view change: a chapter card's title grows into the chapter heading.
+    const tile = e.target.closest("a.tile");
+    if (tile && document.startViewTransition && !e.ctrlKey && !e.metaKey && !e.shiftKey && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      e.preventDefault();
+      tile.querySelector(".t").style.viewTransitionName = "chtitle";
+      document.startViewTransition(() => { skipHash = true; location.hash = tile.getAttribute("href").slice(1); route(); });
+      return;
+    }
+    const tp = e.target.closest("[data-topic]");
+    if (tp) {
+      topicFilter = tp.dataset.topic;
+      location.hash === "#list" ? viewList() : refreshTree();
+      document.querySelectorAll("[data-topic]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.topic === topicFilter)));
+      return;
+    }
+    const rv = e.target.closest("[data-reviewed]");
+    if (rv) {
+      const [id, d] = rv.dataset.reviewed.split(":");
+      reviews[id] = [...(reviews[id] || []), +d]; store.set("reviews", reviews); logDay();
+      toast(`${id} reviewed`); viewProgress(); return;
+    }
+    const bk = e.target.closest("[data-backup]");
+    if (bk) {
+      if (bk.dataset.backup === "copy") { copy(backupJson()); return; }
+      const note = $("#restoreNote"), text = $("#restoreText").value.trim();
+      if (!text) { toast("Paste a backup first"); return; }
+      if (note.hidden) { note.hidden = false; return; }
+      try { restoreBackup(text); toast("Progress restored"); viewProgress(); } catch (err) { toast("That isn't an Atlas backup"); }
+      return;
+    }
     const g = e.target.closest("[data-goto]");
     if (g) { const el = document.getElementById(g.dataset.goto); if (el) el.scrollIntoView({ block: "start" }); return; }
     const t = e.target.closest("[data-status],[data-level],[data-zoomstep],[data-zoomfit],[data-clear],[data-copy-prog],[data-copy-io],[data-judge],[data-copy-cc],[data-bulk],[data-select],[data-jump],.node,[data-solve]");
@@ -976,6 +1423,7 @@ tr td { transition: opacity .15s var(--ease); }
 
   // Keys: / search, t tree, j / k next and previous chapter. Instant on purpose: shortcuts never animate.
   document.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); $("#q").focus(); $("#q").select(); return; }
     if (e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]"))) return;
     if (e.key === "/") { e.preventDefault(); $("#q").focus(); return; }
     if (e.key === "t") { location.hash = "tree"; return; }
@@ -1003,7 +1451,8 @@ tr td { transition: opacity .15s var(--ease); }
     const s = q.value.trim().toLowerCase();
     if (!s) { res.innerHTML = `<div class="none">Search chapters, concept boxes, programs and starred problems. Try 懒标记, dijkstra or P3372</div>`; res.hidden = false; return; }
     const words = s.split(/\s+/);
-    hits = index.filter(x => { const t = x.text.toLowerCase(); return words.every(w => t.includes(w)); });
+    const extra = Object.keys(ALIAS).filter(k => (" " + s + " ").includes(" " + k + " ")).map(k => ALIAS[k].toLowerCase());
+    hits = index.filter(x => { const t = x.text.toLowerCase(); return words.every(w => t.includes(w)) || extra.some(a => t.includes(a)); });
     hits.sort((a, b) => (a.kind === "Chapter" ? 0 : 1) - (b.kind === "Chapter" ? 0 : 1));
     hits = hits.slice(0, 30); hi = 0;
     const snip = t => { const i = t.toLowerCase().indexOf(words[0]); const a = Math.max(0, i - 40); return (a ? "…" : "") + t.slice(a, a + 140) + (t.length > a + 140 ? "…" : ""); };
@@ -1024,10 +1473,11 @@ tr td { transition: opacity .15s var(--ease); }
   // ---- boot ----
   fetch("atlas.json").then(r => r.json()).then(data => {
     A = data;
-    A.forEach(c => { byId[c.id] = c; bySlug[c.slug] = c; });
+    A.forEach(c => { byId[c.id] = c; bySlug[c.slug] = c; c.fam = familyOf(c); });
     A.forEach(c => c.pre.forEach(p => (kids[p] = kids[p] || []).push(c.id)));
     buildIndex();
     route();
+    $("#view").removeAttribute("aria-busy");
   }).catch(err => { console.error(err); $("#view").innerHTML = `<p class="empty">The chapter data didn't load. Reload the page to try again</p>`; });
 })();
 </script>
