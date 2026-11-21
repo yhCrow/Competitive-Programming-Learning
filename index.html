@@ -95,7 +95,7 @@ h1, h2, h3, h4 { font-weight: 500; }
 .nav { display: flex; gap: 4px; }
 .nav a { text-decoration: none; color: var(--fg-2); padding: 4px 12px; border-radius: var(--r-ctl); font-size: 13px; transition: background-color .15s var(--ease), color .15s var(--ease); }
 .nav a:hover { background: var(--raised); }
-.nav a[aria-current="page"] { color: var(--fg); background: var(--raised); }
+.nav a[aria-current="page"] { color: var(--fg); background: var(--raised); box-shadow: inset 0 -2px 0 var(--accent); }
 .search { position: relative; flex: 1 1 220px; max-width: 360px; margin-left: auto; }
 .search input { width: 100%; height: 32px; padding: 0 12px 0 32px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--bg); }
 .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; fill: var(--muted); }
@@ -131,8 +131,8 @@ main { max-width: 1520px; margin: 0 auto; padding-block: 24px 64px; }
 .seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 
 /* tree */
-.treeview { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 24px; align-items: start; }
-.canvas { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow: auto; max-height: calc(100vh - 200px); min-height: 320px; position: relative; }
+.treeview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-items: start; }
+.canvas { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow: auto; max-height: calc(100vh - 150px); min-height: 560px; position: relative; }
 .canvas svg { display: block; }
 .canvas { cursor: grab; touch-action: pan-x pan-y; }
 .canvas.dragging { cursor: grabbing; user-select: none; }
@@ -168,7 +168,7 @@ main { max-width: 1520px; margin: 0 auto; padding-block: 24px 64px; }
 .sw.learned { background: var(--muted); }
 
 /* side and aside: plain sections, one card for the selected chapter */
-.side, .aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 80px); display: grid; gap: 24px; min-width: 0; align-content: start; }
+.aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 80px); display: grid; gap: 24px; min-width: 0; align-content: start; }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px; min-width: 0; }
 .card h2 { margin: 8px 0 0; font-family: var(--f-cjk); font-size: 20px; line-height: 1.3; text-wrap: balance; }
 .en { color: var(--muted); margin: 0 0 8px; }
@@ -219,21 +219,25 @@ ol.path a:hover .cjk { text-decoration: underline; }
 .sec:first-child { margin-top: 0; }
 .sec .n { font-family: var(--f-mono); color: var(--muted); font-size: 13px; }
 .sec h3 { margin: 0; font-family: var(--f-cjk); font-size: 17px; }
-.box { border: 1px solid var(--line); background: var(--surface); border-radius: var(--r-card); padding: 12px 16px; max-width: 72ch; line-height: 1.7; }
-.box b { font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: var(--muted); display: block; margin-bottom: 4px; }
+.box { --k: var(--accent); border: 1px solid color-mix(in srgb, var(--k) 28%, var(--line)); background: color-mix(in srgb, var(--k) 5%, var(--surface)); border-radius: var(--r-card); padding: 14px 18px 16px; max-width: 72ch; line-height: 1.85; }
+.box.key { --k: var(--v-done); } .box.trap { --k: var(--trap); } .box.note { --k: var(--muted); }
+.box b { font-family: var(--f-mono); font-size: 12px; font-weight: 600; color: var(--k); display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.box b .hint { font-weight: 400; }
+.ci { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .box.trap { border-color: color-mix(in srgb, var(--trap) 35%, var(--line)); }
 .box.trap b { color: var(--trap); }
 .jump { font-size: 12px; color: var(--muted); text-decoration: none; }
 .jump:hover { color: var(--fg); }
 .flow { display: grid; gap: 12px; max-width: 72ch; }
-.flow .sec { margin: 32px 0 0; }
+.flow .sec { margin: 48px 0 4px; padding-top: 20px; border-top: 1px solid var(--line); }
 .flow .sec:first-child { margin-top: 0; }
 .flow .box { max-width: none; }
-.sub { font-family: var(--f-cjk); font-size: 14px; margin: 20px 0 0; }
+.sub { font-family: var(--f-cjk); font-size: 15px; margin: 28px 0 0; padding-left: 12px; border-left: 2px solid var(--line-strong); }
 .sub .n, .outline .n { font-family: var(--f-mono); color: var(--muted); font-weight: 400; }
-.lede { color: var(--muted); margin: -4px 0 0; font-size: 13px; }
-.para { margin: 0; line-height: 1.75; }
-.para.li { padding-left: 2.2em; text-indent: -2.2em; }
+.lede { color: var(--fg-2); margin: -2px 0 6px; font-size: 15px; line-height: 1.6; }
+.para { margin: 0; line-height: 1.9; font-size: 14.5px; }
+.para.li { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 10px; align-items: start; }
+.para.li .num { width: 24px; height: 24px; border-radius: 50%; background: var(--raised); color: var(--fg-2); display: grid; place-items: center; font-size: 11px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .tbl { display: grid; gap: 4px; }
 .tbl pre { margin: 0; font-family: var(--f-mono); font-size: 12px; line-height: 1.7; background: var(--raised); border-radius: var(--r-card); padding: 12px 16px; overflow-x: auto; }
 .fig { justify-self: start; }
@@ -325,10 +329,14 @@ tr td { transition: opacity .15s var(--ease); }
 .status button:hover { background: var(--raised); }
 .status button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 .progress-page { display: grid; gap: 32px; max-width: 880px; }
+.side { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px 40px; align-items: start; min-width: 0; }
+.selcard { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px 40px; align-items: start; }
+.selcard .block + .block { margin-top: 16px; }
 
 /* loading skeleton: the page's own outline, still (no shimmer) */
 .skeleton { display: grid; gap: 24px; }
-.sk { background: var(--raised); border-radius: var(--r-ctl); }
+.sk { background: linear-gradient(90deg, var(--raised) 0%, color-mix(in srgb, var(--raised) 55%, var(--surface)) 50%, var(--raised) 100%); background-size: 200% 100%; border-radius: var(--r-ctl); animation: shimmer 1.4s linear infinite; }
+@keyframes shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
 .sk-strip { height: 16px; width: min(560px, 100%); }
 .sk-hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; min-height: calc(100vh - 220px); }
 .sk-h1 { height: 40px; margin-bottom: 12px; } .sk-h1.short { width: 60%; }
@@ -404,9 +412,144 @@ tr td { transition: opacity .15s var(--ease); }
 .cheat td, .cheat th { white-space: nowrap; }
 code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--raised); border-radius: 4px; padding: 0 4px; white-space: nowrap; }
 
-/* the one animated view change: list card title into chapter heading */
-::view-transition-group(chtitle) { animation-duration: .25s; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: .15s; }
+
+/* visualizer colour grammar, shared by every visualizer */
+:root { --v-cur: #4f5fd6; --v-cmp: #c98a00; --v-done: #2b8a57; --v-bad: #d0453b; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --v-cur: #8f9bff; --v-cmp: #f0b429; --v-done: #4cc38a; --v-bad: #ff7b72; } }
+:root[data-theme="dark"] { --v-cur: #8f9bff; --v-cmp: #f0b429; --v-done: #4cc38a; --v-bad: #ff7b72; }
+.vkey { display: inline-flex; gap: 6px; align-items: center; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+.vkey i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; margin-left: 6px; }
+.k-cur { background: var(--v-cur); } .k-cmp { background: var(--v-cmp); } .k-done { background: var(--v-done); } .k-bad { background: var(--v-bad); }
+.cell.on, .vbar.on { background: color-mix(in srgb, var(--v-cmp) 28%, var(--surface)); border-color: var(--v-cmp); }
+.cell.hit { background: var(--v-done); border-color: var(--v-done); color: #fff; }
+.cell.done, .vbar.done { background: color-mix(in srgb, var(--v-done) 18%, var(--surface)); border-color: color-mix(in srgb, var(--v-done) 50%, var(--line-strong)); }
+.cell.bad { background: color-mix(in srgb, var(--v-bad) 22%, var(--surface)); border-color: var(--v-bad); }
+.cell.pad { opacity: .45; }
+.ptr.mid { color: var(--v-cmp); }
+.gn.cur circle, .rn.cur circle { fill: var(--v-cur); stroke: var(--v-cur); }
+.gn.cur text:not(.d) { fill: #fff; }
+.gn.seen circle, .rn.ret circle { fill: color-mix(in srgb, var(--v-done) 22%, var(--surface)); stroke: var(--v-done); }
+.gn.open circle { stroke: var(--v-cmp); }
+.tn.full rect { fill: var(--v-done); stroke: var(--v-done); }
+.tn.split rect { stroke: var(--v-cmp); }
+.gsvg line.hot { stroke: var(--v-cmp); } .gsvg line.mst { stroke: var(--v-done); } .gsvg line.skip { stroke: var(--v-bad); }
+.ivs rect.take { fill: var(--v-done); stroke: var(--v-done); } .ivs rect.cur { stroke: var(--v-cmp); }
+.vis-ctl select { border: 1px solid var(--line-strong); background: var(--surface); border-radius: var(--r-ctl); height: 32px; padding: 0 6px; font-size: 12px; }
+.mvar { border: 1px solid var(--line-strong); border-radius: var(--r-ctl); padding: 8px 12px; display: grid; gap: 6px; }
+.mvar.bad { border-color: var(--v-bad); background: color-mix(in srgb, var(--v-bad) 8%, var(--surface)); }
+.mhead { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.mhead b { margin-left: auto; }
+.bytes { display: flex; gap: 4px; flex-wrap: wrap; }
+.byte { font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; padding: 2px 6px; border-radius: 4px; background: var(--raised); }
+.mvar.bad .byte { background: color-mix(in srgb, var(--v-bad) 18%, var(--surface)); }
+
+/* chapter header card, done bar, ladder, mastery */
+.metacard { margin-top: 20px; display: grid; gap: 12px; padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); max-width: 72ch; }
+.metarow { display: flex; gap: 8px 20px; flex-wrap: wrap; align-items: center; font-size: 13px; color: var(--fg-2); }
+.metarow b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.stars { color: var(--v-cmp); letter-spacing: 2px; white-space: nowrap; } .stars i { color: var(--line-strong); font-style: normal; }
+.goals ul { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 2px; font-size: 13px; }
+.donebar { margin-top: 48px; padding: 16px 18px; border: 1px dashed var(--line-strong); border-radius: var(--r-card); display: flex; gap: 12px 20px; align-items: center; flex-wrap: wrap; max-width: 72ch; }
+.donebar .status { flex: 1 1 280px; }
+.ladder { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 0 0 20px; }
+.tier { border: 1px solid var(--line); border-radius: var(--r-card); padding: 12px 14px; display: grid; gap: 6px; align-content: start; background: var(--surface); }
+.tier .label { margin: 0 0 4px; }
+.tp { text-decoration: none; color: var(--fg); font-size: 13px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tp:hover .cjk { text-decoration: underline; }
+.mastery { display: grid; gap: 8px; }
+.mrow { display: grid; grid-template-columns: 200px minmax(0, 1fr) 48px; gap: 12px; align-items: center; font-size: 13px; }
+.mrow .fam { color: var(--fg-2); }
+.mbar { height: 6px; background: var(--raised); border-radius: 3px; overflow: hidden; }
+.mbar i { display: block; height: 100%; background: var(--v-done); transform-origin: left; animation: grow .7s var(--ease) both; }
+.mrow .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.outline .linkish.active { color: var(--fg); font-weight: 600; }
+.outline .linkish.active .n { color: var(--accent); }
+.prefs { display: flex; gap: 4px; }
+.btn.sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.readbar { position: fixed; left: 0; right: 0; top: calc(env(safe-area-inset-top, 0px) + var(--bar-h, 57px)); height: 2px; background: var(--accent); transform-origin: left; transform: scaleX(0); opacity: 0; z-index: 6; transition: opacity .2s ease; }
+
+/* themes picked by hand: light, dark, warm paper (the default follows the system) */
+:root[data-skin="light"] { --bg: #f6f7f9; --surface: #ffffff; --raised: #eef0f3; --line: rgba(17, 24, 39, 0.10); --line-strong: rgba(17, 24, 39, 0.18); --fg: #151a22; --fg-2: #4a5362; --muted: #6b7382; --accent: #2f5fd0; --lv-b: #1f8a4c; --lv-j: #2f5fd0; --lv-t: #9b3fb5; --lv-n: #c85d0b; --trap: #c2372f; --code-bg: #f8f9fb; --k-kw: #8a3fb0; --k-ty: #1f6fb0; --k-str: #2c7a3f; --k-num: #b45309; --k-com: #7b8594; --k-pre: #b0306a; --v-cur: #4f5fd6; --v-cmp: #c98a00; --v-done: #2b8a57; --v-bad: #d0453b; color-scheme: light; }
+:root[data-skin="dark"] { --bg: #0b0f17; --surface: #111827; --raised: #1b2433; --line: rgba(226, 232, 240, 0.08); --line-strong: rgba(226, 232, 240, 0.16); --fg: #e2e8f0; --fg-2: #b4bfcd; --muted: #8b96a8; --accent: #8ea8ff; --lv-b: #4cc47e; --lv-j: #8ea8ff; --lv-t: #c98be0; --lv-n: #f2994a; --trap: #ff7b72; --code-bg: #0d131d; --k-kw: #d2a8ff; --k-ty: #79c0ff; --k-str: #7ee787; --k-num: #f2b35a; --k-com: #7d8896; --k-pre: #ff8fc0; --v-cur: #8f9bff; --v-cmp: #f0b429; --v-done: #4cc38a; --v-bad: #ff7b72; color-scheme: dark; }
+:root[data-skin="paper"] { --bg: #f4efe4; --surface: #fbf8f1; --raised: #ece5d6; --line: rgba(60, 45, 20, 0.12); --line-strong: rgba(60, 45, 20, 0.22); --fg: #2b2418; --fg-2: #574c3a; --muted: #7d705b; --accent: #9a5b13; --lv-b: #3f7d3a; --lv-j: #2f5f9a; --lv-t: #8a3f8f; --lv-n: #b5520f; --trap: #b23b2e; --code-bg: #f6f1e6; --k-kw: #7d3f93; --k-ty: #2a5d8f; --k-str: #3f6e2c; --k-num: #9a5b13; --k-com: #8a7c66; --k-pre: #a0375f; --v-cur: #2f5f9a; --v-cmp: #b07a00; --v-done: #3f7d3a; --v-bad: #b23b2e; color-scheme: light; }
+@media (max-width: 560px) { .mrow { grid-template-columns: 140px minmax(0, 1fr) 40px; } .prefs { order: 2; } }
+@media (prefers-reduced-motion: reduce) { .sk, .mbar i { animation: none; } }
+
+/* a chapter card's title grows into the chapter heading */
+::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
+
+/* this round: merged programs, tag search, more visualizers, motion */
+details.prog { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); overflow: hidden; }
+details.prog summary { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; padding: 10px 16px; cursor: pointer; list-style: none; }
+details.prog summary::-webkit-details-marker { display: none; }
+details.prog summary .mono { font-weight: 600; }
+details.prog summary small { color: var(--muted); font-size: 12px; }
+details.prog summary .show { margin-left: auto; font-size: 12px; color: var(--accent); }
+details.prog summary .show::before { content: "▸ "; display: inline-block; transition: transform .2s var(--ease); }
+details.prog[open] summary .show::before { transform: rotate(90deg); }
+details.prog[open] summary .show { color: var(--muted); }
+details.prog[open] summary { border-bottom: 1px solid var(--line); }
+.progbar { display: flex; justify-content: flex-end; padding: 6px 12px 0; background: var(--code-bg); }
+details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
+.tagcloud { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 8px 8px; }
+.results:not([hidden]) { animation: pop .14s var(--ease) both; transform-origin: top; }
+@keyframes pop { from { opacity: 0; transform: scale(.98) translateY(-4px); } }
+.arow { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.alabel { width: 92px; flex: none; font-size: 11px; color: var(--muted); text-align: right; }
+.cell.done { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.gsvg line.hot { stroke: var(--accent); stroke-width: 3; }
+.gsvg line.mst { stroke: var(--accent); stroke-width: 4; }
+.gsvg line.skip { stroke-dasharray: 4 4; opacity: .5; }
+.gsvg text.w { font-size: 10px; fill: var(--muted); text-anchor: middle; font-family: var(--f-mono); }
+.gn.open circle { stroke: var(--accent); stroke-dasharray: 3 3; }
+.rn circle { fill: var(--surface); stroke: var(--line-strong); stroke-width: 1.2; transition: fill .15s ease; }
+.rn text { text-anchor: middle; font-family: var(--f-mono); font-size: 10px; fill: var(--fg); }
+.rn text.v { fill: var(--accent); font-size: 9px; }
+.rn { opacity: 0; transition: opacity .2s ease; }
+.rn.on { opacity: 1; }
+.rn.ret circle { fill: color-mix(in srgb, var(--accent) 20%, var(--surface)); }
+.rn.cur circle { stroke: var(--accent); stroke-width: 2.5; }
+.tsvg line { transition: opacity .2s ease; }
+.ivs rect { fill: var(--raised); stroke: var(--line-strong); }
+.ivs rect.take { fill: var(--accent); stroke: var(--accent); }
+.ivs rect.skip { opacity: .35; }
+.ivs rect.cur { stroke: var(--fg); stroke-width: 2; }
+.ivs .tick { font-size: 10px; fill: var(--muted); font-family: var(--f-mono); }
+
+/* the map draws itself the first time it appears, column by column */
+@keyframes draw { to { stroke-dashoffset: 0; } }
+@keyframes nodein { from { opacity: 0; transform: translateY(6px); } }
+.intro .edge { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .9s var(--ease) forwards; animation-delay: calc(var(--d) * 70ms); }
+.intro .node > * { animation: nodein .4s var(--ease) both; animation-delay: calc(var(--d) * 70ms); }
+/* a chosen chapter's path draws in */
+.edge.hot { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s var(--ease) forwards; }
+/* a chapter just marked learned pops */
+@keyframes popnode { 40% { transform: scale(1.08); } }
+.node.pop rect.box { transform-box: fill-box; transform-origin: center; animation: popnode .45s var(--ease); }
+/* checkmarks draw themselves */
+.chk { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; margin-right: 4px; vertical-align: -1px; }
+.chk path { stroke-dasharray: 1; stroke-dashoffset: 1; }
+[aria-pressed="true"] .chk path { animation: draw .35s var(--ease) .05s forwards; }
+.tick { display: inline-grid; place-items: center; width: 18px; height: 18px; border: 1.5px solid var(--line-strong); border-radius: 5px; cursor: pointer; position: relative; transition: background-color .15s ease, border-color .15s ease; }
+.tick input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.tick svg { width: 14px; height: 14px; fill: none; stroke: var(--bg); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.tick path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .3s var(--ease); }
+.tick:has(input:checked) { background: var(--accent); border-color: var(--accent); }
+.tick:has(input:checked) path { stroke-dashoffset: 0; }
+.tick:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* progress bars grow in when a view opens */
+@keyframes grow { from { transform: scaleX(0); } }
+.strip:not(.still) .meter i { transform-origin: left; animation: grow .7s var(--ease) both; }
+.cheat tbody tr { animation: rise .35s var(--ease) both; animation-delay: calc(var(--i) * 45ms); }
+/* page changes by click: the old view lifts away, the new one settles in */
+@keyframes vt-out { to { opacity: 0; transform: translateY(-6px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(10px); } }
+::view-transition-old(root) { animation: vt-out .16s var(--ease) both; }
+::view-transition-new(root) { animation: vt-in .26s var(--ease) both; }
+@media (prefers-reduced-motion: reduce) {
+  .intro .edge, .edge.hot { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; }
+  .intro .node > *, .node.pop rect.box, .strip .meter i, .cheat tbody tr, details.prog[open] .progbody, .results:not([hidden]) { animation: none; }
+}
 
 @media (max-width: 1000px) {
   .treeview, .chapter, .hero, .showcase { grid-template-columns: minmax(0, 1fr); }
@@ -440,10 +583,11 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
   <div class="bar-in wrap">
     <a class="brand" href="#home"><b>Contest Chapter Atlas</b><span>深入浅出程序设计竞赛 · 101 章</span></a>
     <nav class="nav" aria-label="Views">
-      <a href="#tree" id="nav-tree">Tree</a>
-      <a href="#list" id="nav-list">Chapters</a>
-      <a href="#progress" id="nav-progress">Progress</a>
+      <a href="#tree" id="nav-tree" data-t="tree">Tree</a>
+      <a href="#list" id="nav-list" data-t="list">Chapters</a>
+      <a href="#progress" id="nav-progress" data-t="progress">Progress</a>
     </nav>
+    <div class="prefs"><button class="btn sm" id="langBtn" data-lang aria-label="Switch interface language">中</button><button class="btn sm" id="skinBtn" data-skin aria-label="Change theme">Auto</button></div>
     <div class="search" role="search">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.7 10.3a6 6 0 1 0-1.4 1.4l3.6 3.6 1.4-1.4-3.6-3.6zM6.8 11a4.2 4.2 0 1 1 0-8.4 4.2 4.2 0 0 1 0 8.4z"/></svg>
       <input id="q" type="search" placeholder="Search" autocomplete="off" aria-label="Search chapters, concepts, programs and problems">
@@ -459,6 +603,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
   </div>
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="readbar" id="readbar" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script>
@@ -479,9 +624,9 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 
   let A = [], byId = {}, bySlug = {}, kids = {};
   let problems = null, selected = null, levelFilter = "all";
+  let introPending = true, justLearned = null;
   let zoomS = null, curS = 1; // chosen map scale (null = fit) and the one drawn now
   const ZMIN = 0.2, ZSTEPS = [0.2, 0.3, 0.45, 0.6, 0.8, 1];
-  const texts = {};
 
   // ---- per-viewer storage (this browser only) ----
   const store = {
@@ -497,6 +642,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
     const was = full();
     if (s === "none") delete prog[id]; else prog[id] = s;
     store.set("progress", prog);
+    if (s === "learned") { justLearned = id; setTimeout(() => (justLearned = null), 700); }
     if (s === "learned") { learnedAt[id] = Date.now(); delete reviews[id]; store.set("learnedAt", learnedAt); store.set("reviews", reviews); }
     logDay();
     toast(`${id} · ${s === "none" ? "not started" : s}`);
@@ -617,7 +763,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
       const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = x1 + Math.max(24, (x2 - x1) / 2);
       const on = selected && ((c.id === selected && anc.has(p)) || (p === selected) || (anc.has(c.id) && anc.has(p)) || (desc.has(c.id) && (desc.has(p) || p === selected)));
       const filtered = levelFilter !== "all" && !(c.id.startsWith(levelFilter) || p.startsWith(levelFilter));
-      out += `<path class="edge${on ? " hot" : ""}${(selected && !on) || filtered ? " dim" : ""}" d="M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}"/>`;
+      out += `<path class="edge${on ? " hot" : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}"/>`;
     }));
     A.forEach(c => {
       const { x, y } = xy[c.id];
@@ -625,7 +771,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
       const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter)) || (topicFilter !== "all" && c.fam !== topicFilter);
       const title = c.title.length > 15 ? c.title.slice(0, 14) + "…" : c.title;
       const en = c.en.length > 30 ? c.en.slice(0, 29) + "…" : c.en;
-      out += `<g class="node ${st}${isReady(c) ? " ready" : ""}${selected === c.id ? " sel" : ""}${dim ? " dim" : ""}" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(c.id + " " + c.title + ", " + c.en + ", " + (st === "none" ? "not started" : st))}" style="--c: var(--${lvClass(c)})" transform="translate(${x},${y})">
+      out += `<g class="node ${st}${isReady(c) ? " ready" : ""}${selected === c.id ? " sel" : ""}${dim ? " dim" : ""}${justLearned === c.id ? " pop" : ""}" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(c.id + " " + c.title + ", " + c.en + ", " + (st === "none" ? "not started" : st))}" style="--c: var(--${lvClass(c)}); --d:${depthOf(c.id)}" transform="translate(${x},${y})">
         <title>${esc(c.id + " " + c.title + " · " + c.en)}</title>
         <rect class="box" width="${W}" height="${H}" rx="8"/>
         <text class="id" x="12" y="18">${esc(c.id)}</text>
@@ -634,12 +780,13 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
         <text class="en" x="12" y="49">${esc(en)}</text>
       </g>`;
     });
-    return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Route map of all 101 chapters, one lane per level">${out}</svg>`;
+    const intro = introPending; introPending = false; // the first map drawn each visit builds itself
+    return `<svg class="${intro ? "intro" : ""}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Route map of all 101 chapters, one lane per level">${out}</svg>`;
   }
 
   // ---- shared bits ----
-  function stripHtml() {
-    return `<div class="strip">${LEVELS.map(l => {
+  function stripHtml(still) {
+    return `<div class="strip${still ? " still" : ""}">${LEVELS.map(l => {
       const list = A.filter(c => c.id.startsWith(l.key));
       const done = list.filter(c => statusOf(c.id) === "learned").length;
       const half = list.filter(c => statusOf(c.id) === "learning").length;
@@ -649,7 +796,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
   const chLink = id => `<a class="${statusOf(id) === "learned" ? "done" : ""}" href="#ch-${byId[id].slug}" title="${esc(byId[id].title + " · " + byId[id].en)}">${esc(id)}</a>`;
   function statusButtons(id) {
     const st = statusOf(id);
-    return `<div class="status" role="group" aria-label="Status">${[["none", "Not started"], ["learning", "Learning"], ["learned", "Learned"]].map(([s, label]) => `<button data-status="${s}" data-id="${id}" aria-pressed="${st === s}">${label}</button>`).join("")}</div>`;
+    return `<div class="status" role="group" aria-label="Status">${[["none", "Not started"], ["learning", "Learning"], ["learned", "Learned"]].map(([s, label]) => `<button data-status="${s}" data-id="${id}" aria-pressed="${st === s}">${s === "learned" ? '<svg class="chk" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" pathLength="1"/></svg>' : ""}${label}</button>`).join("")}</div>`;
   }
   const pathList = ids => `<ol class="path">${ids.map(id => `<li><a href="#ch-${byId[id].slug}"><span class="lv ${lvClass(byId[id])}">${id}</span> <span class="cjk">${esc(byId[id].title)}</span></a></li>`).join("")}</ol>`;
 
@@ -664,23 +811,24 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
     }
     const c = byId[selected];
     const need = pathTo(c.id);
-    return `<div class="card" style="--c: var(--${lvClass(c)})">
-      <span class="lv ${lvClass(c)}">${c.id} · ${lvOf(c).name} 第${c.num}章</span>
+    return `<div class="card selcard" style="--c: var(--${lvClass(c)})">
+      <div><span class="lv ${lvClass(c)}">${c.id} · ${lvOf(c).name} 第${c.num}章</span>
       <h2>${esc(c.title)}</h2><p class="en">${esc(c.en)}</p>
       <p class="hint" style="margin:0 0 12px">${esc(c.summary)}</p>
       ${statusButtons(c.id)}
       <div class="btns even"><a class="btn primary" href="#ch-${c.slug}">Open chapter</a><a class="btn" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a></div>
-      <div class="block" style="margin-top:20px"><p class="label">Needs</p><div class="links">${c.pre.length ? c.pre.map(chLink).join("") : '<span class="hint">Nothing, a starting point</span>'}</div></div>
+      <div class="btns"><button class="btn" data-clear>Clear selection</button></div></div>
+      <div><div class="block"><p class="label">Needs</p><div class="links">${c.pre.length ? c.pre.map(chLink).join("") : '<span class="hint">Nothing, a starting point</span>'}</div></div>
       <div class="block"><p class="label">Unlocks</p><div class="links">${(kids[c.id] || []).length ? kids[c.id].map(chLink).join("") : '<span class="hint">Nothing further in the course</span>'}</div></div>
+      </div>
       <div class="block"><p class="label">Path to here · ${need.length} left</p>${need.length ? pathList(need) : `<p class="hint">All prerequisites learned</p>`}</div>
-      <div class="btns"><button class="btn" data-clear>Clear selection</button></div>
     </div>`;
   }
 
   // ---- views ----
   // ---- map zoom: the svg is redrawn at width x scale, so text stays sharp and the canvas scrolls natively ----
   const clampS = s => Math.min(1, Math.max(ZMIN, s));
-  const viewH = () => Math.max(320, innerHeight - 200);
+  const viewH = () => Math.max(560, innerHeight - 150);
   const fitScale = canvas => clampS((canvas.clientWidth - 2) / layout.width);
   function sizeSvg(canvas, s) {
     const svg = canvas.querySelector("svg");
@@ -789,7 +937,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
     $("#side").innerHTML = sideCard();
     const s = document.querySelector(".strip"), r = document.querySelector(".resume");
     if (r) r.remove();
-    if (s) s.outerHTML = stripHtml();
+    if (s) s.outerHTML = stripHtml(true);
   }
 
   function viewList() {
@@ -815,6 +963,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
       <div class="block"><p class="label">Ready to learn · ${ready.length}</p><div class="links">${ready.map(c => chLink(c.id)).join("")}</div></div>
       ${(() => { const due = dueReviews(); return due.length ? `<div class="card"><p class="label">Due for review · ${due.length}</p><p style="margin:0 0 12px">You marked these learned ${due.some(x => x.d === 30) ? "a week or a month" : "a week"} ago. Reread each chapter's key points, then mark the review done.</p>
         <ol class="path">${due.map(({ c, d }) => `<li><a href="#ch-${c.slug}"><span class="lv ${lvClass(c)}">${c.id}</span> <span class="cjk">${esc(c.title)}</span></a> <span class="hint">${d}-day review</span> <button class="linkish" data-reviewed="${c.id}:${d}">Mark done</button></li>`).join("")}</ol></div>` : ""; })()}
+      <div class="block"><p class="label">Mastery by topic</p><div class="mastery">${FAMILIES.map(f => { const all = A.filter(c => c.fam === f.key), done = all.filter(c => statusOf(c.id) === "learned").length; return `<div class="mrow"><span class="fam">${icon(f.key)}${f.name}</span><span class="mbar"><i style="width:${(done / all.length) * 100}%"></i></span><span class="n">${done}/${all.length}</span></div>`; }).join("")}</div></div>
       <div class="block"><p class="label">Study days · last 20 weeks</p>${heatmapHtml()}</div>
       <div class="block"><p class="label">Problems ticked · ${solved.size}</p><div class="links">${[...solved].slice(0, 200).map(p => `<span class="pill">${esc(p)}</span>`).join("") || '<span class="hint">None yet</span>'}</div></div>
       <div class="card"><p class="label">Send to CP Coach</p><p style="margin:0 0 12px">Progress here is saved in this browser only. To copy it into the CP Coach mod, paste this to Claude.</p>
@@ -858,26 +1007,29 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
         case "h3": return `<h4 class="sub" id="${secId(b.num)}"><span class="n">${b.num}</span> ${esc(b.title)}</h4>`;
         case "lede": return `<p class="lede">${bigO(esc(b.text))}</p>`;
         case "p": return `<p class="para">${bigO(esc(b.text))}</p>`;
-        case "li": return `<p class="para li">${bigO(esc(b.text))}</p>`;
-        case "box": return `<div class="box${b.kind === "TRAP" ? " trap" : ""}"><b>${KIND[b.kind] || b.kind}</b>${bigO(esc(b.text))}</div>`;
+        case "li": { const m = b.text.match(/^(\d+)\.\s*([\s\S]*)$/); return m ? `<p class="para li"><span class="num">${m[1]}</span><span>${bigO(esc(m[2]))}</span></p>` : `<p class="para li">${bigO(esc(b.text))}</p>`; }
+        case "box": { const k = CALLOUT[b.kind] || CALLOUT.NOTE; return `<div class="box ${k.cls}"><b>${k.icon}<span>${k.zh}</span><span class="hint">${k.en}</span></b><div>${bigO(esc(b.text))}</div></div>`; }
         case "pre": return `<div class="tbl"><pre>${esc(b.lines.join("\n"))}</pre><a class="jump" href="${pdf(b.page)}" target="_blank" rel="noopener">Laid out properly in the PDF, page ${b.page} →</a></div>`;
         case "fig": return `<a class="jump fig" href="${pdf(b.page)}" target="_blank" rel="noopener">Diagram on PDF page ${b.page} →</a>`;
-        case "prog": return `<a class="jump" href="#ch-${c.slug}-code" data-jump="${esc(b.file)}">Program <span class="mono">${esc(b.file)}</span> →</a>`;
+        case "prog": { const k = c.programs.findIndex(p => p.file === b.file); return k < 0 ? "" : progBlock(c, k); }
         default: return "";
       }
     }).join("");
-    return html ? `<div class="flow">${html}</div>` : `<p class="empty">This handout's text could not be read. Open the PDF instead</p>`;
+    // programs the text never mentions still belong to the chapter: list them at the end
+    const placed = new Set((c.flow || []).filter(b => b.t === "prog").map(b => b.file));
+    const rest = c.programs.map((p, k) => (placed.has(p.file) ? "" : progBlock(c, k))).join("");
+    const all = html + (rest ? `<div class="sec"><span class="n">+</span><h3>More programs</h3></div>${rest}` : "");
+    return all ? `<div class="flow">${all}</div>` : `<p class="empty">This handout's text could not be read. Open the PDF instead</p>`;
+  }
+  // A program sits folded where the handout shows it; clicking opens the code, its samples and copy buttons.
+  function progBlock(c, i) {
+    const p = c.programs[i];
+    return `<details class="prog" id="prog-${i}"><summary><span class="mono">${esc(p.file)}</span><small>${p.code.split("\n").length} lines${p.samples.length ? " · sample input and output" : ""}</small><span class="show">Show code</span></summary>
+      <div class="progbody"><div class="progbar"><button class="copy" data-copy-prog="${i}">Copy code</button></div><pre class="code"><code>${codeHtml(p.code)}</code></pre>
+      ${p.samples.length ? `<div class="io">${p.samples.map((s, j) => `<div><b><span>${esc(s.label)}</span><button class="copy" data-copy-io="${i}:${j}">Copy</button></b><pre>${esc(s.text)}</pre></div>`).join("")}</div>` : ""}</div></details>`;
   }
   const outline = c => (c.flow || []).filter(b => b.t === "h2" || b.t === "h3")
-    .map(b => `<li class="${b.t}"><button class="linkish" data-goto="${secId(b.num)}"><span class="n">${b.num}</span> <span class="cjk">${esc(b.title)}</span></button></li>`).join("");
-
-  function programs(c) {
-    if (!c.programs.length) return `<p class="empty">No programs in this handout</p>`;
-    return `<p class="hint" style="margin:0 0 16px">${c.programs.length} programs from the handout, all C++17. To run one with CP Coach, save it as <span class="mono">name.cpp</span> with <span class="mono">name1.in</span> and <span class="mono">name1.out</span> beside it, then type <span class="mono">/test name.cpp</span></p>` +
-      c.programs.map((p, i) => `<article class="prog" id="prog-${i}"><header><span><span class="mono">${esc(p.file)}</span> <small>§${esc(p.section)} · ${p.code.split("\n").length} lines</small></span><button class="copy" data-copy-prog="${i}">Copy code</button></header>
-        <pre class="code"><code>${codeHtml(p.code)}</code></pre>
-        ${p.samples.length ? `<div class="io">${p.samples.map((s, j) => `<div><b><span>${esc(s.label)}</span><button class="copy" data-copy-io="${i}:${j}">Copy</button></b><pre>${esc(s.text)}</pre></div>`).join("")}</div>` : ""}</article>`).join("");
-  }
+    .map(b => `<li class="${b.t}"><button class="linkish" data-goto="${secId(b.num)}" data-spy="${secId(b.num)}"><span class="n">${b.num}</span> <span class="cjk">${esc(b.title)}</span></button></li>`).join("");
 
   function problemRows(c, judge, filter) {
     const list = (problems && problems[c.id] && problems[c.id][judge]) || [];
@@ -885,7 +1037,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
     const diff = p => judge === "luogu" ? `<span class="diff" style="background:${LUOGU[p.d][1]}">${LUOGU[p.d][0]}</span>` : `<span class="diff" style="background:${cfColor(p.r)}">${p.r}</span>`;
     const done = list.filter(p => solved.has(p.id)).length;
     return { html: rows.length ? `<div class="tablewrap"><table><thead><tr><th>Done</th><th>Problem</th><th>Name</th><th>${judge === "luogu" ? "Difficulty" : "Rating"}</th><th class="ptag">Tags</th><th style="text-align:right">${judge === "luogu" ? "Accepted" : "Solved"}</th></tr></thead><tbody>
-      ${rows.map(p => `<tr class="${solved.has(p.id) ? "solved" : ""}"><td><input type="checkbox" id="s-${judge}-${esc(p.id)}" data-solve="${esc(p.id)}" ${solved.has(p.id) ? "checked" : ""} aria-label="Mark ${esc(p.id)} solved"></td>
+      ${rows.map(p => `<tr class="${solved.has(p.id) ? "solved" : ""}"><td><label class="tick"><input type="checkbox" id="s-${judge}-${esc(p.id)}" data-solve="${esc(p.id)}" ${solved.has(p.id) ? "checked" : ""} aria-label="Mark ${esc(p.id)} solved"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" pathLength="1"/></svg></label></td>
         <td class="id">${p.star ? '<span class="star" title="Tests exactly this chapter\'s technique">★</span> ' : ""}<a href="${problemUrl(judge, p.id)}" target="_blank" rel="noopener">${judge === "luogu" ? esc(p.id) : "CF " + esc(p.id)}</a></td>
         <td class="cjk">${esc(p.name)}</td><td>${diff(p)}</td><td class="hint ptag">${esc(p.tags.slice(0, 4).join(", "))}</td><td class="num">${p.ac.toLocaleString("en-US")}</td></tr>`).join("")}</tbody></table></div>` : `<p class="empty">No problems match these filters</p>`, done, total: list.length, shown: rows.length };
   }
@@ -897,6 +1049,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
       return `<p class="empty">Loading ${c.counts.luogu + c.counts.codeforces} problems</p>`;
     }
     const r = problemRows(c, pstate.judge, pstate);
+    const ladder = ladderHtml(c);
     const opts = pstate.judge === "luogu" ? LUOGU.map((l, i) => `<option value="${i}" ${pstate.d === String(i) ? "selected" : ""}>${l[0]}</option>`).join("") : [800, 1200, 1600, 2000, 2400, 2800, 3200].map(v => `<option value="${v}" ${pstate.d === String(v) ? "selected" : ""}>${v}–${v + 399}</option>`).join("");
     return `<div class="ptools">
       <div class="seg" role="group" aria-label="Judge"><button data-judge="luogu" aria-pressed="${pstate.judge === "luogu"}">Luogu ${c.counts.luogu}</button><button data-judge="codeforces" aria-pressed="${pstate.judge === "codeforces"}">Codeforces ${c.counts.codeforces}</button></div>
@@ -905,37 +1058,27 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
       <label><input type="checkbox" id="pstar" ${pstate.star ? "checked" : ""}> ★ only</label>
       <label><input type="checkbox" id="phide" ${pstate.hide ? "checked" : ""}> Hide done</label>
       <span class="hint">${r.done}/${r.total} done · showing ${r.shown}</span></div>
+      ${ladder}
       <p class="hint" style="margin:0 0 12px">★ problems test exactly this chapter's technique, so do those first. Lists run easiest to hardest, and ticks are saved in this browser</p>
       ${r.html}`;
   }
 
-  function handoutTab(c) {
-    const t = texts[c.id];
-    if (t === undefined) {
-      fetch(`handouts/${c.slug}.txt`).then(r => r.text()).then(x => { texts[c.id] = x; route(); }).catch(() => { texts[c.id] = null; route(); });
-      return `<p class="empty">Loading the handout text</p>`;
-    }
-    const body = t === null ? "The text didn't load" : esc(t.replace(/^# .*\n/gm, "")).replace(/=== page (\d+) ===/g, '<span class="pg">Page $1</span>');
-    return `<div class="btns" style="margin:0 0 16px;align-items:center"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Open the PDF · ${c.pages} pages</a><span class="hint">Text extracted from the PDF. Diagrams and table layout are in the PDF only</span></div><div class="reader">${body}</div>`;
-  }
-
-  function notesTab(c) {
-    return `<p class="hint" style="margin:0 0 12px">Your notes for ${c.id}, saved in this browser as you type</p><textarea class="notes" id="notes-${c.slug}" data-notes="${c.id}" placeholder="What clicked, what tripped you up, problems to revisit">${esc(notes[c.id] || "")}</textarea>`;
-  }
-
-  function viewChapter(slug, tab) {
+  function viewChapter(slug, tab, sec) {
     const c = bySlug[slug];
     if (!c) return viewTree();
+    if (tab !== "problems") tab = "concepts"; // old links to the Code, Handout and Notes tabs land on the chapter
     const i = A.indexOf(c), prev = A[i - 1], next = A[i + 1];
-    const tabs = [["concepts", "Concepts", c.boxes.length], ["code", "Code", c.programs.length], ["problems", "Problems", c.counts.luogu + c.counts.codeforces], ["handout", "Handout", c.pages + "p"], ["notes", "Notes", notes[c.id] ? "✎" : ""]];
-    const body = tab === "code" ? programs(c) : tab === "problems" ? problemsTab(c) : tab === "handout" ? handoutTab(c) : tab === "notes" ? notesTab(c) : concepts(c);
+    const tabs = [["concepts", "Learn", `${c.boxes.length} ideas · ${c.programs.length} programs`], ["problems", "Problems", c.counts.luogu + c.counts.codeforces]];
+    const body = tab === "problems" ? problemsTab(c) : concepts(c);
     const need = pathTo(c.id), star = nextStar(c);
     $("#view").innerHTML = `<div class="chapter" style="--c: var(--${lvClass(c)})">
       <div style="min-width:0">
         <div class="crumbs"><a href="#tree" data-select="${c.id}">Tree</a><span>/</span><a href="#list">${lvOf(c).name}</a><span>/</span><span>${c.id}</span></div>
-        <div class="chead"><span class="lv ${lvClass(c)}">${c.id} · ${lvOf(c).name} 第${c.num}章</span> <span class="fam hint">${icon(c.fam)}${famOf(c.fam).name}</span><h1 style="view-transition-name: chtitle">${esc(c.title)}</h1><p class="en">${esc(c.en)}</p><p class="sum">${esc(c.summary)}</p></div>
-        <nav class="tabs" aria-label="Chapter sections">${tabs.map(([k, label, n]) => `<a href="#ch-${c.slug}${k === "concepts" ? "" : "-" + k}" ${(tab || "concepts") === k ? 'aria-current="page"' : ""}>${label}<small>${n}</small></a>`).join("")}</nav>
+        <div class="chead"><span class="lv ${lvClass(c)}">${c.id} · ${lvOf(c).name} 第${c.num}章</span> <span class="fam hint">${icon(c.fam)}${famOf(c.fam).name}</span><h1 style="view-transition-name: chtitle">${esc(c.title)}</h1><p class="en">${esc(c.en)}</p><p class="sum">${esc(c.summary)}</p>
+          <div class="metacard">${headerMeta(c)}</div></div>
+        <nav class="tabs" aria-label="Chapter sections">${tabs.map(([k, label, n]) => `<a href="#ch-${c.slug}${k === "concepts" ? "" : "-" + k}" ${(tab || "concepts") === k ? 'aria-current="page"' : ""}>${tabLabel(label)}<small>${n}</small></a>`).join("")}</nav>
         <div id="tabbody">${body}</div>
+        <div class="donebar"><span>Finished reading ${c.id}?</span>${statusButtons(c.id)}</div>
         <div class="pager">${prev ? `<a href="#ch-${prev.slug}"><small>← ${prev.id}</small><span class="cjk">${esc(prev.title)}</span></a>` : "<span></span>"}${next ? `<a class="next" href="#ch-${next.slug}"><small>${next.id} →</small><span class="cjk">${esc(next.title)}</span></a>` : "<span></span>"}</div>
       </div>
       <aside class="aside">
@@ -948,7 +1091,9 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
         ${need.length ? `<div class="block"><p class="label">Still to learn first · ${need.length}</p><div class="links">${need.map(chLink).join("")}</div></div>` : ""}
         <div class="block"><p class="label">With CP Coach</p><div class="cc">/learn ${c.id}</div><div class="cc">/practice ${c.id}</div><p class="hint" style="margin-top:8px">Type these in Claude Code to study this chapter or get its next problems</p></div>
       </aside></div>`;
-    if ((tab || "concepts") === "concepts") mountVis(c);
+    if ((tab || "concepts") === "concepts") { mountVis(c); spyOutline(); if (sec) { const el = document.getElementById("sec-" + sec); if (el) setTimeout(() => el.scrollIntoView({ block: "start" }), 0); } }
+    const nx = A[i + 1]; // fetch the next chapter's text now so Next feels instant
+    if (nx && nx.flow === undefined) fetch(`handouts/${nx.slug}.flow.json`).then(r => r.json()).then(f => { if (nx.flow === undefined) nx.flow = f; }).catch(() => {});
     window.scrollTo(0, 0);
   }
 
@@ -985,7 +1130,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
           <ul class="stars">${stars.map(s => `<li><span class="diff" style="background:${LUOGU[s.d][1]}">${LUOGU[s.d][0]}</span><a href="${problemUrl("luogu", s.id)}" target="_blank" rel="noopener">★ ${esc(s.id)}</a><span class="cjk">${esc(s.name)}</span></li>`).join("")}</ul>
           <div class="btns"><a class="btn" href="#ch-${c.slug}">Open ${c.id} ${esc(c.title)}</a></div>
         </div>
-        <article class="prog"><header><span><span class="mono">${esc(p.file)}</span> <small>§${esc(p.section)} · first 18 of ${p.code.split("\n").length} lines</small></span><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#ch-${c.slug}-code">All programs</a></header>
+        <article class="prog"><header><span><span class="mono">${esc(p.file)}</span> <small>§${esc(p.section)} · first 18 of ${p.code.split("\n").length} lines</small></span><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#ch-${c.slug}">All programs</a></header>
           <pre class="code"><code>${codeHtml(code)}</code></pre>
           ${p.samples.length ? `<div class="io">${p.samples.map(s => `<div><b><span>${esc(s.label)}</span></b><pre>${esc(s.text)}</pre></div>`).join("")}</div>` : ""}</article>
       </section>
@@ -1173,16 +1318,200 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
       };
     },
   };
+
+  // Shared graph for the weighted visualizers (Dijkstra, Kruskal).
+  const GW = [4, 1, 5, 8, 2, 7, 3, 6, 2, 4];
+  function graphMount(stage, weighted) {
+    stage.innerHTML = `<svg viewBox="0 0 350 200" class="gsvg">${G.edges.map(([u, v], e) => `<line data-e="${e}" x1="${G.pos[u][0]}" y1="${G.pos[u][1]}" x2="${G.pos[v][0]}" y2="${G.pos[v][1]}"/>${weighted ? `<text class="w" x="${(G.pos[u][0] + G.pos[v][0]) / 2}" y="${(G.pos[u][1] + G.pos[v][1]) / 2 - 4}">${GW[e]}</text>` : ""}`).join("")}
+      ${G.pos.map(([x, y], k) => `<g class="gn" transform="translate(${x},${y})"><circle r="16"/><text dy="4">${G.names[k]}</text><text class="d" dy="-22"></text></g>`).join("")}</svg><div class="queue"></div>`;
+    const nodes = [...stage.querySelectorAll(".gn")], lines = [...stage.querySelectorAll("line")], list = stage.querySelector(".queue");
+    return f => {
+      nodes.forEach((n, k) => { n.setAttribute("class", "gn " + (f.node[k] || "")); n.querySelector(".d").textContent = f.label[k] ?? ""; });
+      lines.forEach((l, e) => l.setAttribute("class", f.edge[e] || ""));
+      list.innerHTML = f.list;
+    };
+  }
+  const adjW = () => { const a = G.names.split("").map(() => []); G.edges.forEach(([u, v], e) => { a[u].push([v, GW[e], e]); a[v].push([u, GW[e], e]); }); return a; };
+  VIS["进10"] = {
+    title: "Dijkstra from A",
+    frames() {
+      const adj = adjW(), dist = Array(8).fill(Infinity), done = Array(8).fill(false), F = [];
+      const snap = (cur, relax, text) => F.push({
+        node: dist.map((d, k) => (k === cur ? "cur" : done[k] ? "seen" : d < Infinity ? "open" : "")),
+        label: dist.map(d => (d < Infinity ? d : "∞")), edge: relax !== null ? { [relax]: "hot" } : {},
+        list: `<span class="hint">Waiting, nearest first</span>${dist.map((d, k) => [d, k]).filter(([d, k]) => !done[k] && d < Infinity).sort((a, b) => a[0] - b[0]).map(([d, k]) => `<span class="qcell">${G.names[k]} ${d}</span>`).join("") || '<span class="hint">none</span>'}`, text,
+      });
+      dist[0] = 0; snap(-1, null, "Every distance starts at ∞ except A, which is 0");
+      for (;;) {
+        let u = -1;
+        for (let k = 0; k < 8; k++) if (!done[k] && dist[k] < Infinity && (u < 0 || dist[k] < dist[u])) u = k;
+        if (u < 0) break;
+        done[u] = true; snap(u, null, `${G.names[u]} is the nearest unfinished node (${dist[u]}). Its distance is now final`);
+        for (const [v, w, e] of adj[u]) if (!done[v] && dist[u] + w < dist[v]) { dist[v] = dist[u] + w; snap(u, e, `Relax ${G.names[u]}–${G.names[v]}: ${dist[u]} + ${w} = ${dist[v]} beats the old distance`); }
+      }
+      snap(-1, null, "Every node is final. With a heap this is O((V + E) log V); weights must not be negative");
+      return F;
+    },
+    mount: stage => graphMount(stage, true),
+  };
+  VIS["进11"] = {
+    title: "Kruskal: cheapest edges first, skipping cycles",
+    frames() {
+      const parent = [...Array(8).keys()], find = x => (parent[x] === x ? x : (parent[x] = find(parent[x])));
+      const order = G.edges.map((_, e) => e).sort((a, b) => GW[a] - GW[b] || a - b), edge = {}, F = [];
+      let total = 0, taken = 0;
+      const comps = () => { const g = {}; for (let k = 0; k < 8; k++) (g[find(k)] = g[find(k)] || []).push(G.names[k]); return Object.values(g).map(x => `<span class="qcell">${x.join("")}</span>`).join(""); };
+      const snap = text => F.push({ node: {}, label: {}, edge: { ...edge }, list: `<span class="hint">Groups (union-find)</span>${comps()}`, text });
+      snap("Sort the edges by weight. Each node starts in its own group");
+      for (const e of order) {
+        const [u, v] = G.edges[e];
+        if (find(u) === find(v)) { edge[e] = "skip"; snap(`${G.names[u]}–${G.names[v]} (${GW[e]}) joins two nodes already in one group: it would close a cycle, skip`); continue; }
+        parent[find(u)] = find(v); edge[e] = "mst"; total += GW[e]; taken++;
+        snap(`Take ${G.names[u]}–${G.names[v]} (${GW[e]}) and merge their groups. Tree weight ${total}`);
+        if (taken === 7) break;
+      }
+      snap(`7 edges join all 8 nodes: a minimum spanning tree of weight ${total}. O(E log E) for the sort`);
+      return F;
+    },
+    mount: stage => graphMount(stage, true),
+  };
+  // Generic rows of cells for array-shaped visualizers.
+  function rowsMount(stage) {
+    stage.classList.add("cells");
+    return f => {
+      stage.innerHTML = f.rows.map(r => `<div class="arow"><span class="alabel">${r.label}</span><div class="row">${r.vals.map((v, k) => `<div class="cell ${(r.marks || {})[k] || ""}"><small>${r.idx ? r.idx[k] : k + (r.base ?? 0)}</small>${v}</div>`).join("")}</div></div>`).join("");
+    };
+  }
+  VIS["进2"] = {
+    title: "Prefix sums: build once, answer any range in O(1)",
+    frames() {
+      const a = [3, 1, 4, 1, 5, 9, 2, 6], S = [0], F = [];
+      const snap = (marksA, marksS, text) => F.push({ rows: [{ label: "a", vals: a, base: 1, marks: marksA }, { label: "S", vals: S.concat(Array(9 - S.length).fill("")), marks: marksS }], text });
+      snap({}, { 0: "done" }, "S[i] holds a[1] + … + a[i]. S[0] = 0 makes the first range work too");
+      for (let i = 1; i <= 8; i++) { S[i] = S[i - 1] + a[i - 1]; snap({ [i - 1]: "on" }, { [i - 1]: "done", [i]: "on" }, `S[${i}] = S[${i - 1}] + a[${i}] = ${S[i - 1]} + ${a[i - 1]} = ${S[i]}`); }
+      const all = Object.fromEntries([...Array(9).keys()].map(k => [k, "done"]));
+      const l = 3, r = 6;
+      snap(Object.fromEntries([2, 3, 4, 5].map(k => [k, "on"])), { ...all, [r]: "hit", [l - 1]: "on" }, `Sum of a[${l}..${r}] = S[${r}] − S[${l - 1}] = ${S[r]} − ${S[l - 1]} = ${S[r] - S[l - 1]}. One subtraction, whatever the length`);
+      return F;
+    },
+    mount: rowsMount,
+  };
+  VIS["进5"] = {
+    title: "Fenwick tree: jumps by lowbit",
+    frames() {
+      const n = 8, a = [5, 3, 7, 2, 6, 4, 1, 8], t = Array(n + 1).fill(0), F = [];
+      for (let i = 1; i <= n; i++) for (let j = i; j <= n; j += j & -j) t[j] += a[i - 1];
+      const bin = i => i.toString(2).padStart(4, "0");
+      const snap = (marks, text) => F.push({ rows: [{ label: "tree", vals: t.slice(1), idx: [...Array(n).keys()].map(k => bin(k + 1)), marks }], text });
+      snap({}, "tree[i] covers the last lowbit(i) positions ending at i. The small numbers are i in binary");
+      for (let i = 3; i <= n; i += i & -i) { t[i] += 5; snap({ [i - 1]: "on" }, `update(3, +5): add to tree[${i}] (${bin(i)}), then i += lowbit = ${i & -i}`); }
+      let sum = 0;
+      for (let i = 7; i > 0; i -= i & -i) { sum += t[i]; snap({ [i - 1]: "hit" }, `query(7): add tree[${i}] (${bin(i)}) = ${t[i]}, running sum ${sum}; then i −= lowbit = ${i & -i}`); }
+      snap({}, `Prefix sum of the first 7 values is ${sum}. Both operations touch O(log n) cells`);
+      return F;
+    },
+    mount: rowsMount,
+  };
+  VIS["进7"] = {
+    title: "KMP: building the prefix function of ABABCABAB",
+    frames() {
+      const p = "ABABCABAB", pi = Array(p.length).fill(""), F = [];
+      pi[0] = 0;
+      const snap = (i, j, text) => F.push({ rows: [{ label: "pattern", vals: p.split(""), marks: { [i]: "on", ...(j >= 0 ? { [j]: "hit" } : {}) } }, { label: "π", vals: [...pi] }], text });
+      snap(0, -1, "π[i] = length of the longest proper prefix that is also a suffix of pattern[0..i]. π[0] = 0");
+      let j = 0;
+      for (let i = 1; i < p.length; i++) {
+        while (j > 0 && p[i] !== p[j]) { snap(i, j, `${p[i]} ≠ ${p[j]}: fall back j = π[${j - 1}] = ${pi[j - 1]}`); j = pi[j - 1]; }
+        if (p[i] === p[j]) j++;
+        pi[i] = j; snap(i, j - 1, `π[${i}] = ${j}${j ? `: "${p.slice(0, j)}" is both a prefix and a suffix` : ""}`);
+      }
+      snap(-1, -1, "Each fallback pays for an earlier step forward, so building π is O(m) and searching a text is O(n + m)");
+      return F;
+    },
+    mount: rowsMount,
+  };
+  VIS["进13"] = {
+    title: "0/1 knapsack, filling the table",
+    frames() {
+      const items = [[2, 3], [3, 4], [4, 5], [5, 6]], C = 5, dp = [Array(C + 1).fill(0)], F = [];
+      const rows = (marks) => [{ label: "c →", vals: [...Array(C + 1).keys()], marks: {} }, ...dp.map((r, i) => ({ label: i ? `+${items[i - 1][0]}kg $${items[i - 1][1]}` : "none", vals: r.concat(Array(C + 1 - r.length).fill("")), marks: marks[i] || {} }))];
+      F.push({ rows: rows({}), text: "dp[i][c] = best value using the first i items with capacity c. With no items it's 0" });
+      items.forEach(([w, v], k) => {
+        const i = k + 1; dp[i] = [];
+        for (let c = 0; c <= C; c++) {
+          const skip = dp[i - 1][c], take = c >= w ? dp[i - 1][c - w] + v : -1;
+          dp[i][c] = Math.max(skip, take);
+          F.push({ rows: rows({ [i]: { [c]: "on" }, [i - 1]: { [c]: "done", ...(take >= 0 ? { [c - w]: "hit" } : {}) } }), text: take >= 0 ? `dp[${i}][${c}] = max(skip ${skip}, take ${dp[i - 1][c - w]} + ${v} = ${take}) = ${dp[i][c]}` : `dp[${i}][${c}] = ${skip}: a ${w} kg item does not fit in ${c} kg` });
+        }
+      });
+      F.push({ rows: rows({ 4: { [C]: "hit" } }), text: `Best value for 5 kg is ${dp[4][C]}. The table is O(n · C); one rolling row is enough if you loop c downwards` });
+      return F;
+    },
+    mount: rowsMount,
+  };
+  VIS["基11"] = {
+    title: "Recursion tree of fib(5)",
+    frames() {
+      const nodes = [], F = [];
+      const build = (n, depth) => { const me = { n, depth, kids: [] }; nodes.push(me); if (n > 1) me.kids = [build(n - 1, depth + 1), build(n - 2, depth + 1)]; return me; };
+      const root = build(5, 0);
+      let leaf = 0; const place = x => { if (!x.kids.length) x.x = leaf++; else { x.kids.forEach(place); x.x = (x.kids[0].x + x.kids[x.kids.length - 1].x) / 2; } };
+      place(root);
+      const shown = new Set(), val = new Map();
+      const snap = (cur, text) => F.push({ nodes, shown: new Set(shown), val: new Map(val), cur, text });
+      const run = x => { shown.add(x); snap(x, `call fib(${x.n})`); let r = x.n; if (x.kids.length) r = run(x.kids[0]) + run(x.kids[1]); val.set(x, r); snap(x, `fib(${x.n}) returns ${r}`); return r; };
+      run(root);
+      snap(null, `${nodes.length} calls for fib(5), and fib(3) alone is computed twice. Remember each answer (or loop upwards) and it takes 6 steps: O(n) instead of O(φⁿ)`);
+      return F;
+    },
+    mount(stage) {
+      let built = false, els = new Map();
+      return f => {
+        if (!built) {
+          const X = x => 20 + x.x * 40, Y = x => 20 + x.depth * 44;
+          stage.innerHTML = `<svg viewBox="0 0 360 230" class="tsvg">${f.nodes.flatMap(x => x.kids.map(k => `<line data-k="${f.nodes.indexOf(k)}" x1="${X(x)}" y1="${Y(x)}" x2="${X(k)}" y2="${Y(k)}"/>`)).join("")}
+            ${f.nodes.map((x, i) => `<g class="rn" data-i="${i}" transform="translate(${X(x)},${Y(x)})"><circle r="15"/><text dy="-1">f${x.n}</text><text class="v" dy="10"></text></g>`).join("")}</svg>`;
+          built = true;
+        }
+        stage.querySelectorAll(".rn").forEach(g => { const x = f.nodes[+g.dataset.i]; g.setAttribute("class", "rn" + (f.shown.has(x) ? " on" : "") + (f.val.has(x) ? " ret" : "") + (f.cur === x ? " cur" : "")); g.querySelector(".v").textContent = f.val.has(x) ? f.val.get(x) : ""; });
+        stage.querySelectorAll("line").forEach(l => (l.style.opacity = f.shown.has(f.nodes[+l.dataset.k]) ? 1 : 0));
+      };
+    },
+  };
+  VIS["基12"] = {
+    title: "Greedy: most meetings in one room",
+    frames() {
+      const iv = [[1, 4], [3, 5], [0, 6], [5, 7], [3, 9], [5, 9], [6, 10], [8, 11], [8, 12], [2, 14], [12, 16]].sort((a, b) => a[1] - b[1]);
+      const st = Array(iv.length).fill(""), F = [];
+      const snap = (cur, text) => F.push({ iv, st: [...st], cur, text });
+      snap(-1, "Sort meetings by end time. Always keep the one that ends first: it leaves the most room for the rest");
+      let end = -Infinity, n = 0;
+      iv.forEach(([a, b], k) => {
+        if (a >= end) { st[k] = "take"; end = b; n++; snap(k, `[${a}, ${b}) starts after ${end === b ? "the last kept meeting ends" : end}: keep it. ${n} kept`); }
+        else { st[k] = "skip"; snap(k, `[${a}, ${b}) overlaps the last kept meeting: skip`); }
+      });
+      snap(-1, `${n} meetings. Sorting by start or by length can do worse; by end time is provably optimal. O(n log n)`);
+      return F;
+    },
+    mount(stage) {
+      return f => {
+        const sx = 20;
+        stage.innerHTML = `<svg viewBox="0 0 350 ${f.iv.length * 16 + 26}" class="gsvg ivs">${[0, 4, 8, 12, 16].map(t => `<text class="tick" x="${8 + t * sx}" y="${f.iv.length * 16 + 22}">${t}</text>`).join("")}
+          ${f.iv.map(([a, b], k) => `<rect class="${f.st[k]}${f.cur === k ? " cur" : ""}" x="${8 + a * sx}" y="${4 + k * 16}" width="${(b - a) * sx}" height="12" rx="3"/>`).join("")}</svg>`;
+      };
+    },
+  };
   function mountVis(c) {
     clearInterval(visTimer); visTimer = null;
     const spec = VIS[c.id], host = document.getElementById("vis");
     if (!spec || !host) return;
     const frames = spec.frames();
     let i = 0;
-    host.innerHTML = `<div class="vis-head"><b>${spec.title}</b><span class="hint">Step through it or drag the slider</span></div>
+    host.innerHTML = `<div class="vis-head"><b>${spec.title}</b><span class="vkey"><i class="k-cur"></i>current <i class="k-cmp"></i>comparing <i class="k-done"></i>done <i class="k-bad"></i>rejected</span></div>
       <div class="vis-stage" id="visStage"></div><p class="vis-cap" id="visCap" aria-live="polite"></p>
       <div class="vis-ctl"><button class="btn" data-v="prev" aria-label="Previous step">‹</button><button class="btn" data-v="play">Play</button><button class="btn" data-v="next" aria-label="Next step">›</button>
-      <input type="range" id="visRange" min="0" max="${frames.length - 1}" value="0" aria-label="Step"><span class="hint" id="visN"></span></div>`;
+      <input type="range" id="visRange" min="0" max="${frames.length - 1}" value="0" aria-label="Step"><span class="hint" id="visN"></span>
+      <select id="visSpeed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div>`;
     const update = spec.mount(host.querySelector("#visStage"));
     const playBtn = host.querySelector('[data-v="play"]');
     const stop = () => { clearInterval(visTimer); visTimer = null; playBtn.textContent = "Play"; };
@@ -1202,7 +1531,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
         if (visTimer) return stop();
         if (i === frames.length - 1) show(0);
         playBtn.textContent = "Pause";
-        visTimer = setInterval(() => (i >= frames.length - 1 ? stop() : show(i + 1)), 900);
+        visTimer = setInterval(() => (i >= frames.length - 1 ? stop() : show(i + 1)), 900 / +host.querySelector("#visSpeed").value);
       }
     };
     host.querySelector("#visRange").oninput = e => { stop(); show(+e.target.value); };
@@ -1297,11 +1626,125 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
   const cheatHtml = () => `<section class="showcase">
       <div><h2>Read the constraints first</h2><p class="lead">A judge runs about 10⁸ simple steps a second. The limit on n tells you how fast the solution must be, and so which chapter's technique to reach for.</p></div>
       <div class="tablewrap"><table class="cheat"><thead><tr><th>Input size</th><th>Fits in 1 s</th><th>Typical approach</th><th>Chapter</th></tr></thead><tbody>
-        ${CHEAT.map(([n, o, how, id]) => `<tr><td class="mono">${n}</td><td><code class="bigo">${o}</code></td><td>${how}</td><td>${chLink(id)}</td></tr>`).join("")}</tbody></table></div>
+        ${CHEAT.map(([n, o, how, id], k) => `<tr style="--i:${k}"><td class="mono">${n}</td><td><code class="bigo">${o}</code></td><td>${how}</td><td>${chLink(id)}</td></tr>`).join("")}</tbody></table></div>
     </section>`;
 
   // Big-O in prose reads as code: O(n log n), O(n²), O((n + m) log n)
   const bigO = html => html.replace(/O\((?:[^()]|\([^()]*\))*\)/g, m => `<code class="bigo">${m}</code>`);
+
+
+  // ---- callouts: each handout box kind gets an icon and a bilingual label ----
+  const svgI = d => `<svg class="ci" viewBox="0 0 16 16" aria-hidden="true">${d}</svg>`;
+  const CALLOUT = {
+    IDEA: { cls: "idea", zh: "核心直觉", en: "Idea", icon: svgI('<path d="M8 2a4 4 0 0 0-2.5 7.1V11h5V9.1A4 4 0 0 0 8 2zM6 13h4"/>') },
+    "KEY POINT": { cls: "key", zh: "要点", en: "Key point", icon: svgI('<circle cx="5.5" cy="8" r="2.5"/><path d="M8 8h6M12 8v2M14 8v2"/>') },
+    TRAP: { cls: "trap", zh: "OI 避坑指南", en: "Trap", icon: svgI('<path d="M8 2l5 2v4c0 3-2.2 5-5 6-2.8-1-5-3-5-6V4z"/><path d="M8 6v3M8 11v.01"/>') },
+    NOTE: { cls: "note", zh: "注意", en: "Note", icon: svgI('<circle cx="8" cy="8" r="6"/><path d="M8 7v4M8 5v.01"/>') },
+    TIP: { cls: "idea", zh: "提示", en: "Tip", icon: svgI('<path d="M8 2a4 4 0 0 0-2.5 7.1V11h5V9.1A4 4 0 0 0 8 2zM6 13h4"/>') },
+    WARNING: { cls: "trap", zh: "警告", en: "Warning", icon: svgI('<path d="M8 2l6.5 11h-13z"/><path d="M8 6v3M8 11v.01"/>') },
+  };
+  // ---- chapter header card ----
+  const STARS = { 基: 1, 进: 2, 拓: 4, N: 5 };
+  function headerMeta(c) {
+    const words = c.flow ? c.flow.reduce((n, b) => n + (b.text || "").split(/\s+/).length + ((b.text || "").match(/[一-鿿]/g) || []).length + (b.lines || []).length * 6, 0) : c.pages * 280;
+    const mins = Math.max(3, Math.round(words / 200));
+    const stars = STARS[lvOf(c).key] + (lvOf(c).key === "拓" && c.num > 20 ? 0 : 0);
+    const goals = (c.flow || []).filter(b => b.t === "h2" && !/习题/.test(b.title)).map(b => `<li class="cjk">${esc(b.title)}</li>`).join("");
+    return `<div class="metarow"><span><b>${mins} min</b> read</span><span><b>≈ ${words.toLocaleString("en-US")}</b> words</span><span class="stars" aria-label="Difficulty ${stars} of 5">${"★".repeat(stars)}<i>${"★".repeat(5 - stars)}</i></span><span><b>${c.programs.length}</b> programs</span><span><b>${(c.counts.luogu + c.counts.codeforces).toLocaleString("en-US")}</b> problems</span></div>
+      ${c.pre.length ? `<div class="metarow"><span class="hint">Before this</span><span class="links">${c.pre.map(chLink).join("")}</span></div>` : ""}
+      ${goals ? `<div class="goals"><span class="hint">You will learn</span><ul>${goals}</ul></div>` : ""}`;
+  }
+  // ---- outline follows the reader ----
+  let spyObs = null;
+  function spyOutline() {
+    if (spyObs) spyObs.disconnect();
+    const items = [...document.querySelectorAll("[data-spy]")];
+    if (!items.length || !("IntersectionObserver" in window)) return;
+    spyObs = new IntersectionObserver(entries => {
+      const top = entries.filter(e => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+      if (top) items.forEach(b => b.classList.toggle("active", b.dataset.spy === top.target.id));
+    }, { rootMargin: "-80px 0px -70% 0px" });
+    items.forEach(b => { const el = document.getElementById(b.dataset.spy); if (el) spyObs.observe(el); });
+  }
+  // ---- reading bar under the header, on chapter pages ----
+  addEventListener("scroll", () => requestAnimationFrame(() => {
+    const bar = $("#readbar");
+    if (!bar) return;
+    const on = /^#ch-/.test(location.hash), max = document.documentElement.scrollHeight - innerHeight;
+    bar.style.opacity = on && max > 200 ? 1 : 0;
+    bar.style.transform = `scaleX(${on && max > 0 ? Math.min(1, scrollY / max) : 0})`;
+  }), { passive: true });
+  // ---- practice ladder: three tiers from the chapter's own lists (they run easiest first) ----
+  function ladderHtml(c) {
+    const lists = problems[c.id] || {};
+    const pool = ["luogu", "codeforces"].flatMap(j => (lists[j] || []).map((p, k, all) => ({ p, j, t: k / all.length })));
+    const pick = (lo, hi) => pool.filter(x => x.t >= lo && x.t < hi && !solved.has(x.p.id)).sort((a, b) => (b.p.star | 0) - (a.p.star | 0) || a.t - b.t).slice(0, 3);
+    const tiers = [["热身", "Warm-up", pick(0, 1 / 3)], ["标准", "Standard", pick(1 / 3, 2 / 3)], ["进阶", "Challenge", pick(2 / 3, 1.01)]];
+    return `<div class="ladder">${tiers.map(([zh, en, xs]) => `<div class="tier"><p class="label"><span class="cjk">${zh}</span> ${en}</p>${xs.map(x => `<a class="tp" href="${problemUrl(x.j, x.p.id)}" target="_blank" rel="noopener">${x.p.star ? "★ " : ""}<span class="mono">${x.j === "luogu" ? esc(x.p.id) : "CF " + esc(x.p.id)}</span> <span class="cjk">${esc(x.p.name)}</span></a>`).join("") || '<span class="hint">All done here</span>'}</div>`).join("")}</div>`;
+  }
+  // ---- interface language (labels only; chapter content stays as written) ----
+  const ZH = { tree: "知识树", list: "章节目录", progress: "学习进度", Learn: "学习", Problems: "练习" };
+  const EN = { tree: "Tree", list: "Chapters", progress: "Progress" };
+  let lang = store.get("lang", "en");
+  function setLang(l) {
+    lang = l; store.set("lang", l);
+    document.documentElement.lang = l === "zh" ? "zh-CN" : "en";
+    document.querySelectorAll(".nav [data-t]").forEach(a => (a.textContent = (l === "zh" ? ZH : EN)[a.dataset.t]));
+    $("#langBtn").textContent = l === "zh" ? "EN" : "中";
+    if (A.length) route();
+  }
+  const tabLabel = l => (lang === "zh" && ZH[l]) || l;
+  // ---- themes: follow the system, or pick light, dark or warm paper ----
+  const SKINS = ["auto", "light", "dark", "paper"];
+  let skin = store.get("skin", "auto");
+  function setSkin(k) {
+    skin = k; store.set("skin", k);
+    if (k === "auto") delete document.documentElement.dataset.skin; else document.documentElement.dataset.skin = k;
+    $("#skinBtn").textContent = { auto: "Auto", light: "Light", dark: "Dark", paper: "Paper" }[k];
+  }
+  setSkin(skin);
+  setLang(lang);
+
+  // Memory: what a variable really is. 基2.
+  VIS["基2"] = {
+    title: "Variables in memory: bytes, bits and overflow",
+    frames() {
+      const F = [], vars = [];
+      const bits = (v, bytes) => { const n = BigInt.asUintN(bytes * 8, BigInt(v)); return n.toString(2).padStart(bytes * 8, "0").match(/.{8}/g); };
+      const snap = (text, bad) => F.push({ vars: vars.map(x => ({ ...x })), text, bad });
+      vars.push({ type: "int", name: "a", val: 5, bytes: 4, addr: "0x7ffe10" }); snap("int a = 5; takes 4 bytes (32 bits). 5 is 101 in binary, padded with zeros");
+      vars[0].val = 15; snap("a = a * 3; the same 4 bytes now hold 15 (1111)");
+      vars.push({ type: "long long", name: "b", val: 15, bytes: 8, addr: "0x7ffe18" }); snap("long long b = a; takes 8 bytes: up to about 9.2 × 10¹⁸");
+      vars.push({ type: "char", name: "c", val: 65, bytes: 1, addr: "0x7ffe20", show: "'A'" }); snap("char c = 'A'; is one byte holding 65, the ASCII code of A");
+      vars.push({ type: "int", name: "big", val: 2147483647, bytes: 4, addr: "0x7ffe24" }); snap("int big = 2147483647; the largest int: a 0 sign bit and 31 ones");
+      vars[3].val = -2147483648; vars[3].bad = true; snap("big + 1 does not fit in 32 bits: it wraps to −2147483648. Use long long when sums can pass 2 × 10⁹", true);
+      return F.map(f => ({ ...f, vars: f.vars.map(x => ({ ...x, bits: bits(x.val, x.bytes) })) }));
+    },
+    mount(stage) {
+      return f => {
+        stage.innerHTML = `<div class="mem">${f.vars.map(x => `<div class="mvar${x.bad ? " bad" : ""}"><div class="mhead"><span class="mono">${x.type} ${x.name}</span><span class="hint">${x.addr} · ${x.bytes} byte${x.bytes > 1 ? "s" : ""}</span><b class="mono">${x.show || x.val}</b></div><div class="bytes">${x.bits.map(b => `<span class="byte">${b}</span>`).join("")}</div></div>`).join("")}</div>`;
+      };
+    },
+  };
+  // Arrays: 0-indexed versus the 1-indexed habit of OI code. 基5.
+  VIS["基5"] = {
+    title: "Array indexes: a[0..n−1] or a[1..n]",
+    frames() {
+      const F = [], n = 5;
+      const snap = (zero, one, text) => F.push({ zero, one, text });
+      snap({}, {}, "int a[5] has slots a[0] … a[4]. OI code often declares a[MAXN + 5] and uses a[1] … a[n]");
+      for (let i = 0; i < n; i++) snap({ [i]: "on" }, {}, `for (int i = 0; i < n; i++): visit a[${i}]`);
+      snap({ 5: "bad" }, {}, "i <= n would touch a[5]: past the end. That is undefined behaviour, often a runtime error or a silently wrong answer");
+      for (let i = 1; i <= n; i++) snap({}, { [i]: "on" }, `for (int i = 1; i <= n; i++): visit a[${i}] in the bigger array`);
+      snap({}, { 0: "done", 6: "done" }, "With 1-indexing, a[0] is a free sentinel (prefix sums start from S[0] = 0) and the spare slots absorb off-by-one slips");
+      return F;
+    },
+    mount(stage) {
+      stage.classList.add("cells");
+      const row = (label, n, marks, base) => `<div class="arow"><span class="alabel">${label}</span><div class="row">${Array.from({ length: n }, (_, k) => `<div class="cell ${marks[k] || ""}${k >= base ? "" : " pad"}"><small>${k}</small>${k < base ? "" : k}</div>`).join("")}</div></div>`;
+      return f => { stage.innerHTML = row("int a[5]", 6, f.zero, 0).replace(/(<div class="cell[^"]*")>(<small>5<\/small>)5/, '$1 style="border-style:dashed">$2·') + row("int a[5 + 2]", 7, f.one, 1); };
+    },
+  };
 
   // ---- routing ----
   let skipHash = false;
@@ -1310,8 +1753,8 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
     const h = location.hash.slice(1) || "home";
     if (h === "home") { ["tree", "list", "progress"].forEach(k => $("#nav-" + k).removeAttribute("aria-current")); return viewHome(); }
     ["tree", "list", "progress"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
-    const m = h.match(/^ch-([a-z]\d+)(?:-(code|problems|handout|notes))?$/);
-    if (m) return viewChapter(m[1], m[2]);
+    const m = h.match(/^ch-([a-z]\d+)(?:-(code|problems|handout|notes))?(?:\?sec=([\w-]+))?$/);
+    if (m) return viewChapter(m[1], m[2], m[3]);
     const nav = $("#nav-" + h);
     if (nav) nav.setAttribute("aria-current", "page");
     if (h === "list") return viewList();
@@ -1323,14 +1766,19 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 
   // ---- events ----
   document.addEventListener("click", e => {
-    // The one animated view change: a chapter card's title grows into the chapter heading.
-    const tile = e.target.closest("a.tile");
-    if (tile && document.startViewTransition && !e.ctrlKey && !e.metaKey && !e.shiftKey && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    // Moving between views by click cross-fades; a chapter card's title also grows into the chapter heading.
+    const link = e.target.closest('a[href^="#"]');
+    if (link && link.getAttribute("href").length > 1 && document.startViewTransition && !e.ctrlKey && !e.metaKey && !e.shiftKey && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
       e.preventDefault();
-      tile.querySelector(".t").style.viewTransitionName = "chtitle";
-      document.startViewTransition(() => { skipHash = true; location.hash = tile.getAttribute("href").slice(1); route(); });
+      if (link.dataset.select) { selected = link.dataset.select; zoomS = 1; }
+      const title = link.matches("a.tile") && link.querySelector(".t");
+      if (title) title.style.viewTransitionName = "chtitle";
+      res.hidden = true;
+      document.startViewTransition(() => { skipHash = true; location.hash = link.getAttribute("href").slice(1); route(); });
       return;
     }
+    const tf = e.target.closest("[data-tagfill]");
+    if (tf) { q.value = "#" + tf.dataset.tagfill; q.focus(); search(); return; }
     const tp = e.target.closest("[data-topic]");
     if (tp) {
       topicFilter = tp.dataset.topic;
@@ -1354,8 +1802,16 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
       return;
     }
     const g = e.target.closest("[data-goto]");
-    if (g) { const el = document.getElementById(g.dataset.goto); if (el) el.scrollIntoView({ block: "start" }); return; }
-    const t = e.target.closest("[data-status],[data-level],[data-zoomstep],[data-zoomfit],[data-clear],[data-copy-prog],[data-copy-io],[data-judge],[data-copy-cc],[data-bulk],[data-select],[data-jump],.node,[data-solve]");
+    if (g) {
+      const el = document.getElementById(g.dataset.goto);
+      if (el) el.scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+      // a shareable link to this section, without leaving the page
+      history.replaceState(null, "", location.hash.replace(/\?sec=.*$/, "") + "?sec=" + g.dataset.goto.slice(4));
+      return;
+    }
+    if (e.target.closest("[data-lang]")) { setLang(lang === "en" ? "zh" : "en"); return; }
+    if (e.target.closest("[data-skin]")) { setSkin(SKINS[(SKINS.indexOf(skin) + 1) % SKINS.length]); return; }
+    const t = e.target.closest("[data-status],[data-level],[data-zoomstep],[data-zoomfit],[data-clear],[data-copy-prog],[data-copy-io],[data-judge],[data-copy-cc],[data-bulk],[data-select],.node,[data-solve]");
     if (!t) return;
     if (t.classList.contains("node")) {
       const id = t.dataset.id;
@@ -1381,7 +1837,6 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
     if (t.hasAttribute("data-zoomfit")) { zoomS = null; placeCanvas(); $("#canvas").scrollTo(0, 0); return; }
     if (t.hasAttribute("data-clear")) { selected = null; refreshTree(); return; }
     if (t.dataset.select) { selected = t.dataset.select; zoomS = 1; }
-    if (t.dataset.jump) { const name = t.dataset.jump; setTimeout(() => { const ch = bySlug[(location.hash.match(/ch-([a-z]\d+)/) || [])[1]]; const i = ch ? ch.programs.findIndex(p => p.file === name) : -1; const el = document.getElementById("prog-" + i); if (el) el.scrollIntoView({ block: "start" }); }, 30); }
     const c = bySlug[(location.hash.match(/ch-([a-z]\d+)/) || [])[1]];
     if (t.dataset.copyProg !== undefined && c) copy(c.programs[+t.dataset.copyProg].code);
     if (t.dataset.copyIo !== undefined && c) { const [i, j] = t.dataset.copyIo.split(":").map(Number); copy(c.programs[i].samples[j].text); }
@@ -1406,7 +1861,6 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
   let pqTimer = 0;
   document.addEventListener("input", e => {
     const t = e.target;
-    if (t.dataset.notes) { notes[t.dataset.notes] = t.value; if (!t.value) delete notes[t.dataset.notes]; store.set("notes", notes); }
     if (t.id === "pq") { clearTimeout(pqTimer); pqTimer = setTimeout(() => { pstate.q = t.value.trim().toLowerCase(); const pos = t.selectionStart; route(); const n = $("#pq"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 250); }
   });
   document.addEventListener("keydown", e => {
@@ -1427,10 +1881,10 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
     if (e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]"))) return;
     if (e.key === "/") { e.preventDefault(); $("#q").focus(); return; }
     if (e.key === "t") { location.hash = "tree"; return; }
-    if (e.key === "j" || e.key === "k") {
+    if (e.key === "j" || e.key === "k" || e.key === "]" || e.key === "[") {
       const m = location.hash.match(/^#ch-([a-z]\d+)/);
       const c = m && bySlug[m[1]];
-      const next = c && A[A.indexOf(c) + (e.key === "j" ? 1 : -1)];
+      const next = c && A[A.indexOf(c) + (e.key === "j" || e.key === "]" ? 1 : -1)];
       if (next) location.hash = "ch-" + next.slug;
     }
   });
@@ -1441,7 +1895,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
     A.forEach(c => {
       index.push({ c, kind: "Chapter", text: `${c.id} ${c.title} ${c.en} ${c.summary}`, show: c.summary, href: `#ch-${c.slug}` });
       c.boxes.forEach(b => index.push({ c, kind: KIND[b.kind] || b.kind, text: b.text, show: b.text, href: `#ch-${c.slug}` }));
-      c.programs.forEach(p => index.push({ c, kind: "Program", text: `${p.file} ${p.code.slice(0, 600)}`, show: p.file, href: `#ch-${c.slug}-code` }));
+      c.programs.forEach(p => index.push({ c, kind: "Program", text: `${p.file} ${p.code.slice(0, 600)}`, show: p.file, href: `#ch-${c.slug}` }));
       [...c.stars.luogu, ...c.stars.codeforces].forEach(p => index.push({ c, kind: "★ Problem", text: `${p.id} ${p.name}`, show: `${p.id} ${p.name}`, href: `#ch-${c.slug}-problems` }));
     });
   }
@@ -1449,7 +1903,9 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
   let hits = [], hi = 0;
   function search() {
     const s = q.value.trim().toLowerCase();
-    if (!s) { res.innerHTML = `<div class="none">Search chapters, concept boxes, programs and starred problems. Try 懒标记, dijkstra or P3372</div>`; res.hidden = false; return; }
+    if (!s) { res.innerHTML = `<div class="none">Search chapters, concept boxes, programs and starred problems. Try 懒标记, dijkstra or P3372.<br>Start with # to find problems by tag: #线段树, #dp, #greedy</div>`; res.hidden = false; return; }
+    const tagQ = s.match(/^(?:#|tag:)\s*(.*)$/);
+    if (tagQ) return tagSearch(tagQ[1]);
     const words = s.split(/\s+/);
     const extra = Object.keys(ALIAS).filter(k => (" " + s + " ").includes(" " + k + " ")).map(k => ALIAS[k].toLowerCase());
     hits = index.filter(x => { const t = x.text.toLowerCase(); return words.every(w => t.includes(w)) || extra.some(a => t.includes(a)); });
@@ -1459,13 +1915,39 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
     res.innerHTML = hits.length ? hits.map((x, i) => `<a href="${x.href}" class="${i === 0 ? "on" : ""}"><span class="lv ${lvClass(x.c)}">${x.c.id}</span> <span class="cjk">${esc(x.c.title)}</span> <span class="pill">${esc(x.kind)}</span><small>${esc(snip(x.show))}</small></a>`).join("") : `<div class="none">No matches for “${esc(q.value)}”</div>`;
     res.hidden = false;
   }
+  let allP = null;
+  const ratingOf = x => (x.j === "luogu" ? [800, 1000, 1200, 1500, 1800, 2100, 2500, 3000][x.p.d] : x.p.r);
+  function tagSearch(term) {
+    if (!problems) {
+      res.innerHTML = `<div class="none">Loading the problem lists</div>`; res.hidden = false;
+      fetch("problems.json").then(r => r.json()).then(j => { problems = j; search(); }).catch(() => (res.innerHTML = `<div class="none">The problem lists didn't load</div>`));
+      return;
+    }
+    allP = allP || A.flatMap(c => ["luogu", "codeforces"].flatMap(j => ((problems[c.id] || {})[j] || []).map(p => ({ p, j, c }))));
+    const terms = term.split(/[,，\s]+/).filter(Boolean);
+    if (!terms.length) {
+      const count = {};
+      allP.forEach(x => x.p.tags.forEach(t => (count[t] = (count[t] || 0) + 1)));
+      const top = Object.entries(count).sort((a, b) => b[1] - a[1]).slice(0, 24);
+      res.innerHTML = `<div class="none">Type a tag after #. Common tags:</div><div class="tagcloud">${top.map(([t, n]) => `<button class="chip" data-tagfill="${esc(t)}">${esc(t)} <span class="hint">${n}</span></button>`).join("")}</div>`;
+      res.hidden = false; return;
+    }
+    const want = terms.map(t => [t, ...(ALIAS[t] ? [ALIAS[t].toLowerCase()] : [])]);
+    const found = allP.filter(({ p }) => want.every(alts => p.tags.some(tag => alts.some(a => tag.toLowerCase().includes(a)))));
+    found.sort((a, b) => (b.p.star | 0) - (a.p.star | 0) || ratingOf(a) - ratingOf(b));
+    hi = 0;
+    const diff = x => x.j === "luogu" ? `<span class="diff" style="background:${LUOGU[x.p.d][1]}">${LUOGU[x.p.d][0]}</span>` : `<span class="diff" style="background:${cfColor(x.p.r)}">${x.p.r}</span>`;
+    res.innerHTML = `<div class="none">${found.length.toLocaleString("en-US")} problem${found.length === 1 ? "" : "s"} tagged ${terms.map(esc).join(" + ")}${found.length > 40 ? ", easiest 40 shown (★ first)" : ""}</div>` +
+      found.slice(0, 40).map((x, i) => `<a href="${problemUrl(x.j, x.p.id)}" target="_blank" rel="noopener" class="${i === 0 ? "on" : ""}">${x.p.star ? "★ " : ""}<span class="mono">${x.j === "luogu" ? esc(x.p.id) : "CF " + esc(x.p.id)}</span> <span class="cjk">${esc(x.p.name)}</span> ${diff(x)}<small>${esc(x.p.tags.slice(0, 5).join(", "))} · ${x.c.id} ${esc(x.c.title)}</small></a>`).join("");
+    res.hidden = false;
+  }
   q.addEventListener("input", search);
   q.addEventListener("focus", search);
   q.addEventListener("keydown", e => {
     if (res.hidden) return;
     const links = res.querySelectorAll("a");
     if ((e.key === "ArrowDown" || e.key === "ArrowUp") && links.length) { e.preventDefault(); hi = (hi + (e.key === "ArrowDown" ? 1 : -1) + links.length) % links.length; links.forEach((l, i) => l.classList.toggle("on", i === hi)); links[hi].scrollIntoView({ block: "nearest" }); }
-    if (e.key === "Enter" && links[hi]) { location.hash = links[hi].getAttribute("href").slice(1); res.hidden = true; q.blur(); }
+    if (e.key === "Enter" && links[hi]) { e.preventDefault(); links[hi].click(); res.hidden = true; q.blur(); }
     if (e.key === "Escape") { res.hidden = true; q.blur(); }
   });
   document.addEventListener("click", e => { if (!e.target.closest(".search") || e.target.closest(".results a")) res.hidden = true; });
