@@ -143,9 +143,6 @@ main { max-width: 1520px; margin: 0 auto; padding-block: 24px 64px; }
 .zoom .pct { display: inline-flex; align-items: center; justify-content: center; min-width: 52px; font-size: 12px; color: var(--fg-2); font-variant-numeric: tabular-nums; border-inline: 1px solid var(--line-strong); }
 .lane-bg { fill: var(--c); opacity: .045; }
 .lane-rule { stroke: var(--line); stroke-width: 1; }
-.lane-name { font-family: var(--f-cjk); font-size: 15px; font-weight: 500; fill: var(--c); }
-.lane-en, .lane-n { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
-.col-label { font-family: var(--f-mono); font-size: 11px; fill: var(--muted); }
 .edge { fill: none; stroke: var(--line-strong); stroke-width: 1.2; }
 .edge.hot { stroke: var(--fg); stroke-width: 2; }
 .edge.dim { opacity: .2; }
@@ -586,6 +583,48 @@ table.syl tr.learned td { opacity: .7; }
   .rfill, .tbar i, .node .pulse { animation: none; }
 }
 
+
+/* ---- map redesign: rail, step row, hover ---- */
+.mapwrap { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 0 12px; align-items: start; }
+.mapcol { position: relative; min-width: 0; }
+.lanerail { position: relative; overflow: hidden; margin-top: 30px; border-radius: var(--r-card); }
+.rail-item { position: absolute; left: 0; right: 0; top: 0; display: block; padding: 0; border: 0; border-left: 4px solid var(--c); border-radius: 0 var(--r-card) var(--r-card) 0;
+  background: color-mix(in srgb, var(--c) 9%, var(--surface)); text-align: left; cursor: pointer; overflow: hidden; transition: background-color .15s ease; }
+.rail-item:hover { background: color-mix(in srgb, var(--c) 16%, var(--surface)); }
+.rail-label { display: grid; gap: 4px; padding: 12px 14px; will-change: transform; }
+.rail-key { font-family: var(--f-mono); font-size: 12px; font-weight: 700; color: var(--c); }
+.rail-name { font-size: 22px; line-height: 1.15; color: var(--fg); font-weight: 600; }
+.rail-en { font-size: 12px; color: var(--muted); }
+.rail-bar { height: 5px; background: var(--raised); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+.rail-bar i { display: block; height: 100%; background: var(--c); transform-origin: left; animation: grow .8s var(--ease) both; }
+.rail-n { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; } .rail-n b { color: var(--fg); font-size: 14px; }
+.rail-item.tight .rail-en, .rail-item.tight .rail-bar, .rail-item.tight .rail-n { display: none; }
+.steprow { position: relative; height: 30px; overflow: hidden; }
+.step i { font-style: normal; } .steprow.narrow .step i { display: none; }
+.step { position: absolute; left: 0; top: 6px; font-family: var(--f-mono); font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; transition: opacity .15s ease; }
+svg .node rect.box, svg .edge { transition: opacity .18s ease, stroke .18s ease; }
+svg.hovering .node:not(.hl) { opacity: .28; }
+svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
+.edge.hin { stroke: #22b8cf; } .edge.hout { stroke: var(--v-done); }
+.node rect.box { transform-box: fill-box; transform-origin: center; }
+@media (hover: hover) and (pointer: fine) {
+  .node:hover rect.box { transform: translateY(-2px) scale(1.03); filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .25)); }
+}
+@keyframes breathe { 50% { transform: scale(1.7); opacity: .35; } }
+.node.ready:not(.learned):not(.learning) circle.ready { transform-box: fill-box; transform-origin: center; animation: breathe 2.2s ease-in-out infinite; }
+@media (max-width: 767px) {
+  .mapwrap { grid-template-columns: 64px minmax(0, 1fr); gap: 0 6px; }
+  .rail-label { padding: 10px 6px; }
+  .rail-name, .rail-en, .rail-bar { display: none; }
+  .rail-key { font-size: 20px; text-align: center; }
+  .rail-n { text-align: center; font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .edge.hot, .edge.hin, .edge.hout { animation: none; stroke-dasharray: none; }
+  .node.ready circle.ready, .rail-bar i { animation: none; }
+  .node:hover rect.box { transform: none; }
+}
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1); }
 
@@ -633,7 +672,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 .intro .edge { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .9s var(--ease) forwards; animation-delay: calc(var(--d) * 70ms); }
 .intro .node > * { animation: nodein .4s var(--ease) both; animation-delay: calc(var(--d) * 70ms); }
 /* a chosen chapter's path draws in */
-.edge.hot { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw .6s var(--ease) forwards; }
+/* highlighted paths flow in the direction you would learn them */
+@keyframes flow { to { stroke-dashoffset: -0.06; } }
+.edge.hot, .edge.hin, .edge.hout { stroke-dasharray: 0.035 0.025; animation: flow 1.2s linear infinite; stroke-width: 2.4; }
 /* a chapter just marked learned pops */
 @keyframes popnode { 40% { transform: scale(1.08); } }
 .node.pop rect.box { transform-box: fill-box; transform-origin: center; animation: popnode .45s var(--ease); }
@@ -826,7 +867,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
 
   // ---- lane layout: one horizontal lane per level, columns = prerequisite depth ----
-  const W = 212, H = 56, COLW = 244, ROWH = 68, LANEW = 132, PADY = 36, LANEGAP = 16, LANEPAD = 14;
+  const W = 212, H = 56, COLW = 244, ROWH = 68, LANEW = 28, PADY = 14, LANEGAP = 16, LANEPAD = 14;
   let layout = null;
   function computeLayout() {
     const order = A.map(c => c.id);
@@ -867,12 +908,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const list = A.filter(c => c.id.startsWith(l.key));
       const done = list.filter(c => statusOf(c.id) === "learned").length;
       out += `<g style="--c: var(--lv-${l.slug})"><rect class="lane-bg" data-lv="${l.key}" x="0" y="${top}" width="${width}" height="${h}"/>
-        <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/>
-        <text class="lane-name" x="16" y="${top + 28}">${l.name}</text>
-        <text class="lane-en" x="16" y="${top + 46}">${l.en}</text>
-        <text class="lane-n" x="16" y="${top + 62}">${done}/${list.length}</text></g>`;
+        <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/></g>`;
     });
-    for (let d = 0; d <= maxD; d++) out += `<text class="col-label" x="${LANEW + d * COLW}" y="22">Step ${d + 1}</text>`;
     A.forEach(c => c.pre.forEach(p => {
       const a = xy[p], b = xy[c.id];
       const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = x1 + Math.max(24, (x2 - x1) / 2);
@@ -880,7 +917,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const outg = selected && (p === selected || (desc.has(c.id) && desc.has(p)));
       const on = inc || outg;
       const filtered = levelFilter !== "all" && !(c.id.startsWith(levelFilter) || p.startsWith(levelFilter));
-      out += `<path class="edge${on ? " hot" + (inc ? " in" : " out") : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}"/>`;
+      out += `<path data-f="${p}" data-t="${c.id}" class="edge${on ? " hot" + (inc ? " in" : " out") : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}"/>`;
     }));
     A.forEach(c => {
       const { x, y } = xy[c.id];
@@ -957,7 +994,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     svg.setAttribute("height", Math.round(layout.height * s));
     const pct = $("#zoomPct");
     if (pct) pct.textContent = Math.round(s * 100) + "%";
-    requestAnimationFrame(updateMinimap); // after the caller has moved the scroll position
+    requestAnimationFrame(updateOverlays); // after the caller has moved the scroll position
   }
   // Zoom keeping the map point under (ax, ay), canvas coordinates, where it is.
   function zoomAt(canvas, s, ax = canvas.clientWidth / 2, ay = canvas.clientHeight / 2) {
@@ -998,6 +1035,15 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   // Drag to pan with a mouse; pinch to zoom on touch (one finger still scrolls natively).
   let dragMoved = false;
   function wireCanvas(canvas) {
+    // Point at a chapter to see its whole path: what it needs (cyan) and what it unlocks (green).
+    let hoverId = null;
+    canvas.addEventListener("pointerover", e => {
+      if (e.pointerType === "touch" || dragMoved) return;
+      const n = e.target.closest(".node");
+      const id = n ? n.dataset.id : null;
+      if (id !== hoverId) { hoverId = id; markHover(canvas, id); }
+    });
+    canvas.addEventListener("pointerleave", () => { hoverId = null; markHover(canvas, null); });
     let drag = null;
     const touches = new Map();
     let pinch = null;
@@ -1035,6 +1081,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     }, { passive: false });
   }
   function viewTree() {
+    requestAnimationFrame(updateRail);
     if (!layout) computeLayout();
     $("#view").innerHTML = `${stripHtml()}
       <div class="tools">
@@ -1044,7 +1091,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           ${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}
         </div><span class="hint">Drag to move · Ctrl + scroll or pinch to zoom</span></div>
       <div class="tools">${topicPills()}</div>
-      <div class="treeview"><div class="mapwrap"><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}</div><aside class="side" id="side">${sideCard()}</aside></div>`;
+      <div class="treeview"><div class="mapwrap"><div class="lanerail" id="laneRail">${railHtml()}</div><div class="mapcol"><div class="steprow" id="stepRow">${stepHtml()}</div><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}</div></div><aside class="side" id="side">${sideCard()}</aside></div>`;
     wireCanvas($("#canvas"));
     wireMinimap();
     placeCanvas();
@@ -1059,6 +1106,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     canvas.scrollLeft = sl; canvas.scrollTop = st;
     const mm = $("#minimap");
     if (mm) { mm.outerHTML = minimapHtml(); wireMinimap(); updateMinimap(); }
+    const rail = $("#laneRail");
+    if (rail) { rail.innerHTML = railHtml(); updateRail(); }
     $("#side").innerHTML = sideCard();
     const s = document.querySelector(".strip"), r = document.querySelector(".resume");
     if (r) r.remove();
@@ -1719,7 +1768,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     mm.addEventListener("pointerdown", e => { down = true; mm.setPointerCapture(e.pointerId); go(e); });
     mm.addEventListener("pointermove", e => down && go(e));
     mm.addEventListener("pointerup", () => (down = false));
-    canvas.addEventListener("scroll", updateMinimap, { passive: true });
+    canvas.addEventListener("scroll", updateOverlays, { passive: true });
   }
 
   // ---- study log: active days for the heatmap, learned dates for spaced review ----
@@ -1982,6 +2031,56 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     return "";
   }
 
+
+  // ---- map overlays: the level rail and the step row stay readable at any zoom ----
+  function railHtml() {
+    return layout.lanes.map(({ level: l }) => {
+      const list = A.filter(c => c.id.startsWith(l.key)), done = list.filter(c => statusOf(c.id) === "learned").length;
+      return `<button class="rail-item" data-railfit="${l.key}" style="--c: var(--lv-${l.slug})" title="Fit ${l.name} in view"><span class="rail-label">
+        <span class="rail-key">${l.key}</span><span class="rail-name cjk">${l.name}</span><span class="rail-en">${l.en}</span>
+        <span class="rail-bar"><i style="width:${(done / list.length) * 100}%"></i></span><span class="rail-n"><b>${done}</b>/${list.length}</span></span></button>`;
+    }).join("");
+  }
+  const stepHtml = () => Array.from({ length: layout.maxD + 1 }, (_, d) => `<span class="step" data-d="${d}"><i>Step </i>${d + 1}</span>`).join("");
+  function updateRail() {
+    const canvas = $("#canvas"), rail = $("#laneRail"), row = $("#stepRow");
+    if (!canvas || !rail) return;
+    rail.style.height = canvas.clientHeight + "px";
+    [...rail.children].forEach((item, k) => {
+      const lane = layout.lanes[k], top = lane.top * curS - canvas.scrollTop, h = Math.max(lane.height * curS, 1);
+      item.style.transform = `translateY(${top}px)`;
+      item.style.height = h + "px";
+      const label = item.firstElementChild, lh = label.offsetHeight;
+      // the label sticks to the top of its lane while the lane is on screen
+      label.style.transform = `translateY(${Math.max(0, Math.min(-top, h - lh))}px)`;
+      item.classList.toggle("tight", h < lh + 8);
+    });
+    if (row) row.classList.toggle("narrow", COLW * curS < 72);
+    if (row) [...row.children].forEach(el => {
+      const x = (LANEW + +el.dataset.d * COLW) * curS - canvas.scrollLeft;
+      el.style.transform = `translateX(${x}px)`;
+      el.style.opacity = x < -40 || x > canvas.clientWidth ? 0 : 1;
+    });
+  }
+  function updateOverlays() { updateMinimap(); updateRail(); }
+  function markHover(canvas, id) {
+    const svg = canvas.querySelector("svg");
+    if (!svg) return;
+    if (!id) {
+      svg.classList.remove("hovering");
+      svg.querySelectorAll(".hl,.hin,.hout").forEach(el => el.classList.remove("hl", "hin", "hout"));
+      return;
+    }
+    const anc = ancestors(id), desc = descendants(id);
+    svg.classList.add("hovering");
+    svg.querySelectorAll(".node").forEach(n => n.classList.toggle("hl", n.dataset.id === id || anc.has(n.dataset.id) || desc.has(n.dataset.id)));
+    svg.querySelectorAll(".edge").forEach(e => {
+      const f = e.dataset.f, t = e.dataset.t;
+      e.classList.toggle("hin", (t === id && anc.has(f)) || (anc.has(t) && anc.has(f)));
+      e.classList.toggle("hout", f === id || (desc.has(t) && (desc.has(f) || f === id)));
+    });
+  }
+
   // ---- routing ----
   let skipHash = false;
   function route() {
@@ -2039,6 +2138,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (lv2) { listView = lv2.dataset.lview; viewList(); return; }
     const sp = e.target.closest("[data-start]");
     if (sp) { startPick = startPick === sp.dataset.start ? null : sp.dataset.start; store.set("start", startPick); viewHome(); return; }
+    const rf = e.target.closest("[data-railfit]");
+    if (rf) { levelFilter = rf.dataset.railfit; selected = null; viewTree(); fitLane($("#canvas"), levelFilter); return; }
     const tf = e.target.closest("[data-tagfill]");
     if (tf) { q.value = "#" + tf.dataset.tagfill; q.focus(); search(); return; }
     const tp = e.target.closest("[data-topic]");
