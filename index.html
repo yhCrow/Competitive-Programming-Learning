@@ -108,7 +108,8 @@ h1, h2, h3, h4 { font-weight: 500; }
 .nav a { text-decoration: none; color: var(--fg-2); padding: 4px 12px; border-radius: var(--r-ctl); font-size: 14.5px; transition: background-color .15s var(--ease), color .15s var(--ease); }
 .nav a:hover { background: var(--raised); }
 .nav a[aria-current="page"] { color: var(--fg); background: var(--raised); box-shadow: inset 0 -2px 0 var(--accent); }
-.search { position: relative; flex: 1 1 220px; max-width: 360px; margin-left: auto; }
+.search { position: relative; flex: 1 1 160px; max-width: 360px; margin-left: auto; }
+@media (max-width: 1440px) and (min-width: 768px) { .brand span { display: none; } }
 .search input { width: 100%; height: 32px; padding: 0 12px 0 32px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--bg); }
 .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; fill: var(--muted); }
 .results { position: absolute; top: calc(100% + 8px); left: 0; right: 0; min-width: 320px; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-card); box-shadow: 0 8px 24px rgba(0, 0, 0, .10); max-height: 60vh; overflow: auto; padding: 4px; }
@@ -496,7 +497,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 @media (max-width: 767px) {
   /* a blurred header would pin the fixed tab bar to itself, so phones get a solid header */
   .bar { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
-  .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-radius: 0; gap: 4px;
+  .nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-radius: 0; gap: 4px;
     padding: 6px max(8px, env(safe-area-inset-left, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-right, 0px));
     background: color-mix(in srgb, var(--surface) 88%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-top: 1px solid var(--line); }
   .nav a { min-height: 44px; display: grid; place-items: center; font-size: 12px; padding: 4px 2px; }
@@ -1086,6 +1087,31 @@ svg.pointing .hm-trace { display: none; }
 .anime-on .race-track i { transition: background-color .3s ease; }
 .anime-on .lp-vis.swap { animation: none; }
 
+
+/* ---- problem bank ---- */
+.bank .lead { max-width: 72ch; }
+.practice-page { grid-template-columns: minmax(0, 1fr); } /* a wide row (table, button row) scrolls or wraps instead of widening the page */
+.bank .seg { flex-wrap: wrap; }
+.bank-filters { display: grid; gap: 12px; }
+.bank-row { display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; }
+.bank-in { flex: 1 1 260px; min-width: 0; height: 36px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--surface); padding: 0 12px; }
+.bank-row select { height: 32px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--surface); padding: 0 8px; }
+.bank-row label { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; }
+.bank-row .seg button { display: inline-flex; align-items: center; gap: 6px; }
+.bank-row .seg img, .bank-row .seg svg { width: 16px; height: 16px; border-radius: 3px; }
+.bank-on { display: flex; gap: 6px; flex-wrap: wrap; min-height: 28px; align-items: center; }
+.tagchip { border: 1px solid var(--line-strong); background: var(--raised); color: var(--fg-2); border-radius: 12px; padding: 2px 8px; font-size: 12px; margin: 2px 4px 2px 0; transition: background-color .2s ease, color .2s ease, transform .2s var(--ease); }
+.tagchip:hover { color: var(--fg); border-color: var(--fg-2); }
+.tagchip.on { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.tagchip:active { transform: scale(.96); }
+.tagchip.pop { animation: iPop .35s var(--ease) both; }
+.bank-count { margin: 0; } .bank-count b { color: var(--fg); font-size: 16px; }
+.bank-table tbody tr { animation: hwIn .45s var(--ease) both; animation-delay: calc(var(--i) * 18ms); }
+.bank-table td.bank-tagcell { max-width: 280px; }
+.bank-table .star { color: #f0b429; }
+@media (max-width: 767px) { .bank-table th:nth-child(5), .bank-table td:nth-child(5), .bank-table th:nth-child(7), .bank-table td:nth-child(7) { display: none; } }
+@media (prefers-reduced-motion: reduce) { .bank-table tbody tr, .tagchip.pop { animation: none; } }
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -1202,6 +1228,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       <a href="#list" id="nav-list" data-t="list" title="Chapters · key 3">Chapters</a>
       <a href="#progress" id="nav-progress" data-t="progress" title="Progress · key 4">Progress</a>
       <a href="#practice" id="nav-practice" data-t="practice" title="Practice · key 5">Practice</a>
+      <a href="#problems" id="nav-problems" data-t="problems" title="Problems · key 6">Problems</a>
     </nav>
     <div class="prefs"><button class="btn sm" id="langBtn" data-lang aria-label="Switch interface language">中</button><button class="btn sm" id="skinBtn" data-skin aria-label="Change theme">Auto</button></div>
     <div class="search" role="search">
@@ -3006,8 +3033,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     return `<div class="ladder">${tiers.map(([zh, en, xs]) => `<div class="tier"><p class="label"><span class="cjk">${zh}</span> ${en}</p>${xs.map(x => `<a class="tp" href="${problemUrl(x.j, x.p.id)}" target="_blank" rel="noopener">${x.p.star ? "★ " : ""}<span class="mono">${x.j === "luogu" ? esc(x.p.id) : "CF " + esc(x.p.id)}</span> <span class="cjk">${esc(x.p.name)}</span></a>`).join("") || '<span class="hint">All done here</span>'}</div>`).join("")}</div>`;
   }
   // ---- interface language (labels only; chapter content stays as written) ----
-  const ZH = { home: "首页", tree: "知识树", list: "章节目录", progress: "学习进度", practice: "训练", Learn: "学习", Problems: "练习" };
-  const EN = { home: "Home", tree: "Tree", list: "Chapters", progress: "Progress", practice: "Practice" };
+  const ZH = { home: "首页", tree: "知识树", list: "章节目录", progress: "学习进度", practice: "训练", problems: "题库", Learn: "学习", Problems: "练习" };
+  const EN = { home: "Home", tree: "Tree", list: "Chapters", progress: "Progress", practice: "Practice", problems: "Problems" };
   let lang = store.get("lang", "en");
   function setLang(l) {
     lang = l; store.set("lang", l);
@@ -3428,12 +3455,101 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     contestTimer = setInterval(() => { const el = $("#ctime"); if (!el) return clearInterval(contestTimer); if (left() <= 0) { clearInterval(contestTimer); endContest(); } else el.textContent = clock(left()); }, 1000);
   }
 
+
+  // ================= Problem bank: every chapter's Luogu and Codeforces list in one place =================
+  // Difficulty bands use Luogu's eight tiers; a Codeforces rating falls in the band whose typical rating it is closest to.
+  const BAND_RATING = [800, 1000, 1200, 1500, 1800, 2100, 2500, 3000];
+  const unrated = x => x.j === "codeforces" && x.p.r < 800;
+  const bankRating = x => (unrated(x) ? Infinity : ratingOf(x)); // unrated sorts last whichever way you order
+  const bandOf = x => (unrated(x) ? -1 : x.j === "luogu" ? x.p.d : Math.max(0, BAND_RATING.findLastIndex((r, k) => k === 0 || x.p.r >= (BAND_RATING[k - 1] + r) / 2)));
+  const bank = { tags: [], src: "all", lv: "all", band: "all", star: false, hide: false, q: "", sort: "easy", shown: 50 };
+  let bankTagCount = null;
+  const bankAll = () => (allP = allP || A.flatMap(c => ["luogu", "codeforces"].flatMap(j => ((problems[c.id] || {})[j] || []).map(p => ({ p, j, c })))));
+  // a tag filter matches tags that contain it, or its Chinese name ("dp" also finds 动态规划)
+  const tagWants = t => { const l = t.toLowerCase(); return [l, ...(ALIAS[l] ? [ALIAS[l].toLowerCase()] : [])]; };
+  function bankFilter() {
+    const q = bank.q.toLowerCase(), wants = bank.tags.map(tagWants);
+    const list = bankAll().filter(x =>
+      (bank.src === "all" || x.j === bank.src) && (bank.lv === "all" || x.c.id.startsWith(bank.lv)) &&
+      (bank.band === "all" || bandOf(x) === +bank.band) && (!bank.star || x.p.star) && (!bank.hide || !solved.has(x.p.id)) &&
+      (!q || (x.p.id + " " + x.p.name).toLowerCase().includes(q)) &&
+      wants.every(alts => x.p.tags.some(tag => alts.some(a => tag.toLowerCase().includes(a)))));
+    const hard = x => (unrated(x) ? -Infinity : ratingOf(x));
+    const by = { easy: (a, b) => bankRating(a) - bankRating(b), hard: (a, b) => hard(b) - hard(a), popular: (a, b) => b.p.ac - a.p.ac, chapter: (a, b) => A.indexOf(a.c) - A.indexOf(b.c) || bankRating(a) - bankRating(b) }[bank.sort];
+    return list.sort(by);
+  }
+  function bankHash() {
+    const p = new URLSearchParams();
+    if (bank.tags.length) p.set("tag", bank.tags.join(","));
+    for (const k of ["src", "lv", "band"]) if (bank[k] !== "all") p.set(k, bank[k]);
+    if (bank.star) p.set("star", "1"); if (bank.hide) p.set("hide", "1"); if (bank.q) p.set("q", bank.q); if (bank.sort !== "easy") p.set("sort", bank.sort);
+    history.replaceState(null, "", "#problems" + (p.toString() ? "?" + p : ""));
+  }
+  const bankRow = (x, i) => `<tr class="${solved.has(x.p.id) ? "solved" : ""}" style="--i:${Math.min(i, 24)}"><td><label class="tick"><input type="checkbox" data-solve="${esc(x.p.id)}" ${solved.has(x.p.id) ? "checked" : ""} aria-label="Mark ${esc(x.p.id)} solved"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" pathLength="1"/></svg></label></td>
+      <td class="id">${x.p.star ? '<span class="star" title="Tests exactly its chapter\'s technique">★</span> ' : ""}<a href="${problemUrl(x.j, x.p.id)}" target="_blank" rel="noopener">${x.j === "luogu" ? esc(x.p.id) : "CF " + esc(x.p.id)}</a></td>
+      <td class="cjk">${esc(x.p.name)}</td><td>${unrated(x) ? '<span class="pill">unrated</span>' : diffPill(x)}</td>
+      <td class="bank-tagcell">${x.p.tags.slice(0, 4).map(t => `<button class="tagchip${bank.tags.includes(t) ? " on" : ""}" data-banktag="${esc(t)}">${esc(t)}</button>`).join("")}</td>
+      <td><a href="#ch-${x.c.slug}"><span class="lv ${lvClass(x.c)}">${x.c.id}</span></a></td><td class="num">${x.p.ac.toLocaleString("en-US")}</td></tr>`;
+  function bankRender() {
+    const list = bankFilter(), more = list.length - bank.shown;
+    $("#bankOn").innerHTML = bank.tags.map(t => `<button class="tagchip on pop" data-banktagx="${esc(t)}" aria-label="Remove tag ${esc(t)}">${esc(t)} <span aria-hidden="true">×</span></button>`).join("") || `<span class="hint">No tag yet: pick one below or type it above</span>`;
+    document.querySelectorAll("[data-bankpop]").forEach(b => b.setAttribute("aria-pressed", String(bank.tags.includes(b.dataset.bankpop))));
+    $("#bankCount").innerHTML = `<b>${list.length.toLocaleString("en-US")}</b> problem${list.length === 1 ? "" : "s"}${list.length ? `, ${list.filter(x => solved.has(x.p.id)).length.toLocaleString("en-US")} ticked` : ""}`;
+    $("#bankList").innerHTML = list.length ? `<div class="tablewrap"><table class="bank-table"><thead><tr><th>Done</th><th>Problem</th><th>Name</th><th>Difficulty</th><th>Tags</th><th>Chapter</th><th style="text-align:right">Solved by</th></tr></thead>
+      <tbody>${list.slice(0, bank.shown).map(bankRow).join("")}</tbody></table></div>${more > 0 ? `<div class="btns" style="justify-content:center"><button class="btn" data-bankmore>Show ${Math.min(50, more)} more <span class="hint">· ${more.toLocaleString("en-US")} left</span></button></div>` : ""}`
+      : `<div class="empty card">No problem has all of these. Remove a tag or widen the difficulty.</div>`;
+    bankHash();
+  }
+  function viewBank(qp) {
+    if (!problems) {
+      $("#view").innerHTML = `<div class="practice-page"><h1 class="ptitle">题库 · Problems</h1><div class="skeleton">${Array.from({ length: 8 }, () => `<div class="sk sk-line" style="width:100%;height:36px"></div>`).join("")}</div></div>`;
+      fetch("problems.json").then(r => r.json()).then(j => { problems = j; route(); }).catch(() => { $("#view").innerHTML = `<p class="empty">The problem lists didn't load. Reload the page to try again</p>`; });
+      return;
+    }
+    if (qp && [...qp.keys()].length) Object.assign(bank, { tags: (qp.get("tag") || "").split(",").filter(Boolean), src: qp.get("src") || "all", lv: qp.get("lv") || "all", band: qp.get("band") || "all", star: qp.get("star") === "1", hide: qp.get("hide") === "1", q: qp.get("q") || "", sort: qp.get("sort") || "easy" });
+    bank.shown = 50;
+    if (!bankTagCount) { bankTagCount = {}; bankAll().forEach(x => x.p.tags.forEach(t => (bankTagCount[t] = (bankTagCount[t] || 0) + 1))); }
+    const tagsByCount = Object.entries(bankTagCount).sort((a, b) => b[1] - a[1]);
+    const seg = (key, opts) => `<div class="seg" role="group">${opts.map(([v, label]) => `<button data-bank${key}="${v}" aria-pressed="${bank[key] === v}">${label}</button>`).join("")}</div>`;
+    const total = bankAll().length;
+    $("#view").innerHTML = `<div class="practice-page bank">
+      <h1 class="ptitle">题库 · Problems</h1>
+      <p class="lead">All ${total.toLocaleString("en-US")} problems from the chapters' Luogu and Codeforces lists. Narrow them by tag, difficulty, course level and site; ★ marks the ones that test exactly their chapter's technique.</p>
+      <div class="card bank-filters">
+        <div class="bank-row"><input type="search" id="bankQ" class="bank-in" placeholder="Search by name or id, e.g. P3372 or 线段树" value="${esc(bank.q)}" aria-label="Search problems by name or id">
+          <input id="bankTagIn" class="bank-in" list="bankTags" placeholder="Add a tag: dp, 贪心, graphs…" aria-label="Add a tag filter"><datalist id="bankTags">${tagsByCount.map(([t, n]) => `<option value="${esc(t)}">${n}</option>`).join("")}</datalist></div>
+        <div class="bank-on" id="bankOn"></div>
+        <div class="chipset bank-pop">${tagsByCount.slice(0, 18).map(([t, n]) => `<button class="chip" data-bankpop="${esc(t)}" aria-pressed="false">${esc(t)} <span class="hint">${n}</span></button>`).join("")}</div>
+        <div class="bank-row">
+          ${seg("src", [["all", "Both sites"], ["luogu", `${LOGO.luogu}Luogu`], ["codeforces", `${LOGO.cf}Codeforces`]])}
+          ${seg("lv", [["all", "All levels"], ...LEVELS.map(l => [l.key, l.name])])}
+        </div>
+        <div class="bank-row">
+          <select id="bankBand" aria-label="Difficulty"><option value="all">Any difficulty</option>${LUOGU.map((l, k) => `<option value="${k}" ${bank.band === String(k) ? "selected" : ""}>${l[0]} · about ${BAND_RATING[k]}</option>`).join("")}</select>
+          <select id="bankSort" aria-label="Order">${[["easy", "Easiest first"], ["hard", "Hardest first"], ["popular", "Most solved"], ["chapter", "By chapter"]].map(([v, l]) => `<option value="${v}" ${bank.sort === v ? "selected" : ""}>${l}</option>`).join("")}</select>
+          <label><input type="checkbox" id="bankStar" ${bank.star ? "checked" : ""}> ★ only</label>
+          <label><input type="checkbox" id="bankHide" ${bank.hide ? "checked" : ""}> Hide solved</label>
+          <button class="linkish" data-bankreset>Clear filters</button>
+        </div>
+      </div>
+      <p class="hint bank-count" id="bankCount" aria-live="polite"></p>
+      <div id="bankList"></div></div>`;
+    bankRender();
+    window.scrollTo(0, 0);
+  }
+  function bankTagAdd(t) {
+    t = t.trim();
+    if (!t || bank.tags.includes(t)) return;
+    bank.tags.push(t); bank.shown = 50; bankRender();
+  }
+
   // ---- the practice hub ----
   function viewPractice() {
     $("#view").innerHTML = `<div class="practice-page"><h1 class="ptitle">训练 · Practice</h1>
       <div class="phub">${dailyHtml()}
         <a class="card hubcard" href="#contest"><p class="label">模拟赛 · Contest mode</p><p>Four starred problems from your learned chapters, easy to hard, against a 1 to 3 hour timer</p></a>
         <a class="card hubcard" href="#cards"><p class="label">闪卡 · Flashcards</p><p>Every Trap and Key point box in the course, one card at a time</p></a>
+        <a class="card hubcard" href="#problems"><p class="label">题库 · Problems</p><p>Every chapter's Luogu and Codeforces problems in one list, filtered by tag, difficulty, level and site</p></a>
         <a class="card hubcard" href="#glossary"><p class="label">术语表 · Glossary</p><p>The Chinese and English names of every technique, with the chapters that use them</p></a></div>
       ${calcCard()}${reviewsHtml()}</div>`;
     window.scrollTo(0, 0);
@@ -3572,7 +3688,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (homeCtx) { homeCtx.revert(); homeCtx = null; }
     if (shareProg) { shareProg = null; layout = null; }
     const full = location.hash.slice(1) || "home";
-    ["home", "tree", "list", "progress", "practice"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
+    ["home", "tree", "list", "progress", "practice", "problems"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
     const [base, query] = full.split("?");
     const qp = new URLSearchParams(query || "");
     if (base === "home") { $("#nav-home").setAttribute("aria-current", "page"); return viewHome(); }
@@ -3589,6 +3705,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const PRACTICE = { practice: () => viewPractice(), glossary: () => viewGlossary(), cards: () => viewCards(), contest: () => viewContest() };
     if (PRACTICE[base]) { $("#nav-practice").setAttribute("aria-current", "page"); return PRACTICE[base](); }
     if (base === "shared") return viewShared(qp.get("p") || "");
+    if (base === "problems") { $("#nav-problems").setAttribute("aria-current", "page"); return viewBank(qp); }
     const h = base === "list" || base === "tree" ? base : full;
     const m = h.match(/^ch-([a-z]\d+)(?:-(code|problems|handout|notes))?(?:\?sec=([\w-]+))?$/);
     if (m) return viewChapter(m[1], m[2], m[3]);
@@ -3642,6 +3759,18 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       topicFilter = pick; viewList();
       document.querySelectorAll("[data-topic]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.topic === topicFilter)));
       return;
+    }
+    const bk2 = e.target.closest("[data-banktag],[data-banktagx],[data-bankpop],[data-banksrc],[data-banklv],[data-bankmore],[data-bankreset]");
+    if (bk2) {
+      const d = bk2.dataset;
+      if (d.banktag !== undefined) { bank.tags.includes(d.banktag) ? (bank.tags = bank.tags.filter(x => x !== d.banktag)) : bank.tags.push(d.banktag); }
+      if (d.banktagx !== undefined) bank.tags = bank.tags.filter(x => x !== d.banktagx);
+      if (d.bankpop !== undefined) bank.tags.includes(d.bankpop) ? (bank.tags = bank.tags.filter(x => x !== d.bankpop)) : bank.tags.push(d.bankpop);
+      if (d.banksrc) { bank.src = d.banksrc; document.querySelectorAll("[data-banksrc]").forEach(b => b.setAttribute("aria-pressed", String(b === bk2))); }
+      if (d.banklv) { bank.lv = d.banklv; document.querySelectorAll("[data-banklv]").forEach(b => b.setAttribute("aria-pressed", String(b === bk2))); }
+      if (d.bankreset !== undefined) { Object.assign(bank, { tags: [], src: "all", lv: "all", band: "all", star: false, hide: false, q: "", sort: "easy" }); viewBank(); return; }
+      if (d.bankmore !== undefined) { bank.shown += 50; bankRender(); return; }
+      bank.shown = 50; bankRender(); return;
     }
     const st = e.target.closest("[data-simtab]");
     if (st) {
@@ -3720,6 +3849,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const t = e.target;
     if (t.dataset.solve) { toggleSolved(t.dataset.solve); t.closest("tr").classList.toggle("solved", solved.has(t.dataset.solve)); return; }
     if (t.id === "pdiff") { pstate.d = t.value; route(); }
+    if (t.id === "bankTagIn") { bankTagAdd(t.value); t.value = ""; return; }
+    if (t.id === "bankBand" || t.id === "bankSort") { bank[t.id === "bankBand" ? "band" : "sort"] = t.value; bank.shown = 50; bankRender(); return; }
+    if (t.id === "bankStar" || t.id === "bankHide") { bank[t.id === "bankStar" ? "star" : "hide"] = t.checked; bank.shown = 50; bankRender(); return; }
     if (t.id === "restoreFile" && t.files[0]) { t.files[0].text().then(txt => { $("#restoreText").value = txt; $("#restoreNote").hidden = false; toast("Backup loaded. Press Restore to apply it"); }); }
     if (t.dataset.csolve) { contestTick(t.dataset.csolve, t.checked); }
     if (t.dataset.cardopt) { cardOpts[t.dataset.cardopt] = t.type === "checkbox" ? t.checked : t.value; deck = null; viewCards(); }
@@ -3731,6 +3863,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const t = e.target;
     if (t.id === "raceN") { raceUpdate(+t.value); return; }
     if (t.id === "calcN" || t.id === "calcT") { const o = $("#calcOut"); if (o) o.innerHTML = calcHtml($("#calcN").value, $("#calcT").value); return; }
+    if (t.id === "bankQ") { clearTimeout(pqTimer); pqTimer = setTimeout(() => { bank.q = t.value.trim(); bank.shown = 50; bankRender(); }, 200); return; }
     if (t.id === "glossQ") { glossQ = t.value.trim().toLowerCase(); const b = $("#glossBody"); if (b) b.innerHTML = glossRows(); return; }
     if (t.id === "pq") { clearTimeout(pqTimer); pqTimer = setTimeout(() => { pstate.q = t.value.trim().toLowerCase(); const pos = t.selectionStart; route(); const n = $("#pq"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 250); }
   });
@@ -3756,7 +3889,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (e.key === "/") { e.preventDefault(); $("#q").focus(); return; }
     if (e.key === "t") { location.hash = "tree"; return; }
     if (e.key === "m") { location.hash = "map"; return; }
-    const views = { 1: "home", 2: "tree", 3: "list", 4: "progress", 5: "practice" };
+    const views = { 1: "home", 2: "tree", 3: "list", 4: "progress", 5: "practice", 6: "problems" };
     if (views[e.key]) { location.hash = views[e.key]; return; }
     if (e.key === "j" || e.key === "k" || e.key === "]" || e.key === "[") {
       const m = location.hash.match(/^#ch-([a-z]\d+)/);
@@ -3816,10 +3949,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     found.sort((a, b) => (b.p.star | 0) - (a.p.star | 0) || ratingOf(a) - ratingOf(b));
     hi = 0;
     const diff = x => x.j === "luogu" ? `<span class="diff" style="background:${LUOGU[x.p.d][1]}">${LUOGU[x.p.d][0]}</span>` : `<span class="diff" style="background:${cfColor(x.p.r)}">${x.p.r}</span>`;
-    res.innerHTML = `<div class="none">${found.length.toLocaleString("en-US")} problem${found.length === 1 ? "" : "s"} tagged ${terms.map(esc).join(" + ")}${found.length > 40 ? ", easiest 40 shown (★ first)" : ""}</div>` +
+    res.innerHTML = `<div class="none">${found.length.toLocaleString("en-US")} problem${found.length === 1 ? "" : "s"} tagged ${terms.map(esc).join(" + ")}${found.length > 40 ? ", easiest 40 shown (★ first)" : ""}. <a href="#problems?tag=${encodeURIComponent(terms.join(","))}">See them all in Problems →</a></div>` +
       found.slice(0, 40).map((x, i) => `<a href="${problemUrl(x.j, x.p.id)}" target="_blank" rel="noopener" class="${i === 0 ? "on" : ""}">${x.p.star ? "★ " : ""}<span class="mono">${x.j === "luogu" ? esc(x.p.id) : "CF " + esc(x.p.id)}</span> <span class="cjk">${esc(x.p.name)}</span> ${diff(x)}<small>${esc(x.p.tags.slice(0, 5).join(", "))} · ${x.c.id} ${esc(x.c.title)}</small></a>`).join("");
     res.hidden = false;
   }
+  document.addEventListener("keydown", e => { if (e.key === "Enter" && e.target.id === "bankTagIn") { e.preventDefault(); bankTagAdd(e.target.value); e.target.value = ""; } });
   q.addEventListener("input", search);
   q.addEventListener("focus", search);
   q.addEventListener("keydown", e => {
