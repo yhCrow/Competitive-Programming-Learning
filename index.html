@@ -866,8 +866,8 @@ svg.edgesback .edges { animation: fadein .5s ease-out 1.05s both; }
 
 /* ================= Home ================= */
 .lp { display: grid; gap: 96px; padding-bottom: 32px; }
-.lp-hero { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 7fr); gap: 48px; align-items: center; min-height: calc(100vh - 140px); }
-.lp-h1 { font-family: var(--f-cjk); font-size: 48px; line-height: 1.1; font-weight: 600; margin: 0 0 24px; max-width: 680px; letter-spacing: -0.02em; color: var(--fg); }
+.lp-hero { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 6fr); gap: 48px; align-items: center; min-height: calc(100vh - 140px); }
+.lp-h1 { font-family: var(--f-cjk); font-size: clamp(34px, 3.6vw, 48px); line-height: 1.1; font-weight: 600; margin: 0 0 24px; max-width: 680px; letter-spacing: -0.02em; color: var(--fg); }
 /* each word carries its own slice of one gradient across the heading (a gradient on the heading itself doesn't paint inside animated words) */
 .lp-h1 .hw { background-image: linear-gradient(90deg, var(--fg), color-mix(in srgb, var(--fg) 58%, var(--bg))); background-size: var(--gw, 100%) 100%; background-position: calc(-1px * var(--gx, 0)) 0; background-repeat: no-repeat; -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hw { display: inline-block; animation: hwIn .7s var(--ease) both; animation-delay: calc(var(--i) * 60ms); }
@@ -1079,6 +1079,14 @@ svg.pointing .hm-trace { display: none; }
   .readybox ol.path a:hover { transform: none; }
 }
 
+
+/* GSAP drives the entrance, the reveals and the tagline; Anime.js the race bars and the simulator swap */
+.gsap-on .hw, .gsap-on .lp-sub, .gsap-on .lp-cta, .gsap-on .lp-proof, .gsap-on .lp-resume, .gsap-on .lp-heromap, .gsap-on .hm-block, .gsap-on .hm-trace { animation: none; }
+.gsap-on .tw { transition: none; }
+.gsap-on .hm-block { transition: opacity .25s ease; }
+.anime-on .race-track i { transition: background-color .3s ease; }
+.anime-on .lp-vis.swap { animation: none; }
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -1215,6 +1223,10 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 <div class="readbar" id="readbar" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
 <script>
 (function () {
   "use strict";
@@ -2102,10 +2114,86 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       svg.classList.add("pointing");
       svg.querySelectorAll(".hm-block").forEach(b => b.classList.toggle("lit", b.dataset.heroid === id || need.has(b.dataset.heroid)));
       svg.querySelectorAll(".hm-edge").forEach(p => p.classList.toggle("lit", (p.dataset.t === id || need.has(p.dataset.t)) && need.has(p.dataset.f)));
+      if (box.dataset.last !== id) { box.dataset.last = id; rippleChain(svg, id); }
       cap.innerHTML = `<span class="lv ${lvClass(byId[id])}">${id}</span> <span class="cjk">${esc(byId[id].title)}</span> · needs ${need.size} chapter${need.size === 1 ? "" : "s"} first. Click to open it on the map`;
     });
-    box.addEventListener("pointerleave", () => { svg.classList.remove("pointing"); svg.querySelectorAll(".lit").forEach(x => x.classList.remove("lit")); cap.textContent = "Point at any block to see what it needs"; });
+    box.addEventListener("pointerleave", () => { box.dataset.last = ""; svg.classList.remove("pointing"); svg.querySelectorAll(".lit").forEach(x => x.classList.remove("lit")); cap.textContent = "Point at any block to see what it needs"; });
   }
+
+  // ---- Home motion: GSAP runs the entrance and the scroll story, Anime.js the small reactions to what you do.
+  // Without the libraries (or with reduced motion) the CSS versions above still play. ----
+  let homeCtx = null;
+  const motionOK = () => !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const haveGsap = () => window.gsap && window.ScrollTrigger && window.CustomEase;
+  function animateHome() {
+    const root = $(".lp");
+    if (!root || !motionOK() || !haveGsap()) return revealHome();
+    gsap.registerPlugin(ScrollTrigger, CustomEase);
+    if (!CustomEase.get("atlas")) CustomEase.create("atlas", "0.22, 1, 0.36, 1"); // the site's --ease curve
+    root.classList.add("gsap-on"); // turns off the CSS versions of what GSAP now drives
+    if (window.anime) root.classList.add("anime-on");
+    homeCtx = gsap.context(() => {
+      // 1. the entrance: headline word by word, then the text, then the map builds itself step by step and traces a path
+      const tl = gsap.timeline({ defaults: { ease: "atlas", duration: 0.8 } });
+      tl.from(".lp-h1 .hw", { y: 28, opacity: 0, stagger: 0.05 })
+        .from([".lp-sub", ".lp-cta", ".lp-proof", ".lp-resume"], { y: 20, opacity: 0, stagger: 0.08 }, "-=0.55")
+        .from(".lp-heromap", { y: 24, opacity: 0, scale: 0.97, duration: 1 }, 0.1)
+        // blocks pop in step by step to their resting strength by status, then hand back to the CSS (so hover dimming works)
+        .fromTo(".hm-block", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%" }, { opacity: (i, el) => (el.classList.contains("learned") ? 0.95 : el.classList.contains("learning") ? 0.7 : 0.32), scale: 1, duration: 0.5, clearProps: "opacity,scale,transform,transformOrigin", stagger: (i, el) => +el.style.getPropertyValue("--d") * 0.07 }, 0.35)
+        .fromTo(".hm-trace", { strokeDashoffset: 1, opacity: 0.55 }, { strokeDashoffset: 0, duration: 1.6, ease: "power2.inOut" }, ">-0.3")
+        .to(".hm-trace", { opacity: 0, duration: 0.6 }, ">0.4")
+        .from(".pvhere", { scale: 1.25, opacity: 0, transformOrigin: "50% 50%", duration: 0.6 }, "<");
+      // 2. as you scroll away the hero map drifts up a little slower than the page
+      gsap.to(".lp-heromap", { yPercent: -6, ease: "none", scrollTrigger: { trigger: ".lp-hero", start: "top top", end: "bottom top", scrub: 0.6 } });
+      // 3. each section rises in once, then its cards follow one after another
+      gsap.set(".lp .reveal", { y: 32, opacity: 0 });
+      ScrollTrigger.batch(".lp .reveal", {
+        start: "top 88%", once: true,
+        onEnter: els => els.forEach((el, k) => {
+          el.classList.add("in"); // starts the CSS drawings inside (feature art, level shapes, code lines)
+          gsap.to(el, { y: 0, opacity: 1, duration: 0.8, ease: "atlas", delay: k * 0.1 });
+          const kids = el.querySelectorAll(".logo-link, .lp-level, .lp-feat, .lp-steps li, .lp-faq details, .lp-tabs button, .stat, .lp-code .l");
+          if (kids.length) gsap.from(kids, { y: 24, opacity: 0, duration: 0.7, ease: "atlas", stagger: 0.07, delay: 0.15 + k * 0.1 });
+        }),
+      });
+      // 4. the tagline lights up word by word as you scroll through it (and dims again if you scroll back)
+      const fg = getComputedStyle(document.documentElement).getPropertyValue("--fg").trim() || "#fff";
+      gsap.to(".lp-tagline .tw", { color: fg, ease: "none", stagger: 0.1, scrollTrigger: { trigger: ".lp-tagline", start: "top 75%", end: "bottom 40%", scrub: true } });
+    }, root);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ScrollTrigger.refresh());
+  }
+  // Anime.js: when you point at a block, its chain of prerequisites pulses outward from it, nearest first.
+  function rippleChain(svg, id) {
+    if (!window.anime || !motionOK()) return;
+    const order = [id, ...[...ancestors(id)].sort((a, b) => depthOf(b) - depthOf(a))];
+    const els = order.map(x => svg.querySelector(`.hm-block[data-heroid="${x}"]`)).filter(Boolean);
+    anime.remove(els);
+    anime({ targets: els, scale: [1, 1.12, 1], duration: 520, delay: anime.stagger(45), easing: "easeOutQuad" });
+  }
+  // Anime.js: a simulator's pieces settle in one after another when you switch tabs.
+  function enterSim(host) {
+    if (!window.anime || !motionOK()) return;
+    const stage = host.querySelector(".vis-stage");
+    anime({ targets: stage.querySelectorAll(".cell, .gn, .tn, .rn, .qcell, .mvar"), opacity: [0, 1], translateY: [10, 0], delay: anime.stagger(22), duration: 520, easing: "easeOutExpo" });
+    anime({ targets: stage.querySelectorAll(".vbar, line, .ivs rect"), opacity: [0, 1], delay: anime.stagger(30), duration: 420, easing: "easeOutQuad" }); // these move by transform already: fade only
+  }
+  // Anime.js: the race bars spring to their new length when n changes (retargeted from wherever they are).
+  function raceUpdate(v) {
+    const out = $("#raceOut");
+    if (!out) return;
+    if (!window.anime || !motionOK() || !out.querySelector(".race-row")) { out.innerHTML = raceHtml(v); return; }
+    const n = Math.round(10 ** v);
+    out.querySelector(".race-n b").textContent = n.toLocaleString("en-US");
+    out.querySelectorAll(".race-row").forEach((row, k) => {
+      const ops = RACE[k][1](n), fits = ops <= 1e8, w = Math.max(0.02, Math.min(1, Math.log10(Math.max(1, ops)) / 12));
+      row.classList.toggle("fits", fits); row.classList.toggle("slow", !fits);
+      row.querySelector(".race-v").textContent = fits ? "fits" : "too slow";
+      const bar = row.querySelector("i");
+      anime.remove(bar);
+      anime({ targets: bar, scaleX: w, easing: "spring(1, 90, 12, 0)" });
+    });
+  }
+
   // Sections rise into view once; numbers and drawings start when they arrive.
   function revealHome() {
     const root = $(".lp");
@@ -2266,7 +2354,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     h1.querySelectorAll(".hw").forEach(w => { w.style.setProperty("--gx", w.offsetLeft); w.style.setProperty("--gw", hw + "px"); });
     document.querySelectorAll(".lp-code .l").forEach((l, k) => (l.style.transitionDelay = k * 45 + "ms")); // the code types itself in, line by line
     mountVisInto($("#homeVis"), VIS[SIMS[0][0]]);
-    revealHome();
+    animateHome();
     window.scrollTo(0, 0);
   }
 
@@ -3478,6 +3566,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     clearInterval(visTimer); visTimer = null; // a visualizer stops playing when you leave its chapter
     clearInterval(contestTimer); contestTimer = null;
     document.body.classList.remove("mapopen");
+    if (homeCtx) { homeCtx.revert(); homeCtx = null; }
     if (shareProg) { shareProg = null; layout = null; }
     const full = location.hash.slice(1) || "home";
     ["home", "tree", "list", "progress", "practice"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
@@ -3555,7 +3644,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (st) {
       document.querySelectorAll("[data-simtab]").forEach(b => b.setAttribute("aria-selected", String(b === st)));
       const host = $("#homeVis"); host.classList.remove("swap"); void host.offsetWidth; host.classList.add("swap");
-      mountVisInto(host, VIS[st.dataset.simtab]); return;
+      mountVisInto(host, VIS[st.dataset.simtab]); enterSim(host); return;
     }
     const hb = e.target.closest("[data-heroid]");
     if (hb) { selected = hb.dataset.heroid; zoomS = 1; pulseId = selected; location.hash = "map"; return; }
@@ -3637,7 +3726,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   let pqTimer = 0;
   document.addEventListener("input", e => {
     const t = e.target;
-    if (t.id === "raceN") { const o = $("#raceOut"); if (o) o.innerHTML = raceHtml(+t.value); return; }
+    if (t.id === "raceN") { raceUpdate(+t.value); return; }
     if (t.id === "calcN" || t.id === "calcT") { const o = $("#calcOut"); if (o) o.innerHTML = calcHtml($("#calcN").value, $("#calcT").value); return; }
     if (t.id === "glossQ") { glossQ = t.value.trim().toLowerCase(); const b = $("#glossBody"); if (b) b.innerHTML = glossRows(); return; }
     if (t.id === "pq") { clearTimeout(pqTimer); pqTimer = setTimeout(() => { pstate.q = t.value.trim().toLowerCase(); const pos = t.selectionStart; route(); const n = $("#pq"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 250); }
