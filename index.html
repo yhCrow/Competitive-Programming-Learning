@@ -94,6 +94,8 @@ h1, h2, h3, h4 { font-weight: 500; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cjk { font-family: var(--f-cjk); }
 .mono { font-family: var(--f-mono); }
+/* code shows the characters you type: no != → ≠ or >= → ≥ ligatures */
+code, pre, .mono, kbd, samp, .wout, .wsort, .wcode, .trace { font-variant-ligatures: none; font-feature-settings: "calt" 0, "liga" 0; }
 .wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 .label { font-size: 13px; color: var(--muted); margin: 0 0 8px; font-weight: 500; }
 .hint { color: var(--muted); font-size: 14.5px; }
@@ -1255,7 +1257,7 @@ svg.pointing .hm-trace { display: none; }
 /* lesson widgets */
 .lwid { display: grid; gap: 16px; padding: 22px 24px 24px; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); border-radius: var(--r-card); background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
 .lwhead { margin: 0; display: flex; gap: 10px; align-items: center; font-weight: 600; }
-.lwhead span { font-size: 12px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); padding: 2px 8px; border-radius: 999px; }
+.lwhead span { white-space: nowrap; font-size: 12px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); padding: 2px 8px; border-radius: 999px; }
 .wq { margin: 0; color: var(--fg-2); }
 .wfb { margin: 0; min-height: 1.6em; color: var(--fg-2); line-height: 1.6; }
 .wfb.ok { color: var(--v-done); } .wfb.bad { color: var(--v-bad); }
@@ -1298,7 +1300,7 @@ svg.pointing .hm-trace { display: none; }
 .wcode.small { padding: 10px 0; min-width: 180px; }
 .wcode.small span { display: block; padding: 2px 14px; border-left: 3px solid transparent; font: 14px/1.7 var(--f-mono); color: var(--muted); transition: color .2s var(--ease), background-color .2s var(--ease), border-color .2s var(--ease); }
 .wcode.small span.on { color: var(--fg); border-left-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 16%, transparent); }
-.wcode.small span.done { color: var(--fg-2); }
+.wcode.small span.done { color: var(--fg-2); border-left-color: color-mix(in srgb, var(--v-cmp) 45%, transparent); background: color-mix(in srgb, var(--v-cmp) 6%, transparent); }
 .wboxes { display: flex; gap: 16px; }
 .wboxes .vbox b { font: inherit; }
 .wboxes .vbox { transition: opacity .25s var(--ease), border-color .2s var(--ease), background-color .2s var(--ease); }
@@ -1308,7 +1310,7 @@ svg.pointing .hm-trace { display: none; }
 /* lesson pieces rise in as they scroll into view, their parts one after another */
 .rv { opacity: 0; transform: translateY(14px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
 .rv.in { opacity: 1; transform: none; }
-.rv.in :is(.fchip, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fascii > div, .fverd > div), .rv.in .forder > div > * { animation: lsIn .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
+.rv.in :is(.fchip, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fascii > div, .fverd > div, .fprec > div, .fchain .row), .rv.in .forder > div > * { animation: lsIn .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
 .rv.in .forder > div > * { animation-delay: calc(var(--i, 0) * 260ms + 150ms); }
 .rv.in .fflow > i { animation: lsIn .4s var(--ease) both; animation-delay: .45s; }
 .rv.in .fline .arc { stroke-dashoffset: 0; animation: lsDraw .8s var(--ease) .35s both; }
@@ -1384,6 +1386,63 @@ svg.pointing .hm-trace { display: none; }
   .fascii .plus { width: 100%; text-align: center; }
 }
 @media (prefers-reduced-motion: reduce) { .wout span, .rv.in .fsize .bar i { animation: none; } .wmeter i { transition: none; } }
+
+
+/* 基3 figures and widgets */
+.fprec { display: grid; gap: 8px; width: 100%; max-width: 560px; }
+.fprec > div { width: var(--w); display: grid; grid-template-columns: 26px auto 1fr; gap: 14px; align-items: center; padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--v-cur) 10%, var(--surface)); border: 1px solid var(--line); }
+.fprec .n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--raised); color: var(--fg-2); }
+.fprec code { font-size: 16px; font-weight: 600; white-space: pre; }
+.fprec small { color: var(--muted); font-size: 12.5px; text-align: right; }
+.fprec .floop { margin-top: 6px; }
+.fchain { display: grid; gap: 4px; width: 100%; max-width: 520px; }
+.fchain .row { display: grid; grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); gap: 10px; align-items: center; }
+.fchain .cond { padding: 12px 14px; border: 1px solid var(--v-cmp); border-radius: 10px; background: color-mix(in srgb, var(--v-cmp) 10%, var(--surface)); font: 600 14px var(--f-mono); text-align: center; }
+.fchain .cond.else { border-style: dashed; border-color: var(--line-strong); background: var(--bg); }
+.fchain i { font-style: normal; color: var(--muted); font-size: 12.5px; text-align: center; }
+.fchain .res { padding: 12px 14px; border-radius: 10px; background: color-mix(in srgb, var(--v-done) 14%, var(--surface)); border: 1px solid var(--v-done); font-weight: 600; text-align: center; }
+.fchain .no { padding-left: calc(25% - 16px); color: var(--muted); font-size: 12.5px; }
+.wtog { display: flex; gap: 12px; flex-wrap: wrap; }
+.wtog .btn { height: 44px; min-width: 132px; font: 600 15px var(--f-mono); }
+.wtog .btn[aria-pressed="true"] { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 14%, var(--surface)); }
+.wtog .btn[aria-pressed="false"] { border-color: var(--v-bad); background: color-mix(in srgb, var(--v-bad) 12%, var(--surface)); }
+.wres b.t { color: var(--v-done); } .wres b.f { color: var(--v-bad); }
+.wquad { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: 20px; align-items: center; }
+.wplane { width: 100%; cursor: crosshair; border-radius: 10px; }
+.wplane .bg { fill: var(--bg); }
+.wplane .g { stroke: var(--line); stroke-width: 1; }
+.wplane .ax { stroke: var(--fg-2); stroke-width: 1.5; }
+.wplane .q { fill: var(--muted); font: 600 18px var(--f-mono); text-anchor: middle; dominant-baseline: middle; opacity: .6; }
+.wplane .pt { fill: var(--v-cmp); stroke: var(--surface); stroke-width: 2; transition: cx .25s var(--ease-in-out), cy .25s var(--ease-in-out); }
+.wtree { width: 100%; }
+.wtree line { stroke: var(--line-strong); stroke-width: 1.5; transition: stroke .2s var(--ease); }
+.wtree line.hit { stroke: var(--v-cmp); stroke-width: 3; }
+.wtree .el { fill: var(--muted); font: 11px var(--f-mono); text-anchor: middle; }
+.wtree .tn rect { fill: var(--bg); stroke: var(--line-strong); stroke-width: 1.2; transition: fill .2s var(--ease), stroke .2s var(--ease); }
+.wtree .tn text { fill: var(--fg-2); font: 12px var(--f-mono); text-anchor: middle; }
+.wtree .tn.hit rect { fill: color-mix(in srgb, var(--v-cmp) 18%, var(--surface)); stroke: var(--v-cmp); }
+.wtree .tn.hit.leaf rect { fill: color-mix(in srgb, var(--v-done) 22%, var(--surface)); stroke: var(--v-done); }
+.wtree .tn.hit text { fill: var(--fg); font-weight: 600; }
+.wtree .tn.hit { animation: lsIn .3s var(--ease) both; animation-delay: calc(var(--i) * 80ms); }
+.wsort { display: grid; gap: 8px; }
+.wsort > div { display: grid; grid-template-columns: 150px repeat(3, 44px); gap: 8px; align-items: center; animation: lsIn .3s var(--ease) both; animation-delay: calc(var(--i) * 70ms); }
+.wsort small { color: var(--muted); font-size: 12.5px; }
+.wsort span { height: 38px; display: grid; place-items: center; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); font: 600 17px var(--f-mono); }
+.wsort span.cmp { border-color: var(--v-cmp); }
+.wsort span.swp { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 20%, var(--surface)); }
+.wclock b.bad { color: var(--v-bad); }
+.wpacks > div { align-content: start; }
+.wpacks small { color: var(--muted); font-size: 12.5px; }
+.wpacks > div.best { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 12%, var(--surface)); }
+.wpacks > div.best b { color: var(--v-done); }
+@media (max-width: 640px) {
+  .fprec > div { width: 100%; }
+  .wquad { grid-template-columns: minmax(0, 1fr); }
+  .wplane { max-width: 240px; justify-self: center; }
+  .wsort > div { grid-template-columns: minmax(0, 1fr) repeat(3, 38px); }
+  .fchain .row { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) { .wtree .tn.hit, .wsort > div { animation: none; } .wplane .pt { transition: none; } }
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -3409,7 +3468,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
     document.querySelectorAll(".flow.lesson :is(.lfig, .lwid, .ltable, .lsteps, .lcards, .box, details.prog, .vis)").forEach(el => {
       el.classList.add("rv"); io.observe(el);
-      [...el.querySelectorAll(".fchip, .forder > div, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fsize > div, .fascii > div, .fverd > div")].forEach((c, k) => c.style.setProperty("--i", k));
+      [...el.querySelectorAll(".fchip, .forder > div, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fsize > div, .fascii > div, .fverd > div, .fprec > div, .wpacks > div")].forEach((c, k) => c.style.setProperty("--i", k));
     });
   }
 
@@ -5884,6 +5943,129 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       ["You forgot a ; after a statement", 5, "It never even compiled"],
       ["You declared int a[1000000000]", 3, "That array needs 4 GB, far over the limit"],
     ].map(([q, r, why]) => [q, ["AC", "WA", "TLE", "MLE", "RE", "CE"], r, why]), q => esc(q)),
+  });
+
+
+  // ---- 基3: figures and widgets ----
+  Object.assign(FIG, {
+    precedence: () => `<div class="fprec">${[["!", "not"], ["* / %   + -", "arithmetic"], ["< <= > >=", "compare"], ["== !=", "equal or not"], ["&&", "and"], ["||", "or"]].map(([o, s], k) => `<div style="--w:${100 - k * 11}%"><span class="n">${k + 1}</span><code>${esc(o)}</code><small>${s}</small></div>`).join("")}<p class="floop">Higher rows bind tighter. When you mix <code>&amp;&amp;</code> and <code>||</code>, add brackets</p></div>`,
+    chain: () => `<div class="fchain">${[["bmi < 18.5 ?", "Underweight"], ["bmi < 24 ?", "Normal"], ["else", "Overweight"]].map(([c, r], k) => `<div class="row" style="--i:${k}"><span class="cond${k === 2 ? " else" : ""}">${esc(c)}</span><i aria-hidden="true">${k === 2 ? "→" : "yes →"}</i><span class="res">${r}</span></div>${k < 2 ? '<div class="no" aria-hidden="true">↓ no</div>' : ""}`).join("")}</div>`,
+  });
+  const tf = v => `<b class="${v ? "t" : "f"}">${v}</b>`;
+  Object.assign(WIDGET, {
+    logic: {
+      title: "Logic lab",
+      html: () => `<div class="wtog">${["A", "B"].map(n => `<button type="button" class="btn" data-t="${n}" aria-pressed="true">${n} = <span>true</span></button>`).join("")}</div>
+        <div class="wres">${["A && B", "A || B", "!A"].map(e => `<div><code>${esc(e)}</code><span data-out="${e}"></span></div>`).join("")}</div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const v = { A: true, B: true }, fb = el.querySelector(".wfb");
+        const run = () => {
+          const r = { "A && B": v.A && v.B, "A || B": v.A || v.B, "!A": !v.A };
+          Object.entries(r).forEach(([k, x]) => { const o = el.querySelector(`[data-out="${k}"]`); if (o.textContent !== String(x)) { o.innerHTML = tf(x); pop(o.firstChild); } });
+          say(fb, "", v.A && v.B ? "&& needs both sides true. Here it gets them" : v.A || v.B ? "|| needs at least one true side, && needs both" : "Both false: only !A is true");
+        };
+        el.querySelector(".wtog").onclick = e => { const b = e.target.closest("[data-t]"); if (!b) return; v[b.dataset.t] = !v[b.dataset.t]; b.setAttribute("aria-pressed", v[b.dataset.t]); b.querySelector("span").textContent = v[b.dataset.t]; run(); };
+        run();
+      },
+    },
+    conds: quizWidget("Predict the condition", [
+      ["int x = 9;  cout << (1 < x < 5);", ["0", "1"], 1, "(1 < 9) gives 1, and 1 < 5 is true. Write 1 < x && x < 5"],
+      ["cout << (0.1 + 0.2 == 0.3);", ["1", "0"], 1, "Doubles are not exact. Compare with a small tolerance instead"],
+      ["cout << !5;", ["0", "-5", "1"], 0, "Any non zero value counts as true, so !5 is false"],
+      ["int n = 0;  cout << (n != 0 && 10 / n > 1);", ["0", "crash", "1"], 0, "&& stops at the first false part, so 10 / n never runs"],
+      ["int a = 3;  if (a = 0) cout << \"A\"; else cout << \"B\";", ["A", "B"], 1, "a = 0 stores 0, and 0 counts as false. You wanted =="],
+      ["int x = 4;  cout << (x % 2 == 0 ? \"even\" : \"odd\");", ["even", "odd"], 0, "? : picks the first value when the condition is true"],
+    ], q => `What does <code>${esc(q)}</code> print?`),
+    switch: {
+      title: "switch with and without break",
+      html: () => `<div class="seg" role="group" aria-label="break"><button type="button" data-b="1" aria-pressed="true">With break</button><button type="button" data-b="0" aria-pressed="false">Without break</button></div>
+        <div class="wpre">${range(12).map(k => `<button type="button" class="chip" data-m="${k + 1}" aria-pressed="${k === 1}">${k + 1}</button>`).join("")}</div>
+        <div class="wswap"><div class="wcode small"></div><div class="wclock"><b></b><small>days in month <span class="mono"></span> of 2024</small></div></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        let brk = true, m = 2;
+        const fb = el.querySelector(".wfb");
+        const run = () => {
+          const L = ["switch (m) {", `  case 2: days = leap ? 29 : 28;${brk ? " break;" : ""}`, `  case 4: case 6: case 9: case 11: days = 30;${brk ? " break;" : ""}`, "  default: days = 31;", "}"];
+          const entry = m === 2 ? 1 : [4, 6, 9, 11].includes(m) ? 2 : 3, ran = brk ? [entry] : range(4 - entry).map(k => entry + k), vals = { 1: 29, 2: 30, 3: 31 };
+          el.querySelector(".wcode").innerHTML = L.map((l, k) => `<span class="${k === entry ? "on" : ran.includes(k) ? "done" : ""}">${esc(l)}</span>`).join("");
+          const out = el.querySelector(".wclock b"); out.textContent = vals[ran[ran.length - 1]]; pop(out);
+          el.querySelector(".wclock .mono").textContent = m;
+          say(fb, !brk && ran.length > 1 ? "bad" : "ok", brk ? `m = ${m} jumps to its case, sets days, and break leaves the switch` : ran.length > 1 ? `No break: after its own case, m = ${m} falls through ${ran.length - 1} more line${ran.length > 2 ? "s" : ""}, and the last one wins: days = 31` : "The default case is last, so nothing is below it to fall into");
+        };
+        el.onclick = e => {
+          const b = e.target.closest("[data-b]"), c = e.target.closest("[data-m]");
+          if (b) { brk = b.dataset.b === "1"; el.querySelectorAll("[data-b]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); }
+          if (c) { m = +c.dataset.m; el.querySelectorAll("[data-m]").forEach(x => x.setAttribute("aria-pressed", x === c)); run(); }
+        };
+        run();
+      },
+    },
+    quadrant: {
+      title: "Which quadrant?",
+      html: () => {
+        const P = v => 100 + v * 16;
+        return `<p class="wq">Click anywhere on the plane</p><div class="wquad">
+          <svg class="wplane" viewBox="0 0 200 200" role="img" aria-label="Coordinate plane from minus 5 to 5"><rect class="bg" x="0" y="0" width="200" height="200"/>${range(11).map(k => `<line class="g" x1="${P(k - 5)}" y1="20" x2="${P(k - 5)}" y2="180"/><line class="g" x1="20" y1="${P(k - 5)}" x2="180" y2="${P(k - 5)}"/>`).join("")}
+            <line class="ax" x1="12" y1="100" x2="188" y2="100"/><line class="ax" x1="100" y1="12" x2="100" y2="188"/>${[["1", 150, 50], ["2", 50, 50], ["3", 50, 150], ["4", 150, 150]].map(([q, x, y]) => `<text class="q" x="${x}" y="${y}">${q}</text>`).join("")}<circle class="pt" r="6"/></svg>
+          <svg class="wtree" viewBox="0 0 380 230" role="img" aria-label="Decision tree"></svg></div>
+          <div class="win"><label>x <input type="number" value="3" min="-5" max="5" data-k="x"></label><label>y <input type="number" value="-2" min="-5" max="5" data-k="y"></label></div><p class="wfb" aria-live="polite"></p>`;
+      },
+      init(el) {
+        const [ix, iy] = el.querySelectorAll("input"), plane = el.querySelector(".wplane"), tree = el.querySelector(".wtree"), fb = el.querySelector(".wfb");
+        const N = { r: [190, 26, "x == 0 || y == 0"], ax: [70, 96, "on an axis"], x: [270, 96, "x > 0"], y1: [200, 160, "y > 0"], y2: [330, 160, "y > 0"], q1: [165, 214, "1"], q4: [235, 214, "4"], q2: [295, 214, "2"], q3: [360, 214, "3"] };
+        const E = [["r", "ax", "yes"], ["r", "x", "no"], ["x", "y1", "yes"], ["x", "y2", "no"], ["y1", "q1", "yes"], ["y1", "q4", "no"], ["y2", "q2", "yes"], ["y2", "q3", "no"]];
+        const run = () => {
+          const x = Math.max(-5, Math.min(5, Math.trunc(+ix.value || 0))), y = Math.max(-5, Math.min(5, Math.trunc(+iy.value || 0)));
+          const path = x === 0 || y === 0 ? ["r", "ax"] : x > 0 ? ["r", "x", "y1", y > 0 ? "q1" : "q4"] : ["r", "x", "y2", y > 0 ? "q2" : "q3"];
+          const on = (a, b) => path.includes(a) && path.includes(b) && path.indexOf(b) === path.indexOf(a) + 1;
+          tree.innerHTML = E.map(([a, b, l]) => `<line class="${on(a, b) ? "hit" : ""}" x1="${N[a][0]}" y1="${N[a][1]}" x2="${N[b][0]}" y2="${N[b][1]}"/><text class="el" x="${(N[a][0] + N[b][0]) / 2 + (l === "yes" ? -10 : 10)}" y="${(N[a][1] + N[b][1]) / 2}">${l}</text>`).join("")
+            + Object.entries(N).map(([k, [cx, cy, t]], i) => { const leaf = /^q|ax/.test(k), w = Math.max(30, t.length * 7.6 + 16); return `<g class="tn${path.includes(k) ? " hit" : ""}${leaf ? " leaf" : ""}" style="--i:${path.indexOf(k)}"><rect x="${cx - w / 2}" y="${cy - 13}" width="${w}" height="26" rx="${leaf ? 13 : 6}"/><text x="${cx}" y="${cy + 4}">${esc(t)}</text></g>`; }).join("");
+          const pt = plane.querySelector(".pt"); pt.setAttribute("cx", 100 + x * 16); pt.setAttribute("cy", 100 - y * 16);
+          say(fb, "ok", `(${x}, ${y}): ${x === 0 || y === 0 ? "a zero coordinate, so the first question already answers it: on an axis" : `not on an axis, x ${x > 0 ? ">" : "<"} 0, y ${y > 0 ? ">" : "<"} 0, so quadrant ${path[3].slice(1)}`}`);
+        };
+        plane.onclick = e => { const b = plane.getBoundingClientRect(), sx = ((e.clientX - b.left) / b.width) * 200, sy = ((e.clientY - b.top) / b.height) * 200; ix.value = Math.max(-5, Math.min(5, Math.round((sx - 100) / 16))); iy.value = Math.max(-5, Math.min(5, Math.round((100 - sy) / 16))); run(); };
+        ix.oninput = iy.oninput = run;
+        run();
+      },
+    },
+    triangle: {
+      title: "Triangle tester",
+      html: () => `<div class="wpre">${["5 3 4", "2 2 3", "3 3 3", "4 5 6", "1 2 3"].map(t => `<button type="button" class="chip" data-abc="${t}">${t}</button>`).join("")}</div>
+        <div class="win">${["a", "b", "c"].map((n, k) => `<label>${n} <input type="number" value="${[5, 3, 4][k]}" min="1" data-k="${n}"></label>`).join("")}</div>
+        <div class="wsort"></div><div class="forder wsteps"></div><div class="wclock"><b></b></div>`,
+      init(el) {
+        const ins = [...el.querySelectorAll("input")];
+        const run = () => {
+          const v = ins.map(i => Math.max(1, Math.trunc(+i.value || 1))), rows = [[[...v], -1, -1, "start"]];
+          for (const [i, j] of [[0, 1], [1, 2], [0, 1]]) { const sw = v[i] > v[j]; if (sw) [v[i], v[j]] = [v[j], v[i]]; rows.push([[...v], i, j, sw ? "swap" : "keep"]); }
+          el.querySelector(".wsort").innerHTML = rows.map(([r, i, j, s], k) => `<div style="--i:${k}"><small>${k ? `${"abc"[i]} > ${"abc"[j]}? ${s}` : "start"}</small>${r.map((x, q) => `<span class="${q === i || q === j ? (s === "swap" ? "swp" : "cmp") : ""}">${x}</span>`).join("")}</div>`).join("");
+          const [a, b, c] = v, tri = a + b > c, s2 = a * a + b * b, c2 = c * c;
+          const steps = [[`${a} + ${b} ${tri ? ">" : "≤"} ${c}`, tri ? "a triangle" : "not a triangle: stop"]];
+          if (tri) steps.push([`${a}² + ${b}² = ${s2} ${s2 === c2 ? "=" : s2 > c2 ? ">" : "<"} ${c2} = ${c}²`, s2 === c2 ? "right" : s2 > c2 ? "acute" : "obtuse"], [a === c ? `${a} == ${c}` : a === b || b === c ? "two sides equal" : "all sides differ", a === c ? "equilateral" : a === b || b === c ? "isosceles" : "no equal sides"]);
+          el.querySelector(".wsteps").innerHTML = steps.map(([e, s], k) => `<div style="--i:${k}"><span class="n">${k + 1}</span><code>${e}</code><small>${s}</small></div>`).join("");
+          const out = el.querySelector(".wclock b"); out.textContent = tri ? [s2 === c2 ? "Right" : s2 > c2 ? "Acute" : "Obtuse", a === c ? "Equilateral" : a === b || b === c ? "Isosceles" : ""].filter(Boolean).join(" · ") : "Not triangle"; out.classList.toggle("bad", !tri); pop(out);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-abc]"); if (!c) return; c.dataset.abc.split(" ").forEach((x, k) => (ins[k].value = x)); run(); };
+        ins.forEach(i => (i.oninput = run));
+        run();
+      },
+    },
+    cheapest: {
+      title: "Pick the cheapest packs",
+      html: () => `<div class="wpre">${[57, 100, 1].map(n => `<button type="button" class="chip" data-n="${n}">n = ${n}</button>`).join("")}</div>
+        <div class="win"><label>pencils needed <input type="number" value="57" min="1" data-k="n"></label></div><div class="wres wpacks"></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const inp = el.querySelector("input"), fb = el.querySelector(".wfb"), P = [[2, 2], [50, 30], [30, 27]];
+        const run = () => {
+          const n = Math.max(1, Math.trunc(+inp.value || 1)), cost = P.map(([s, p]) => Math.floor((n + s - 1) / s) * p), best = Math.min(...cost);
+          el.querySelector(".wpacks").innerHTML = P.map(([s, p], k) => `<div class="${cost[k] === best ? "best" : ""}" style="--i:${k}"><code>${s} per pack, ${p} each</code><small>⌈${n} / ${s}⌉ = ${Math.floor((n + s - 1) / s)} packs</small><b>${cost[k]}</b></div>`).join("");
+          say(fb, "ok", `best = min(${cost.join(", ")}) = ${best}`);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-n]"); if (!c) return; inp.value = c.dataset.n; run(); };
+        inp.oninput = run;
+        run();
+      },
+    },
   });
 
   // ---- shared numbers: tier, streaks, milestones, next chapter ----
