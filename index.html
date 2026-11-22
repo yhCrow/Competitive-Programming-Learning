@@ -607,16 +607,16 @@ table.syl tr.learned td { opacity: .7; }
 .rail-bar { height: 5px; background: var(--raised); border-radius: 3px; overflow: hidden; margin-top: 4px; }
 .rail-bar i { display: block; height: 100%; background: var(--c); transform-origin: left; animation: grow .8s var(--ease) both; }
 .rail-n { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; } .rail-n b { color: var(--fg); font-size: 15.5px; }
-.rail-en, .rail-bar, .rail-n { transition: opacity .35s ease, max-height .35s ease, margin .35s ease; max-height: 40px; overflow: hidden; }
-.rail-item.tight .rail-en, .rail-item.tight .rail-bar, .rail-item.tight .rail-n { opacity: 0; max-height: 0; margin: 0; }
+/* details fade (opacity, transform), and only then give up their space in one step, so the layout changes once, not every frame */
+.rail-en, .rail-bar, .rail-n { max-height: 40px; overflow: hidden; transition: opacity .3s ease, transform .3s ease, max-height 0s linear 0s, margin 0s linear 0s; }
+.rail-item.tight .rail-en, .rail-item.tight .rail-bar, .rail-item.tight .rail-n { opacity: 0; transform: translateY(-4px); max-height: 0; margin: 0; transition: opacity .3s ease, transform .3s ease, max-height 0s linear .3s, margin 0s linear .3s; }
 .steprow { position: relative; height: 30px; overflow: hidden; }
 .step i { font-style: normal; } .steprow.narrow .step i { display: none; }
 .step { position: absolute; left: 0; top: 6px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; transition: opacity .15s ease; }
-svg .node rect.box, svg .edge { transition: opacity .18s ease, stroke .18s ease, stroke-width .2s ease, transform .2s var(--ease), filter .22s ease; }
-.node > :not(rect.box) { transition: transform .2s var(--ease); }
-svg.lifting .node > :not(rect.box) { transform: translateY(-7px); }
-svg.lifting .node rect.box { transform: translateY(-7px) scale(1.035); filter: drop-shadow(0 9px 10px rgba(0, 0, 0, .28)); }
-svg.lifting.leaving .node rect.box { filter: none; }
+svg .node rect.box, svg .edge { transition: opacity .18s ease, stroke .18s ease, stroke-width .2s ease; }
+/* one moving part per chapter: translate and scale apply on top of the box's own position */
+.node { transition: translate .2s var(--ease), scale .2s var(--ease); }
+svg.lifting .node { translate: 0 -7px; scale: 1.035; }
 .glayer rect { transition: fill .25s ease, stroke .25s ease, stroke-width .25s ease, filter .3s ease; }
 svg.hovering .node:not(.hl) { opacity: .28; }
 svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
@@ -624,9 +624,8 @@ svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
 .node rect.box { transform-box: fill-box; transform-origin: center; }
 @media (hover: hover) and (pointer: fine) {
   /* a chapter rises toward you with a glow in its level colour; a group box brightens and its icon plays */
-  .node:hover > :not(rect.box) { transform: translateY(-3px); }
-  .node:hover circle.ready { transform: translateY(-3px) scale(1.5); }
-  .node:hover rect.box { transform: translateY(-3px) scale(1.035); stroke-width: 2.6; filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--c) 40%, transparent)); }
+  .node:hover { translate: 0 -3px; scale: 1.035; }
+  .node:hover rect.box { stroke: var(--c); stroke-width: 3; }
   .gbox:hover rect { fill: color-mix(in srgb, var(--c) 12%, transparent); stroke: color-mix(in srgb, var(--c) 65%, transparent); stroke-width: 2.5; filter: drop-shadow(0 10px 24px color-mix(in srgb, var(--c) 22%, transparent)); }
 }
 @keyframes breathe { 50% { transform: scale(1.7); opacity: .35; } }
@@ -641,7 +640,7 @@ svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
 @media (prefers-reduced-motion: reduce) {
   .edge.hot, .edge.hin, .edge.hout { animation: none; stroke-dasharray: none; }
   .node.ready circle.ready, .rail-bar i { animation: none; }
-  .node:hover rect.box, .node:hover > *, svg.lifting .node > * { transform: none; }
+  .node:hover, svg.lifting .node { translate: none; scale: none; }
 }
 
 
@@ -739,12 +738,11 @@ body.mapopen { overflow: hidden; }
 .mapbar { display: none; }
 .toast { z-index: 60; }
 /* the level rail slides away for other arrangements and flows back slowly for Prerequisites */
-.mapwrap { transition: grid-template-columns .8s var(--ease), column-gap .8s var(--ease); }
-.lanerail, .steprow, .minimap { transition: opacity .9s ease .25s, transform 1.1s var(--ease) .25s; }
+.lanerail, .steprow, .minimap { transition: opacity .9s ease .1s, transform 1.1s var(--ease) .1s; }
 .mapwrap.grouped { grid-template-columns: 0px minmax(0, 1fr); column-gap: 0; }
-.mapwrap.grouped .lanerail, .mapwrap.grouped .steprow, .mapwrap.grouped .minimap { opacity: 0; pointer-events: none; transition-duration: .35s, .6s; transition-delay: 0s; }
-.mapwrap.grouped .lanerail { transform: translateX(-48px); }
-.mapwrap.grouped .steprow { transform: translateY(-8px); }
+.mapwrap.railout .lanerail, .mapwrap.railout .steprow, .mapwrap.railout .minimap, .mapwrap.grouped .lanerail, .mapwrap.grouped .steprow, .mapwrap.grouped .minimap { opacity: 0; pointer-events: none; transition-duration: .3s, .4s; transition-delay: 0s; }
+.mapwrap.railout .lanerail, .mapwrap.grouped .lanerail { transform: translateX(-48px); }
+.mapwrap.railout .steprow, .mapwrap.grouped .steprow { transform: translateY(-8px); }
 .rail-label { transition: opacity .4s ease; }
 .rail-item { display: flex; flex-direction: column; justify-content: flex-start; } /* a button centres its content; the name belongs at the top of its lane */
 .arrsub { margin-top: 10px; }
@@ -817,7 +815,7 @@ svg.far .node .badge { display: none; }
 @media (hover: hover) and (pointer: fine) { .rail-item:hover .licon { animation: lTurn .9s var(--ease); } }
 .rail-item.tight .licon { width: 18px; height: 18px; }
 @media (prefers-reduced-motion: reduce) {
-  .mapwrap, .lanerail, .steprow, .minimap { transition: none; }
+  .lanerail, .steprow, .minimap { transition: none; }
   .gicon *, .licon, .licon * { animation: none !important; }
 }
 .mappanel .seg.arr { display: grid; }
@@ -829,10 +827,10 @@ svg.far .node .badge { display: none; }
 .gcount { font-family: var(--f-mono); font-size: 16px; fill: var(--muted); }
 .gbox { transition: opacity .3s ease; }
 .gbox.dim { opacity: .3; }
-svg.leaving .edge, svg.leaving .lane-bg, svg.leaving .lane-rule, svg.leaving .glayer, svg.leaving .foldbar, svg.leaving .foldtxt { opacity: 0; transition: opacity .22s ease; }
+svg.leaving .edges, svg.leaving .lane-bg, svg.leaving .lane-rule, svg.leaving .glayer, svg.leaving .foldbar, svg.leaving .foldtxt { opacity: 0; transition: opacity .22s ease; }
 @keyframes fadein { from { opacity: 0; } }
 svg.arriving .gbox, svg.arriving .lane-bg, svg.arriving .lane-rule, svg.arriving .foldbar, svg.arriving .foldtxt { animation: gIn .3s ease-out both; transform-box: fill-box; transform-origin: center; }
-svg.edgesback .edge { animation: fadein .5s ease-out 1.05s both; }
+svg.edgesback .edges { animation: fadein .5s ease-out 1.05s both; }
 @media (max-width: 767px) {
   .mapfull { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); padding: calc(8px + env(safe-area-inset-top, 0px)) 8px 8px; gap: 8px; }
   .mapbar { display: flex; justify-content: space-between; gap: 8px; }
@@ -1168,6 +1166,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       out += `<g style="--c: var(--lv-${l.slug})"><rect class="lane-bg" data-lv="${l.key}" x="0" y="${top}" width="${width}" height="${h}"/>
         <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/>${lanes.find(x => x.level === l).folded ? `<rect class="foldbar" x="${LANEW + 4}" y="${top + 4}" width="${Math.min(width - LANEW - 8, 900)}" height="${h - 8}" rx="12"/><text class="foldtxt" x="${LANEW + 22}" y="${top + 27}">✓ ${l.name} complete · ${list.length} of ${list.length} learned · folded</text>` : ""}</g>`;
     });
+    let lines = "";
     A.forEach(c => c.pre.forEach(p => {
       if (arrange !== "map" || isFoldedId(c.id) || isFoldedId(p)) return; // groups read better without lines
       const a = xy[p], b = xy[c.id];
@@ -1175,8 +1174,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const outg = selected && (p === selected || (desc.has(c.id) && desc.has(p)));
       const on = inc || outg;
       const filtered = levelFilter !== "all" && !(c.id.startsWith(levelFilter) || p.startsWith(levelFilter));
-      out += `<path data-f="${p}" data-t="${c.id}" class="edge${on ? " hot" + (inc ? " in" : " out") : ""}${goalSet && goalSet.has(p) && goalSet.has(c.id) ? " goaledge" : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="${edgeD(a, b)}"/>`;
+      lines += `<path data-f="${p}" data-t="${c.id}" class="edge${on ? " hot" + (inc ? " in" : " out") : ""}${goalSet && goalSet.has(p) && goalSet.has(c.id) ? " goaledge" : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="${edgeD(a, b)}"/>`;
     }));
+    if (lines) out += `<g class="edges">${lines}</g>`;
     A.forEach(c => {
       if (arrange === "map" && isFoldedId(c.id)) return;
       const { x, y } = xy[c.id];
@@ -1311,14 +1311,14 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         return;
       }
       moved++;
-      const side = Math.random() < 0.5 ? -1 : 1, amp = Math.min(80, d * 0.18) * side, rot = side * (2 + Math.random() * 2.5);
+      const side = Math.random() < 0.5 ? -1 : 1, amp = Math.min(80, d * 0.18) * side;
       const mx = b.x + dx / 2 - (dy / d) * amp, my = b.y + dy / 2 + (dx / d) * amp;
-      const at = (x, y, r, k = 1) => `translate(${x}px, ${y}px) rotate(${r}deg) scale(${k})`;
+      const at = (x, y, k = 1) => `translate(${x}px, ${y}px) scale(${k})`;
       n.animate([
-        { transform: at(b.x, b.y - lift, 0, lift ? 1.035 : 1), easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
-        { transform: at(mx, my, rot, lift ? 1.02 : 1), offset: 0.55, easing: "cubic-bezier(0.25, 1.25, 0.5, 1)" },
-        { transform: at(a.x, a.y, 0) },
-      ], { duration: 820 + Math.random() * 160, delay: 200 + Math.random() * 110, fill: "backwards" }); // wait for the group boxes to fade in, then fly in one go
+        { transform: at(b.x, b.y - lift, lift ? 1.035 : 1), easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+        { transform: at(mx, my), offset: 0.55, easing: "cubic-bezier(0.25, 1.25, 0.5, 1)" },
+        { transform: at(a.x, a.y) },
+      ], { duration: 820 + Math.random() * 160, delay: 200 + Math.random() * 220, fill: "backwards" }); // wait for the group boxes to fade in; spread launches so fewer fly at once
     });
     return moved;
   }
@@ -1346,14 +1346,19 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (!canvas || mode === arrange) return;
     document.querySelectorAll("[data-arrange]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.arrange === mode)));
     const sub = $("#arrSub"); if (sub) sub.classList.add("swap");
+    const wrap = $(".mapwrap");
+    if (arrange === "map") wrap.classList.add("railout"); // the rail slides away while the chapters lift
     if (mode !== "map") canvas.scrollTo({ left: 0, top: 0, behavior: "smooth" }); // start heading home while the boxes fade
     morph(() => {
       arrange = mode; grouped = null;
       if (mode !== "topic") topicFilter = "all";
       if (sub) { sub.innerHTML = arrSub(); sub.classList.remove("swap"); }
       if (mode === "map") { const r = $("#laneRail"); if (r) { r.classList.add("fresh"); setTimeout(() => r.classList.remove("fresh"), 2600); } }
+      // the column changes in one step while the rail is invisible: for Prerequisites it then flows back in slowly
+      wrap.classList.add("railout");
+      wrap.classList.toggle("grouped", mode !== "map");
       groupWrap = Math.max(W + 96, canvas.clientWidth / curS - 24); // groups wrap to the width you can see at this zoom
-      $(".mapwrap").classList.toggle("grouped", mode !== "map");
+      if (mode === "map") setTimeout(() => wrap.classList.remove("railout"), 150);
     }, () => { if (mode === "map") placeCanvas(true); });
   }
   function exitMap() {
@@ -1411,17 +1416,36 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (pct) pct.textContent = Math.round(s * 100) + "%";
     requestAnimationFrame(updateOverlays); // after the caller has moved the scroll position
   }
+  // While a zoom or glide is in motion the map is only scaled and shifted with a CSS transform (the GPU does it);
+  // its real size, which re-lays-out every chapter, is set once when the motion ends.
+  // view = that temporary transform: drawing pixels at the committed scale curS, times k, shifted by (tx, ty).
+  const view = { k: 1, tx: 0, ty: 0 };
+  function previewView(canvas, k, tx, ty) {
+    view.k = k; view.tx = tx; view.ty = ty;
+    canvas.querySelector("svg").style.transform = k === 1 && !tx && !ty ? "" : `translate(${tx}px, ${ty}px) scale(${k})`;
+    const pct = $("#zoomPct"); if (pct) pct.textContent = Math.round(curS * k * 100) + "%";
+    updateOverlays();
+  }
+  function clearView(canvas) { view.k = 1; view.tx = 0; view.ty = 0; canvas.querySelector("svg").style.transform = ""; }
   // Glide toward a zoom level a little each frame, keeping the point under (ax, ay) still.
-  let zTarget = null, zAnchor = [0, 0], zRaf = 0;
+  let zTarget = null, zAnchor = [0, 0], zRaf = 0, zS = 1;
+  function commitZoom(canvas) { // turn the scaled picture into the real size, keeping the anchor point where it is
+    if (view.k === 1) return;
+    const s = curS * view.k; clearView(canvas); zoomAt(canvas, s, zAnchor[0], zAnchor[1]);
+  }
   function smoothZoom(canvas, target, ax = canvas.clientWidth / 2, ay = canvas.clientHeight / 2) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { zoomAt(canvas, target, ax, ay); return; }
+    // the pointer moved since the last notch: settle the current picture first so the new anchor is exact
+    if (view.k !== 1 && Math.hypot(ax - zAnchor[0], ay - zAnchor[1]) > 4) commitZoom(canvas);
     zTarget = clampS(target); zAnchor = [ax, ay];
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { zoomAt(canvas, zTarget, ax, ay); zTarget = null; return; }
     if (zRaf) return;
+    zS = curS * view.k;
     const step = () => {
-      if (!canvas.isConnected || zTarget === null) { zRaf = 0; zTarget = null; return; }
-      const next = curS + (zTarget - curS) * 0.2, done = Math.abs(zTarget - next) < 0.003;
-      zoomAt(canvas, done ? zTarget : next, zAnchor[0], zAnchor[1]);
-      if (done) { zRaf = 0; zTarget = null; } else zRaf = requestAnimationFrame(step);
+      if (!canvas.isConnected || zTarget === null) { zRaf = 0; return; }
+      zS += (zTarget - zS) * 0.2;
+      const done = Math.abs(zTarget - zS) < 0.003, k = (done ? zTarget : zS) / curS;
+      previewView(canvas, k, (canvas.scrollLeft + zAnchor[0]) * (1 - k), (canvas.scrollTop + zAnchor[1]) * (1 - k));
+      if (done) { zRaf = 0; zTarget = null; commitZoom(canvas); } else zRaf = requestAnimationFrame(step);
     };
     zRaf = requestAnimationFrame(step);
   }
@@ -1439,18 +1463,23 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     zoomS = s;
     glideTo(canvas, s, x0 * s, y0 * s);
   }
-  // Ease the zoom and the scroll together to a new view.
+  // Ease the zoom and the scroll together to a new view: a scaled, shifted picture while moving, the real size at the end.
   function glideTo(canvas, s1, left, top, ms = 700) {
+    zTarget = null; commitZoom(canvas);
+    s1 = clampS(s1);
+    left = Math.max(0, Math.min(left, layout.width * s1 - canvas.clientWidth));
+    top = Math.max(0, Math.min(top, layout.height * s1 - canvas.clientHeight));
+    const land = () => { clearView(canvas); sizeSvg(canvas, s1); canvas.scrollLeft = left; canvas.scrollTop = top; updateOverlays(); };
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return land();
     const s0 = curS, l0 = canvas.scrollLeft, t0 = canvas.scrollTop, start = performance.now();
-    zTarget = null;
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { sizeSvg(canvas, s1); canvas.scrollLeft = left; canvas.scrollTop = top; return; }
     const ease = k => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
     const step = now => {
       if (!canvas.isConnected) return;
       const k = Math.min(1, (now - start) / ms), e = ease(k);
-      sizeSvg(canvas, s0 + (s1 - s0) * e);
-      canvas.scrollLeft = l0 + (left - l0) * e; canvas.scrollTop = t0 + (top - t0) * e;
-      if (k < 1) requestAnimationFrame(step);
+      if (k >= 1) return land();
+      // the real scroll stays at (l0, t0); the shift makes it look as if it moved to the in-between scroll
+      previewView(canvas, (s0 + (s1 - s0) * e) / curS, l0 - (l0 + (left - l0) * e), t0 - (t0 + (top - t0) * e));
+      requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   }
@@ -2360,9 +2389,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function updateMinimap() {
     const canvas = $("#canvas"), mm = $("#minimap"), v = $("#mmView");
     if (!canvas || !mm || !v) return;
-    const w = canvas.clientWidth / curS, h = canvas.clientHeight / curS;
+    const S = curS * view.k, w = canvas.clientWidth / S, h = canvas.clientHeight / S;
     mm.style.display = w >= layout.width - 1 && h >= layout.height - 1 ? "none" : "";
-    v.setAttribute("x", canvas.scrollLeft / curS); v.setAttribute("y", canvas.scrollTop / curS);
+    v.setAttribute("x", (canvas.scrollLeft - view.tx) / S); v.setAttribute("y", (canvas.scrollTop - view.ty) / S);
     v.setAttribute("width", w); v.setAttribute("height", h);
   }
   function wireMinimap() {
@@ -2663,45 +2692,50 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function updateRail() {
     const canvas = $("#canvas"), rail = $("#laneRail"), row = $("#stepRow");
     if (!canvas || !rail) return;
-    rail.style.height = canvas.clientHeight + "px";
-    [...rail.children].forEach((item, k) => {
-      const lane = layout.lanes[k], top = lane.top * curS - canvas.scrollTop, h = Math.max(lane.height * curS, 1);
+    const S = curS * view.k, sl = canvas.scrollLeft, st = canvas.scrollTop, ch = canvas.clientHeight, cw = canvas.clientWidth;
+    rail.style.height = ch + "px";
+    const items = [...rail.children];
+    // all writes first, then one read of the label heights, then the label writes: one layout, not one per lane
+    const geo = items.map((item, k) => {
+      const lane = layout.lanes[k], top = lane.top * S + view.ty - st, h = Math.max(lane.height * S, 1), room = h + Math.min(0, top);
       item.style.transform = `translateY(${top}px)`;
       item.style.height = h + "px";
-      const label = item.firstElementChild;
-      const room = h + Math.min(0, top); // how much of the lane is still below the top edge of the map
       // the details (English name, bar, count) fade out when the lane can't hold them; the margins stop it flickering
       if (!item.classList.contains("tight") && room < 150) item.classList.add("tight");
       else if (item.classList.contains("tight") && room > 170) item.classList.remove("tight");
-      const lh = label.offsetHeight; // follows the details as they fade, so the name eases down instead of jumping
+      return { top, h, room };
+    });
+    const heights = items.map(item => item.firstElementChild.offsetHeight);
+    items.forEach((item, k) => {
+      const { top, h, room } = geo[k], lh = heights[k], label = item.firstElementChild;
       // the name sticks to the top of its lane while the lane is on screen, and fades gently as the lane runs out
       label.style.transform = `translateY(${Math.max(0, Math.min(-top, h - lh))}px)`;
       label.style.opacity = Math.max(0, Math.min(1, (room - lh * 0.5) / (lh * 0.5)));
     });
-    if (row) row.classList.toggle("narrow", COLW * curS < 72);
+    if (row) row.classList.toggle("narrow", COLW * S < 72);
     if (row) [...row.children].forEach(el => {
-      const x = (LANEW + +el.dataset.d * COLW) * curS - canvas.scrollLeft;
+      const x = (LANEW + +el.dataset.d * COLW) * S + view.tx - sl;
       el.style.transform = `translateX(${x}px)`;
-      el.style.opacity = x < -40 || x > canvas.clientWidth ? 0 : 1;
+      el.style.opacity = x < -40 || x > cw ? 0 : 1;
     });
   }
   function updateOverlays() { updateMinimap(); updateRail(); }
+  // Only the boxes and lines whose highlight changes are touched, not all of them on every hover.
   function markHover(canvas, id) {
     const svg = canvas.querySelector("svg");
     if (!svg) return;
-    if (!id) {
-      svg.classList.remove("hovering");
-      svg.querySelectorAll(".hl,.hin,.hout").forEach(el => el.classList.remove("hl", "hin", "hout"));
-      return;
-    }
-    const anc = ancestors(id), desc = descendants(id);
-    svg.classList.add("hovering");
-    svg.querySelectorAll(".node").forEach(n => n.classList.toggle("hl", n.dataset.id === id || anc.has(n.dataset.id) || desc.has(n.dataset.id)));
+    const prev = svg.querySelectorAll(".hl,.hin,.hout");
+    if (!id) { svg.classList.remove("hovering"); prev.forEach(el => el.classList.remove("hl", "hin", "hout")); return; }
+    const anc = ancestors(id), desc = descendants(id), want = new Map();
+    [id, ...anc, ...desc].forEach(x => { const n = svg.querySelector(`.node[data-id="${x}"]`); if (n) want.set(n, "hl"); });
     svg.querySelectorAll(".edge").forEach(e => {
       const f = e.dataset.f, t = e.dataset.t;
-      e.classList.toggle("hin", (t === id && anc.has(f)) || (anc.has(t) && anc.has(f)));
-      e.classList.toggle("hout", f === id || (desc.has(t) && (desc.has(f) || f === id)));
+      if ((t === id && anc.has(f)) || (anc.has(t) && anc.has(f))) want.set(e, "hin");
+      else if (f === id || (desc.has(t) && (desc.has(f) || f === id))) want.set(e, "hout");
     });
+    prev.forEach(el => { const w = want.get(el); if (!w || !el.classList.contains(w)) el.classList.remove("hl", "hin", "hout"); });
+    want.forEach((cls, el) => { if (!el.classList.contains(cls)) el.classList.add(cls); });
+    svg.classList.add("hovering");
   }
 
 
