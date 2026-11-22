@@ -1082,7 +1082,6 @@ svg.pointing .hm-trace { display: none; }
 
 /* GSAP drives the entrance, the reveals and the tagline; Anime.js the race bars and the simulator swap */
 .gsap-on .hw, .gsap-on .lp-sub, .gsap-on .lp-cta, .gsap-on .lp-proof, .gsap-on .lp-resume, .gsap-on .lp-heromap, .gsap-on .hm-block, .gsap-on .hm-trace { animation: none; }
-.gsap-on .tw { transition: none; }
 .gsap-on .hm-block { transition: opacity .25s ease; }
 .anime-on .race-track i { transition: background-color .3s ease; }
 .anime-on .lp-vis.swap { animation: none; }
@@ -1222,11 +1221,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="readbar" id="readbar" aria-hidden="true"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
 <script>
 (function () {
   "use strict";
@@ -2157,8 +2156,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         }),
       });
       // 4. the tagline lights up word by word as you scroll through it (and dims again if you scroll back)
-      const fg = getComputedStyle(document.documentElement).getPropertyValue("--fg").trim() || "#fff";
-      gsap.to(".lp-tagline .tw", { color: fg, ease: "none", stagger: 0.1, scrollTrigger: { trigger: ".lp-tagline", start: "top 75%", end: "bottom 40%", scrub: true } });
+      const words = [...document.querySelectorAll(".lp-tagline .tw")];
+      ScrollTrigger.create({ trigger: ".lp-tagline", start: "top 75%", end: "bottom 40%", onUpdate: self => words.forEach((w, i) => w.classList.toggle("in", self.progress * words.length > i)) });
     }, root);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ScrollTrigger.refresh());
   }
@@ -2174,8 +2173,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function enterSim(host) {
     if (!window.anime || !motionOK()) return;
     const stage = host.querySelector(".vis-stage");
-    anime({ targets: stage.querySelectorAll(".cell, .gn, .tn, .rn, .qcell, .mvar"), opacity: [0, 1], translateY: [10, 0], delay: anime.stagger(22), duration: 520, easing: "easeOutExpo" });
-    anime({ targets: stage.querySelectorAll(".vbar, line, .ivs rect"), opacity: [0, 1], delay: anime.stagger(30), duration: 420, easing: "easeOutQuad" }); // these move by transform already: fade only
+    anime({ targets: stage.querySelectorAll(".cell, .qcell, .mvar"), opacity: [0, 1], translateY: [10, 0], delay: anime.stagger(22), duration: 520, easing: "easeOutExpo" });
+    // these are positioned by their own transform (SVG translate, or the sorting bars' slide): fade only
+    anime({ targets: stage.querySelectorAll(".vbar, line, .ivs rect, .gn, .tn, .rn"), opacity: [0, 1], delay: anime.stagger(30), duration: 420, easing: "easeOutQuad" });
   }
   // Anime.js: the race bars spring to their new length when n changes (retargeted from wherever they are).
   function raceUpdate(v) {
@@ -2185,7 +2185,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const n = Math.round(10 ** v);
     out.querySelector(".race-n b").textContent = n.toLocaleString("en-US");
     out.querySelectorAll(".race-row").forEach((row, k) => {
-      const ops = RACE[k][1](n), fits = ops <= 1e8, w = Math.max(0.02, Math.min(1, Math.log10(Math.max(1, ops)) / 12));
+      const { fits, w } = raceRow(k, n);
       row.classList.toggle("fits", fits); row.classList.toggle("slow", !fits);
       row.querySelector(".race-v").textContent = fits ? "fits" : "too slow";
       const bar = row.querySelector("i");
@@ -2213,12 +2213,15 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   };
   // The complexity race: how many steps each running time takes for n, against a judge's one second.
   const RACE = [["O(log n)", n => Math.log2(n)], ["O(n)", n => n], ["O(n log n)", n => n * Math.log2(n)], ["O(n²)", n => n * n], ["O(2ⁿ)", n => (n > 60 ? Infinity : 2 ** n)]];
+  const RACE_CAP = 12; // bars show up to 10¹² steps
+  // One running time at size n: does it fit a judge's 10⁸ steps, and how long is its bar (0..1, log scale)?
+  const raceRow = (k, n) => { const ops = RACE[k][1](n); return { fits: ops <= 1e8, w: Math.max(0.02, Math.min(1, Math.log10(Math.max(1, ops)) / RACE_CAP)) }; };
   function raceHtml(v) {
-    const n = Math.round(10 ** v), cap = 12; // bars show up to 10¹² steps
+    const n = Math.round(10 ** v);
     return `<p class="race-n">n = <b>${n.toLocaleString("en-US")}</b></p>
-      <div class="race">${RACE.map(([o, f]) => { const ops = f(n), fits = ops <= 1e8, w = Math.min(1, Math.log10(Math.max(1, ops)) / cap);
-        return `<div class="race-row ${fits ? "fits" : "slow"}"><code class="bigo">${o}</code><span class="race-track"><i style="transform:scaleX(${Math.max(0.02, w)})"></i></span><span class="race-v">${fits ? "fits" : "too slow"}</span></div>`; }).join("")}
-        <span class="race-line" style="left:calc(var(--race-x) + (100% - var(--race-x) - var(--race-r)) * ${8 / cap})" title="10⁸ steps: about one second"></span></div>`;
+      <div class="race">${RACE.map(([o], k) => { const { fits, w } = raceRow(k, n);
+        return `<div class="race-row ${fits ? "fits" : "slow"}"><code class="bigo">${o}</code><span class="race-track"><i style="transform:scaleX(${w})"></i></span><span class="race-v">${fits ? "fits" : "too slow"}</span></div>`; }).join("")}
+        <span class="race-line" style="left:calc(var(--race-x) + (100% - var(--race-x) - var(--race-r)) * ${8 / RACE_CAP})" title="10⁸ steps: about one second"></span></div>`;
   }
   const SIMS = [["基13", "Binary search"], ["基9", "Sorting"], ["进6", "Segment tree"], ["进10", "Dijkstra"], ["基17", "Union find"], ["进13", "Knapsack DP"]];
   const words = text => text.split(/(\s+)/).map((w, k) => (w.trim() ? `<span class="hw" style="--i:${k >> 1}">${esc(w)}</span>` : w)).join("");
