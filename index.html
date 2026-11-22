@@ -612,13 +612,22 @@ table.syl tr.learned td { opacity: .7; }
 .steprow { position: relative; height: 30px; overflow: hidden; }
 .step i { font-style: normal; } .steprow.narrow .step i { display: none; }
 .step { position: absolute; left: 0; top: 6px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; transition: opacity .15s ease; }
-svg .node rect.box, svg .edge { transition: opacity .18s ease, stroke .18s ease, transform .15s var(--ease); }
+svg .node rect.box, svg .edge { transition: opacity .18s ease, stroke .18s ease, stroke-width .2s ease, transform .2s var(--ease), filter .22s ease; }
+.node > :not(rect.box) { transition: transform .2s var(--ease); }
+svg.lifting .node > :not(rect.box) { transform: translateY(-7px); }
+svg.lifting .node rect.box { transform: translateY(-7px) scale(1.035); filter: drop-shadow(0 9px 10px rgba(0, 0, 0, .28)); }
+svg.lifting.leaving .node rect.box { filter: none; }
+.glayer rect { transition: fill .25s ease, stroke .25s ease, stroke-width .25s ease, filter .3s ease; }
 svg.hovering .node:not(.hl) { opacity: .28; }
 svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
 .edge.hin { stroke: #22b8cf; } .edge.hout { stroke: var(--v-done); }
 .node rect.box { transform-box: fill-box; transform-origin: center; }
 @media (hover: hover) and (pointer: fine) {
-  .node:hover rect.box { transform: translateY(-2px) scale(1.03); filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .25)); }
+  /* a chapter rises toward you with a glow in its level colour; a group box brightens and its icon plays */
+  .node:hover > :not(rect.box) { transform: translateY(-3px); }
+  .node:hover circle.ready { transform: translateY(-3px) scale(1.5); }
+  .node:hover rect.box { transform: translateY(-3px) scale(1.035); stroke-width: 2.6; filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--c) 40%, transparent)); }
+  .gbox:hover rect { fill: color-mix(in srgb, var(--c) 12%, transparent); stroke: color-mix(in srgb, var(--c) 65%, transparent); stroke-width: 2.5; filter: drop-shadow(0 10px 24px color-mix(in srgb, var(--c) 22%, transparent)); }
 }
 @keyframes breathe { 50% { transform: scale(1.7); opacity: .35; } }
 .node.ready:not(.learned):not(.learning) circle.ready { transform-box: fill-box; transform-origin: center; animation: breathe 2.2s ease-in-out 3; }
@@ -632,7 +641,7 @@ svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
 @media (prefers-reduced-motion: reduce) {
   .edge.hot, .edge.hin, .edge.hout { animation: none; stroke-dasharray: none; }
   .node.ready circle.ready, .rail-bar i { animation: none; }
-  .node:hover rect.box { transform: none; }
+  .node:hover rect.box, .node:hover > *, svg.lifting .node > * { transform: none; }
 }
 
 
@@ -1296,22 +1305,26 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     document.querySelectorAll("#canvas .node").forEach(n => {
       const b = before[n.dataset.id], a = xy[n.dataset.id];
       if (!b || !a) return;
-      const dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy);
-      if (d < 2) return;
+      const dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy), lift = liftFrom;
+      if (d < 2) {
+        if (lift) n.animate([{ transform: `translate(${b.x}px, ${b.y - lift}px) scale(1.035)` }, { transform: `translate(${a.x}px, ${a.y}px) scale(1)` }], { duration: 380, delay: 150, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)", fill: "backwards" });
+        return;
+      }
       moved++;
       const side = Math.random() < 0.5 ? -1 : 1, amp = Math.min(80, d * 0.18) * side, rot = side * (2 + Math.random() * 2.5);
       const mx = b.x + dx / 2 - (dy / d) * amp, my = b.y + dy / 2 + (dx / d) * amp;
-      const at = (x, y, r) => `translate(${x}px, ${y}px) rotate(${r}deg)`;
+      const at = (x, y, r, k = 1) => `translate(${x}px, ${y}px) rotate(${r}deg) scale(${k})`;
       n.animate([
-        { transform: at(b.x, b.y, 0), easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
-        { transform: at(mx, my, rot), offset: 0.55, easing: "cubic-bezier(0.25, 1.25, 0.5, 1)" },
+        { transform: at(b.x, b.y - lift, 0, lift ? 1.035 : 1), easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+        { transform: at(mx, my, rot, lift ? 1.02 : 1), offset: 0.55, easing: "cubic-bezier(0.25, 1.25, 0.5, 1)" },
         { transform: at(a.x, a.y, 0) },
       ], { duration: 820 + Math.random() * 160, delay: 200 + Math.random() * 110, fill: "backwards" }); // wait for the group boxes to fade in, then fly in one go
     });
     return moved;
   }
-  // Change what the map shows in three beats: the old group boxes and lines fade out, the new ones fade in,
+  // Change what the map shows in four beats: the chapters lift, the old group boxes and lines fade out, the new ones fade in,
   // then each chapter flies to its place (floatNodes); lines come back after they land.
+  let liftFrom = 0; // how high the chapters were lifted before they fly (px), so the flight starts where they hover
   function morph(apply, after) {
     const svg = $("#canvas svg");
     const run = () => {
@@ -1320,8 +1333,10 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (after) after();
     };
     if (!svg || matchMedia("(prefers-reduced-motion: reduce)").matches) return run();
-    svg.classList.add("leaving");
-    setTimeout(run, 240);
+    // the chapters rise a little first, then the group boxes fade, then everything moves
+    svg.classList.add("lifting");
+    setTimeout(() => svg.classList.add("leaving"), 200);
+    setTimeout(() => { liftFrom = 7; run(); liftFrom = 0; }, 440);
   }
   const arrSub = () => arrange === "topic" ? `<p class="label">Bring a topic to the front</p>${topicPills()}`
     : arrange === "status" ? `<p class="hint">Chapters gather by where you are: learned, learning, ready and locked</p>`
