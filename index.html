@@ -1311,7 +1311,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 /* lesson pieces rise in as they scroll into view, their parts one after another */
 .rv { opacity: 0; transform: translateY(14px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
 .rv.in { opacity: 1; transform: none; }
-.rv.in :is(.fchip, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fascii > div, .fverd > div, .fprec > div, .fchain .row), .rv.in .forder > div > * { animation: lsIn .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
+.rv.in :is(.fchip, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fascii > div, .fverd > div, .fprec > div, .fchain .row, .frow), .rv.in .forder > div > * { animation: lsIn .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
 .rv.in .forder > div > * { animation-delay: calc(var(--i, 0) * 260ms + 150ms); }
 .rv.in .fflow > i { animation: lsIn .4s var(--ease) both; animation-delay: .45s; }
 .rv.in .fline .arc { stroke-dashoffset: 0; animation: lsDraw .8s var(--ease) .35s both; }
@@ -1424,7 +1424,8 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .wtree .tn.hit rect { fill: color-mix(in srgb, var(--v-cmp) 18%, var(--surface)); stroke: var(--v-cmp); }
 .wtree .tn.hit.leaf rect { fill: color-mix(in srgb, var(--v-done) 22%, var(--surface)); stroke: var(--v-done); }
 .wtree .tn.hit text { fill: var(--fg); font-weight: 600; }
-.wtree .tn.hit { animation: lsIn .3s var(--ease) both; animation-delay: calc(var(--i) * 80ms); }
+.wtree .tn { transform-box: fill-box; transform-origin: center; }
+.wtree .tn.hit { animation: lsPop .35s var(--ease) both; animation-delay: calc(var(--i) * 70ms); }
 .wsort { display: grid; gap: 8px; }
 .wsort > div { display: grid; grid-template-columns: 150px repeat(3, 44px); gap: 8px; align-items: center; animation: lsIn .3s var(--ease) both; animation-delay: calc(var(--i) * 70ms); }
 .wsort small { color: var(--muted); font-size: 12.5px; }
@@ -1478,6 +1479,76 @@ img.lglogo { object-fit: contain; border-radius: 0; }
   .wgrid span { height: 26px; }
 }
 @media (prefers-reduced-motion: reduce) { .wchips span, .wtab tbody tr, .wgrid span.on { animation: none; } }
+
+
+/* 基5 figures and widgets */
+.fbox { display: grid; gap: 14px; justify-items: center; width: 100%; }
+.frow { display: grid; grid-template-columns: minmax(0, 220px) auto auto; gap: 16px; align-items: center; width: 100%; max-width: 620px; }
+.frow > code { font-size: 13.5px; color: var(--fg-2); }
+.fval { font: 600 16px var(--f-mono); } .fval.ok { color: var(--v-done); } .fval.bad { color: var(--v-bad); }
+.wcells { display: flex; gap: 5px; flex-wrap: wrap; }
+.wcells span { position: relative; min-width: 40px; height: 44px; padding: 14px 4px 0; display: grid; place-items: center; border-radius: 8px; background: var(--bg); border: 1.5px solid var(--line-strong); font: 600 16px var(--f-mono); transition: background-color .2s var(--ease), border-color .2s var(--ease); }
+.wcells span small { position: absolute; top: 3px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: 500; color: var(--muted); }
+.wcells span.on { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 16%, var(--surface)); }
+.wcells span.hit { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 18%, var(--surface)); animation: lsPop .3s var(--ease); }
+.wcells span.bad { border-color: var(--v-bad); background: color-mix(in srgb, var(--v-bad) 16%, var(--surface)); color: var(--v-bad); }
+.wcells span.ghost { border-style: dashed; color: var(--muted); background: none; }
+.fbox .wcells span.ghost { border-color: var(--v-bad); color: var(--v-bad); }
+.wcells span.byte { min-width: 54px; }
+.rv.in .fbox .wcells span { animation: lsPop .3s var(--ease) both; animation-delay: calc(var(--k) * 60ms + 150ms); }
+.wroad .wcells span { min-width: 30px; font-size: 13px; }
+.wroad .wcells span:not(.on):not(.bad) { color: var(--v-done); }
+.wlamps { display: flex; gap: 6px; flex-wrap: wrap; }
+.wlamps span { width: 30px; height: 40px; border-radius: 15px 15px 8px 8px; background: var(--raised); border: 1.5px solid var(--line-strong); display: grid; align-items: end; justify-items: center; padding-bottom: 3px; transition: background-color .25s var(--ease), box-shadow .25s var(--ease); }
+.wlamps span small { font-size: 10px; color: var(--muted); }
+.wlamps span.lit { background: color-mix(in srgb, var(--v-cmp) 70%, var(--surface)); border-color: var(--v-cmp); box-shadow: 0 0 12px color-mix(in srgb, var(--v-cmp) 45%, transparent); }
+.wlamps span.lit small { color: var(--fg); }
+.wlamps span.flip { animation: lsPop .3s var(--ease); }
+.wmatrix { display: grid; grid-template-columns: repeat(var(--c), minmax(0, 52px)); gap: 4px; }
+.wmatrix span { height: 44px; display: grid; place-items: center; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); font: 600 13px var(--f-mono); text-align: center; line-height: 1.2; }
+.wmatrix span.hd { background: none; border: 0; color: var(--muted); font-size: 11px; font-weight: 500; }
+.wmatrix span.dim { opacity: .25; }
+.wmatrix span.hit { background: color-mix(in srgb, var(--v-done) 22%, var(--surface)); border-color: var(--v-done); color: var(--v-done); }
+.wmatrix span.warn { background: color-mix(in srgb, var(--v-cmp) 20%, var(--surface)); border-color: var(--v-cmp); }
+.wmatrix span.bad { background: color-mix(in srgb, var(--v-bad) 14%, var(--surface)); color: var(--v-bad); font-size: 11px; }
+.wpascal { display: grid; gap: 6px; justify-items: center; }
+.wpascal div { display: flex; gap: 6px; }
+.flow.lesson > * { min-width: 0; }
+.flow.lesson > :is(.lwid, .lfig) { overflow-x: auto; }
+.wpascal button { min-width: 40px; height: 36px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font: 600 14px var(--f-mono); cursor: pointer; transition: background-color .15s var(--ease), border-color .15s var(--ease); }
+.wpascal button.on { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 22%, var(--surface)); animation: lsPop .3s var(--ease); }
+.wpascal button.hit { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 24%, var(--surface)); animation: lsPop .3s var(--ease) .12s both; }
+@media (hover: hover) and (pointer: fine) { .wpascal button:hover { border-color: var(--accent); } }
+.wspiral, .wmines { display: grid; grid-template-columns: repeat(var(--n), 40px); gap: 4px; }
+.wspiral span { height: 40px; display: grid; place-items: center; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); font: 600 14px var(--f-mono); }
+.wspiral span.on { background: color-mix(in srgb, var(--v-cur) 30%, var(--surface)); animation: lsPop .25s var(--ease); }
+.wspiral span.cur { border-color: var(--v-cmp); color: var(--v-cmp); font-size: 18px; }
+.wmines button { height: 40px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg-2); font: 600 15px var(--f-mono); cursor: pointer; }
+.wmines button.n0 { color: var(--muted); opacity: .6; }
+.wmines button.n2, .wmines button.n3 { color: var(--v-cmp); }
+.wmines button.mine { background: color-mix(in srgb, var(--v-bad) 22%, var(--surface)); border-color: var(--v-bad); color: var(--v-bad); font-size: 20px; animation: lsPop .3s var(--ease); }
+.wmines button.near { border-color: var(--v-cmp); animation: lsPop .3s var(--ease); }
+.wtrans { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.wtrans > i { font-style: normal; color: var(--muted); font-size: 20px; }
+.wt { display: grid; grid-template-columns: repeat(3, 44px); gap: 4px; }
+.wt span { height: 44px; display: grid; place-items: center; border-radius: 8px; background: var(--bg); border: 1px solid var(--line-strong); font: 700 18px var(--f-mono); }
+.wt span.on { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 18%, var(--surface)); }
+.wt span.new { animation: lsPop .3s var(--ease) both; animation-delay: calc(var(--k) * 35ms); }
+.wbits { display: flex; gap: 4px; flex-wrap: wrap; }
+.wbits button { width: 36px; height: 44px; border-radius: 6px; border: 1.5px solid var(--line-strong); font: 700 17px var(--f-mono); cursor: pointer; color: var(--fg); }
+.wbits button.r0 { background: color-mix(in srgb, var(--v-cur) 14%, var(--surface)); }
+.wbits button.r1 { background: color-mix(in srgb, var(--v-cmp) 18%, var(--surface)); }
+.wbits button.b1 { border-color: var(--fg-2); }
+.wclock b.sm { font-size: 26px; }
+@media (max-width: 640px) {
+  .wpascal div { gap: 3px; }
+  .wpascal button { min-width: 0; width: clamp(24px, 7.6vw, 40px); height: 32px; font-size: 11.5px; padding: 0; }
+  .lwid { padding: 18px 14px 20px; }
+  .frow { grid-template-columns: minmax(0, 1fr); justify-items: start; gap: 8px; }
+  .wspiral, .wmines { grid-template-columns: repeat(var(--n), minmax(0, 34px)); }
+  .wmatrix { grid-template-columns: repeat(var(--c), minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .wcells span, .wlamps span, .wpascal button, .wspiral span, .wmines button, .wt span, .rv.in .fbox .wcells span { animation: none !important; } }
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -3503,7 +3574,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
     document.querySelectorAll(".flow.lesson :is(.lfig, .lwid, .ltable, .lsteps, .lcards, .box, details.prog, .vis)").forEach(el => {
       el.classList.add("rv"); io.observe(el);
-      [...el.querySelectorAll(".fchip, .forder > div, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fsize > div, .fascii > div, .fverd > div, .fprec > div, .wpacks > div")].forEach((c, k) => c.style.setProperty("--i", k));
+      [...el.querySelectorAll(".fchip, .forder > div, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fsize > div, .fascii > div, .fverd > div, .fprec > div, .wpacks > div, .frow")].forEach((c, k) => c.style.setProperty("--i", k));
     });
   }
 
@@ -6275,6 +6346,227 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           if (b) { c = +b.dataset.c; el.querySelectorAll("[data-c]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); }
         };
         run();
+      },
+    },
+  });
+
+
+  // ---- 基5: figures and widgets ----
+  const cellRow = (vals, cls = () => "", lab = k => k) => `<div class="wcells">${vals.map((v, k) => `<span class="${cls(k, v)}" style="--k:${k}"><small>${lab(k)}</small>${v}</span>`).join("")}</div>`;
+  Object.assign(FIG, {
+    boxes: () => `<div class="fbox"><code>int a[5];</code>${cellRow([3, 1, 4, 1, 5, "?"], k => (k === 5 ? "ghost" : ""), k => `a[${k}]`)}<p class="floop">Five boxes, <code>a[0]</code> to <code>a[4]</code>. There is no <code>a[5]</code>: that memory belongs to something else</p></div>`,
+    init: () => `<div class="fbox">${[["int g[5];  // global", [0, 0, 0, 0, 0], ""], ["int a[5];  // local", ["?", "?", "?", "?", "?"], "bad"], ["int a[5] = {1, 2};", [1, 2, 0, 0, 0], ""], ["fill(c, c + 5, 7);", [7, 7, 7, 7, 7], ""]].map(([c, v, cls]) => `<div class="frow"><code>${esc(c)}</code>${cellRow(v, () => cls, () => "")}</div>`).join("")}</div>`,
+    memset: () => `<div class="fbox">${[["memset(a, 0, sizeof a)", "00", "0", "ok"], ["memset(a, -1, sizeof a)", "FF", "-1", "ok"], ["memset(a, 1, sizeof a)", "01", "16843009", "bad"]].map(([c, b, v, cls]) => `<div class="frow"><code>${c}</code><div class="wcells">${range(4).map(k => `<span class="byte" style="--k:${k}"><small>byte ${k}</small>${b}</span>`).join("")}</div><b class="fval ${cls}">= ${v}</b></div>`).join("")}<p class="floop">memset fills every <b>byte</b>. An int is 4 bytes, so 01 01 01 01 is 16843009, not 1</p></div>`,
+  });
+  const ints = s => s.trim().split(/[\s,]+/).map(Number).filter(Number.isFinite);
+  const presets = (attr, list) => `<div class="wpre">${list.map(([v, l]) => `<button type="button" class="chip" data-${attr}="${v}">${l}</button>`).join("")}</div>`;
+  Object.assign(WIDGET, {
+    road: {
+      title: "Mark the cut trees",
+      html: () => `${presets("pr", [["10|2 5, 4 7", "two overlapping cuts"], ["12|0 3, 3 6, 6 9", "three touching"], ["15|5 5", "one tree"]])}
+        <div class="win"><label>L <input type="number" value="10" min="1" max="40" data-k="L"></label><label>cuts <input type="text" class="wide" value="2 5, 4 7" data-k="c"></label></div>
+        <div class="wroad"></div><div class="wclock"><b></b><small>trees left</small></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const [iL, iC] = el.querySelectorAll("input"), fb = el.querySelector(".wfb");
+        const run = () => {
+          const L = Math.max(1, Math.min(40, Math.trunc(+iL.value || 1))), nums = ints(iC.value), cut = Array(L + 1).fill(0);
+          const R = []; for (let k = 0; k + 1 < nums.length; k += 2) R.push([Math.max(0, Math.min(nums[k], nums[k + 1])), Math.min(L, Math.max(nums[k], nums[k + 1]))]);
+          R.forEach(([l, r]) => { for (let p = l; p <= r; p++) cut[p]++; });
+          el.querySelector(".wroad").innerHTML = cellRow(cut.map(c => (c ? "✕" : "●")), k => (cut[k] > 1 ? "bad" : cut[k] ? "on" : ""), k => k);
+          const left = cut.filter(c => !c).length, naive = L + 1 - R.reduce((s, [l, r]) => s + r - l + 1, 0);
+          const o = el.querySelector(".wclock b"); o.textContent = left; pop(o);
+          say(fb, "ok", cut.some(c => c > 1) ? `Red boxes were cut twice, but a mark is a mark. Subtracting lengths would give ${naive}, which is wrong` : `Each position is marked once. cut[p] == 0 means the tree is still there`);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-pr]"); if (!c) return; [iL.value, iC.value] = c.dataset.pr.split("|"); run(); };
+        iL.oninput = iC.oninput = run;
+        run();
+      },
+    },
+    lamps: {
+      title: "Toggle the lamps",
+      html: () => `<div class="win"><label>n <input type="number" value="16" min="1" max="30" data-k="n"></label></div><p class="wq"></p><div class="wlamps"></div>
+        <div class="btns"><button type="button" class="btn primary" data-step>Next person</button><button type="button" class="btn" data-all>Everyone</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const inp = el.querySelector("input"), fb = el.querySelector(".wfb");
+        let n, k, on, last = [];
+        const draw = () => {
+          el.querySelector(".wq").textContent = k ? `Person ${k} flipped every ${k === 1 ? "lamp" : `${k}th lamp`}: on[p] ^= 1` : "All lamps start off. Person k flips lamps k, 2k, 3k, …";
+          el.querySelector(".wlamps").innerHTML = range(n).map(p => `<span class="${on[p + 1] ? "lit" : ""}${last.includes(p + 1) ? " flip" : ""}"><small>${p + 1}</small></span>`).join("");
+          if (k === n) say(fb, "ok", `On: ${range(n).map(p => p + 1).filter(p => on[p]).join(", ")}. Exactly the perfect squares, because only they have an odd number of divisors`);
+          else say(fb, "", `${range(n).filter(p => on[p + 1]).length} lamps on`);
+        };
+        const reset = () => { n = Math.max(1, Math.min(30, Math.trunc(+inp.value || 1))); k = 0; on = Array(n + 1).fill(0); last = []; el.querySelector("[data-step]").disabled = false; draw(); };
+        const step = () => { if (k >= n) return; k++; last = []; for (let p = k; p <= n; p += k) { on[p] ^= 1; last.push(p); } if (k === n) el.querySelector("[data-step]").disabled = true; };
+        el.onclick = e => { if (e.target.closest("[data-reset]")) return reset(); if (e.target.closest("[data-step]")) { step(); draw(); } if (e.target.closest("[data-all]")) { while (k < n) step(); last = []; draw(); } };
+        inp.oninput = reset;
+        reset();
+      },
+    },
+    pairs: {
+      title: "Every pair exactly once",
+      html: () => `<div class="seg" role="group" aria-label="inner loop start"><button type="button" data-j="1" aria-pressed="true">j = i + 1</button><button type="button" data-j="0" aria-pressed="false">j = 0 (wrong)</button></div>
+        <div class="win"><label>a <input type="text" value="3 9 4 8" data-k="a"></label><label>k <input type="number" value="1" min="0" data-k="k"></label></div><div class="wmatrix"></div><div class="wclock"><b></b><small>pairs with |a[i] − a[j]| ≤ k</small></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        let from1 = true;
+        const [ia, ik] = el.querySelectorAll("input"), fb = el.querySelector(".wfb");
+        const run = () => {
+          const a = ints(ia.value).slice(0, 8), k = Math.trunc(+ik.value || 0), n = a.length;
+          let cnt = 0, right = 0;
+          const cells = [`<span class="hd"></span>`].concat(a.map((v, j) => `<span class="hd">j=${j}<br>${v}</span>`));
+          a.forEach((v, i) => {
+            cells.push(`<span class="hd">i=${i}<br>${v}</span>`);
+            a.forEach((w, j) => {
+              const visited = from1 ? j > i : true, close = Math.abs(v - w) <= k;
+              if (j > i && close) right++;
+              if (visited && close) cnt++;
+              const cls = !visited ? "dim" : i === j ? "bad" : j < i ? (close ? "warn" : "") : close ? "hit" : "";
+              cells.push(`<span class="${cls}" style="--k:${i * n + j}">${!visited ? "" : i === j ? "self" : close ? "✓" : "·"}</span>`);
+            });
+          });
+          const m = el.querySelector(".wmatrix"); m.style.setProperty("--c", n + 1); m.innerHTML = cells.join("");
+          const o = el.querySelector(".wclock b"); o.textContent = cnt; o.classList.toggle("bad", cnt !== right); pop(o);
+          say(fb, cnt === right ? "ok" : "bad", from1 ? `Only the upper right triangle: n(n − 1) / 2 = ${(n * (n - 1)) / 2} pairs, each once` : `Every pair twice plus each element with itself: ${cnt} = 2 × ${right} + ${cnt - 2 * right}`);
+        };
+        el.onclick = e => { const b = e.target.closest("[data-j]"); if (!b) return; from1 = b.dataset.j === "1"; el.querySelectorAll("[data-j]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); };
+        ia.oninput = ik.oninput = run;
+        run();
+      },
+    },
+    window: {
+      title: "Slide a window of m values",
+      html: () => `<div class="win"><label>a <input type="text" class="wide" value="1 4 7 3 1 2 6 5" data-k="a"></label><label>m <input type="number" value="3" min="1" data-k="m"></label></div>
+        <div class="wwin"></div><div class="wres two"><div><code>window sum s</code><b data-out="s"></b></div><div><code>best (smallest)</code><b data-out="b"></b></div></div>
+        <div class="btns"><button type="button" class="btn primary" data-step>Slide right</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const [ia, im] = el.querySelectorAll("input"), fb = el.querySelector(".wfb");
+        let a, m, i, s, best;
+        const set = (k, v) => { const o = el.querySelector(`[data-out="${k}"]`); if (o.textContent !== String(v)) { o.textContent = v; pop(o); } };
+        const draw = (text, added, dropped) => {
+          el.querySelector(".wwin").innerHTML = cellRow(a, k => (k === added ? "hit" : k === dropped ? "ghost" : k >= i - m && k < i ? "on" : ""), k => k);
+          set("s", s); set("b", best); say(fb, "", text);
+          el.querySelector("[data-step]").disabled = i >= a.length;
+        };
+        const reset = () => {
+          a = ints(ia.value).slice(0, 14); m = Math.max(1, Math.min(a.length, Math.trunc(+im.value || 1))); i = m;
+          s = a.slice(0, m).reduce((x, y) => x + y, 0); best = s;
+          draw(`First window a[0..${m - 1}]: add them up once, s = ${s}`);
+        };
+        el.onclick = e => {
+          if (e.target.closest("[data-reset]")) return reset();
+          if (!e.target.closest("[data-step]") || i >= a.length) return;
+          s += a[i] - a[i - m]; best = Math.min(best, s); i++;
+          draw(`s += a[${i - 1}] − a[${i - 1 - m}] = ${a[i - 1]} − ${a[i - 1 - m]}: s = ${s}. Two operations, not ${m}`, i - 1, i - 1 - m);
+        };
+        ia.oninput = im.oninput = reset;
+        reset();
+      },
+    },
+    pascal: {
+      title: "Each number is the two above it",
+      html: () => `<p class="wq">Click any number</p><div class="wpascal"></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const N = 8, a = range(N + 1).map(() => Array(N + 2).fill(0)), fb = el.querySelector(".wfb");
+        a[1][1] = 1;
+        for (let i = 2; i <= N; i++) for (let j = 1; j <= i; j++) a[i][j] = a[i - 1][j - 1] + a[i - 1][j];
+        const draw = (si, sj) => {
+          el.querySelector(".wpascal").innerHTML = range(N).map(r => `<div>${range(r + 1).map(c => { const i = r + 1, j = c + 1, cls = i === si && j === sj ? "hit" : i === si - 1 && (j === sj || j === sj - 1) ? "on" : ""; return `<button type="button" class="${cls}" data-ij="${i} ${j}">${a[i][j]}</button>`; }).join("")}</div>`).join("");
+          if (si > 1) say(fb, "ok", `a[${si}][${sj}] = a[${si - 1}][${sj - 1}] + a[${si - 1}][${sj}] = ${a[si - 1][sj - 1]} + ${a[si - 1][sj]} = ${a[si][sj]}${sj === 1 || sj === si ? ". One parent is the zero padding outside the triangle" : ""}`);
+          else say(fb, "", "a[1][1] = 1 starts everything. The zeros around it make every edge 1 without an if");
+        };
+        el.onclick = e => { const b = e.target.closest("[data-ij]"); if (!b) return; draw(...b.dataset.ij.split(" ").map(Number)); };
+        draw(5, 3);
+      },
+    },
+    spiral: {
+      title: "Spiral fill with direction arrays",
+      html: () => `<div class="win"><label>n <input type="number" value="5" min="2" max="8" data-k="n"></label></div><div class="wspiral"></div>
+        <div class="btns"><button type="button" class="btn primary" data-step>Next number</button><button type="button" class="btn" data-play>Play</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const inp = el.querySelector("input"), fb = el.querySelector(".wfb"), DX = [0, 1, 0, -1], DY = [1, 0, -1, 0], AR = ["→", "↓", "←", "↑"];
+        let n, g, x, y, d, k, timer;
+        const draw = turned => {
+          const w = el.querySelector(".wspiral"); w.style.setProperty("--n", n);
+          w.innerHTML = range(n).map(i => range(n).map(j => { const v = g[i][j], cur = i === x && j === y; return `<span class="${cur ? "cur" : v ? "on" : ""}">${v || (cur ? AR[d] : "")}</span>`; }).join("")).join("");
+          say(fb, turned ? "bad" : "", k > n * n ? `Done: ${n * n} numbers, turning right each time the next cell is outside or already filled` : `Next: ${k} at row ${x + 1}, column ${y + 1}, heading ${AR[d]} (d = ${d})${turned ? ". Blocked, so d = (d + 1) % 4" : ""}`);
+        };
+        const reset = () => { clearInterval(timer); n = Math.max(2, Math.min(8, Math.trunc(+inp.value || 2))); g = range(n).map(() => Array(n).fill(0)); x = y = d = 0; k = 1; draw(false); };
+        const step = () => {
+          if (k > n * n) return false;
+          g[x][y] = k++;
+          let nx = x + DX[d], ny = y + DY[d], turned = false;
+          if (nx < 0 || nx >= n || ny < 0 || ny >= n || g[nx][ny]) { d = (d + 1) % 4; turned = true; }
+          if (k <= n * n) { x += DX[d]; y += DY[d]; } else x = y = -1;
+          draw(turned); return true;
+        };
+        el.onclick = e => {
+          if (e.target.closest("[data-reset]")) return reset();
+          if (e.target.closest("[data-step]")) { clearInterval(timer); step(); }
+          if (e.target.closest("[data-play]")) { clearInterval(timer); timer = setInterval(() => step() || clearInterval(timer), 180); }
+        };
+        inp.oninput = reset;
+        reset();
+      },
+    },
+    mines: {
+      title: "Count the mines around each cell",
+      html: () => `<p class="wq">Click cells to place or remove mines</p><div class="wmines"></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const R = 5, C = 7, g = range(R).map(() => Array(C).fill(false)), fb = el.querySelector(".wfb");
+        [[0, 0], [1, 2], [3, 5], [4, 1]].forEach(([i, j]) => (g[i][j] = true));
+        const draw = (pi, pj) => {
+          const w = el.querySelector(".wmines"); w.style.setProperty("--n", C);
+          w.innerHTML = range(R).map(i => range(C).map(j => {
+            if (g[i][j]) return `<button type="button" class="mine" data-ij="${i} ${j}">*</button>`;
+            let c = 0; for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) { const ni = i + di, nj = j + dj; if ((di || dj) && ni >= 0 && ni < R && nj >= 0 && nj < C && g[ni][nj]) c++; }
+            const near = pi !== undefined && Math.abs(i - pi) <= 1 && Math.abs(j - pj) <= 1 && !(i === pi && j === pj);
+            return `<button type="button" class="n${c}${near ? " near" : ""}" data-ij="${i} ${j}">${c}</button>`;
+          }).join("")).join("");
+          say(fb, "", pi === undefined ? "Each number counts the * among its 8 neighbours, skipping any outside the grid" : `Changed (${pi}, ${pj}): only its 8 neighbours, highlighted, changed their counts`);
+        };
+        el.onclick = e => { const b = e.target.closest("[data-ij]"); if (!b) return; const [i, j] = b.dataset.ij.split(" ").map(Number); g[i][j] = !g[i][j]; draw(i, j); };
+        draw();
+      },
+    },
+    transform: {
+      title: "Rotate and mirror a grid",
+      T: [["Rotate 90°", "b[j][n-1-i]", (i, j, n) => [j, n - 1 - i]], ["Rotate 180°", "b[n-1-i][n-1-j]", (i, j, n) => [n - 1 - i, n - 1 - j]], ["Rotate 270°", "b[n-1-j][i]", (i, j, n) => [n - 1 - j, i]], ["Mirror ↔", "b[i][n-1-j]", (i, j, n) => [i, n - 1 - j]], ["Mirror ↕", "b[n-1-i][j]", (i, j, n) => [n - 1 - i, j]], ["Transpose", "b[j][i]", (i, j) => [j, i]]],
+      html: () => `<div class="wpre">${WIDGET.transform.T.map(([l], k) => `<button type="button" class="chip" data-t="${k}">${l}</button>`).join("")}<button type="button" class="chip" data-t="-1">Reset</button></div>
+        <div class="wtrans"><div class="wt" data-g="a"></div><i aria-hidden="true">→</i><div class="wt" data-g="b"></div></div><code class="wcall"></code>`,
+      init(el) {
+        const n = 3, A = ["A", "B", "C", "D", "E", "F", "G", "H", "I"];
+        let cur = range(n).map(i => range(n).map(j => A[i * n + j]));
+        const grid = (g, cls) => g.map((row, i) => row.map((v, j) => `<span class="${cls(i, j)}" style="--k:${i * n + j}">${v}</span>`).join("")).join("");
+        const show = (prev, k) => {
+          el.querySelector('[data-g="a"]').innerHTML = grid(prev, (i, j) => (i === 0 ? "on" : ""));
+          el.querySelector('[data-g="b"]').innerHTML = grid(cur, () => "new");
+          el.querySelector(".wcall").textContent = k < 0 ? "Pick a transform. Row 0 of the left grid is highlighted" : `${WIDGET.transform.T[k][1]} = a[i][j]   (built in a second array, never in place)`;
+        };
+        el.onclick = e => {
+          const b = e.target.closest("[data-t]"); if (!b) return;
+          const k = +b.dataset.t, prev = cur.map(r => [...r]);
+          if (k < 0) { cur = range(n).map(i => range(n).map(j => A[i * n + j])); return show(cur, -1); }
+          const nb = range(n).map(() => Array(n).fill(""));
+          prev.forEach((row, i) => row.forEach((v, j) => { const [x, y] = WIDGET.transform.T[k][2](i, j, n); nb[x][y] = v; }));
+          cur = nb; show(prev, k);
+        };
+        show(cur, -1);
+      },
+    },
+    rle: {
+      title: "Run-length encoding",
+      html: () => `<p class="wq">Click bits to flip them</p><div class="wbits"></div><div class="wclock"><b class="sm"></b><small>run lengths, starting with 0s</small></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const bits = [0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1], fb = el.querySelector(".wfb");
+        const draw = () => {
+          const runs = []; let cur = 0, r = 0;
+          bits.forEach(b => { if (b === cur) r++; else { runs.push(r); cur = b; r = 1; } }); runs.push(r);
+          let run = 0, left = runs[0];
+          el.querySelector(".wbits").innerHTML = bits.map((b, k) => { while (left === 0) { run++; left = runs[run]; } left--; return `<button type="button" class="b${b} r${run % 2}" data-k="${k}">${b}</button>`; }).join("");
+          const o = el.querySelector(".wclock b"); o.textContent = runs.join(" "); pop(o);
+          say(fb, "", bits[0] ? "The sequence starts with 1, so the first run (of 0s) has length 0" : `${runs.length} runs alternate 0s and 1s. Decoding just prints each run and flips the bit`);
+        };
+        el.onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; bits[+b.dataset.k] ^= 1; draw(); };
+        draw();
       },
     },
   });
