@@ -707,13 +707,52 @@ svg.far .node.learned text.far { fill: var(--surface); }
 .peekn { margin: 8px 0 0; font-size: 14px; color: var(--fg-2); }
 .peek .btns { margin-top: 12px; }
 .peekx { position: absolute; top: 8px; right: 8px; }
-.filters { position: relative; }
-.filters > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; }
-.filters > summary::-webkit-details-marker { display: none; }
-.filters > summary::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translateY(-2px); margin-left: 8px; }
-.filters[open] > summary { background: var(--raised); }
-.filterpop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 6; width: min(420px, 90vw); background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-card); padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, .22); display: grid; gap: 8px; }
-.filterpop .label { margin: 4px 0 0; }
+/* ---- the small map on the Tree tab, and the full-screen map ---- */
+.mappreview { display: block; position: relative; text-decoration: none; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; margin-bottom: 24px; transition: border-color .15s ease; }
+.mpsvg { height: clamp(220px, 32vw, 380px); padding: 16px; pointer-events: none; }
+.mpsvg svg { display: block; width: 100%; height: 100%; transition: transform .4s var(--ease); }
+.pvedge { fill: none; stroke: color-mix(in srgb, var(--fg) 18%, transparent); stroke-width: 4; }
+.pvhere { fill: none; stroke: var(--fg); stroke-width: 8; }
+.mpcta { position: absolute; left: 16px; bottom: 16px; display: grid; gap: 2px; padding: 12px 16px; background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line-strong); border-radius: var(--r-ctl); box-shadow: 0 6px 18px rgba(0, 0, 0, .18); }
+.mpcta b { font-size: 17px; }
+@media (hover: hover) and (pointer: fine) { .mappreview:hover { border-color: var(--line-strong); } .mappreview:hover .mpsvg svg { transform: scale(1.015); } }
+::view-transition-group(atlasmap) { animation-duration: .45s; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+body.mapopen { overflow: hidden; }
+.mapfull { position: fixed; inset: 0; z-index: 40; background: var(--bg); display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 12px; padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 12px; }
+.mapmain { min-width: 0; min-height: 0; }
+.mapfull .canvas { height: calc(100dvh - 54px - env(safe-area-inset-top, 0px)); max-height: none; min-height: 0; }
+.mappanel { min-height: 0; overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px; display: grid; gap: 18px; align-content: start; }
+.mappanel section .label { margin-bottom: 6px; }
+.mappanel .seg { flex-wrap: wrap; }
+.mphead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.mphead b { font-size: 18px; }
+.mpside .selcard { padding: 14px; }
+.mapbar { display: none; }
+.toast { z-index: 60; }
+.mapwrap.grouped { grid-template-columns: 0 minmax(0, 1fr); gap: 0; }
+.mapwrap.grouped .lanerail, .mapwrap.grouped .steprow, .mapwrap.grouped .minimap { visibility: hidden; }
+.mappanel .seg.arr { display: grid; grid-template-columns: 1fr 1fr; }
+@media (min-width: 768px) { .mapfull .peek { display: none; } }
+/* arrangements and the floating move */
+.node { transform-box: fill-box; transform-origin: center; }
+.glayer rect { fill: color-mix(in srgb, var(--c) 7%, transparent); stroke: color-mix(in srgb, var(--c) 32%, transparent); stroke-width: 1.5; }
+.gname { font-family: var(--f-cjk); font-size: 26px; font-weight: 600; fill: var(--c); }
+.gcount { font-family: var(--f-mono); font-size: 16px; fill: var(--muted); }
+.gbox { transition: opacity .3s ease; }
+.gbox.dim { opacity: .3; }
+svg.leaving .edge, svg.leaving .lane-bg, svg.leaving .lane-rule, svg.leaving .glayer { opacity: 0; transition: opacity .18s ease; }
+@keyframes fadein { from { opacity: 0; } }
+svg.arriving .glayer { animation: fadein .6s ease-out .3s both; }
+svg.edgesback .edge, svg.edgesback .lane-bg { animation: fadein .6s ease-out 1.05s both; }
+@media (max-width: 767px) {
+  .mapfull { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); padding: calc(8px + env(safe-area-inset-top, 0px)) 8px 8px; gap: 8px; }
+  .mapbar { display: flex; justify-content: space-between; gap: 8px; }
+  .mapfull .canvas { height: calc(100dvh - 100px - env(safe-area-inset-top, 0px)); }
+  .mappanel { position: fixed; left: 0; right: 0; bottom: 0; max-height: 78dvh; border-radius: 16px 16px 0 0; z-index: 45; transform: translateY(105%); transition: transform .3s var(--ease); box-shadow: 0 -10px 30px rgba(0, 0, 0, .3); padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+  .mappanel.open { transform: none; }
+  .mapfull .peek { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (prefers-reduced-motion: reduce) { .mappanel { transition: none; } .mpsvg svg { transition: none; } }
 .skip { position: absolute; left: 0; top: 0; z-index: 7; transform: translateY(-120%); opacity: 0; border: 1px solid var(--accent); background: var(--surface); border-radius: var(--r-ctl); padding: 6px 12px; }
 .skip:focus-visible { transform: none; opacity: 1; }
 @media (max-width: 767px) {
@@ -882,7 +921,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   let introPending = true, justLearned = null, pulseId = null;
   let startPick = null; // read from storage once it exists (below)
   // Open the map on one chapter: select it, zoom to 100%, glide there and pulse.
-  function locate(id) { selected = id; zoomS = 1; pulseId = id; if (location.hash === "#tree") viewTree(); else location.hash = "tree"; }
+  function locate(id) { selected = id; zoomS = 1; pulseId = id; if (location.hash === "#map") viewTree(); else location.hash = "map"; }
   let zoomS = null, curS = 1; // chosen map scale (null = fit) and the one drawn now
   const ZMIN = 0.2, ZSTEPS = [0.2, 0.3, 0.45, 0.6, 0.8, 1];
 
@@ -1013,23 +1052,26 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       }));
       height = place();
     }
-    layout = { xy, lanes, maxD, width: LANEW + maxD * COLW + W + 24 + 216, height: height - LANEGAP + 12 }; // +216: room to scroll past the minimap
+    layout = { xy, lanes, maxD, width: LANEW + maxD * COLW + W + 24 + 216, height: height - LANEGAP + 12, mapHeight: height - LANEGAP + 12 }; // +216: room to scroll past the minimap
+    grouped = null;
   }
 
   function svgTree() {
     if (!layout) computeLayout();
-    const { xy, width, height, lanes, maxD } = layout;
+    if (arrange === "map") layout.height = layout.mapHeight; else computeGroups();
+    const xy = curXY(), { width, height, lanes, maxD } = layout;
     const goalSet = goal && byId[goal] ? new Set([goal, ...pathTo(goal)]) : null;
     const anc = selected ? ancestors(selected) : null, desc = selected ? descendants(selected) : null;
     const hot = selected ? new Set([selected, ...anc, ...desc]) : null;
     let out = "";
-    lanes.forEach(({ level: l, top, height: h }) => {
+    if (arrange !== "map") out += `<g class="glayer">${grouped.boxes.map(b => `<g class="gbox${b.dim ? " dim" : ""}" style="--c: ${b.color}"><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="18"/><text class="gname" x="${b.x + 24}" y="${b.y + 40}">${esc(b.name)}</text><text class="gcount" x="${b.x + b.w - 24}" y="${b.y + 40}" text-anchor="end">${b.ids.length} · ${b.ids.filter(id => statusOf(id) === "learned").length} learned</text></g>`).join("")}</g>`;
+    if (arrange === "map") lanes.forEach(({ level: l, top, height: h }) => {
       const list = A.filter(c => c.id.startsWith(l.key));
       const done = list.filter(c => statusOf(c.id) === "learned").length;
       out += `<g style="--c: var(--lv-${l.slug})"><rect class="lane-bg" data-lv="${l.key}" x="0" y="${top}" width="${width}" height="${h}"/>
         <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/>${lanes.find(x => x.level === l).folded ? `<text class="foldtxt" x="${LANEW + 8}" y="${top + 25}">${l.name} · all ${list.length} chapters learned · folded</text>` : ""}</g>`;
     });
-    A.forEach(c => c.pre.forEach(p => {
+    if (arrange === "map") A.forEach(c => c.pre.forEach(p => {
       if (isFoldedId(c.id) || isFoldedId(p)) return;
       const a = xy[p], b = xy[c.id];
       const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = x1 + Math.max(24, (x2 - x1) / 2);
@@ -1040,7 +1082,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       out += `<path data-f="${p}" data-t="${c.id}" class="edge${on ? " hot" + (inc ? " in" : " out") : ""}${goalSet && goalSet.has(p) && goalSet.has(c.id) ? " goaledge" : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}"/>`;
     }));
     A.forEach(c => {
-      if (isFoldedId(c.id)) return;
+      if (arrange === "map" && isFoldedId(c.id)) return;
       const { x, y } = xy[c.id];
       const st = statusOf(c.id);
       const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter)) || (topicFilter !== "all" && c.fam !== topicFilter) || (readyOnly && !(isReady(c) || st === "learning"));
@@ -1065,7 +1107,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       </g>`;
     });
     const intro = introPending; introPending = false; // the first map drawn each visit builds itself
-    return `<svg class="${intro ? "intro" : ""}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet" role="group" aria-label="Course map: 101 chapters in four lanes, one per level. Arrow keys move between chapters, Enter selects, Escape clears">${out}</svg>`;
+    return `<svg class="${intro ? "intro" : ""}${arrange !== "map" ? " grouped" : ""}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet" role="group" aria-label="Course map: 101 chapters in four lanes, one per level. Arrow keys move between chapters, Enter selects, Escape clears">${out}</svg>`;
   }
 
   // ---- shared bits ----
@@ -1101,7 +1143,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       <h2>${esc(c.title)}</h2><p class="en">${esc(c.en)}</p>
       <p class="hint" style="margin:0 0 12px">${esc(c.summary)}</p>
       ${statusButtons(c.id)}
-      <div class="btns even"><a class="btn primary" href="#ch-${c.slug}">Open chapter</a><a class="btn" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a></div>
+      <div class="btns even"><a class="btn primary" href="#ch-${c.slug}">Go to chapter</a><a class="btn" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a></div>
       <div class="btns"><button class="btn" data-clear>Clear selection</button><button class="btn" data-goal="${c.id}">${goal === c.id ? "Clear goal" : "Set as my goal"}</button></div></div>
       <div><div class="block"><p class="label">Needs</p>${c.pre.length ? pathList(c.pre) : '<p class="hint">Nothing, a starting point</p>'}</div>
       <div class="block"><p class="label">Unlocks</p>${(kids[c.id] || []).length ? pathList(kids[c.id]) : '<p class="hint">Nothing further in the course</p>'}</div>
@@ -1111,6 +1153,75 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
 
   // ---- views ----
+
+
+  // ---- arrangements: chapters regroup by level, topic or status; the group you filter on floats to the front ----
+  let arrange = "map", groupWrap = 0, grouped = null;
+  const stateOf = c => { const st = statusOf(c.id); return st === "learned" ? "learned" : st === "learning" ? "learning" : isReady(c) ? "ready" : "locked"; };
+  const ARRANGE = {
+    level: () => LEVELS.map(l => ({ key: l.key, name: l.name, color: `var(--lv-${l.slug})`, ids: A.filter(c => c.id.startsWith(l.key)).map(c => c.id) })),
+    topic: () => FAMILIES.map(f => ({ key: f.key, name: f.name, color: `var(--fam-${f.key})`, ids: A.filter(c => c.fam === f.key).map(c => c.id) })),
+    status: () => [["learned", "Learned", "var(--v-done)"], ["learning", "Learning", "var(--v-cmp)"], ["ready", "Ready", "var(--accent)"], ["locked", "Locked", "var(--muted)"]]
+      .map(([key, name, color]) => ({ key, name, color, ids: A.filter(c => stateOf(c) === key).map(c => c.id) })),
+  };
+  function computeGroups() {
+    const front = arrange === "level" ? levelFilter : arrange === "topic" ? topicFilter : "all";
+    const gs = ARRANGE[arrange]().filter(g => g.ids.length).sort((a, b) => (b.key === front) - (a.key === front));
+    const xy = {}, boxes = [], PAD = 24, HEAD = 64, GAP = 48, PER = 6, X0 = 24, maxW = Math.max(W + 2 * PAD + X0, groupWrap || layout.width);
+    let x = X0, y = 24, rowH = 0;
+    gs.forEach(g => {
+      const cols = Math.ceil(g.ids.length / PER), rows = Math.ceil(g.ids.length / cols);
+      const w = cols * COLW - (COLW - W) + 2 * PAD, h = HEAD + rows * ROWH - (ROWH - H) + PAD;
+      if (x > X0 && x + w > maxW) { x = X0; y += rowH + GAP; rowH = 0; }
+      g.ids.forEach((id, i) => (xy[id] = { x: x + PAD + (i % cols) * COLW, y: y + HEAD + Math.floor(i / cols) * ROWH }));
+      boxes.push({ ...g, x, y, w, h, dim: front !== "all" && g.key !== front });
+      x += w + GAP; rowH = Math.max(rowH, h);
+    });
+    grouped = { xy, boxes, height: y + rowH + 24 };
+    layout.height = Math.max(layout.mapHeight, grouped.height);
+  }
+  const curXY = () => { if (arrange === "map") return layout.xy; if (!grouped) computeGroups(); return grouped.xy; };
+  // A box that changes place drifts there on a gentle curve, dips as if settling into water, and comes to rest.
+  function floatNodes(before) {
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const xy = curXY();
+    document.querySelectorAll("#canvas .node").forEach(n => {
+      const b = before[n.dataset.id], a = xy[n.dataset.id];
+      if (!b || !a) return;
+      const dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy);
+      if (d < 2) return;
+      const side = Math.random() < 0.5 ? -1 : 1, amp = Math.min(80, d * 0.18) * side, rot = side * (2 + Math.random() * 2.5);
+      const mx = b.x + dx / 2 - (dy / d) * amp, my = b.y + dy / 2 + (dx / d) * amp;
+      const at = (x, y, r) => `translate(${x}px, ${y}px) rotate(${r}deg)`;
+      n.animate([
+        { transform: at(b.x, b.y, 0), easing: "cubic-bezier(0.45, 0, 0.55, 1)" },
+        { transform: at(mx, my, rot), offset: 0.5, easing: "cubic-bezier(0.33, 0, 0.2, 1)" },
+        { transform: at(a.x, a.y + 8, -rot * 0.45), offset: 0.8, easing: "ease-in-out" },
+        { transform: at(a.x, a.y - 3, rot * 0.15), offset: 0.92, easing: "ease-in-out" },
+        { transform: at(a.x, a.y, 0) },
+      ], { duration: 1100 + Math.random() * 300, delay: Math.random() * 320, fill: "backwards" });
+    });
+  }
+  function rearrange(mode) {
+    const canvas = $("#canvas");
+    if (!canvas || mode === arrange) return;
+    const go = () => {
+      arrange = mode; grouped = null;
+      groupWrap = Math.max(W + 96, canvas.clientWidth / curS - 24); // groups wrap to the width you can see at this zoom
+      $(".mapwrap").classList.toggle("grouped", mode !== "map");
+      refreshTree();
+      const svg = $("#canvas svg"); if (svg) svg.classList.add(mode === "map" ? "edgesback" : "arriving");
+      document.querySelectorAll("[data-arrange]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.arrange === arrange)));
+      if (mode === "map") placeCanvas(); else canvas.scrollTo({ left: 0, top: 0, behavior: "smooth" });
+    };
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return go();
+    const svg = $("#canvas svg"); if (svg) svg.classList.add("leaving");
+    setTimeout(go, 180);
+  }
+  function exitMap() {
+    const leave = () => { skipHash = true; location.hash = "tree"; route(); };
+    if (document.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) document.startViewTransition(leave); else leave();
+  }
 
   // ---- tree: the floating card for a selection, keyboard movement, the ready count ----
   const readyCount = () => A.filter(c => isReady(c) || statusOf(c.id) === "learning").length;
@@ -1128,10 +1239,10 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
   // Arrow keys walk the map: left and right by step, up and down within a step.
   function moveFocus(from, key) {
-    const p = layout.xy[from], dir = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowUp: [0, -1] }[key];
+    const xyNow = curXY(), p = xyNow[from], dir = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowUp: [0, -1] }[key];
     let best = null, bestScore = Infinity;
     document.querySelectorAll("#canvas .node").forEach(n => {
-      const q = layout.xy[n.dataset.id], dx = q.x - p.x, dy = q.y - p.y;
+      const q = xyNow[n.dataset.id], dx = q.x - p.x, dy = q.y - p.y;
       const along = dir[0] ? dx * dir[0] : dy * dir[1], across = dir[0] ? Math.abs(dy) : Math.abs(dx);
       if (along <= 0 || n.dataset.id === from) return;
       const score = along + across * 3;
@@ -1185,7 +1296,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     sizeSvg(canvas, zoomS ?? fitScale(canvas));
     if (zoomS === null) return;
     const focusId = selected || (nextChapter().cur || A[0]).id;
-    const p = layout.xy[focusId];
+    const p = curXY()[focusId];
     const left = Math.max(0, p.x * curS - (selected ? canvas.clientWidth / 2 - W * curS / 2 : canvas.clientWidth / 3));
     const top = Math.max(0, p.y * curS - canvas.clientHeight / 2 + H * curS / 2);
     if (pulseId && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -1243,22 +1354,46 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     }, { passive: false });
   }
   let canvasRO = null;
+  // The Tree tab: the course map in miniature. Clicking it opens the full-screen map (#map).
+  // A thumbnail can't show text: draw each chapter as a block in its level's colour, brighter the further you are,
+  // with a ring on the chapter you're up to.
+  function previewSvg() {
+    const { xy, lanes, width, mapHeight: height } = layout, cur = nextChapter().cur;
+    return `<svg viewBox="0 0 ${width - 216} ${height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      ${lanes.map(({ level: l, top, height: h }) => `<rect x="0" y="${top}" width="${width - 216}" height="${h}" rx="18" style="fill: var(--lv-${l.slug}); opacity: .07"/>`).join("")}
+      ${A.flatMap(c => c.pre.map(p => { const a = xy[p], b = xy[c.id]; return `<path d="M${a.x + W},${a.y + H / 2} C${a.x + W + 60},${a.y + H / 2} ${b.x - 60},${b.y + H / 2} ${b.x},${b.y + H / 2}" class="pvedge"/>`; })).join("")}
+      ${A.map(c => { const st = statusOf(c.id); return `<rect x="${xy[c.id].x}" y="${xy[c.id].y}" width="${W}" height="${H}" rx="12" style="fill: var(--${lvClass(c)}); opacity: ${st === "learned" ? 0.95 : st === "learning" || isReady(c) ? 0.7 : 0.3}"/>`; }).join("")}
+      ${cur ? `<rect class="pvhere" x="${xy[cur.id].x - 10}" y="${xy[cur.id].y - 10}" width="${W + 20}" height="${H + 20}" rx="18"/>` : ""}</svg>`;
+  }
+  function viewTreeHome() {
+    if (!layout) computeLayout();
+    const sel = selected; selected = null;
+    const map = previewSvg();
+    const side = sideCard(); selected = sel;
+    $("#view").innerHTML = `${stripHtml()}
+      <a class="mappreview" href="#map" style="view-transition-name: atlasmap" aria-label="Open the full course map"><div class="mpsvg" inert>${map}</div>
+        <span class="mpcta"><b>Open the map</b><span class="hint">All ${A.length} chapters, full screen · arrange by level, topic or status</span></span></a>
+      <div class="side treehome">${side}</div>`;
+    window.scrollTo(0, 0);
+  }
   function viewTree() {
     requestAnimationFrame(updateRail);
     if (!layout) computeLayout();
-    $("#view").innerHTML = `${stripHtml()}
-      <div class="tools">
-        <div class="seg zoom" role="group" aria-label="Map zoom"><button data-zoomstep="-1" aria-label="Zoom out">−</button><span class="pct" id="zoomPct" aria-live="polite">100%</span><button data-zoomstep="1" aria-label="Zoom in">+</button><button data-zoomfit>Fit</button></div>
-        <div class="chipset" role="group" aria-label="Show a level">
-          <button class="chip" data-level="all" aria-pressed="${levelFilter === "all"}">All levels</button>
-          ${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}
-        </div>
-        <button class="chip" data-readyonly aria-pressed="${readyOnly}">Ready only · ${readyCount()}</button>
-        <details class="filters"><summary class="chip">Filters${topicFilter !== "all" || foldDone ? " · on" : ""}</summary><div class="filterpop" role="group" aria-label="More map filters">
-          <p class="label">Topic</p>${topicPills()}
-          <p class="label">Levels you've finished</p><button class="chip" data-fold aria-pressed="${foldDone}">Fold finished levels</button></div></details>
-        <span class="hint">Drag to move · Ctrl + scroll or pinch to zoom</span></div>
-      <div class="treeview"><div class="mapwrap"><div class="lanerail" id="laneRail">${railHtml()}</div><div class="mapcol"><button class="skip" data-skipmap>Skip the map</button><div class="steprow" id="stepRow" title="Steps count prerequisites: a step 3 chapter builds on chapters from steps 1 and 2">${stepHtml()}</div><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}${peekHtml() || '<div id="peek" hidden></div>'}</div></div><aside class="side" id="side">${sideCard()}</aside></div>`;
+    document.body.classList.add("mapopen");
+    const seg = (attr, cur, opts, label) => `<div class="seg arr" role="group" aria-label="${label}">${opts.map(([v, t]) => `<button ${attr}="${v}" aria-pressed="${cur === v}">${t}</button>`).join("")}</div>`;
+    $("#view").innerHTML = `<div class="mapfull" style="view-transition-name: atlasmap">
+      <div class="mapbar"><a class="btn" href="#tree">Exit map</a><button class="btn" data-panel aria-expanded="false" aria-controls="mappanel">Settings</button></div>
+      <div class="mapmain"><div class="mapwrap${arrange !== "map" ? " grouped" : ""}"><div class="lanerail" id="laneRail">${railHtml()}</div><div class="mapcol"><button class="skip" data-skipmap>Skip the map</button><div class="steprow" id="stepRow" title="Steps count prerequisites: a step 3 chapter builds on chapters from steps 1 and 2">${stepHtml()}</div><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}${peekHtml() || '<div id="peek" hidden></div>'}</div></div></div>
+      <aside class="mappanel" id="mappanel" aria-label="Map settings">
+        <div class="mphead"><b>Course map</b><a class="btn" href="#tree" title="Esc">Exit map</a></div>
+        <section><p class="label">Arrange by</p>${seg("data-arrange", arrange, [["map", "Prerequisites"], ["level", "Level"], ["topic", "Topic"], ["status", "Status"]], "Arrange the chapters")}</section>
+        <section><p class="label">Zoom</p><div class="seg zoom" role="group" aria-label="Map zoom"><button data-zoomstep="-1" aria-label="Zoom out">−</button><span class="pct" id="zoomPct" aria-live="polite">100%</span><button data-zoomstep="1" aria-label="Zoom in">+</button><button data-zoomfit>Fit</button></div></section>
+        <section><p class="label">Level</p><div class="chipset" role="group" aria-label="Show a level"><button class="chip" data-level="all" aria-pressed="${levelFilter === "all"}">All levels</button>${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}</div></section>
+        <section><p class="label">Topic</p>${topicPills()}</section>
+        <section><p class="label">Show</p><div class="chipset"><button class="chip" data-readyonly aria-pressed="${readyOnly}">Ready only · ${readyCount()}</button><button class="chip" data-fold aria-pressed="${foldDone}">Fold finished levels</button></div></section>
+        <div id="side" class="mpside">${sideCard()}</div>
+        <p class="hint">Drag to move · Ctrl + scroll or pinch to zoom · Esc to exit</p>
+      </aside></div>`;
     const canvas = $("#canvas");
     wireCanvas(canvas);
     wireMinimap();
@@ -1275,8 +1410,10 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (!layout) computeLayout();
     const canvas = $("#canvas");
     if (!canvas) return viewTree();
-    const sl = canvas.scrollLeft, st = canvas.scrollTop;
+    const sl = canvas.scrollLeft, st = canvas.scrollTop, before = {};
+    canvas.querySelectorAll(".node").forEach(n => { const m = n.getAttribute("transform").match(/translate\(([-\d.]+),([-\d.]+)\)/); if (m) before[n.dataset.id] = { x: +m[1], y: +m[2] }; });
     canvas.innerHTML = svgTree();
+    floatNodes(before);
     sizeSvg(canvas, curS);
     canvas.scrollLeft = sl; canvas.scrollTop = st;
     const mm = $("#minimap");
@@ -1284,6 +1421,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const rail = $("#laneRail");
     if (rail) { rail.innerHTML = railHtml(); updateRail(); }
     $("#side").innerHTML = sideCard();
+    if (selected && $("#mappanel")) $("#side").scrollIntoView({ block: "nearest" });
     const pk = $("#peek"), np = peekHtml();
     if (pk) pk.outerHTML = np || '<div id="peek" hidden></div>';
     const rc = $("[data-readyonly]"); if (rc) rc.textContent = `Ready only · ${readyCount()}`;
@@ -1452,7 +1590,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const need = pathTo(c.id), star = nextStar(c);
     $("#view").innerHTML = `<div class="chapter" style="--c: var(--${lvClass(c)})">
       <div style="min-width:0">
-        <div class="crumbs"><a href="#tree" data-select="${c.id}">Tree</a><span>/</span><a href="#list">${lvOf(c).name}</a><span>/</span><span>${c.id}</span></div>
+        <div class="crumbs"><a href="#map" data-select="${c.id}">Tree</a><span>/</span><a href="#list">${lvOf(c).name}</a><span>/</span><span>${c.id}</span></div>
         <div class="chead"><span class="lv ${lvClass(c)}">${c.id} · ${lvOf(c).name} 第${c.num}章</span> <span class="fam hint">${icon(c.fam)}${famOf(c.fam).name}</span><h1 style="view-transition-name: chtitle">${esc(c.title)}</h1><p class="en">${esc(c.en)}</p><p class="sum">${esc(c.summary)}</p>
           <div class="metacard">${headerMeta(c)}</div></div>
         <nav class="tabs" aria-label="Chapter sections">${tabs.map(([k, label, n]) => `<a href="#ch-${c.slug}${k === "concepts" ? "" : "-" + k}" ${(tab || "concepts") === k ? 'aria-current="page"' : ""}>${tabLabel(label)}<small>${n}</small></a>`).join("")}</nav>
@@ -1462,7 +1600,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       </div>
       <aside class="aside">
         <div class="block"><p class="label">Status</p>${statusButtons(c.id)}
-          <div class="btns even"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a><a class="btn" href="#tree" data-select="${c.id}">Show in tree</a></div>
+          <div class="btns even"><a class="btn primary" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a><a class="btn" href="#map" data-select="${c.id}">Show in tree</a></div>
           <div class="btns"><button class="btn" data-goal="${c.id}">${goal === c.id ? "Clear goal" : "Set as my goal"}</button></div></div>
         ${mistakesHtml(c)}
         ${star ? `<div class="block"><p class="label">Next ★ problem</p><a class="btn" style="width:100%;justify-content:flex-start" href="${star.url}" target="_blank" rel="noopener"><span class="mono">${esc(star.label)}</span><span class="cjk" style="overflow:hidden;text-overflow:ellipsis">${esc(star.p.name)}</span></a></div>` : ""}
@@ -2041,10 +2179,10 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   // ---- tree minimap: the whole course small, with the visible part outlined; click or drag to move ----
   function minimapHtml() {
     if (!layout) computeLayout();
-    const { xy, width, height, lanes } = layout;
+    const xy = curXY(), { width, height, lanes } = layout;
     return `<svg class="minimap" id="minimap" viewBox="0 0 ${width} ${height}" role="img" aria-label="Overview of the map; click to move there">
-      ${lanes.map(({ level: l, top, height: h }) => `<rect x="0" y="${top}" width="${width}" height="${h}" style="fill: var(--lv-${l.slug}); opacity: .12"/>`).join("")}
-      ${A.filter(c => !isFoldedId(c.id)).map(c => `<rect x="${xy[c.id].x}" y="${xy[c.id].y}" width="${W}" height="${H}" rx="10" style="fill: var(--${lvClass(c)}); opacity: ${statusOf(c.id) === "learned" ? 0.95 : 0.4}"/>`).join("")}
+      ${arrange === "map" ? lanes.map(({ level: l, top, height: h }) => `<rect x="0" y="${top}" width="${width}" height="${h}" style="fill: var(--lv-${l.slug}); opacity: .12"/>`).join("") : grouped.boxes.map(b => `<rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="18" style="fill: ${b.color}; opacity: .12"/>`).join("")}
+      ${A.filter(c => arrange !== "map" || !isFoldedId(c.id)).map(c => `<rect x="${xy[c.id].x}" y="${xy[c.id].y}" width="${W}" height="${H}" rx="10" style="fill: var(--${lvClass(c)}); opacity: ${statusOf(c.id) === "learned" ? 0.95 : 0.4}"/>`).join("")}
       <rect class="mm-view" id="mmView" x="0" y="0" width="0" height="0"/></svg>`;
   }
   function updateMinimap() {
@@ -2467,7 +2605,6 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     return ids.length ? `<div class="block"><p class="label">My mistakes · ${ids.reduce((n, id) => n + mistakes[id].length, 0)}</p>
       <ul class="mlist">${ids.flatMap(id => mistakes[id].map(m => `<li><span>${chLink(id)} ${esc(m.t)}</span></li>`)).join("")}</ul></div>` : "";
   }
-  document.addEventListener("click", e => { const f = document.querySelector("details.filters[open]"); if (f && !f.contains(e.target)) f.open = false; });
   document.addEventListener("submit", e => {
     const f = e.target.closest("[data-madd]");
     if (!f) return;
@@ -2723,11 +2860,13 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if ("readyonly" in d) {
       readyOnly = !readyOnly; el.setAttribute("aria-pressed", String(readyOnly)); refreshTree();
       // show what's ready instead of leaving a few lit boxes somewhere in a dim map
-      const ids = A.filter(c => isReady(c) || statusOf(c.id) === "learning").map(c => layout.xy[c.id]).filter(Boolean);
+      const ids = A.filter(c => isReady(c) || statusOf(c.id) === "learning").map(c => curXY()[c.id]).filter(Boolean);
       if (readyOnly && ids.length) fitBox($("#canvas"), Math.min(...ids.map(p => p.x)) - 40, Math.min(...ids.map(p => p.y)) - 40, Math.max(...ids.map(p => p.x)) + W + 40, Math.max(...ids.map(p => p.y)) + H + 40);
       if (readyOnly && !ids.length) toast("Nothing is ready: every chapter left still needs another one first");
       return true;
     }
+    if ("arrange" in d) { rearrange(d.arrange); return true; }
+    if ("panel" in d) { const p = $("#mappanel"), open = p.classList.toggle("open"); el.setAttribute("aria-expanded", String(open)); return true; }
     if ("peekmore" in d) { $("#side").scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); return true; }
     if ("skipmap" in d) { const t = document.querySelector("#side a, #side button"); if (t) t.focus(); return true; }
     if ("fold" in d) { foldDone = !foldDone; store.set("foldDone", foldDone); layout = null; viewTree(); return true; }
@@ -2760,6 +2899,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function route() {
     clearInterval(visTimer); visTimer = null; // a visualizer stops playing when you leave its chapter
     clearInterval(contestTimer); contestTimer = null;
+    document.body.classList.remove("mapopen");
     if (shareProg) { shareProg = null; layout = null; }
     const full = location.hash.slice(1) || "home";
     ["home", "tree", "list", "progress", "practice"].forEach(k => $("#nav-" + k).removeAttribute("aria-current"));
@@ -2771,7 +2911,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (qp.has("status")) listStatus = qp.get("status");
       if (qp.has("view")) listView = qp.get("view");
     }
-    if (base === "tree" && qp.has("level")) { levelFilter = qp.get("level"); $("#nav-tree").setAttribute("aria-current", "page"); viewTree(); fitLane($("#canvas"), levelFilter); return; }
+    if (base === "map" || (base === "tree" && qp.has("level"))) {
+      $("#nav-tree").setAttribute("aria-current", "page");
+      if (qp.has("level")) { levelFilter = qp.get("level"); arrange = "map"; viewTree(); fitLane($("#canvas"), levelFilter); } else viewTree();
+      return;
+    }
     const PRACTICE = { practice: () => viewPractice(), glossary: () => viewGlossary(), cards: () => viewCards(), contest: () => viewContest() };
     if (PRACTICE[base]) { $("#nav-practice").setAttribute("aria-current", "page"); return PRACTICE[base](); }
     if (base === "shared") return viewShared(qp.get("p") || "");
@@ -2783,7 +2927,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (h === "list") return viewList();
     if (h === "progress") return viewProgress();
     $("#nav-tree").setAttribute("aria-current", "page");
-    return viewTree();
+    return viewTreeHome();
   }
   window.addEventListener("hashchange", () => (skipHash ? (skipHash = false) : route()));
 
@@ -2829,7 +2973,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       document.querySelectorAll("[data-topic]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.topic === topicFilter)));
       return;
     }
-    const ex = e.target.closest("[data-readyonly],[data-peekmore],[data-skipmap],[data-fold],[data-goal],[data-goalqueue],[data-chk],[data-mdel],[data-stuck],[data-copy-share],[data-card-img],[data-cardflip],[data-cardgrade],[data-cards],[data-contest],[data-csolve-btn]");
+    const ex = e.target.closest("[data-readyonly],[data-arrange],[data-panel],[data-peekmore],[data-skipmap],[data-fold],[data-goal],[data-goalqueue],[data-chk],[data-mdel],[data-stuck],[data-copy-share],[data-card-img],[data-cardflip],[data-cardgrade],[data-cards],[data-contest],[data-csolve-btn]");
     if (ex && extraClick(ex, e)) return;
     const rv = e.target.closest("[data-reviewed]");
     if (rv) {
@@ -2862,7 +3006,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (t.classList.contains("node")) {
       const id = t.dataset.id;
       if (e.detail >= 2) { location.hash = "ch-" + byId[id].slug; return; }
-      if (!$("#canvas")) { selected = id; zoomS = 1; location.hash = "tree"; return; } // the front-page map
+      if (!$("#canvas")) { selected = id; zoomS = 1; location.hash = "map"; return; } // the front-page map
       if (dragMoved) return; // the end of a drag, not a click
       selected = selected === id ? null : id;
       if (selected && curS < 0.99) { const before = t.getBoundingClientRect(); zoomS = 1; viewTree(); zoomFrom(before, id); return; }
@@ -2871,7 +3015,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (t.dataset.status === "learned" && /^#ch-/.test(location.hash) && statusOf(t.dataset.id) !== "learned" && !checks[t.dataset.id] && byId[t.dataset.id].boxes.length) { startCheck(t.dataset.id); return; }
     if (t.dataset.status) { setStatus(t.dataset.id, t.dataset.status); route(); return; }
     if (t.dataset.level) {
-      levelFilter = t.dataset.level; selected = null; viewTree();
+      levelFilter = t.dataset.level; selected = null;
+      if (arrange !== "map") { refreshTree(); document.querySelectorAll("[data-level]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.level === levelFilter))); return; }
+      viewTree();
       if (levelFilter === "all") { zoomS = null; placeCanvas(); } else fitLane($("#canvas"), levelFilter);
       return;
     }
@@ -2920,10 +3066,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const n = e.target.closest && e.target.closest(".node");
     if (n && $("#canvas") && e.key.startsWith("Arrow")) { e.preventDefault(); moveFocus(n.dataset.id, e.key); return; }
     if (e.key === "Escape" && selected && $("#canvas") && !(e.target.closest && e.target.closest("input, textarea"))) { const id = selected; selected = null; refreshTree(); const back = document.querySelector(`.node[data-id="${id}"]`); if (back) back.focus({ preventScroll: true }); return; }
+    if (e.key === "Escape" && $("#mappanel") && !(e.target.closest && e.target.closest("input, textarea"))) { const p = $("#mappanel"); if (p.classList.contains("open")) p.classList.remove("open"); else exitMap(); return; }
     if (n && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       if (selected === n.dataset.id && e.key === "Enter") { location.hash = "ch-" + byId[n.dataset.id].slug; return; }
-      if (!$("#canvas")) { selected = n.dataset.id; zoomS = 1; location.hash = "tree"; return; }
+      if (!$("#canvas")) { selected = n.dataset.id; zoomS = 1; location.hash = "map"; return; }
       selected = n.dataset.id;
       if (curS < 0.99) { zoomS = 1; viewTree(); } else refreshTree(); // keyboard: jump to full size, no zoom animation
       const again = document.querySelector(`.node[data-id="${n.dataset.id}"]`); if (again) again.focus();
@@ -2936,6 +3083,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (e.ctrlKey || e.metaKey || e.altKey || (e.target.closest && e.target.closest("input, textarea, select, [contenteditable]"))) return;
     if (e.key === "/") { e.preventDefault(); $("#q").focus(); return; }
     if (e.key === "t") { location.hash = "tree"; return; }
+    if (e.key === "m") { location.hash = "map"; return; }
     const views = { 1: "home", 2: "tree", 3: "list", 4: "progress", 5: "practice" };
     if (views[e.key]) { location.hash = views[e.key]; return; }
     if (e.key === "j" || e.key === "k" || e.key === "]" || e.key === "[") {
