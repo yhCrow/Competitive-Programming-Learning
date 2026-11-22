@@ -4812,6 +4812,516 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   });
 
 
+  // ===== the chapters that had no visualizer yet =====
+  addVis("拓12", {
+    title: "Digit DP: count numbers up to N with no digit 4",
+    frames() {
+      const N = 2547, d = String(N).split("").map(Number), L = d.length, F = [];
+      const free = k => 9 ** k; // any of 0..9 except 4 in each of k free places
+      let total = 0, tight = true;
+      const snap = (pos, text) => F.push({ rows: [{ label: "N", vals: d, marks: Object.fromEntries(d.map((_, k) => [k, k < pos ? "done" : k === pos ? "on" : ""])) }], text: `${text}. Count so far: ${total}` });
+      snap(-1, `Walk the digits of ${N} from the left, staying "tight" (equal to N so far). Any digit below the limit frees every place to its right`);
+      for (let i = 0; i < L && tight; i++) {
+        const lim = d[i], below = range(lim).filter(x => x !== 4).length, add = below * free(L - 1 - i);
+        total += add;
+        snap(i, `Place ${i + 1}: digits 0..${lim - 1} without 4 give ${below} choices, each leaving ${L - 1 - i} free place${L - 1 - i === 1 ? "" : "s"} with 9 options: ${below} × 9^${L - 1 - i} = ${add}`);
+        if (lim === 4) { tight = false; snap(i, `To stay tight we would need the digit 4 itself, which is banned. Stop here: no number that matches N this far is allowed`); }
+      }
+      if (tight) { total += 1; snap(L, `We stayed tight to the end, so ${N} itself has no 4 and counts once`); }
+      let brute = 0; for (let x = 0; x <= N; x++) if (!String(x).includes("4")) brute++;
+      if (brute !== total) throw new Error("digit dp " + total + " " + brute);
+      F.push({ rows: [{ label: "N", vals: d, marks: mk(range(L), "done") }], text: `${total} numbers in [0, ${N}] have no 4 (0 counts too). Memoising (position, tight) makes any digit rule O(digits × states)` });
+      return F;
+    },
+    mount: rowsMount,
+  });
+
+  addVis("拓14", {
+    title: "Link-cut tree: access(v) makes the root-to-v path preferred",
+    frames() {
+      const par = [-1, 0, 0, 1, 1, 2, 3, 3, 5, 6], names = "ABCDEFGHIJ", pref = Array(10).fill(-1), F = [];
+      pref[0] = 2; pref[2] = 5; pref[5] = 8; pref[1] = 4; pref[3] = 7;
+      const paths = () => { const out = []; range(10).forEach(v => { if (par[v] >= 0 && pref[par[v]] === v) return; const p = []; for (let u = v; u >= 0; u = pref[u]) p.push(names[u]); out.push(p.join("")); }); return out; };
+      const snap = (hot, node, text) => F.push({ par, names, edge: Object.fromEntries(range(10).filter(v => par[v] >= 0).map(v => [v, hot.includes(v) ? "hot" : pref[par[v]] === v ? "mst" : "skip"])), node, list: qlist("Preferred paths (each is one splay tree, keyed by depth)", paths()), text });
+      snap([], {}, "Solid edges are preferred: every node has at most one preferred child. The tree splits into preferred paths, each stored in a splay tree");
+      const v = 9;
+      for (let u = v, last = -1; u >= 0; last = u, u = par[u]) {
+        const old = pref[u];
+        pref[u] = last;
+        snap(last >= 0 ? [last] : [], { [u]: "cur", [v]: "hit" }, last < 0 ? `access(${names[v]}): first cut ${names[v]}'s preferred child${old >= 0 ? ` ${names[old]}` : " (none)"}, so the path ends at ${names[v]}` : `Climb to ${names[u]}: its preferred child becomes ${names[last]}${old >= 0 && old !== last ? `, and ${names[old]} drops off into a path of its own` : old === last ? " (it already was)" : ""}`);
+      }
+      snap([], { [v]: "hit", 0: "end" }, `Now A…${names[v]} is one preferred path, so one splay tree holds exactly the root-to-${names[v]} path. Link, cut, path sums and findroot are all built on access, amortised O(log n)`);
+      return F;
+    },
+    mount: dynTreeMount,
+  });
+
+  addVis("拓16", {
+    title: "Stress testing: compare against a brute force until they disagree",
+    frames() {
+      const code = ["for (int t = 1; ; t++) {", "  system(\"gen > in.txt\");", "  system(\"sol < in.txt > a.txt\");", "  system(\"brute < in.txt > b.txt\");", "  if (system(\"fc a.txt b.txt\")) break;", "}"];
+      let seed = 5; const rnd = m => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % m; };
+      const sol = a => { let best = 0, cur = 0; for (const x of a) { cur = Math.max(0, cur + x); best = Math.max(best, cur); } return best; }; // bug: best starts at 0
+      const brute = a => { let best = -Infinity; for (let i = 0; i < a.length; i++) { let s = 0; for (let j = i; j < a.length; j++) { s += a[j]; best = Math.max(best, s); } } return best; };
+      const F = [];
+      F.push({ code, line: -1, vars: { task: "largest subarray sum" }, text: "sol is the fast answer we doubt, brute an obviously correct O(n²) one, gen prints a small random test. Small tests make a failure easy to read" });
+      for (let t = 1; t < 40; t++) {
+        const n = 2 + rnd(3), a = range(n).map(() => rnd(10) - 4), x = sol(a), y = brute(a), vars = { t, input: a.join(" "), sol: x, brute: y };
+        if (t === 3 && x === y) F.push({ code, line: 4, vars, text: "From here the tests keep agreeing, so the loop just runs on. Hundreds of small tests take a second" });
+        if (t <= 2 || x !== y) {
+          F.push({ code, line: 1, vars: { t, input: a.join(" ") }, text: `Test ${t}: gen writes a random array of length ${n}` });
+          F.push({ code, line: 4, vars, text: x === y ? `Both print ${x}. Same output, next test` : `They disagree: sol says ${x}, brute says ${y}. The loop stops with the breaking input still in in.txt` });
+        }
+        if (x !== y) { F.push({ code, line: 5, vars, text: `Every value in ${a.join(" ")} is negative, so the best subarray is a single number, ${y}. sol started best at 0, which is the empty subarray. Fix: start best at the first element` }); break; }
+      }
+      return F;
+    },
+    mount: traceMount,
+  });
+
+  addVis("拓21", {
+    title: "Palindromic tree of abaaba",
+    frames() {
+      const s = "abaaba", len = [-1, 0], fail = [0, 0], str = ["−1", "ε"], ch = [{}, {}], par = [-1, 0], F = [];
+      let last = 1;
+      const getFail = (v, i) => { const walk = [v]; while (i - len[v] - 1 < 0 || s[i - len[v] - 1] !== s[i]) { v = fail[v]; walk.push(v); } return [v, walk]; };
+      let read = 0;
+      const snap = (node, text) => F.push({ par: [...par], names: len.map(String), label: [...str], node, edge: { 1: "hid" }, extra: range(len.length).slice(2).map(v => [v, fail[v]]), list: qlist("Read so far", [s.slice(0, read) || "nothing"]), text });
+      snap({}, "Two roots: one of length −1 (so adding a letter on both sides gives one letter) and one of length 0 (for even palindromes). Numbers are lengths, dashed curves are suffix links");
+      for (let i = 0; i < s.length; i++) {
+        const [p, walk] = getFail(last, i), c = s[i];
+        read = i + 1;
+        if (ch[p][c] !== undefined) { last = ch[p][c]; snap({ [last]: "hit" }, `Add ${c}: walk ${walk.map(v => str[v]).join(" → ")} until the letter before the palindrome is also ${c}. ${str[last]} already exists`); continue; }
+        const v = len.length;
+        len.push(len[p] + 2); str.push(p === 0 ? c : c + (p === 1 ? "" : str[p]) + c); ch.push({}); par.push(p);
+        fail.push(p === 0 ? 1 : ch[getFail(fail[p], i)[0]][c]);
+        ch[p][c] = v; last = v;
+        snap({ [v]: "hit", [p]: "cur" }, `Add ${c}: walk ${walk.map(v => str[v]).join(" → ")} until the letter before the palindrome is also ${c}. New node ${str[v]} under ${str[p]}; its suffix link goes to ${str[fail[v]]}`);
+      }
+      const set = new Set(); for (let i = 0; i < s.length; i++) for (let j = i + 1; j <= s.length; j++) { const t = s.slice(i, j); if (t === [...t].reverse().join("")) set.add(t); }
+      if (set.size !== len.length - 2) throw new Error("pam " + set.size);
+      snap({}, `${len.length - 2} nodes besides the roots: exactly the distinct palindromes of ${s}. A string of length n has at most n of them, so the tree is built in O(n)`);
+      return F;
+    },
+    mount: dynTreeMount,
+  });
+
+  addVis("拓33", {
+    title: "endpos classes of abcbc form the suffix link tree",
+    frames() {
+      const s = "abcbc", n = s.length, ep = {}, F = [];
+      for (let i = 0; i < n; i++) for (let j = i + 1; j <= n; j++) (ep[s.slice(i, j)] = ep[s.slice(i, j)] || []).push(j);
+      const cls = {};
+      Object.entries(ep).forEach(([t, e]) => { const key = [...new Set(e)].join(","); (cls[key] = cls[key] || []).push(t); });
+      const groups = [{ key: range(n + 1).join(","), subs: ["ε"] }].concat(Object.entries(cls).map(([key, subs]) => ({ key, subs: subs.sort((a, b) => b.length - a.length) }))).sort((a, b) => b.key.split(",").length - a.key.split(",").length);
+      const sub = (a, b) => a.split(",").every(x => b.split(",").includes(x));
+      const par = [], names = [], label = [];
+      F.push({ par: [-1], names: [String(n + 1)], label: ["ε"], list: qlist("Positions", s.split("").map((c, k) => `${k + 1}:${c}`)), text: "endpos(t) is the set of positions where t ends. The empty string ends everywhere (positions 0 to 5), so it is the root" });
+      par.push(-1); names.push(String(n + 1)); label.push("ε");
+      groups.slice(1).forEach((g, k) => {
+        let p = 0; for (let q = 0; q <= k; q++) if (sub(g.key, groups[q].key) && groups[q].key.split(",").length <= groups[p].key.split(",").length) p = q;
+        par.push(p); names.push(String(g.key.split(",").length)); label.push(g.subs[0]);
+        F.push({ par: [...par], names: [...names], label: [...label], node: { [k + 1]: "hit", [p]: "cur" }, list: qlist("Strings in this class", g.subs), text: `${g.subs.join(", ")} ${g.subs.length > 1 ? "all end" : "ends"} at {${g.key}}: one class, one SAM state. Its parent is the smallest class whose set contains this one` });
+      });
+      F.push({ par, names, label, list: qlist("Classes and where they end", groups.map(g => `${g.subs[0]} {${g.key}}`)), text: `Circles show how many positions each class ends at. ${groups.length} classes, so the SAM of ${s} has ${groups.length} states. A child's set is a subset of its parent's. Read as a tree of reversed strings, this is the suffix tree of the reversed text` });
+      return F;
+    },
+    mount: dynTreeMount,
+  });
+
+  // ---- NOI ----
+  const N1G = { names: ["s", "a", "b", "t", "S", "T"], pos: [[40, 170], [110, 50], [180, 120], [310, 170], [330, 40], [40, 40]], dir: true, edges: [[0, 1], [0, 2], [1, 2], [1, 3], [2, 3], [3, 0], [4, 1], [4, 2], [4, 3], [0, 5], [1, 5], [2, 5], [3, 5]] };
+  addVis("N1", {
+    title: "Flow with lower bounds: is there a feasible circulation?",
+    frames() {
+      const E = [[0, 1, 1, 3], [0, 2, 0, 2], [1, 2, 1, 2], [1, 3, 0, 2], [2, 3, 2, 3], [3, 0, 0, 9]], F = [];
+      const d = Array(4).fill(0); E.forEach(([u, v, l]) => { d[v] += l; d[u] -= l; });
+      if (d[0] > 0) throw new Error("the drawing has no S to s edge");
+      const lab = E.map(([, , l, c]) => `${l}..${c}`), hidAux = Object.fromEntries(range(7).map(k => [6 + k, "hid"]));
+      F.push({ node: { 4: "hid", 5: "hid" }, edge: hidAux, elab: lab, text: "Each edge carries a range lower..upper. t→s with no limit turns the s–t flow into a circulation. Is there any flow that respects every range?" });
+      F.push({ node: { 4: "hid", 5: "hid" }, label: Object.fromEntries(d.map((x, k) => [k, x > 0 ? `+${x}` : x])), edge: hidAux, elab: E.map(([, , l, c]) => `${c - l}`), text: "Force every lower bound through first. That leaves capacity upper − lower, and each node is now unbalanced by (lower bounds in) − (lower bounds out)" });
+      // the auxiliary edges: S → v for a surplus, v → T for a deficit
+      const aux = [], cap = [];
+      E.forEach(([u, v, l, c]) => { aux.push([u, v]); cap.push(c - l); });
+      const auxIdx = {};
+      range(4).forEach(v => { if (d[v] > 0) { auxIdx[6 + v - 1] = aux.length; aux.push([4, v]); cap.push(d[v]); } });
+      range(4).forEach(v => { if (d[v] < 0) { auxIdx[9 + v] = aux.length; aux.push([v, 5]); cap.push(-d[v]); } });
+      const drawE = k => (auxIdx[k] !== undefined ? "" : k >= 6 ? "hid" : "");
+      const shown = () => Object.fromEntries(range(13).map(k => [k, drawE(k)]));
+      const elab = flow => Object.fromEntries(range(13).map(k => { const j = k < 6 ? k : auxIdx[k]; return [k, j === undefined ? "" : `${flow[j]}/${cap[j]}`]; }));
+      const flow = cap.map(() => 0);
+      F.push({ label: Object.fromEntries(d.map((x, k) => [k, x > 0 ? `+${x}` : x])), edge: shown(), elab: elab(flow), text: "Add a new source S feeding each surplus and a new sink T draining each deficit. A feasible flow exists exactly when max flow S→T fills every S edge" });
+      const n = 6, need = cap.filter((_, k) => aux[k][0] === 4).reduce((a, b) => a + b, 0);
+      let total = 0;
+      for (;;) {
+        const prev = Array(n).fill(null); prev[4] = -1; const q = [4];
+        while (q.length && prev[5] === null) { const u = q.shift(); aux.forEach(([a, b], k) => { if (a === u && prev[b] === null && flow[k] < cap[k]) { prev[b] = [k, 1]; q.push(b); } if (b === u && prev[a] === null && flow[k] > 0) { prev[a] = [k, -1]; q.push(a); } }); }
+        if (prev[5] === null) break;
+        let push = Infinity;
+        const steps = [];
+        for (let v = 5; v !== 4;) { const [k, dir] = prev[v]; push = Math.min(push, dir > 0 ? cap[k] - flow[k] : flow[k]); steps.push([k, dir]); v = dir > 0 ? aux[k][0] : aux[k][1]; }
+        steps.forEach(([k, dir]) => (flow[k] += dir * push));
+        const path = steps.map(([k]) => k);
+        total += push;
+        const hot = shown(); path.forEach(k => { const draw = k < 6 ? k : +Object.keys(auxIdx).find(x => auxIdx[x] === k); hot[draw] = "hot"; });
+        F.push({ edge: hot, elab: elab(flow), list: qlist("Flow from S", [`${total} of ${need}`]), text: `Augment ${push} along a shortest path from S to T (BFS)` });
+      }
+      if (total !== need) throw new Error("not feasible");
+      const real = E.map(([, , l], k) => l + flow[k]);
+      range(4).forEach(v => { let bal = 0; E.forEach(([a, b], k) => { if (b === v) bal += real[k]; if (a === v) bal -= real[k]; }); if (bal) throw new Error("not balanced"); });
+      F.push({ node: { 4: "hid", 5: "hid" }, edge: { ...hidAux, ...mk(range(6), "mst") }, elab: E.map(([, , l, c], k) => `${real[k]} in ${l}..${c}`), text: `Every S edge is full (${need}), so a valid circulation exists. Real flow = lower bound + flow found; each node balances. Max flow with bounds then runs s→t once more on what is left` });
+      return F;
+    },
+    mount: netMount(N1G),
+  });
+
+  const N2G = { names: "RABCD".split(""), pos: [[40, 100], [150, 40], [150, 160], [270, 160], [270, 40]], dir: true, edges: [[0, 1, 6], [0, 2, 8], [1, 2, 2], [2, 3, 3], [3, 1, 4], [3, 4, 1], [1, 4, 7], [4, 3, 9]] };
+  addVis("N2", {
+    title: "Minimum arborescence: cheapest in-edges, then shrink the cycle",
+    frames() {
+      const E = N2G.edges, n = 5, F = [];
+      const inBest = range(n).map(v => (v === 0 ? -1 : E.map((e, k) => [e, k]).filter(([e]) => e[1] === v).sort((a, b) => a[0][2] - b[0][2])[0][1]));
+      F.push({ text: "Root R must reach every node by directed edges, as cheaply as possible. Step one: every other node keeps only its cheapest incoming edge" });
+      F.push({ edge: mk(inBest.filter(k => k >= 0), "hot"), label: Object.fromEntries(inBest.map((k, v) => [v, k >= 0 ? `in ${E[k][2]}` : ""])), text: `Cheapest in-edges: ${inBest.slice(1).map((k, i) => `${"ABCD"[i]} ← ${N2G.names[E[k][0]]} (${E[k][2]})`).join(", ")}` });
+      // find the cycle among the chosen edges
+      const p = inBest.map(k => (k < 0 ? -1 : E[k][0]));
+      let cyc = [];
+      for (let s = 1; s < n && !cyc.length; s++) { const seen = []; let v = s; while (v > 0 && !seen.includes(v)) { seen.push(v); v = p[v]; } if (v > 0) { cyc = [v]; for (let u = p[v]; u !== v; u = p[u]) cyc.push(u); } }
+      if (!cyc.length) throw new Error("expected a cycle");
+      const inC = v => cyc.includes(v), cycW = cyc.reduce((a, v) => a + E[inBest[v]][2], 0);
+      F.push({ edge: mk(cyc.map(v => inBest[v]), "hot"), node: mk(cyc, "alt"), text: `${cyc.map(v => N2G.names[v]).join(", ")} point at each other: a cycle, so this is not a tree yet. Shrink the cycle into one node` });
+      const adj = E.map(([u, v, w]) => (inC(v) && !inC(u) ? w - E[inBest[v]][2] : w));
+      F.push({ edge: Object.assign(mk(cyc.map(v => inBest[v]), "hot"), mk(range(E.length).filter(k => inC(E[k][0]) && inC(E[k][1]) && !cyc.some(v => inBest[v] === k)), "skip")), node: mk(cyc, "alt"), elab: Object.fromEntries(E.map((e, k) => [k, inC(e[1]) && !inC(e[0]) ? `${e[2]}−${E[inBest[e[1]]][2]}=${adj[k]}` : e[2]])), text: `An edge entering the cycle at v will replace v's cycle edge, so its cost becomes w − (v's cheapest in-edge). The cycle edges themselves (${cycW} in all) are kept for now` });
+      const enter = E.map((e, k) => k).filter(k => inC(E[k][1]) && !inC(E[k][0])).sort((a, b) => adj[a] - adj[b])[0], drop = inBest[E[enter][1]];
+      const chosen = range(n).slice(1).map(v => (v === E[enter][1] ? enter : inBest[v])), total = chosen.reduce((a, k) => a + E[k][2], 0);
+      let best = Infinity;
+      const opts = range(n).slice(1).map(v => E.map((e, k) => k).filter(k => E[k][1] === v));
+      const tryAll = (i, pick) => { if (i === opts.length) { const pp = [-1, ...pick.map(k => E[k][0])]; if (range(n).slice(1).every(v => { let u = v, s = 0; while (u > 0 && s < n) { u = pp[u]; s++; } return u === 0; })) best = Math.min(best, pick.reduce((a, k) => a + E[k][2], 0)); return; } opts[i].forEach(k => tryAll(i + 1, [...pick, k])); };
+      tryAll(0, []);
+      if (best !== total) throw new Error("arborescence " + total + " " + best);
+      F.forEach(f => (f.elab = f.elab || E.map(e => e[2])));
+      F.push({ elab: E.map(e => e[2]), edge: Object.assign(mk(chosen, "mst"), { [drop]: "skip" }), node: { 0: "end" }, text: `The cheapest edge into the shrunk node is ${N2G.names[E[enter][0]]}→${N2G.names[E[enter][1]]} (adjusted ${adj[enter]}). Take it and drop ${N2G.names[E[drop][0]]}→${N2G.names[E[drop][1]]}. Total ${total}, the minimum. Zhu–Liu repeats this, O(VE)` });
+      return F;
+    },
+    mount: netMount(N2G),
+  });
+
+  const N3G = { names: "ABCDEF".split(""), pos: [[30, 100], [100, 100], [180, 100], [260, 40], [260, 160], [330, 40]], edges: [[0, 1], [1, 2], [2, 3], [2, 4], [3, 4], [3, 5]] };
+  addVis("N3", {
+    title: "Blossom: an odd cycle hides an augmenting path",
+    frames() {
+      const F = [], M = { 1: "mst", 4: "mst" };
+      F.push({ edge: M, node: { 0: "open", 5: "open" }, text: "Thick edges are matched: B–C and D–E. A and F are free. Is there an augmenting path from A? (free, unmatched, matched, …, unmatched, free)" });
+      F.push({ edge: { ...M, 0: "hot", 1: "hot" }, node: { 0: "cur", 1: "alt", 2: "cur" }, label: { 0: "even", 1: "odd", 2: "even" }, text: "Search from A as in bipartite matching: A is even, B odd, then C (B's partner) even" });
+      F.push({ edge: { ...M, 0: "hot", 1: "hot", 2: "hot", 3: "hot" }, node: { 0: "cur", 1: "alt", 2: "cur", 3: "alt", 4: "alt" }, label: { 0: "even", 1: "odd", 2: "even", 3: "odd", 4: "odd" }, text: "From C both D and E look odd. The bipartite rule only follows a matched edge out of an odd node, and F hangs off D on an unmatched edge: the search would miss it" });
+      F.push({ edge: { ...M, 0: "hot", 1: "hot", 2: "hot", 3: "hot", 4: "hot" }, node: { 0: "cur", 1: "alt", 2: "bad", 3: "bad", 4: "bad" }, label: { 0: "even", 1: "odd", 2: "base" }, text: "But D's partner E is also reachable as even (C → D → E), and C → E → D makes D even too. Two even nodes joined by an edge close an odd cycle C, D, E: a blossom with base C" });
+      F.push({ edge: { 0: "hot", 1: "mst", 2: "fail", 3: "fail", 4: "fail", 5: "hot" }, node: { 0: "cur", 1: "alt", 2: "hit", 3: "hit", 4: "hit", 5: "open" }, label: { 2: "blossom" }, text: "Shrink the blossom to one even node. Every node in a blossom is even, so the edge D–F now leaves an even node and reaches free F: A – B = (CDE) – F" });
+      // expand: path A-B=C-E=D-F
+      const match = [[0, 1], [2, 4], [3, 5]], ok = match.every(([u, v]) => N3G.edges.some(([a, b]) => (a === u && b === v) || (a === v && b === u)));
+      let best = 0; const tryM = (k, used, c) => { if (k === N3G.edges.length) { best = Math.max(best, c); return; } tryM(k + 1, used, c); const [u, v] = N3G.edges[k]; if (!(used >> u & 1) && !(used >> v & 1)) tryM(k + 1, used | 1 << u | 1 << v, c + 1); };
+      tryM(0, 0, 0);
+      if (!ok || best !== 3) throw new Error("blossom " + best);
+      F.push({ edge: { 0: "hot", 1: "hot", 3: "hot", 4: "hot", 5: "hot" }, node: { 0: "cur", 5: "cur" }, text: "Expand the blossom and route the path around the cycle the even way: A – B = C – E = D – F. It alternates and ends at two free nodes" });
+      F.push({ edge: { 0: "mst", 3: "mst", 5: "mst" }, node: mk(range(6), "seen"), text: "Flip every edge on the path: A–B, C–E and D–F are matched now. Three pairs, a perfect matching. The blossom algorithm repeats this for each free node, O(n³)" });
+      return F;
+    },
+    mount: netMount(N3G),
+  });
+
+  const N4G = { names: "RABCDEFG".split(""), pos: [[30, 100], [110, 40], [110, 160], [190, 100], [260, 40], [260, 160], [330, 100], [190, 180]], dir: true, edges: [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [3, 5], [4, 6], [5, 6], [2, 7]] };
+  addVis("N4", {
+    title: "Dominator tree: who must be passed on every path from R",
+    frames() {
+      const n = 8, E = N4G.edges, F = [], pred = range(n).map(v => E.filter(e => e[1] === v).map(e => e[0]));
+      const order = [], seen = [];
+      const dfs = u => { seen[u] = 1; E.filter(e => e[0] === u).forEach(([, v]) => !seen[v] && dfs(v)); order.push(u); };
+      dfs(0);
+      const rpo = order.reverse(), num = {}; rpo.forEach((v, k) => (num[v] = k));
+      const idom = Array(n).fill(-1); idom[0] = 0;
+      const meet = (a, b) => { while (a !== b) { while (num[a] > num[b]) a = idom[a]; while (num[b] > num[a]) b = idom[b]; } return a; };
+      const lab = () => Object.fromEntries(range(n).map(v => [v, v && idom[v] >= 0 ? `idom ${N4G.names[idom[v]]}` : ""]));
+      F.push({ label: lab(), text: "u dominates v when every path from R to v passes through u. The closest such u is v's immediate dominator, idom(v); those links form a tree" });
+      let changed = true, pass = 0;
+      while (changed) {
+        changed = false; pass++;
+        for (const v of rpo.slice(1)) {
+          const ps = pred[v].filter(p => idom[p] >= 0);
+          const nd = ps.reduce((a, p) => (a < 0 ? p : meet(a, p)), -1);
+          if (nd !== idom[v]) { idom[v] = nd; changed = true; F.push({ node: { [v]: "cur", [nd]: "hit", ...mk(pred[v].filter(p => p !== nd), "open") }, label: lab(), text: `Pass ${pass}, ${N4G.names[v]}: ${pred[v].length > 1 ? `its predecessors ${pred[v].map(p => N4G.names[p]).join(", ")} first meet, walking up the idom links, at ${N4G.names[nd]}` : `its only way in is from ${N4G.names[nd]}`}. So idom(${N4G.names[v]}) = ${N4G.names[nd]}` }); }
+        }
+      }
+      // check: removing idom(v) cuts v off from R
+      range(n).slice(1).forEach(v => { const r = [], go = u => { if (r[u] || u === idom[v]) return; r[u] = 1; E.filter(e => e[0] === u).forEach(e => go(e[1])); }; if (idom[v] !== 0) { go(0); if (r[v]) throw new Error("idom wrong " + v); } });
+      const under = range(n).filter(v => { for (let u = v; u; u = idom[u]) if (idom[u] === 3) return true; return false; });
+      F.push({ label: lab(), node: { 3: "hit", ...mk(under, "alt") }, list: qlist("Dominator tree edges", range(n).slice(1).map(v => `${N4G.names[idom[v]]}→${N4G.names[v]}`)), text: `A pass that changes nothing ends it. Every path to ${under.map(v => N4G.names[v]).join(", ")} passes C, so deleting C cuts them all off. Lengauer–Tarjan does the same in O(m α)` });
+      return F;
+    },
+    mount: netMount(N4G),
+  });
+
+  addVis("N5", {
+    title: "Leftist heap: merge along the right spines",
+    frames() {
+      // nodes: key, left, right
+      const T = [[2, 1, 2], [6, 3, -1], [5, -1, -1], [9, -1, -1], [3, 5, 6], [8, -1, -1], [4, 7, -1], [7, -1, -1]].map(([k, l, r]) => ({ k, l, r }));
+      const dist = u => (u < 0 ? 0 : T[u].d), F = [];
+      const fix = u => { if (u < 0) return; fix(T[u].l); fix(T[u].r); T[u].d = dist(T[u].r) + 1; };
+      fix(0); fix(4);
+      const show = (roots, c, text) => F.push({ t: T.map((x, u) => ({ k: x.k, l: x.l, r: x.r, s: x.d, c: c[u] || "" })), roots, text });
+      show([0, 4], {}, "Two min heaps. The small number on each node is its distance: the length of its right spine. Leftist means dist(left) ≥ dist(right), so the right spine is O(log n) long");
+      const spine = u => { const s = []; for (; u >= 0; u = T[u].r) s.push(u); return s; };
+      const sa = spine(0), sb = spine(4), merged = [...sa, ...sb].sort((a, b) => T[a].k - T[b].k);
+      show([0, 4], mk([...sa, ...sb], "cur"), `Merge only walks the right spines: ${sa.map(u => T[u].k).join(", ")} and ${sb.map(u => T[u].k).join(", ")}. Each node keeps its left subtree`);
+      merged.forEach((u, k) => (T[u].r = k + 1 < merged.length ? merged[k + 1] : -1));
+      show([merged[0]], mk(merged, "cur"), `Zip them like two sorted lists: ${merged.map(u => T[u].k).join(", ")} is the new right spine. The heap order holds already`);
+      for (let k = merged.length - 1; k >= 0; k--) {
+        const u = merged[k], l = T[u].l, r = T[u].r;
+        let note;
+        if (dist(l) < dist(r)) { T[u].l = r; T[u].r = l; note = `dist(left) = ${dist(l)} < dist(right) = ${dist(r)}, so swap the children`; } else note = `dist(left) = ${dist(l)} ≥ dist(right) = ${dist(r)}, keep`;
+        T[u].d = dist(T[u].r) + 1;
+        show([merged[0]], { [u]: "hit" }, `Back up at ${T[u].k}: ${note}. New distance ${T[u].d}`);
+      }
+      const check = u => { if (u < 0) return true; const { l, r } = T[u]; if ((l >= 0 && T[l].k < T[u].k) || (r >= 0 && T[r].k < T[u].k) || dist(l) < dist(r)) return false; return check(l) && check(r); };
+      if (!check(merged[0])) throw new Error("leftist");
+      show([merged[0]], {}, "A valid leftist heap again. Merge is O(log n), so push is a merge with one node and pop merges the root's two children");
+      return F;
+    },
+    mount: bstMount,
+  });
+
+  addVis("N6", {
+    title: "Min_25 sieve, part one: primes up to every n / i",
+    frames() {
+      const n = 30, vals = [...new Set(range(n).map(i => Math.floor(n / (i + 1))))], g = vals.map(v => v - 1), F = [];
+      const primes = []; for (let p = 2; p * p <= n; p++) if (range(p).slice(2).every(d => p % d)) primes.push(p);
+      const snap = (marks, text) => F.push({ rows: [{ label: "v", vals, idx: vals.map(() => ""), wide: true }, { label: "g(v)", vals: [...g], idx: vals.map(() => ""), wide: true, marks }], text });
+      snap({}, `Only ${vals.length} values of ⌊${n} / i⌋ exist, about 2√n. Start with g(v) = v − 1: pretend every number from 2 to v is prime`);
+      primes.forEach((p, pi) => {
+        const hit = [];
+        vals.forEach((v, k) => { if (v >= p * p) { const j = vals.indexOf(Math.floor(v / p)); g[k] -= g[j] - pi; hit.push(k); } });
+        snap(mk(hit, "on"), `Prime ${p}: for each v ≥ ${p * p}, remove the numbers whose smallest prime factor is ${p}: g(v) −= g(⌊v / ${p}⌋) − (primes below ${p}) = g(⌊v / ${p}⌋) − ${pi}`);
+      });
+      const pi = v => range(v + 1).filter(x => x > 1 && range(x).slice(2).every(d => x % d)).length;
+      vals.forEach((v, k) => { if (g[k] !== pi(v)) throw new Error("min25 " + v); });
+      snap(mk(range(vals.length), "done"), `Every g(v) is now π(v), the count of primes up to v: π(${n}) = ${g[0]}. Part two adds the composite numbers; together O(n^¾ / log n)`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+
+  addVis("N8", {
+    title: "Simplex: climb from corner to corner of the feasible region",
+    frames() {
+      // maximise 3x + 2y, x + y ≤ 4, x + 2y ≤ 6, x ≤ 3, x, y ≥ 0
+      const A = [[1, 1], [1, 2], [1, 0]], b = [4, 6, 3], c = [3, 2], m = 3, F = [];
+      const tab = A.map((r, i) => [...r, ...range(m).map(j => (i === j ? 1 : 0)), b[i]]), z = [...c.map(x => -x), ...Array(m).fill(0), 0], basis = range(m).map(i => 2 + i);
+      const point = () => { const x = [0, 0]; basis.forEach((v, i) => { if (v < 2) x[v] = tab[i][tab[i].length - 1]; }); return x; };
+      const X = x => 30 + x * 60, Y = y => 180 - y * 45;
+      const corners = [[0, 0], [3, 0], [3, 1], [2, 2], [0, 3]], poly = corners.map(([x, y]) => `${X(x)},${Y(y)}`).join(" ");
+      const lines = [[[0, 4], [4, 0], "x+y≤4"], [[0, 3], [5, 0.5], "x+2y≤6"], [[3, 0], [3, 3.6], "x≤3"]];
+      const path = [];
+      const draw = text => { const p = point(); path.push(p); F.push({ svg: `<line class="ax" x1="30" y1="180" x2="340" y2="180"/><line class="ax" x1="30" y1="180" x2="30" y2="10"/>${lines.map(([a, q, t]) => `<line class="ax" x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(q[0])}" y2="${Y(q[1])}" style="stroke-dasharray:3 3"/><text class="lbl" x="${X(q[0]) - 30}" y="${Y(q[1]) - 4}">${t}</text>`).join("")}<polygon class="poly" points="${poly}"/><polyline class="hull" style="fill:none" points="${path.map(([x, y]) => `${X(x)},${Y(y)}`).join(" ")}"/>${corners.map(([x, y]) => `<circle class="pt" cx="${X(x)}" cy="${Y(y)}" r="3"/>`).join("")}<circle class="pt hit" cx="${X(p[0])}" cy="${Y(p[1])}" r="6"/><text class="lbl" x="${X(p[0]) + 8}" y="${Y(p[1]) - 8}">(${p.join(", ")}) → ${3 * p[0] + 2 * p[1]}</text>`, text }); };
+      draw("Maximise 3x + 2y inside the shaded region. The best point is always a corner, so start at the corner (0, 0) where every slack is full");
+      for (;;) {
+        let e = -1; z.slice(0, -1).forEach((v, j) => { if (v < -1e-9 && (e < 0 || v < z[e])) e = j; });
+        if (e < 0) break;
+        let r = -1; tab.forEach((row, i) => { if (row[e] > 1e-9 && (r < 0 || row[row.length - 1] / row[e] < tab[r][tab[r].length - 1] / tab[r][e])) r = i; });
+        const pv = tab[r][e]; tab[r] = tab[r].map(x => x / pv);
+        tab.forEach((row, i) => { if (i !== r) { const f = row[e]; tab[i] = row.map((x, j) => x - f * tab[r][j]); } });
+        const f = z[e]; z.forEach((x, j) => (z[j] = x - f * tab[r][j]));
+        const leaving = basis[r]; basis[r] = e;
+        draw(`Raising ${"xy"[e]} improves the score most. Push it until constraint ${lines[leaving - 2][2]} becomes tight: one pivot moves along an edge to the next corner`);
+      }
+      const best = Math.max(...corners.map(([x, y]) => 3 * x + 2 * y));
+      if (Math.abs(z[z.length - 1] - best) > 1e-9) throw new Error("simplex");
+      draw(`No variable can still raise the score, so this corner is optimal: ${best}. Each pivot is O(nm); in practice few pivots are needed`);
+      return F;
+    },
+    mount: svgMount("0 0 350 200"),
+  });
+
+  addVis("N9", {
+    title: "General suffix automaton of ab, b and ba",
+    frames() {
+      const words = ["ab", "b", "ba"], len = [0], link = [-1], nxt = [{}], str = [""], F = [];
+      const extend = (last, c) => {
+        if (nxt[last][c] !== undefined) {
+          const q = nxt[last][c];
+          if (len[q] === len[last] + 1) return [q, `${str[q]} already exists with the right length: reuse it, no new state`];
+          const cl = len.length; len.push(len[last] + 1); link.push(link[q]); nxt.push({ ...nxt[q] }); str.push(str[last] + c);
+          link[q] = cl; for (let p = last; p >= 0 && nxt[p][c] === q; p = link[p]) nxt[p][c] = cl;
+          return [cl, `${str[q]} exists but is too long for this path: clone it as ${str[cl]}`];
+        }
+        const cur = len.length; len.push(len[last] + 1); link.push(0); nxt.push({}); str.push(str[last] + c);
+        let p = last; for (; p >= 0 && nxt[p][c] === undefined; p = link[p]) nxt[p][c] = cur;
+        let note = `new state ${str[cur]}`;
+        if (p >= 0) {
+          const q = nxt[p][c];
+          if (len[p] + 1 === len[q]) link[cur] = q;
+          else { const cl = len.length; len.push(len[p] + 1); link.push(link[q]); nxt.push({ ...nxt[q] }); str.push(str[p] + c); for (; p >= 0 && nxt[p][c] === q; p = link[p]) nxt[p][c] = cl; link[q] = link[cur] = cl; note += `, and clone ${str[cl]} from ${str[q]}`; }
+        }
+        return [cur, note];
+      };
+      const count = () => range(len.length).slice(1).reduce((a, v) => a + len[v] - len[link[v]], 0);
+      const snap = (hot, text) => F.push({ par: [...link], names: str.map(s => s || "ε"), label: len.map(String), node: { [hot]: "hit" }, list: qlist("Distinct substrings so far", [count()]), text });
+      snap(0, "One automaton for many strings. Each word starts again from the root. Numbers are len, the tree is the suffix link tree");
+      words.forEach(w => { let last = 0; for (const c of w) { const [v, note] = extend(last, c); last = v; snap(v, `Word ${w}, letter ${c}: ${note}`); } });
+      const all = new Set(); words.forEach(w => { for (let i = 0; i < w.length; i++) for (let j = i + 1; j <= w.length; j++) all.add(w.slice(i, j)); });
+      if (all.size !== count()) throw new Error("gsam " + all.size + " " + count());
+      snap(-1, `Each state adds len − len(link) new substrings: ${count()} distinct substrings across all words (${[...all].join(", ")}). Built in O(total length)`);
+      return F;
+    },
+    mount: dynTreeMount,
+  });
+
+  addVis("N14", [{
+    title: "Binomial inversion: derangements from n!",
+    frames() {
+      const N = 5, C = (n, k) => { let r = 1; for (let i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }, fact = n => (n ? n * fact(n - 1) : 1), D = [], F = [];
+      const rows = (m, terms) => [{ label: "n!", vals: range(N + 1).map(fact), wide: true }, { label: "D(n)", vals: range(N + 1).map(i => D[i] ?? ""), wide: true, marks: m }].concat(terms ? [{ label: "term", vals: terms, wide: true, idx: range(terms.length).map(i => `i=${i}`) }] : []);
+      F.push({ rows: rows({}), text: "Sort n! permutations by how many points stay fixed: n! = Σ C(n, i)·D(i), where D(i) counts the ones with no fixed point among i items. We know f = n!, we want D" });
+      for (let n = 0; n <= N; n++) {
+        const terms = range(n + 1).map(i => (n - i) % 2 ? -C(n, i) * fact(i) : C(n, i) * fact(i));
+        D[n] = terms.reduce((a, b) => a + b, 0);
+        if (n >= 2) F.push({ rows: rows({ [n]: "hit" }, terms), text: `Binomial inversion flips it: D(${n}) = Σ (−1)^(${n}−i)·C(${n}, i)·i! = ${terms.map((x, k) => (k ? (x < 0 ? "− " : "+ ") : x < 0 ? "−" : "") + Math.abs(x)).join(" ")} = ${D[n]}` });
+      }
+      const perms = a => (a.length ? a.flatMap((x, k) => perms([...a.slice(0, k), ...a.slice(k + 1)]).map(p => [x, ...p])) : [[]]);
+      if (perms(range(N)).filter(p => p.every((x, k) => x !== k)).length !== D[N]) throw new Error("derangements");
+      F.push({ rows: rows(mk(range(N + 1), "done")), text: `${D[N]} of the ${fact(N)} orders of ${N} items move every item. The same flip works whenever f(n) = Σ C(n, i)·g(i)` });
+      return F;
+    },
+    mount: rowsMount,
+  }, {
+    title: "Min–max inclusion–exclusion: expected time to see every coupon",
+    frames() {
+      const p = [0.5, 0.3, 0.2], n = 3, F = [], vals = [], idx = [];
+      let sum = 0;
+      F.push({ rows: [{ label: "p", vals: p, wide: true }], text: "Each draw shows coupon i with probability p_i. We want E[max of the first times], which is hard. E[min] over a set T is easy: 1 / Σ p over T" });
+      for (let m = 1; m < 1 << n; m++) {
+        const T = range(n).filter(i => m >> i & 1), q = T.reduce((a, i) => a + p[i], 0), sgn = T.length % 2 ? 1 : -1, term = sgn / q;
+        sum += term; vals.push((sgn > 0 ? "+" : "−") + (1 / q).toFixed(2)); idx.push(T.map(i => "ABC"[i]).join(""));
+        F.push({ rows: [{ label: "p", vals: p, wide: true }, { label: "±E[min]", vals: [...vals], idx: [...idx], wide: true, marks: { [vals.length - 1]: "on" } }], text: `T = {${T.map(i => "ABC"[i]).join(", ")}}: some coupon of T appears with chance ${q.toFixed(1)} per draw, so E[min] = ${(1 / q).toFixed(2)}. Size ${T.length} gives sign ${sgn > 0 ? "+" : "−"}. Running total ${sum.toFixed(3)}` });
+      }
+      // exact check by a DP over the set already seen
+      const E = Array(1 << n).fill(0);
+      for (let m = (1 << n) - 2; m >= 0; m--) { const miss = range(n).filter(i => !(m >> i & 1)), q = miss.reduce((a, i) => a + p[i], 0); E[m] = (1 + miss.reduce((a, i) => a + p[i] * E[m | 1 << i], 0)) / q; }
+      if (Math.abs(E[0] - sum) > 1e-9) throw new Error("minmax " + E[0] + " " + sum);
+      F.push({ rows: [{ label: "p", vals: p, wide: true }, { label: "±E[min]", vals, idx, wide: true, marks: mk(range(vals.length), "done") }], text: `E[max] = Σ over nonempty T of (−1)^(|T|+1)·E[min(T)] = ${sum.toFixed(3)} draws. It matches a direct DP over the seen set. The identity holds for any random variables, not just these` });
+      return F;
+    },
+    mount: rowsMount,
+  }]);
+
+  addVis("N16", {
+    title: "Berlekamp–Massey: the shortest recurrence behind a sequence",
+    frames() {
+      const P = 101, md = x => ((x % P) + P) % P, inv = x => { let r = 1, b = md(x), e = P - 2; while (e) { if (e & 1) r = r * b % P; b = b * b % P; e >>= 1; } return r; };
+      const a = [1, 1, 3, 5, 11, 21, 43, 85], F = [];
+      let C = [], B = [], fail = -1, delta = 0;
+      const show = (i, text) => F.push({ rows: [{ label: "a", vals: a, marks: i >= 0 ? { [i]: "on" } : {} }, { label: "rule", vals: C.length ? C.map(x => (x > P / 2 ? x - P : x)) : ["—"], idx: C.length ? C.map((_, k) => `c${k + 1}`) : [""] }], text });
+      show(-1, "Find the shortest c with a[i] = c1·a[i−1] + … + cL·a[i−L]. Work modulo a prime (101 here) so every division is exact. Start with no rule");
+      for (let i = 0; i < a.length; i++) {
+        const pred = C.reduce((s, c, k) => s + c * a[i - 1 - k], 0), d = md(a[i] - pred);
+        if (!d) { show(i, `The rule predicts a[${i}] = ${a[i]} correctly. Nothing to change`); continue; }
+        if (fail < 0) { C = Array(i + 1).fill(0); fail = i; delta = d; show(i, `a[${i}] = ${a[i]} breaks the empty rule, so any rule needs length ${i + 1}. Take all zeros and keep this failure to fix later`); continue; }
+        const coef = d * inv(delta) % P, T = [...C], fix = [...Array(i - fail - 1).fill(0), coef, ...B.map(x => md(-coef * x))];
+        while (C.length < fix.length) C.push(0);
+        fix.forEach((x, k) => (C[k] = md(C[k] + x)));
+        if (i - fail + B.length >= T.length) { B = T; fail = i; delta = d; }
+        show(i, `The rule predicts a[${i}] wrong by ${d > P / 2 ? d - P : d}. Add a shifted, scaled copy of the last failed rule, which cancels exactly this error and keeps all earlier ones. Length now ${C.length}`);
+      }
+      while (C.length && !C[C.length - 1]) C.pop();
+      const real = C.map(x => (x > P / 2 ? x - P : x));
+      const next = real.reduce((s, c, k) => s + c * a[a.length - 1 - k], 0);
+      if (real.join() !== "1,2" || next !== 171) throw new Error("bm " + real);
+      show(-1, `Shortest rule: a[i] = ${real.map((c, k) => `${c}·a[i−${k + 1}]`).join(" + ")}, so the next term is ${next}. 2L terms are enough to pin a rule of length L; O(n²)`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+
+  addVis("N21", {
+    title: "Dynamic DP: (max, +) matrices in a segment tree",
+    frames() {
+      const a = [3, 1, 4, 1, 5, 9, 2, 6], n = 8, NEG = -1e9, F = [];
+      // M_i applied to (g, h): g' = max(g, h), h' = g + a[i]   (g: last not taken, h: last taken)
+      const leaf = x => [[0, 0], [x, NEG]], mul = (A, B) => [0, 1].map(i => [0, 1].map(j => Math.max(A[i][0] + B[0][j], A[i][1] + B[1][j])));
+      const t = Array(2 * n);
+      const ans = M => Math.max(M[0][0], M[1][0]); // start vector (0, −∞)
+      const pull = k => { t[k] = mul(t[2 * k + 1], t[2 * k]); }; // the right half acts after the left half
+      range(n).forEach(i => (t[n + i] = leaf(a[i])));
+      for (let k = n - 1; k >= 1; k--) pull(k);
+      const rows = marks => [1, 2, 4, 8].map(w => ({ label: w === 8 ? "leaves" : `level ${Math.log2(w)}`, vals: range(w).map(j => (w === 8 ? a[j] : ans(t[w + j]))), idx: range(w).map(j => { const s = j * (n / w), e = s + n / w - 1; return s === e ? `${s + 1}` : `${s + 1}–${e + 1}`; }), marks: marks[w] || {} }));
+      const plain = arr => { let g = 0, h = NEG; for (const x of arr) [g, h] = [Math.max(g, h), g + x]; return Math.max(g, h); };
+      F.push({ rows: rows({}), text: "Pick values with no two neighbours, maximum sum. The step g' = max(g, h), h' = g + a[i] is a 2×2 matrix in (max, +) algebra, so a segment holds the product of its leaves' matrices" });
+      F.push({ rows: rows({ 1: { 0: "hit" } }), text: `Each cell shows the best sum inside its segment, read from its matrix. The root answers the whole array: ${ans(t[1])}` });
+      const i = 2, v = 12;
+      a[i] = v; t[n + i] = leaf(v);
+      const touched = { 8: { [i]: "on" } };
+      F.push({ rows: rows(touched), text: `Update a[${i + 1}] = ${v}. Only its leaf matrix changes` });
+      for (let k = (n + i) >> 1, w = n / 2; k >= 1; k >>= 1, w /= 2) {
+        pull(k); touched[w] = { [k - w]: "on" };
+        F.push({ rows: rows(touched), text: `Recompute the ${w === 1 ? "root" : "parent"} as right matrix × left matrix. Every other cell is reused` });
+      }
+      if (ans(t[1]) !== plain(a)) throw new Error("ddp " + ans(t[1]) + " " + plain(a));
+      F.push({ rows: rows({ 1: { 0: "hit" } }), text: `New answer ${ans(t[1])}, after touching log n + 1 = 4 cells instead of redoing the DP. On a tree, heavy-light decomposition puts each chain in such a segment tree` });
+      return F;
+    },
+    mount: rowsMount,
+  });
+
+  // A segment tree over 8 leaves with an extra node u that wants edges to a whole range.
+  const N23T = treePos([-1, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6], { w: 330, top: 26, dy: 44, left: 20 });
+  const N23G = { names: [...range(15).map(k => (k < 7 ? "" : String(k - 6))), "u"], pos: [...N23T.pos, [330, 26]], dir: true, r: 12, vb: "0 0 350 210", edges: [...N23T.edges, ...range(15).map(k => [15, k])] };
+  addVis("N23", {
+    title: "Segment tree graph: an edge to a whole range costs O(log n) edges",
+    frames() {
+      const F = [], lo = [], hi = [], tree = N23T.edges.length;
+      const span = (k, l, r) => { lo[k] = l; hi[k] = r; if (l === r) return; const m = (l + r) >> 1; span(2 * k + 1, l, m); span(2 * k + 2, m + 1, r); };
+      span(0, 1, 8);
+      const L = 2, R = 7, cover = [];
+      const q = k => { if (hi[k] < L || lo[k] > R) return; if (L <= lo[k] && hi[k] <= R) { cover.push(k); return; } q(2 * k + 1); q(2 * k + 2); };
+      q(0);
+      const got = cover.flatMap(k => range(hi[k] - lo[k] + 1).map(x => lo[k] + x)).sort((a, b) => a - b);
+      if (got.join() !== range(R - L + 1).map(x => x + L).join()) throw new Error("cover");
+      const names = N23G.names.map((s, k) => (k < 7 ? `${lo[k]}${lo[k] === hi[k] ? "" : "–" + hi[k]}` : s));
+      const hideU = mk(range(15).map(k => tree + k), "hid");
+      F.push({ names, edge: hideU, text: "Inner nodes stand for ranges and point down to their children with cost 0. Leaves are the real vertices 1 to 8" });
+      F.push({ names, edge: hideU, node: { 15: "cur", ...mk(range(15).filter(k => lo[k] >= L && hi[k] <= R && lo[k] === hi[k]), "open") }, text: `u wants an edge of weight w to every vertex in [${L}, ${R}]. Done directly that is ${R - L + 1} edges, and with many such ranges it explodes to O(n²)` });
+      F.push({ names, edge: { ...hideU, ...Object.fromEntries(cover.map(k => [tree + k, "hot"])) }, node: { 15: "cur", ...mk(cover, "hit") }, text: `Split [${L}, ${R}] the way a segment tree query does: ${cover.map(k => names[k]).join(", ")}. Add an edge from u to just these ${cover.length} nodes` });
+      const down = N23T.edges.map(([, v], e) => [e, v]).filter(([, v]) => cover.some(k => lo[k] <= lo[v] && hi[v] <= hi[k])).map(([e]) => e);
+      F.push({ names, edge: { ...hideU, ...Object.fromEntries(cover.map(k => [tree + k, "hot"])), ...mk(down, "mst") }, node: { 15: "cur", ...mk(cover, "hit"), ...mk(range(15).filter(k => k >= 7 && lo[k] >= L && hi[k] <= R), "seen") }, text: `The free edges down the tree carry u to every leaf in [${L}, ${R}] with the same cost w. Ranges pointing into u use a second tree whose edges point up. Then run Dijkstra as usual` });
+      return F;
+    },
+    mount: netMount(N23G),
+  });
+
+  const N25G = { names: "ABCDE".split(""), pos: [[50, 50], [180, 30], [300, 70], [90, 170], [250, 170]], edges: [[0, 1, 3], [1, 2, 4], [0, 3, 2], [1, 3, 6], [1, 4, 5], [2, 4, 1], [3, 4, 4], [0, 2, 7]] };
+  addVis("N25", {
+    title: "Chinese postman: walk every street, repeat the cheapest ones",
+    frames() {
+      const E = N25G.edges, n = 5, F = [], deg = Array(n).fill(0);
+      E.forEach(([u, v]) => { deg[u]++; deg[v]++; });
+      const sum = E.reduce((a, e) => a + e[2], 0), odd = range(n).filter(v => deg[v] % 2);
+      const d = range(n).map(i => range(n).map(j => (i === j ? 0 : Infinity))), nx = range(n).map(i => range(n).map(j => j));
+      E.forEach(([u, v, w]) => { d[u][v] = d[v][u] = w; });
+      for (let k = 0; k < n; k++) for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (d[i][k] + d[k][j] < d[i][j]) { d[i][j] = d[i][k] + d[k][j]; nx[i][j] = nx[i][k]; }
+      F.push({ label: Object.fromEntries(deg.map((x, v) => [v, `deg ${x}`])), text: `A closed walk that uses every edge exists only if every degree is even (an Euler circuit). The streets add up to ${sum}` });
+      F.push({ node: mk(odd, "bad"), label: Object.fromEntries(deg.map((x, v) => [v, `deg ${x}`])), text: `${odd.map(v => N25G.names[v]).join(", ")} have odd degree. Some streets must be walked twice, and the repeats must pair the odd nodes up` });
+      const pairings = xs => { if (!xs.length) return [[]]; const [a, ...r] = xs; return r.flatMap((b, k) => pairings(r.filter((_, j) => j !== k)).map(p => [[a, b], ...p])); };
+      const all = pairings(odd).map(p => [p, p.reduce((s, [a, b]) => s + d[a][b], 0)]).sort((x, y) => x[1] - y[1]);
+      F.push({ node: mk(odd, "bad"), list: qlist("Ways to pair them (shortest paths)", all.map(([p, c]) => `${p.map(([a, b]) => N25G.names[a] + N25G.names[b]).join(" + ")} = ${c}`)), text: "Repeat a shortest path between each pair. Try every pairing; with many odd nodes this becomes a minimum weight perfect matching" });
+      const [best, extra] = all[0], twice = {};
+      best.forEach(([a, b]) => { for (let u = a; u !== b; u = nx[u][b]) { const v = nx[u][b], e = E.findIndex(([x, y]) => (x === u && y === v) || (x === v && y === u)); twice[e] = "hot"; } });
+      const deg2 = [...deg]; Object.keys(twice).forEach(e => { deg2[E[e][0]]++; deg2[E[e][1]]++; });
+      if (deg2.some(x => x % 2)) throw new Error("postman");
+      F.push({ edge: twice, node: mk(odd, "hit"), label: Object.fromEntries(deg2.map((x, v) => [v, `deg ${x}`])), list: qlist("Chosen", [`${best.map(([a, b]) => N25G.names[a] + N25G.names[b]).join(" + ")} = ${extra}`]), text: `The cheapest pairing costs ${extra}. Doubling those edges makes every degree even, so an Euler circuit now exists. Shortest tour = ${sum} + ${extra} = ${sum + extra}` });
+      return F;
+    },
+    mount: netMount(N25G),
+  });
+
+
   // ---- shared numbers: tier, streaks, milestones, next chapter ----
   function longestStreak() {
     const ks = Object.keys(days).sort();
