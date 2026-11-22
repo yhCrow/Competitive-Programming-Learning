@@ -68,7 +68,7 @@ img { max-width: 100%; }
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #121417; --surface: #181b20; --raised: #20242a; --line: rgba(236, 239, 244, 0.08); --line-strong: rgba(236, 239, 244, 0.16);
+    --bg: #1a1d22; --surface: #21252b; --raised: #2a2f36; --line: rgba(236, 239, 244, 0.08); --line-strong: rgba(236, 239, 244, 0.16);
     --fg: #eceff4; --fg-2: #b3b9c3; --muted: #8a919c; --accent: #7aa2ff;
     --lv-b: #4cc47e; --lv-j: #7aa2ff; --lv-t: #c98be0; --lv-n: #f2994a; --trap: #ff7b72; --code-bg: #15181c;
     --k-kw: #d2a8ff; --k-ty: #79c0ff; --k-str: #7ee787; --k-num: #f2b35a; --k-com: #7d8896; --k-pre: #ff8fc0;
@@ -76,7 +76,7 @@ img { max-width: 100%; }
   }
 }
 :root[data-theme="dark"] {
-  --bg: #121417; --surface: #181b20; --raised: #20242a; --line: rgba(236, 239, 244, 0.08); --line-strong: rgba(236, 239, 244, 0.16);
+  --bg: #1a1d22; --surface: #21252b; --raised: #2a2f36; --line: rgba(236, 239, 244, 0.08); --line-strong: rgba(236, 239, 244, 0.16);
   --fg: #eceff4; --fg-2: #b3b9c3; --muted: #8a919c; --accent: #7aa2ff;
   --lv-b: #4cc47e; --lv-j: #7aa2ff; --lv-t: #c98be0; --lv-n: #f2994a; --trap: #ff7b72; --code-bg: #15181c;
   --k-kw: #d2a8ff; --k-ty: #79c0ff; --k-str: #7ee787; --k-num: #f2b35a; --k-com: #7d8896; --k-pre: #ff8fc0;
@@ -262,7 +262,7 @@ ol.path a:hover .cjk { text-decoration: underline; }
 pre.code { margin: 0; padding: 12px 16px; background: var(--code-bg); overflow-x: auto; font-family: var(--f-mono); font-size: 14.5px; line-height: 1.6; tab-size: 4; counter-reset: ln; }
 pre.code .l { display: block; }
 pre.code .l::before { counter-increment: ln; content: counter(ln); display: inline-block; width: 2.6em; margin-right: 12px; text-align: right; color: var(--k-com); opacity: .7; user-select: none; }
-.io { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); border-top: 1px solid var(--line); }
+.io { background: var(--code-bg); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); border-top: 1px solid var(--line); }
 .io > div { padding: 8px 16px 12px; min-width: 0; }
 .io > div + div { border-left: 1px solid var(--line); }
 .io b { font-size: 13px; font-weight: 500; color: var(--muted); display: flex; justify-content: space-between; align-items: center; }
@@ -359,7 +359,6 @@ tr td { transition: opacity .15s var(--ease); }
 .vis-stage { min-height: 120px; overflow-x: auto; position: relative; }
 .vis-cap { margin: 0; min-height: 3.2em; color: var(--fg-2); line-height: 1.6; }
 .vis-ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.vis-ctl input[type="range"] { flex: 1 1 160px; accent-color: var(--accent); }
 .bars { height: 172px; min-width: 352px; }
 .vbar { position: absolute; bottom: 24px; left: 0; width: 36px; background: var(--raised); border: 1px solid var(--line-strong); border-radius: 6px 6px 0 0; transition: transform .3s var(--ease-in-out), background-color .15s ease; }
 .vbar span { position: absolute; bottom: -22px; width: 100%; text-align: center; font-size: 13px; color: var(--fg-2); }
@@ -468,7 +467,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 
 /* themes picked by hand: light, dark, warm paper (the default follows the system) */
 :root[data-skin="light"] { --bg: #f6f7f9; --surface: #ffffff; --raised: #eef0f3; --line: rgba(17, 24, 39, 0.10); --line-strong: rgba(17, 24, 39, 0.18); --fg: #151a22; --fg-2: #4a5362; --muted: #5d6573; --accent: #2f5fd0; --lv-b: #1a7a43; --lv-j: #2f5fd0; --lv-t: #9b3fb5; --lv-n: #ad4f09; --trap: #c2372f; --code-bg: #f8f9fb; --k-kw: #8a3fb0; --k-ty: #1f6fb0; --k-str: #2c7a3f; --k-num: #b45309; --k-com: #7b8594; --k-pre: #b0306a; --v-cur: #4f5fd6; --v-cmp: #c98a00; --v-done: #237a4b; --v-bad: #d0453b; color-scheme: light; }
-:root[data-skin="dark"] { --bg: #0b0f17; --surface: #111827; --raised: #1b2433; --line: rgba(226, 232, 240, 0.08); --line-strong: rgba(226, 232, 240, 0.16); --fg: #e2e8f0; --fg-2: #b4bfcd; --muted: #8b96a8; --accent: #8ea8ff; --lv-b: #4cc47e; --lv-j: #8ea8ff; --lv-t: #c98be0; --lv-n: #f2994a; --trap: #ff7b72; --code-bg: #0d131d; --k-kw: #d2a8ff; --k-ty: #79c0ff; --k-str: #7ee787; --k-num: #f2b35a; --k-com: #7d8896; --k-pre: #ff8fc0; --v-cur: #8f9bff; --v-cmp: #f0b429; --v-done: #4cc38a; --v-bad: #ff7b72; color-scheme: dark; }
+:root[data-skin="dark"] { --bg: #131a26; --surface: #1a2232; --raised: #243045; --line: rgba(226, 232, 240, 0.08); --line-strong: rgba(226, 232, 240, 0.16); --fg: #e2e8f0; --fg-2: #b4bfcd; --muted: #8b96a8; --accent: #8ea8ff; --lv-b: #4cc47e; --lv-j: #8ea8ff; --lv-t: #c98be0; --lv-n: #f2994a; --trap: #ff7b72; --code-bg: #0d131d; --k-kw: #d2a8ff; --k-ty: #79c0ff; --k-str: #7ee787; --k-num: #f2b35a; --k-com: #7d8896; --k-pre: #ff8fc0; --v-cur: #8f9bff; --v-cmp: #f0b429; --v-done: #4cc38a; --v-bad: #ff7b72; color-scheme: dark; }
 :root[data-skin="paper"] { --bg: #f4efe4; --surface: #fbf8f1; --raised: #ece5d6; --line: rgba(60, 45, 20, 0.12); --line-strong: rgba(60, 45, 20, 0.22); --fg: #2b2418; --fg-2: #574c3a; --muted: #665a46; --accent: #8a5110; --lv-b: #346a30; --lv-j: #2f5f9a; --lv-t: #8a3f8f; --lv-n: #9c460c; --trap: #b23b2e; --code-bg: #f6f1e6; --k-kw: #7d3f93; --k-ty: #2a5d8f; --k-str: #3f6e2c; --k-num: #9a5b13; --k-com: #8a7c66; --k-pre: #a0375f; --v-cur: #2f5f9a; --v-cmp: #b07a00; --v-done: #346a30; --v-bad: #b23b2e; color-scheme: light; }
 @media (max-width: 560px) { .mrow { grid-template-columns: 140px minmax(0, 1fr) 40px; } .prefs { order: 2; } }
 @media (prefers-reduced-motion: reduce) { .sk, .mbar i { animation: none; } }
@@ -1120,7 +1119,7 @@ svg.pointing .hm-trace { display: none; }
 .cells .row.tight { gap: 3px; } .row.tight .cell { width: 28px; font-size: 12px; } .row.tight .cell small { left: 2px; font-size: 8px; }
 .trace { margin: 0 0 4px; font-family: var(--f-mono); font-size: 13px; line-height: 1.6; overflow-x: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 0; }
 .trace span { display: block; padding: 0 10px; border-left: 3px solid transparent; white-space: pre; transition: background-color .15s ease; }
-.trace span.on { background: color-mix(in srgb, var(--v-cmp) 18%, transparent); border-left-color: var(--v-cmp); }
+.trace span.on { color: var(--fg); }
 .stk { display: grid; gap: 4px; max-width: 420px; }
 .stk div { display: flex; justify-content: space-between; gap: 12px; border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 10px; font-family: var(--f-mono); font-size: 13px; }
 .stk div.on { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 14%, var(--surface)); }
@@ -1151,7 +1150,7 @@ svg.pointing .hm-trace { display: none; }
 .flow.lesson .box { padding: 18px 22px 20px; }
 .flow.lesson .prog { margin: 0; }
 .flow.lesson .vis { margin: 0; }
-.flow.lesson :is(.para, .lede, .box, .lcard, .lsteps, .floop) code:not(.bigo), .ltable code { font-family: var(--f-mono); font-size: .92em; background: var(--raised); border-radius: 5px; padding: 1px 6px; overflow-wrap: anywhere; }
+.flow.lesson :is(.para, .lede, .box, .lcard, .lsteps, .floop, .wq) code:not(.bigo), .ltable code { font-family: var(--f-mono); font-size: .92em; background: var(--raised); border-radius: 5px; padding: 1px 6px; overflow-wrap: anywhere; }
 .flow.lesson strong { font-weight: 600; color: var(--fg); }
 .ltable code { overflow-wrap: normal !important; white-space: nowrap; }
 .ltitle { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
@@ -1231,6 +1230,102 @@ svg.pointing .hm-trace { display: none; }
   .lsteps li { grid-template-columns: 26px minmax(0, 1fr); gap: 4px 14px; }
   .lsteps li span:last-child { grid-column: 2; }
   .fswap { gap: 14px; }
+}
+
+/* the visualizer slider: a slim track that fills as the steps advance, and a round thumb */
+.vis-ctl input[type="range"] { flex: 1 1 160px; -webkit-appearance: none; appearance: none; height: 6px; margin: 0 6px; border-radius: 999px; cursor: pointer;
+  background: linear-gradient(var(--accent), var(--accent)) 0 / var(--p, 0%) 100% no-repeat, var(--raised); transition: background-size .2s var(--ease); }
+.vis-ctl input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); transition: transform .15s var(--ease); }
+.vis-ctl input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); transition: transform .15s var(--ease); }
+.vis-ctl input[type="range"]::-moz-range-track { background: transparent; }
+@media (hover: hover) and (pointer: fine) { .vis-ctl input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); } .vis-ctl input[type="range"]:hover::-moz-range-thumb { transform: scale(1.15); } }
+.vis-ctl input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.25); }
+.vis-ctl input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; }
+.vis-ctl .vplay { min-width: 92px; } .vis-ctl .vplay span { font-size: 11px; }
+#visN { font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; }
+
+/* the code run: a bar slides to the running line; values that change flash */
+.trace { position: relative; }
+.trace span { position: relative; z-index: 1; transition: color .2s var(--ease); }
+.trace .tbar { position: absolute; left: 0; right: 0; top: 0; height: 0; z-index: 0; opacity: 0; pointer-events: none; background: color-mix(in srgb, var(--v-cmp) 18%, transparent); border-left: 3px solid var(--v-cmp);
+  transition: transform .22s var(--ease-in-out), height .22s var(--ease-in-out), opacity .2s var(--ease); }
+.qcell.chg { animation: lsFlash .5s var(--ease); }
+@keyframes lsFlash { from { background: color-mix(in srgb, var(--v-cmp) 45%, var(--surface)); transform: scale(1.08); } }
+
+/* lesson widgets */
+.lwid { display: grid; gap: 16px; padding: 22px 24px 24px; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); border-radius: var(--r-card); background: color-mix(in srgb, var(--accent) 4%, var(--surface)); }
+.lwhead { margin: 0; display: flex; gap: 10px; align-items: center; font-weight: 600; }
+.lwhead span { font-size: 12px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); padding: 2px 8px; border-radius: 999px; }
+.wq { margin: 0; color: var(--fg-2); }
+.wfb { margin: 0; min-height: 1.6em; color: var(--fg-2); line-height: 1.6; }
+.wfb.ok { color: var(--v-done); } .wfb.bad { color: var(--v-bad); }
+.wfb.show { animation: lsIn .3s var(--ease) both; }
+.werr { background: var(--code-bg); border: 1px solid color-mix(in srgb, var(--v-bad) 40%, var(--line)); border-radius: 8px; padding: 10px 14px; color: var(--v-bad); font-size: 13.5px; overflow-x: auto; }
+.wcode { display: grid; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 0; overflow-x: auto; }
+.wcode button { all: unset; display: grid; grid-template-columns: 32px 1fr; align-items: baseline; padding: 3px 12px 3px 0; cursor: pointer; border-left: 3px solid transparent; font: 14px/1.6 var(--f-mono); white-space: pre; transition: background-color .15s var(--ease), border-color .15s var(--ease); }
+.wcode button .ln { color: var(--muted); text-align: right; padding-right: 12px; font-size: 12px; }
+.wcode button code { background: none; padding: 0; }
+@media (hover: hover) and (pointer: fine) { .wcode button:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); } }
+.wcode button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.wcode button.bad { border-left-color: var(--v-bad); animation: lsShake .35s var(--ease); }
+.wcode button.ok { border-left-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 14%, transparent); }
+.wcode .fix { color: var(--v-done); animation: lsPop .4s var(--ease) both; display: inline-block; }
+@keyframes lsShake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+.wpre { display: flex; gap: 8px; flex-wrap: wrap; }
+.win { display: flex; gap: 16px; flex-wrap: wrap; }
+.win label { display: flex; gap: 10px; align-items: center; font-weight: 600; }
+.win input { width: 110px; height: 40px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--bg); color: var(--fg); font: 600 18px var(--f-mono); padding: 0 12px; }
+.win input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.wres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.wres > div { display: grid; gap: 8px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.wres code { color: var(--muted); font-size: 13px; }
+.wres b { font: 600 24px var(--f-mono); font-variant-numeric: tabular-nums; display: inline-block; justify-self: start; }
+.pop { animation: lsPop .35s var(--ease); }
+@keyframes lsPop { from { transform: scale(.7); opacity: .3; } }
+.wdots { display: flex; gap: 6px; }
+.wdots i { width: 22px; height: 4px; border-radius: 2px; background: var(--raised); transition: background-color .3s var(--ease); }
+.wdots i.d { background: var(--v-done); } .wdots i.c { background: var(--accent); }
+.wquiz { display: grid; gap: 14px; }
+.wquiz .wq code { font-size: 1.05em; }
+.wopts { display: flex; gap: 10px; flex-wrap: wrap; }
+.wopts .btn { min-width: 72px; height: 44px; font: 600 16px var(--f-mono); }
+.wopts .btn.ok { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 16%, var(--surface)); animation: lsPop .3s var(--ease); }
+.wopts .btn.bad { border-color: var(--v-bad); background: color-mix(in srgb, var(--v-bad) 14%, var(--surface)); animation: lsShake .35s var(--ease); }
+.wopts .btn:disabled { cursor: default; opacity: 1; }
+.wdone { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; animation: lsIn .4s var(--ease) both; }
+.wdone b { font-size: 28px; color: var(--v-done); }
+.wswap { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
+.wcode.small { padding: 10px 0; min-width: 180px; }
+.wcode.small span { display: block; padding: 2px 14px; border-left: 3px solid transparent; font: 14px/1.7 var(--f-mono); color: var(--muted); transition: color .2s var(--ease), background-color .2s var(--ease), border-color .2s var(--ease); }
+.wcode.small span.on { color: var(--fg); border-left-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 16%, transparent); }
+.wcode.small span.done { color: var(--fg-2); }
+.wboxes { display: flex; gap: 16px; }
+.wboxes .vbox b { font: inherit; }
+.wboxes .vbox { transition: opacity .25s var(--ease), border-color .2s var(--ease), background-color .2s var(--ease); }
+.wboxes .vbox.off { opacity: .3; }
+.lwid .btn:disabled { opacity: .5; cursor: default; }
+
+/* lesson pieces rise in as they scroll into view, their parts one after another */
+.rv { opacity: 0; transform: translateY(14px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+.rv.in { opacity: 1; transform: none; }
+.rv.in :is(.fchip, .fvars > div, .fswap > div, .lsteps > li, .lcard), .rv.in .forder > div > * { animation: lsIn .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
+.rv.in .forder > div > * { animation-delay: calc(var(--i, 0) * 260ms + 150ms); }
+.rv.in .fflow > i { animation: lsIn .4s var(--ease) both; animation-delay: .45s; }
+.rv.in .fline .arc { stroke-dashoffset: 0; animation: lsDraw .8s var(--ease) .35s both; }
+.rv.in .fline .to { transform-box: fill-box; transform-origin: center; animation: lsPop .4s var(--ease) 1s both; }
+.rv.in .fchip.ok { animation-name: lsIn, lsGlow; animation-duration: .45s, 1.2s; animation-delay: calc(var(--i, 0) * 90ms + 120ms), .9s; }
+@keyframes lsIn { from { opacity: 0; transform: translateY(10px); } }
+@keyframes lsDraw { from { opacity: 0; } }
+@keyframes lsGlow { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--v-done) 25%, transparent); } }
+@media (max-width: 640px) {
+  .wres { grid-template-columns: minmax(0, 1fr); }
+  .wres > div { grid-template-columns: 1fr auto; align-items: center; }
+  .wswap { gap: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rv { opacity: 1; transform: none; transition: none; }
+  .trace .tbar, .vis-ctl input[type="range"] { transition: none; }
+  .qcell.chg, .wfb.show, .pop, .wcode button.bad, .wopts .btn.ok, .wopts .btn.bad, .wdone, .wcode .fix { animation: none; }
 }
 
 /* a chapter card's title grows into the chapter heading */
@@ -2135,6 +2230,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         case "prog": { const k = c.programs.findIndex(p => p.file === b.file); return k < 0 ? "" : progBlock(c, k, b.open); }
         case "figure": return FIG[b.name] ? `<figure class="lfig">${FIG[b.name]()}</figure>` : "";
         case "vis": return VIS[c.id] ? `<div class="vis" id="vis"></div>` : "";
+        case "widget": return WIDGET[b.name] ? `<section class="lwid" data-widget="${b.name}"><p class="lwhead"><span>Try it</span>${esc(WIDGET[b.name].title)}</p>${WIDGET[b.name].html()}</section>` : "";
         case "table": {
           const code = new Set(b.code || []);
           const cell = (v, j) => (j === b.link ? `<a class="mono" href="${problemUrl("luogu", v)}" target="_blank" rel="noopener">${esc(v)}</a>` : code.has(j) ? `<code>${esc(v)}</code>` : rich(v));
@@ -2223,7 +2319,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         ${need.length ? `<div class="block"><p class="label">Still to learn first · ${need.length}</p><div class="links">${need.map(chLink).join("")}</div></div>` : ""}
         <div class="block"><p class="label">With CP Coach</p><div class="cc">/learn ${c.id}</div><div class="cc">/practice ${c.id}</div><p class="hint" style="margin-top:8px">Type these in Claude Code to study this chapter or get its next problems</p></div>
       </aside></div>`;
-    if ((tab || "concepts") === "concepts") { mountVis(c); spyOutline(); if (sec) { const el = document.getElementById("sec-" + sec); if (el) setTimeout(() => el.scrollIntoView({ block: "start" }), 0); } }
+    if ((tab || "concepts") === "concepts") { mountVis(c); mountWidgets(); spyOutline(); if (sec) { const el = document.getElementById("sec-" + sec); if (el) setTimeout(() => el.scrollIntoView({ block: "start" }), 0); } }
     const nx = A[i + 1]; // fetch the next chapter's text now so Next feels instant
     if (nx && nx.flow === undefined) fetch(`handouts/${nx.slug}.flow.json`).then(r => r.json()).then(f => { if (nx.flow === undefined) nx.flow = f; }).catch(() => {});
     window.scrollTo(0, 0);
@@ -3002,17 +3098,18 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     let i = 0;
     host.innerHTML = `${list.length > 1 ? `<div class="vis-pick chipset" role="group" aria-label="Concept">${list.map((s, k) => `<button class="chip" data-vpick="${k}" aria-pressed="${k === pick}">${esc(s.title)}</button>`).join("")}</div>` : ""}<div class="vis-head"><b>${spec.title}</b><span class="vkey"><i class="k-cur"></i>current <i class="k-cmp"></i>comparing <i class="k-done"></i>done <i class="k-bad"></i>rejected</span></div>
       <div class="vis-stage" id="visStage"></div><p class="vis-cap" id="visCap" aria-live="polite"></p>
-      <div class="vis-ctl"><button class="btn" data-v="prev" aria-label="Previous step">‹</button><button class="btn" data-v="play">Play</button><button class="btn" data-v="next" aria-label="Next step">›</button>
+      <div class="vis-ctl"><button class="btn" data-v="prev" aria-label="Previous step">‹</button><button class="btn vplay" data-v="play"><span aria-hidden="true">▶</span> Play</button><button class="btn" data-v="next" aria-label="Next step">›</button>
       <input type="range" id="visRange" min="0" max="${frames.length - 1}" value="0" aria-label="Step"><span class="hint" id="visN"></span>
-      <select id="visSpeed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select></div>`;
+      <select id="visSpeed" aria-label="Playback speed">${[0.5, 1, 2, 3].map(v => `<option value="${v}"${v === (spec.speed || 1) ? " selected" : ""}>${v}×</option>`).join("")}</select></div>`;
     const update = spec.mount(host.querySelector("#visStage"));
     const playBtn = host.querySelector('[data-v="play"]');
-    const stop = () => { clearInterval(visTimer); visTimer = null; playBtn.textContent = "Play"; };
+    const stop = () => { clearInterval(visTimer); visTimer = null; playBtn.innerHTML = '<span aria-hidden="true">▶</span> Play'; };
     const show = k => {
       i = Math.max(0, Math.min(frames.length - 1, k));
       update(frames[i]);
       host.querySelector("#visCap").textContent = frames[i].text;
-      host.querySelector("#visRange").value = i;
+      const rg = host.querySelector("#visRange");
+      rg.value = i; rg.style.setProperty("--p", (frames.length > 1 ? (i / (frames.length - 1)) * 100 : 100) + "%");
       host.querySelector("#visN").textContent = `${i + 1} / ${frames.length}`;
     };
     host.onclick = e => {
@@ -3025,7 +3122,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (b.dataset.v === "play") {
         if (visTimer) return stop();
         if (i === frames.length - 1) show(0);
-        playBtn.textContent = "Pause";
+        playBtn.innerHTML = '<span aria-hidden="true">❚❚</span> Pause';
         visTimer = setInterval(() => (i >= frames.length - 1 ? stop() : show(i + 1)), 900 / +host.querySelector("#visSpeed").value);
       }
     };
@@ -3118,7 +3215,146 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   const bigO = html => html.replace(/O\((?:[^()]|\([^()]*\))*\)/g, m => `<code class="bigo">${m}</code>`);
   // Lesson text: `code` and **bold** inside a sentence.
   const rich = s => bigO(esc(s)).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-  const LESSON_BLOCKS = new Set(["figure", "table", "steps", "cards", "vis"]);
+  const LESSON_BLOCKS = new Set(["figure", "table", "steps", "cards", "vis", "widget"]);
+  // Small exercises a lesson places with {t: "widget", name}. html() draws it, init(el) wires it after the page draws.
+  const WIDGET = {
+    bug: {
+      title: "Find the bug",
+      html: () => {
+        const L = ["#include <bits/stdc++.h>", "using namespace std;", "", "int main() {", '    cout << "Hello, World!" << "\\n"', "    return 0;", "}"];
+        return `<div class="werr"><span class="mono">a.cpp:6:5: error: expected ';' before 'return'</span></div>
+          <p class="wq">The program will not compile. Click the line you would fix</p>
+          <div class="wcode">${L.map((l, k) => `<button type="button" data-line="${k + 1}"><span class="ln">${k + 1}</span><code>${esc(l) || " "}</code></button>`).join("")}</div><p class="wfb" aria-live="polite"></p>`;
+      },
+      init(el) {
+        const fb = el.querySelector(".wfb");
+        el.querySelector(".wcode").onclick = e => {
+          const b = e.target.closest("[data-line]");
+          if (!b || el.dataset.done) return;
+          const n = +b.dataset.line;
+          b.classList.remove("bad"); void b.offsetWidth;
+          if (n === 5) {
+            el.dataset.done = 1; b.classList.add("ok");
+            b.querySelector("code").insertAdjacentHTML("beforeend", '<b class="fix">;</b>');
+            say(fb, "ok", "Yes. Line 5 is missing its ; and the compiler only noticed when it reached line 6. Read the error's line, then look just before it");
+          } else if (n === 6) { b.classList.add("bad"); say(fb, "", "Close. The compiler points at line 6, but nothing is wrong there. Look one line up"); }
+          else { b.classList.add("bad"); say(fb, "", "Not this one. The error mentions line 6, so start looking there and just before it"); }
+        };
+      },
+    },
+    divide: {
+      title: "Division playground",
+      html: () => `<div class="wpre">${[[17, 5], [7, 2], [-7, 2], [7, -2], [10, 0]].map(([a, b]) => `<button type="button" class="chip" data-ab="${a} ${b}">${a} and ${b}</button>`).join("")}</div>
+        <div class="win"><label>a <input type="number" value="17" data-k="a" inputmode="numeric"></label><label>b <input type="number" value="5" data-k="b" inputmode="numeric"></label></div>
+        <div class="wres">${[["a / b", "q"], ["a % b", "r"], ["1.0 * a / b", "d"]].map(([e, k]) => `<div><code>${e}</code><b data-out="${k}"></b></div>`).join("")}</div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const [ia, ib] = el.querySelectorAll("input"), fb = el.querySelector(".wfb"), out = k => el.querySelector(`[data-out="${k}"]`);
+        const set = (k, v) => { const o = out(k); if (o.textContent !== v) { o.textContent = v; pop(o); } };
+        const run = () => {
+          const a = Math.trunc(+ia.value || 0), b = Math.trunc(+ib.value || 0);
+          if (!b) { ["q", "r", "d"].forEach(k => set(k, "crash")); return say(fb, "bad", "b = 0: dividing by zero stops the program with a runtime error. Always check b first"); }
+          const q = Math.trunc(a / b), r = a % b; // C++ also cuts toward 0, and % takes the sign of a
+          set("q", String(q)); set("r", String(r)); set("d", String(+(a / b).toPrecision(6)));
+          const n = x => (x < 0 ? `(${x})` : x);
+          say(fb, "ok", `Check: b × q + r = ${n(b)} × ${n(q)} + ${n(r)} = ${b * q + r}, which is a again${a / b < 0 && q !== Math.floor(a / b) ? `. Note ${q}, not ${Math.floor(a / b)}: it cuts toward 0` : ""}`);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-ab]"); if (!c) return; [ia.value, ib.value] = c.dataset.ab.split(" "); run(); };
+        ia.oninput = ib.oninput = run;
+        run();
+      },
+    },
+    predict: {
+      title: "Predict the output",
+      Q: [
+        ["7 / 2", ["3.5", "3", "4"], 1, "Two ints: the fraction is dropped"],
+        ["-7 / 2", ["-4", "-3", "-3.5"], 1, "It cuts toward 0, so -3.5 becomes -3, not -4"],
+        ["-7 % 3", ["2", "-1", "1"], 1, "% takes the sign of the left side: -7 = 3 × (-2) - 1"],
+        ["1 + 2 * 3", ["9", "7"], 1, "* runs before +"],
+        ["7.0 / 2", ["3", "3.5", "4"], 1, "One double makes it real division"],
+        ["(7 + 3 - 1) / 3", ["2", "3", "3.33"], 1, "That is 9 / 3 = 3: the round up trick for 7 / 3"],
+      ],
+      html: () => `<div class="wquiz"></div>`,
+      init(el) {
+        const Q = WIDGET.predict.Q, box = el.querySelector(".wquiz");
+        let k = 0, score = 0;
+        const draw = () => {
+          if (k === Q.length) {
+            box.innerHTML = `<div class="wdone"><b>${score} / ${Q.length}</b><span>${score === Q.length ? "All right. You have the rules" : "Read the table above again, then try once more"}</span><button type="button" class="btn" data-again>Try again</button></div>`;
+            return;
+          }
+          const [e, opts] = Q[k];
+          box.innerHTML = `<div class="wdots">${Q.map((_, j) => `<i class="${j < k ? "d" : j === k ? "c" : ""}"></i>`).join("")}</div>
+            <p class="wq">What does <code>cout &lt;&lt; ${esc(e)};</code> print?</p>
+            <div class="wopts">${opts.map((o, j) => `<button type="button" class="btn" data-o="${j}">${esc(o)}</button>`).join("")}</div><p class="wfb" aria-live="polite"></p>`;
+        };
+        box.onclick = e => {
+          if (e.target.closest("[data-again]")) { k = score = 0; return draw(); }
+          if (e.target.closest("[data-next]")) { k++; return draw(); }
+          const b = e.target.closest("[data-o]");
+          if (!b || box.dataset.answered === String(k)) return;
+          box.dataset.answered = k;
+          const [, , right, why] = Q[k], ok = +b.dataset.o === right;
+          if (ok) score++;
+          box.querySelectorAll("[data-o]").forEach(x => { x.disabled = true; if (+x.dataset.o === right) x.classList.add("ok"); });
+          if (!ok) b.classList.add("bad");
+          const fb = box.querySelector(".wfb");
+          say(fb, ok ? "ok" : "bad", `${ok ? "Right." : "Not quite."} ${why}`);
+          fb.insertAdjacentHTML("beforeend", ` <button type="button" class="linkish" data-next>${k + 1 < Q.length ? "Next →" : "See score →"}</button>`);
+        };
+        draw();
+      },
+    },
+    swap: {
+      title: "Swap two boxes",
+      M: { right: ["int t = a;", "a = b;", "b = t;"], wrong: ["a = b;", "b = a;"] },
+      html: () => `<div class="seg" role="group" aria-label="Way to swap"><button type="button" data-m="right" aria-pressed="true">With a third box</button><button type="button" data-m="wrong" aria-pressed="false">Without one</button></div>
+        <div class="wswap"><div class="wcode small"></div><div class="wboxes">${["a", "b", "t"].map(n => `<span class="vbox" data-v="${n}"><small>${n}</small><b></b></span>`).join("")}</div></div>
+        <div class="btns"><button type="button" class="btn primary" data-step>Run next line</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        let mode = "right", i = 0, v;
+        const code = el.querySelector(".wcode"), fb = el.querySelector(".wfb"), stepBtn = el.querySelector("[data-step]");
+        const box = n => el.querySelector(`[data-v="${n}"]`);
+        const paint = changed => {
+          ["a", "b", "t"].forEach(n => { box(n).querySelector("b").textContent = v[n]; box(n).classList.toggle("ok", n === changed); });
+          box("t").classList.toggle("off", mode === "wrong");
+          if (changed) pop(box(changed));
+          code.querySelectorAll("span").forEach((s, k) => s.className = k < i ? "done" : k === i ? "on" : "");
+        };
+        const reset = () => {
+          v = { a: 3, b: 5, t: "?" }; i = 0; stepBtn.disabled = false;
+          code.innerHTML = WIDGET.swap.M[mode].map(l => `<span>${esc(l)}</span>`).join("");
+          say(fb, "", "a holds 3 and b holds 5. Run the lines one at a time");
+          paint();
+        };
+        el.onclick = e => {
+          const m = e.target.closest("[data-m]");
+          if (m) { mode = m.dataset.m; el.querySelectorAll("[data-m]").forEach(x => x.setAttribute("aria-pressed", x === m)); return reset(); }
+          if (e.target.closest("[data-reset]")) return reset();
+          if (!e.target.closest("[data-step]")) return;
+          const L = WIDGET.swap.M[mode], line = L[i], [dst, src] = line.replace("int ", "").replace(";", "").split(" = ");
+          v[dst] = v[src]; i++; paint(dst);
+          if (i === L.length) {
+            stepBtn.disabled = true;
+            say(fb, mode === "right" ? "ok" : "bad", mode === "right" ? "Swapped: a is 5 and b is 3. t kept the old a safe while a was overwritten" : "Both are 5. The 3 was lost the moment a = b ran, so b = a just copies 5 back");
+          } else say(fb, "", `${line} copies ${src} into ${dst}`);
+        };
+        reset();
+      },
+    },
+  };
+  const say = (el, cls, text) => { el.className = "wfb " + cls; el.textContent = text; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show"); };
+  const pop = el => { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); };
+  function mountWidgets() {
+    document.querySelectorAll("[data-widget]").forEach(el => WIDGET[el.dataset.widget] && WIDGET[el.dataset.widget].init(el));
+    // lesson pieces rise in as they scroll into view; their parts follow one after another
+    if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
+    document.querySelectorAll(".flow.lesson :is(.lfig, .lwid, .ltable, .lsteps, .lcards, .box, details.prog, .vis)").forEach(el => {
+      el.classList.add("rv"); io.observe(el);
+      [...el.querySelectorAll(".fchip, .forder > div, .fvars > div, .fswap > div, .lsteps > li, .lcard")].forEach((c, k) => c.style.setProperty("--i", k));
+    });
+  }
+
   // The handouts' diagrams, redrawn so they sit in the page and follow the theme.
   const FIG = {
     cycle: () => `<div class="fflow">${[["Read", "the problem"], ["Write", "the code"], ["Compile", "g++"], ["Test", "samples and small cases"]].map(([h, s], k) => `<div class="fchip"><b>${k + 1}</b><span>${h}</span><small>${s}</small></div><i aria-hidden="true">→</i>`).join("")}<div class="fchip ok"><b>✓</b><span>Submit</span><small>when all pass</small></div></div>
@@ -3324,9 +3560,32 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   const svgMount = vb => stage => f => { stage.innerHTML = `<svg viewBox="${vb}" class="gsvg plane">${f.svg}</svg>${f.list ? `<div class="queue">${f.list}</div>` : ""}`; };
   // A short program run line by line: f.code, f.line (the line about to run), f.vars, f.out.
   function traceMount(stage) {
+    let code = null, seen = {}, lastOut;
+    const flash = el => { el.classList.remove("chg"); void el.offsetWidth; el.classList.add("chg"); };
     return f => {
-      stage.innerHTML = `<pre class="trace">${f.code.map((l, k) => `<span class="${k === f.line ? "on" : ""}">${esc(l) || " "}</span>`).join("")}</pre>
-        <div class="queue">${qlist("Variables", Object.entries(f.vars).map(([k, v]) => `${esc(k)} = ${esc(String(v))}`))}</div>${f.out != null ? `<div class="queue"><span class="hint">Output</span><span class="qcell">${esc(f.out) || "&nbsp;"}</span></div>` : ""}`;
+      if (code !== f.code) {
+        code = f.code; seen = {}; lastOut = undefined;
+        stage.innerHTML = `<pre class="trace"><i class="tbar" aria-hidden="true"></i>${f.code.map(l => `<span>${esc(l) || " "}</span>`).join("")}</pre>
+          <div class="queue tvars"><span class="hint">Variables</span></div><div class="queue tout"><span class="hint">Output</span><span class="qcell"></span></div>`;
+      }
+      const lines = [...stage.querySelectorAll(".trace span")], bar = stage.querySelector(".tbar"), on = lines[f.line];
+      lines.forEach((l, k) => l.classList.toggle("on", k === f.line));
+      bar.style.opacity = on ? 1 : 0;
+      if (on) { bar.style.transform = `translateY(${on.offsetTop}px)`; bar.style.height = on.offsetHeight + "px"; }
+      const box = stage.querySelector(".tvars"), names = Object.keys(f.vars);
+      [...box.querySelectorAll(".qcell")].forEach(c => { if (!names.includes(c.dataset.k)) { c.remove(); delete seen[c.dataset.k]; } });
+      names.forEach(k => {
+        let c = box.querySelector(`[data-k="${CSS.escape(k)}"]`);
+        if (!c) { c = document.createElement("span"); c.className = "qcell"; c.dataset.k = k; box.append(c); }
+        const v = String(f.vars[k]);
+        c.textContent = `${k} = ${v}`;
+        if (seen[k] !== undefined && seen[k] !== v) flash(c);
+        seen[k] = v;
+      });
+      const out = stage.querySelector(".tout");
+      out.hidden = f.out == null;
+      if (f.out != null) { out.lastElementChild.textContent = f.out; if (f.out !== lastOut) flash(out.lastElementChild); }
+      lastOut = f.out;
     };
   }
   // A call stack: f.stack = [{name, note, c}], the newest call on top.
@@ -3337,6 +3596,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   // ===== 基础篇 =====
   addVis("基1", {
     title: "A program runs one line at a time",
+    speed: 3,
     frames() {
       const code = ["int a, b;", "cin >> a >> b;            // input: 17 5", "int q = a / b;", "int r = a % b;", "double d = 1.0 * a / b;", 'cout << q << " " << r << " " << d;'];
       const F = [], vars = {};
