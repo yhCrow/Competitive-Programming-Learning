@@ -1245,7 +1245,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .vis-ctl input[type="range"]:active::-webkit-slider-thumb { transform: scale(1.25); }
 .vis-ctl input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 6px; }
 .vis-ctl .vplay { min-width: 92px; } .vis-ctl .vplay span { font-size: 11px; }
-#visN { font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; }
+[data-n] { font-variant-numeric: tabular-nums; min-width: 4.5ch; text-align: right; }
 
 /* the code run: a bar slides to the running line; values that change flash */
 .trace { position: relative; }
@@ -2495,7 +2495,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         case "fig": return `<a class="jump fig" href="${pdf(b.page)}" target="_blank" rel="noopener">Diagram on PDF page ${b.page} →</a>`;
         case "prog": { const k = c.programs.findIndex(p => p.file === b.file); return k < 0 ? "" : progBlock(c, k, b.open); }
         case "figure": return FIG[b.name] ? `<figure class="lfig">${FIG[b.name]()}</figure>` : "";
-        case "vis": return VIS[c.id] ? `<div class="vis" id="vis"></div>` : "";
+        case "vis": return VIS[c.id] ? `<div class="vis"${b.k ? "" : ' id="vis"'} data-vk="${b.k || 0}"></div>` : "";
         case "widget": return WIDGET[b.name] ? `<section class="lwid" data-widget="${b.name}"><p class="lwhead"><span>Try it</span>${esc(WIDGET[b.name].title)}</p>${WIDGET[b.name].html()}</section>` : "";
         case "table": {
           const code = new Set(b.code || []);
@@ -2917,7 +2917,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     ${FAMILIES.map(f => `<button class="chip ichip" data-topic="${f.key}" aria-pressed="${topicFilter === f.key}">${icon(f.key)}${f.name}</button>`).join("")}</div>`;
 
   // ---- visualizers: a step player plus five small pieces, each tied to the chapter it teaches ----
-  let visTimer = null;
+  let visTimer = null, visStop = null;
   const VIS = {};
   VIS["基9"] = {
     title: "Insertion sort, step by step",
@@ -3361,28 +3361,35 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     mount: rowsMount,
   };
 
-  function mountVis(c) { mountVisInto(document.getElementById("vis"), VIS[c.id]); }
+  // A lesson places players with {t: "vis", k}: each shows concept k of the chapter. Otherwise one player with chips.
+  function mountVis(c) {
+    const hosts = document.querySelectorAll(".flow [data-vk]");
+    if (hosts.length) hosts.forEach(h => mountVisInto(h, [].concat(VIS[c.id])[+h.dataset.vk]));
+    else mountVisInto(document.getElementById("vis"), VIS[c.id]);
+  }
   function mountVisInto(host, specs, pick = 0) {
-    clearInterval(visTimer); visTimer = null;
     if (!specs || !host) return;
+    if (host._stop) host._stop(); // a remount (a concept chip) stops this player first
     const list = [].concat(specs), spec = list[pick] || list[0];
     const frames = spec.frames();
     let i = 0;
     host.innerHTML = `${list.length > 1 ? `<div class="vis-pick chipset" role="group" aria-label="Concept">${list.map((s, k) => `<button class="chip" data-vpick="${k}" aria-pressed="${k === pick}">${esc(s.title)}</button>`).join("")}</div>` : ""}<div class="vis-head"><b>${spec.title}</b><span class="vkey"><i class="k-cur"></i>current <i class="k-cmp"></i>comparing <i class="k-done"></i>done <i class="k-bad"></i>rejected</span></div>
-      <div class="vis-stage" id="visStage"></div><p class="vis-cap" id="visCap" aria-live="polite"></p>
+      <div class="vis-stage" ></div><p class="vis-cap"  aria-live="polite"></p>
       <div class="vis-ctl"><button class="btn" data-v="prev" aria-label="Previous step">‹</button><button class="btn vplay" data-v="play"><span aria-hidden="true">▶</span> Play</button><button class="btn" data-v="next" aria-label="Next step">›</button>
-      <input type="range" id="visRange" min="0" max="${frames.length - 1}" value="0" aria-label="Step"><span class="hint" id="visN"></span>
-      <select id="visSpeed" aria-label="Playback speed">${[0.5, 1, 2, 3].map(v => `<option value="${v}"${v === (spec.speed || 1) ? " selected" : ""}>${v}×</option>`).join("")}</select></div>`;
-    const update = spec.mount(host.querySelector("#visStage"));
+      <input type="range" class="vis-range" min="0" max="${frames.length - 1}" value="0" aria-label="Step"><span class="hint" data-n></span>
+      <select class="vis-speed" aria-label="Playback speed">${[0.5, 1, 2, 3].map(v => `<option value="${v}"${v === (spec.speed || 1) ? " selected" : ""}>${v}×</option>`).join("")}</select></div>`;
+    const update = spec.mount(host.querySelector(".vis-stage"));
     const playBtn = host.querySelector('[data-v="play"]');
-    const stop = () => { clearInterval(visTimer); visTimer = null; playBtn.innerHTML = '<span aria-hidden="true">▶</span> Play'; };
+    // only one player runs at a time: starting this one stops the other
+    const stop = () => { if (visStop === stop) { clearInterval(visTimer); visTimer = null; visStop = null; } playBtn.innerHTML = '<span aria-hidden="true">▶</span> Play'; };
+    host._stop = stop;
     const show = k => {
       i = Math.max(0, Math.min(frames.length - 1, k));
       update(frames[i]);
-      host.querySelector("#visCap").textContent = frames[i].text;
-      const rg = host.querySelector("#visRange");
+      host.querySelector(".vis-cap").textContent = frames[i].text;
+      const rg = host.querySelector(".vis-range");
       rg.value = i; rg.style.setProperty("--p", (frames.length > 1 ? (i / (frames.length - 1)) * 100 : 100) + "%");
-      host.querySelector("#visN").textContent = `${i + 1} / ${frames.length}`;
+      host.querySelector("[data-n]").textContent = `${i + 1} / ${frames.length}`;
     };
     host.onclick = e => {
       const p = e.target.closest("[data-vpick]");
@@ -3392,13 +3399,14 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (b.dataset.v === "prev") { stop(); show(i - 1); }
       if (b.dataset.v === "next") { stop(); show(i + 1); }
       if (b.dataset.v === "play") {
-        if (visTimer) return stop();
+        if (visStop === stop) return stop();
+        if (visStop) visStop();
         if (i === frames.length - 1) show(0);
         playBtn.innerHTML = '<span aria-hidden="true">❚❚</span> Pause';
-        visTimer = setInterval(() => (i >= frames.length - 1 ? stop() : show(i + 1)), 900 / +host.querySelector("#visSpeed").value);
+        visTimer = setInterval(() => (i >= frames.length - 1 ? stop() : show(i + 1)), 900 / +host.querySelector(".vis-speed").value); visStop = stop;
       }
     };
-    host.querySelector("#visRange").oninput = e => { stop(); show(+e.target.value); };
+    host.querySelector(".vis-range").oninput = e => { stop(); show(+e.target.value); };
     show(0);
   }
 
@@ -6800,6 +6808,276 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     },
   });
 
+
+  // ===== more step players for the lesson chapters; a lesson places each with {t: "vis", k} =====
+  const traceF = (code, F) => (line, vars, text, out) => F.push({ code, line, vars: { ...vars }, out, text });
+  const idiv = (a, b) => Math.trunc(a / b);
+  // 基1
+  addVis("基1", {
+    title: "Swapping two boxes with a third",
+    frames() {
+      const code = ["int a = 3, b = 5, t;", "t = a;", "a = b;", "b = t;"], F = [], s = traceF(code, F), v = { a: 3, b: 5, t: "?" };
+      s(0, v, "Two boxes hold 3 and 5. t is the empty third box");
+      v.t = v.a; s(1, v, "t = a copies 3 into t. Now the 3 is safe");
+      v.a = v.b; s(2, v, "a = b overwrites a with 5. Without t, the 3 would be gone now");
+      v.b = v.t; s(3, v, "b = t puts the saved 3 into b. Swapped: a = 5, b = 3");
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基1", {
+    title: "Which operator runs first",
+    frames() {
+      let tok = ["2", "*", "3", "-", "4", "/", "2"];
+      const F = [], snap = (m, text) => F.push({ rows: [{ label: "expr", vals: [...tok], marks: m }], text });
+      snap({}, "2 * 3 - 4 / 2: no brackets, so * and / go first, left to right, then + and −");
+      for (const ops of [["*", "/", "%"], ["+", "-"]]) {
+        for (let i = 1; i < tok.length; i += 2) {
+          if (!ops.includes(tok[i])) continue;
+          const a = +tok[i - 1], b = +tok[i + 1], r = tok[i] === "*" ? a * b : tok[i] === "/" ? idiv(a, b) : tok[i] === "%" ? a % b : tok[i] === "+" ? a + b : a - b;
+          snap(mk([i - 1, i, i + 1], "on"), `${ops[0] === "*" ? "* / % come first" : "Now + and −"}: ${a} ${tok[i]} ${b} = ${r}`);
+          tok = [...tok.slice(0, i - 1), String(r), ...tok.slice(i + 2)]; i -= 2;
+          snap({ [Math.max(0, i + 1)]: "hit" }, `Replace it with ${r}`);
+        }
+      }
+      snap({ 0: "done" }, `The value is ${tok[0]}. When in doubt, add brackets`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基1", {
+    title: "Integer division cuts toward 0",
+    frames() {
+      const P = [[7, 2], [-7, 2], [7, -2], [-7, -2], [17, 5]], F = [], cols = [];
+      const snap = (k, text) => F.push({ rows: ["a", "b", "a / b", "a % b"].map((l, r) => ({ label: l, vals: cols.map(c => c[r]), marks: k >= 0 ? { [k]: r >= 2 ? "hit" : "on" } : {} })), text });
+      P.forEach(([a, b], k) => { const q = idiv(a, b), r = a % b; cols.push([a, b, q, r]); const n = x => (x < 0 ? `(${x})` : x); snap(k, `${a} / ${b} = ${a / b} becomes ${q} (toward 0). Remainder ${r}: ${n(b)} × ${n(q)} + ${n(r)} = ${a}`); });
+      snap(-1, "% always takes the sign of a, so b × (a / b) + a % b gives a back in every case");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  // 基2
+  addVis("基2", {
+    title: "Clock times in minutes",
+    frames() {
+      const code = ["cin >> a >> b >> c >> d;   // 12 50 19 10", "int t = (c * 60 + d) - (a * 60 + b);", "cout << t / 60 << \" \" << t % 60;"], F = [], s = traceF(code, F), v = {};
+      Object.assign(v, { a: 12, b: 50, c: 19, d: 10 }); s(0, v, "Start 12:50, end 19:10 on the same day");
+      v.start = 12 * 60 + 50; v.end = 19 * 60 + 10; v.t = v.end - v.start; s(1, v, `12:50 is minute ${v.start} after midnight, 19:10 is minute ${v.end}. The gap is ${v.t} minutes`);
+      s(2, v, `${v.t} / 60 = ${idiv(v.t, 60)} hours, ${v.t} % 60 = ${v.t % 60} minutes`, `${idiv(v.t, 60)} ${v.t % 60}`);
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基2", {
+    title: "Counting back past midnight",
+    frames() {
+      const code = ["cin >> s >> v;   // 10000 1", "int need = (s + v - 1) / v + 10;", "int t = ((8 * 60 - need) % 1440 + 1440) % 1440;", "printf(\"%02d:%02d\", t / 60, t % 60);"], F = [], s = traceF(code, F), v = { s: 10000, v: 1 };
+      s(0, v, "10000 metres at 1 metre per minute");
+      v.need = Math.floor((10000 + 1 - 1) / 1) + 10; s(1, v, `Round up the walk and add 10 minutes: need = ${v.need}`);
+      v.raw = 480 - v.need; s(2, v, `08:00 is minute 480. 480 − ${v.need} = ${v.raw}: negative, we left days earlier`);
+      v.t = ((v.raw % 1440) + 1440) % 1440; s(2, v, `${v.raw} % 1440 = ${v.raw % 1440}, + 1440 = ${(v.raw % 1440) + 1440}, % 1440 = ${v.t}`);
+      s(3, v, `${v.t} minutes is ${String(idiv(v.t, 60)).padStart(2, "0")}:${String(v.t % 60).padStart(2, "0")}`, `${String(idiv(v.t, 60)).padStart(2, "0")}:${String(v.t % 60).padStart(2, "0")}`);
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基2", {
+    title: "Lowercase to uppercase with char arithmetic",
+    frames() {
+      const w = "hello", out = Array(w.length).fill(""), F = [];
+      const snap = (k, text) => F.push({ rows: [{ label: "c", vals: w.split(""), marks: k >= 0 ? { [k]: "on" } : {} }, { label: "code", vals: w.split("").map(c => c.charCodeAt(0)) }, { label: "c-'a'+'A'", vals: [...out], marks: k >= 0 ? { [k]: "hit" } : {} }], text });
+      snap(-1, "Each char is stored as its code. Lowercase letters are exactly 32 above their uppercase partners");
+      [...w].forEach((c, k) => { out[k] = String.fromCharCode(c.charCodeAt(0) - 32); snap(k, `'${c}' is ${c.charCodeAt(0)}. ${c.charCodeAt(0)} − 'a' + 'A' = ${c.charCodeAt(0) - 32}, which is '${out[k]}'`); });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  // 基3
+  addVis("基3", {
+    title: "An else if chain stops at the first true test",
+    frames() {
+      const code = ["if (bmi < 18.5) cout << \"Underweight\";", "else if (bmi < 24) cout << \"Normal\";", "else cout << \"Overweight\";"], F = [];
+      for (const [m, h] of [[45, 1.7], [70, 1.75], [90, 1.75]]) {
+        const bmi = +(m / (h * h)).toFixed(1), s = traceF(code, F);
+        s(0, { m, h, bmi }, `bmi = ${bmi}. Test 1: ${bmi} < 18.5 is ${bmi < 18.5}`, bmi < 18.5 ? "Underweight" : undefined);
+        if (bmi < 18.5) continue;
+        s(1, { m, h, bmi }, `Test 1 failed, so test 2: ${bmi} < 24 is ${bmi < 24}`, bmi < 24 ? "Normal" : undefined);
+        if (bmi < 24) continue;
+        s(2, { m, h, bmi }, "Both tests failed: the else runs", "Overweight");
+      }
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基3", {
+    title: "switch without break falls through",
+    frames() {
+      const code = ["switch (m) {", "  case 2: days = 28;", "  case 4: case 6: case 9: case 11: days = 30;", "  default: days = 31;", "}"], F = [], s = traceF(code, F), v = { m: 4 };
+      s(0, v, "m = 4. switch jumps straight to the matching case");
+      v.days = 30; s(2, v, "case 4 runs: days = 30. There is no break…");
+      v.days = 31; s(3, v, "…so it falls into default too: days = 31. Wrong");
+      s(4, v, "Put break at the end of every case to leave the switch", "31");
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基3", {
+    title: "Sorting three values with three swaps",
+    frames() {
+      const v = [5, 3, 4], F = [], snap = (m, text) => F.push({ rows: [{ label: "a b c", vals: [...v], marks: m }], text });
+      snap({}, "Three compare and swap steps sort any three values");
+      for (const [i, j] of [[0, 1], [1, 2], [0, 1]]) {
+        const sw = v[i] > v[j];
+        snap(mk([i, j], "on"), `Is ${"abc"[i]} = ${v[i]} > ${"abc"[j]} = ${v[j]}? ${sw ? "yes, swap" : "no, keep"}`);
+        if (sw) { [v[i], v[j]] = [v[j], v[i]]; snap(mk([i, j], "hit"), `Now ${v.join(", ")}`); }
+      }
+      const [a, b, c] = v;
+      snap(mk([0, 1, 2], "done"), `Sorted. ${a} + ${b} > ${c}: a triangle. ${a}² + ${b}² = ${a * a + b * b} = ${c}²: a right angle`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  // 基4
+  addVis("基4", {
+    title: "A for loop, one part at a time",
+    frames() {
+      const code = ["int sum = 0;", "for (int i = 1; i < 10; i += 3)", "    sum += i;", "cout << sum;"], F = [], s = traceF(code, F), v = { sum: 0 };
+      s(0, v, "sum starts at 0");
+      v.i = 1; s(1, v, "init: i = 1, runs once");
+      for (;;) {
+        if (!(v.i < 10)) { s(1, v, `test: ${v.i} < 10 is false, so the loop ends`); break; }
+        s(1, v, `test: ${v.i} < 10 is true`);
+        v.sum += v.i; s(2, v, `body: sum += ${v.i}, sum = ${v.sum}`);
+        v.i += 3; s(1, v, `update: i += 3, i = ${v.i}`);
+      }
+      s(3, v, "The body ran 3 times", String(v.sum));
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基4", {
+    title: "Trial division up to √n",
+    frames() {
+      const n = 221, tried = [], res = [], F = [], snap = (m, text) => F.push({ rows: [{ label: "i", vals: [...tried] }, { label: "n % i", vals: [...res], marks: m }], text });
+      snap({}, `Is ${n} prime? Only divisors up to √${n} ≈ ${Math.sqrt(n).toFixed(1)} need testing`);
+      for (let i = 2; i * i <= n; i++) {
+        tried.push(i); res.push(n % i);
+        if (n % i === 0) { snap({ [tried.length - 1]: "bad" }, `${n} % ${i} = 0: ${n} = ${i} × ${n / i}, not prime. Stop`); break; }
+        snap({ [tried.length - 1]: "on" }, `${n} % ${i} = ${n % i}, not a divisor`);
+      }
+      snap({}, `${tried.length} tests instead of ${n - 2}: O(√n)`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基4", {
+    title: "Euclid's algorithm",
+    frames() {
+      const code = ["while (b != 0) {", "    int r = a % b;", "    a = b; b = r;", "}", "cout << a;"], F = [], s = traceF(code, F), v = { a: 1071, b: 462 };
+      s(-1, v, "gcd(1071, 462)");
+      while (v.b) {
+        s(0, v, `b = ${v.b} is not 0: keep going`);
+        v.r = v.a % v.b; s(1, v, `r = ${v.a} % ${v.b} = ${v.r}`);
+        v.a = v.b; v.b = v.r; s(2, v, `gcd(a, b) = gcd(b, r): now a = ${v.a}, b = ${v.b}`);
+      }
+      s(4, v, `b is 0, so the answer is a = ${v.a}. Each step shrinks the numbers fast: O(log n)`, String(v.a));
+      return F;
+    },
+    mount: traceMount,
+  });
+  // 基5
+  addVis("基5", {
+    title: "Marking cut ranges in a record array",
+    frames() {
+      const L = 10, cut = Array(L + 1).fill(0), F = [], snap = (m, text) => F.push({ rows: [{ label: "cut", vals: [...cut], marks: m }], text });
+      snap({}, "Trees stand at positions 0 to 10. cut[p] = 1 will mean the tree at p is gone");
+      for (const [l, r] of [[2, 5], [4, 7]]) { for (let p = l; p <= r; p++) cut[p] = 1; snap(mk(range(r - l + 1).map(x => x + l), "on"), `Cut [${l}, ${r}]: set cut[${l}..${r}] = 1. Positions already 1 just stay 1`); }
+      snap(mk(range(L + 1).filter(p => !cut[p]), "hit"), `Count the zeros: ${cut.filter(x => !x).length} trees left. Overlaps were handled for free`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基5", {
+    title: "Sliding a window of 3",
+    frames() {
+      const a = [1, 4, 7, 3, 1, 2, 6, 5], m = 3, F = [];
+      let s = a[0] + a[1] + a[2], best = s;
+      const snap = (lo, add, drop, text) => F.push({ rows: [{ label: "a", vals: a, marks: Object.assign(mk(range(m).map(x => x + lo), "on"), add >= 0 ? { [add]: "hit" } : {}, drop >= 0 ? { [drop]: "bad" } : {}) }], text });
+      snap(0, -1, -1, `First window a[0..2]: s = ${s}`);
+      for (let i = m; i < a.length; i++) { s += a[i] - a[i - m]; best = Math.min(best, s); snap(i - m + 1, i, i - m, `Add a[${i}] = ${a[i]}, drop a[${i - m}] = ${a[i - m]}: s = ${s}. Smallest so far ${best}`); }
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基5", {
+    title: "Filling a spiral with direction arrays",
+    frames() {
+      const n = 4, g = range(n).map(() => Array(n).fill("")), F = [], DX = [0, 1, 0, -1], DY = [1, 0, -1, 0], AR = "→↓←↑";
+      let x = 0, y = 0, d = 0;
+      const snap = (text, turned) => F.push({ rows: g.map((r, i) => ({ label: `row ${i}`, vals: [...r], marks: i === x ? { [y]: turned ? "bad" : "on" } : {} })), text });
+      for (let k = 1; k <= n * n; k++) {
+        g[x][y] = k;
+        const nx = x + DX[d], ny = y + DY[d], blocked = nx < 0 || nx >= n || ny < 0 || ny >= n || g[nx][ny] !== "";
+        snap(`Write ${k}, heading ${AR[d]}${blocked && k < n * n ? `. The next cell is ${nx < 0 || nx >= n || ny < 0 || ny >= n ? "outside" : "taken"}: turn right, d = ${(d + 1) % 4}` : ""}`, blocked && k < n * n);
+        if (blocked) d = (d + 1) % 4;
+        x += DX[d]; y += DY[d];
+      }
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基5", {
+    title: "Counting by value also sorts",
+    frames() {
+      const xs = [3, 1, 4, 1, 5, 2, 3, 1], cnt = Array(6).fill(0), out = [], F = [];
+      const snap = (m, om, text) => F.push({ rows: [{ label: "input", vals: xs, marks: om }, { label: "cnt[v]", vals: [...cnt], marks: m }, { label: "output", vals: out.length ? [...out] : [""] }], text });
+      snap({}, {}, "cnt[v] counts how many times value v appeared. Values are 0 to 5");
+      xs.forEach((v, k) => { cnt[v]++; snap({ [v]: "on" }, { [k]: "on" }, `Read ${v}: cnt[${v}]++ → ${cnt[v]}`); });
+      for (let v = 0; v < 6; v++) if (cnt[v]) { for (let t = 0; t < cnt[v]; t++) out.push(v); snap({ [v]: "hit" }, {}, `Walk the values in order: print ${v} ${cnt[v]} time${cnt[v] > 1 ? "s" : ""}`); }
+      snap({}, {}, `Sorted without comparing anything: O(n + range)`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  // 基6
+  addVis("基6", {
+    title: "Walking a char array to its \\0",
+    frames() {
+      const a = ["h", "e", "l", "l", "o", "\\0", "?", "?"], F = [];
+      for (let len = 0; ; len++) {
+        const end = a[len] === "\\0";
+        F.push({ rows: [{ label: "a", vals: a, marks: { [len]: end ? "hit" : "on" } }], text: end ? `a[${len}] is '\\0': stop. The length is ${len}. Boxes after it are never read` : `a[${len}] = '${a[len]}' is not '\\0': len becomes ${len + 1}` });
+        if (end) break;
+      }
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基6", {
+    title: "Counting letters with cnt[ch - 'a']",
+    frames() {
+      const w = "banana", L = "abn", cnt = { a: 0, b: 0, n: 0 }, F = [];
+      const snap = (k, text) => F.push({ rows: [{ label: "word", vals: w.split(""), marks: k >= 0 ? { [k]: "on" } : {} }, { label: "cnt", vals: L.split("").map(c => cnt[c]), idx: L.split("").map(c => `'${c}'`), marks: k >= 0 ? { [L.indexOf(w[k])]: "hit" } : {} }], text });
+      snap(-1, "One box per letter. ch - 'a' turns 'a'…'z' into 0…25 (only the letters that appear are shown)");
+      [...w].forEach((c, k) => { cnt[c]++; snap(k, `'${c}' - 'a' = ${c.charCodeAt(0) - 97}: cnt[${c.charCodeAt(0) - 97}]++ → ${cnt[c]}`); });
+      snap(-1, "max 3, min 1 among letters that appear: 3 − 1 = 2, a prime. Lucky Word");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基6", {
+    title: "Finding every match with find",
+    frames() {
+      const text = " to be or not to be ", w = " to ", F = [], hits = [];
+      const snap = (m, text2) => F.push({ rows: [{ label: "text", vals: [...text].map(c => (c === " " ? "␣" : c)), marks: m }], text: text2 });
+      snap({}, `Search " to " in the padded line. The spaces stop it matching inside other words`);
+      for (let p = text.indexOf(w); p >= 0; p = text.indexOf(w, p + 1)) { hits.push(p); snap(mk(range(w.length).map(i => p + i), "hit"), `find(w, from) returns ${p}. That is the word's start in the original line. Next search from ${p + 1}`); }
+      snap({}, `No more: find returns npos. ${hits.length} matches, the first at ${hits[0]}`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+
   // ---- shared numbers: tier, streaks, milestones, next chapter ----
   function longestStreak() {
     const ks = Object.keys(days).sort();
@@ -7385,7 +7663,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   // ---- routing ----
   let skipHash = false;
   function route() {
-    clearInterval(visTimer); visTimer = null; // a visualizer stops playing when you leave its chapter
+    if (visStop) visStop(); // a visualizer stops playing when you leave its chapter
     clearInterval(contestTimer); contestTimer = null;
     document.body.classList.remove("mapopen");
     if (homeCtx) { homeCtx.revert(); homeCtx = null; }
