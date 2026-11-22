@@ -355,13 +355,13 @@ tr td { transition: opacity .15s var(--ease); }
 .mm-view { fill: color-mix(in srgb, var(--accent) 14%, transparent); stroke: var(--accent); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
 
 /* visualizers */
-.vis { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); padding: 16px; display: grid; gap: 12px; margin-bottom: 20px; }
+.vis { border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin-bottom: 20px; }
 .vis-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
 .vis-head b { font-weight: 500; }
 .vis-stage { min-height: 120px; overflow-x: auto; position: relative; }
 .vis-cap { margin: 0; min-height: 3.2em; color: var(--fg-2); line-height: 1.6; }
 .vis-ctl { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.bars { height: 172px; min-width: 352px; }
+.bars { height: 172px; min-width: min(352px, 100%); }
 .vbar { position: absolute; bottom: 24px; left: 0; width: 36px; background: var(--raised); border: 1px solid var(--line-strong); border-radius: 6px 6px 0 0; transition: transform .3s var(--ease-in-out), background-color .15s ease; }
 .vbar span { position: absolute; bottom: -22px; width: 100%; text-align: center; font-size: 13px; color: var(--fg-2); }
 .vbar.done { background: color-mix(in srgb, var(--accent) 22%, var(--surface)); }
@@ -1653,6 +1653,23 @@ svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
 .wcrow:first-child span { color: var(--v-cmp); font-size: 11px; }
 .wbig { padding: 12px 14px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--line); font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; max-height: 9em; overflow-y: auto; }
 @media (max-width: 640px) { .wcrow small { width: 70px; } .wcrow span { width: 28px; height: 30px; } }
+
+
+/* 基9 widgets */
+.fverd.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.fverd > div.best { border-color: var(--v-done); }
+.wsbars { display: flex; gap: 6px; align-items: flex-end; height: 170px; padding-top: 6px; }
+.wsbars > div { flex: 1 1 0; max-width: 46px; height: 100%; display: grid; grid-template-rows: 1fr auto; justify-items: center; gap: 4px; }
+.wsbars i { align-self: end; width: 100%; height: var(--h); min-height: 4px; border-radius: 6px 6px 2px 2px; background: color-mix(in srgb, var(--v-cur) 45%, var(--surface)); transition: height .2s var(--ease-in-out), background-color .15s var(--ease); }
+.wsbars span { font: 600 13px var(--f-mono); color: var(--fg-2); }
+.wsbars .cmp i { background: var(--v-cmp); }
+.wsbars .sw i { background: var(--v-bad); }
+.wsbars .fin i { background: color-mix(in srgb, var(--v-done) 65%, var(--surface)); }
+.wstages { display: grid; gap: 10px; }
+.wstages .frow { grid-template-columns: 70px auto; justify-items: start; max-width: none; }
+.wpairs span { min-width: auto; padding: 0 10px; }
+@media (max-width: 640px) { .fverd.four { grid-template-columns: minmax(0, 1fr); } .wsbars { gap: 3px; } .wstages .frow { grid-template-columns: minmax(0, 1fr); } }
+@media (prefers-reduced-motion: reduce) { .wsbars i { transition: none; } }
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -3125,7 +3142,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const nodes = [...stage.querySelectorAll(".gn")], lines = [...stage.querySelectorAll("line")], list = stage.querySelector(".queue");
     return f => {
       nodes.forEach((n, k) => {
-        n.setAttribute("class", "gn " + (f.node[k] || ""));
+        const st = (f.node[k] || ""), was = n.getAttribute("class").replace(/\s*glow/g, "").replace(/^gn\s*/, "").trim();
+        n.setAttribute("class", "gn " + st);
+        if (st && st !== was) { n.getBoundingClientRect(); n.classList.add("glow"); }
         const d = n.querySelector(".d"), v = String(f.label[k] ?? "");
         if (d.textContent !== v) { const had = d.textContent !== ""; d.textContent = v; d.classList.remove("glow"); if (had && v) { d.getBoundingClientRect(); d.classList.add("glow"); } }
       });
@@ -3181,9 +3200,10 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function rowsMount(stage) {
     stage.classList.add("cells");
     return f => {
-      const old = [...stage.querySelectorAll(".cell")].map(c => c.textContent);
+      const mark = c => [...c.classList].filter(x => x !== "cell" && x !== "w" && x !== "glow").join(" ");
+      const old = [...stage.querySelectorAll(".cell")].map(c => [c.textContent, mark(c)]);
       stage.innerHTML = f.rows.map(r => `<div class="arow"><span class="alabel">${r.label}</span><div class="row${r.vals.length > 12 ? " tight" : ""}">${r.vals.map((v, k) => `<div class="cell ${r.wide ? "w " : ""}${(r.marks || {})[k] || ""}"><small>${r.idx ? r.idx[k] : k + (r.base ?? 0)}</small>${v}</div>`).join("")}</div></div>`).join("");
-      if (old.length) stage.querySelectorAll(".cell").forEach((c, k) => { if (old[k] !== undefined && old[k] !== c.textContent) c.classList.add("glow"); });
+      if (old.length) stage.querySelectorAll(".cell").forEach((c, k) => { const o = old[k], m = mark(c); if (o && (o[0] !== c.textContent || (m && o[1] !== m))) c.classList.add("glow"); });
     };
   }
   VIS["进2"] = {
@@ -3874,7 +3894,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const nodes = [...stage.querySelectorAll(".gn")], lines = [...stage.querySelectorAll("line")], wts = [...stage.querySelectorAll("text.w")], list = stage.querySelector(".queue");
       return f => {
         nodes.forEach((n, k) => {
-          n.setAttribute("class", "gn " + ((f.node || {})[k] || ""));
+          const st = ((f.node || {})[k] || ""), was = n.getAttribute("class").replace(/\s*glow/g, "").replace(/^gn\s*/, "").trim();
+          n.setAttribute("class", "gn " + st);
+          if (st && st !== was) { n.getBoundingClientRect(); n.classList.add("glow"); }
           const d = n.querySelector(".d"), v = String((f.label || {})[k] ?? "");
           if (d.textContent !== v) { const had = d.textContent !== ""; d.textContent = v; d.classList.remove("glow"); if (had && v) { d.getBoundingClientRect(); d.classList.add("glow"); } }
           if (f.names) n.querySelector("text").textContent = f.names[k];
@@ -7593,6 +7615,229 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       snap({ 0: "on" }, "Seats 0 to 6 round a circle. Start at seat 0");
       for (const [a, s] of [[0, 3], [1, 1], [0, 2]]) { const back = face[p] === a, q = back ? (p - (s % n) + n) % n : (p + s) % n; snap({ [p]: "on", [q]: "hit" }, `${names[p]} faces ${face[p] ? "out" : "in"}, told to go ${a ? "right" : "left"} ${s}: ${back ? `(${p} − ${s} + 7) % 7` : `(${p} + ${s}) % 7`} = ${q}`); p = q; }
       snap({ [p]: "done" }, `The answer is ${names[p]}`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+
+
+  // ---- 基9: figures, widgets and step players ----
+  Object.assign(FIG, {
+    sorts: () => `<div class="fverd fthree four">${[["selection", "always about n²/2", "few swaps"], ["bubble", "up to n²/2", "counting inversions"], ["insertion", "n to n²/2", "nearly sorted data"], ["std::sort", "about n log n", "everything else"]].map(([k, c, g], i) => `<div class="${i === 3 ? "best" : ""}"><b class="vd${i === 3 ? " ok" : ""}">${k}</b><span>${c} comparisons</span><small>good for ${g}</small></div>`).join("")}</div>`,
+    partition: () => `<div class="fbox">${cellRow([4, 9, 5, 1, 7, 3, 8], k => (k === 2 ? "on" : ""), k => k)}<p class="floop">↓ partition around the pivot 5</p>${cellRow([4, 1, 3, 5, 7, 9, 8], k => (k < 3 ? "hit" : k === 3 ? "on" : "bad"), k => (k < 3 ? "≤ 5" : k === 3 ? "pivot" : "≥ 5"))}<p class="floop">Smaller values to the left, bigger to the right. Then sort each side the same way</p></div>`,
+  });
+  // step through a simple sort, recording every comparison and swap
+  const sortSteps = (algo, arr) => {
+    const a = [...arr], S = [];
+    const cmp = (i, j, text) => S.push({ a: [...a], on: [i, j], text, kind: "cmp" });
+    const sw = (i, j, text) => { [a[i], a[j]] = [a[j], a[i]]; S.push({ a: [...a], on: [i, j], text, kind: "swap" }); };
+    const n = a.length;
+    if (algo === "selection") for (let i = 0; i < n - 1; i++) { let m = i; for (let j = i + 1; j < n; j++) { cmp(j, m, `Is ${a[j]} smaller than the minimum so far, ${a[m]}?`); if (a[j] < a[m]) m = j; } if (m !== i) sw(i, m, `Swap the minimum ${a[m]} into position ${i}`); S.push({ a: [...a], on: [], done: i, text: `Position ${i} is final`, kind: "mark" }); }
+    if (algo === "bubble") for (let p = 0; p < n - 1; p++) { for (let j = 0; j + 1 < n - p; j++) { cmp(j, j + 1, `Neighbours ${a[j]} and ${a[j + 1]}: in order?`); if (a[j] > a[j + 1]) sw(j, j + 1, `${a[j + 1]} > ${a[j]}: swap them. Each swap fixes one inversion`); } S.push({ a: [...a], on: [], done: n - 1 - p, text: `Pass ${p + 1} done: the largest left has bubbled to position ${n - 1 - p}`, kind: "mark" }); }
+    if (algo === "insertion") for (let i = 1; i < n; i++) { for (let j = i; j > 0; j--) { cmp(j - 1, j, `Is ${a[j - 1]} bigger than ${a[j]}?`); if (a[j - 1] > a[j]) sw(j - 1, j, `Yes: slide ${a[j - 1]} right`); else break; } S.push({ a: [...a], on: [], done: i, text: `The first ${i + 1} values are sorted`, kind: "mark" }); }
+    return S;
+  };
+  Object.assign(WIDGET, {
+    sortrace: {
+      title: "Watch a simple sort",
+      html: () => `<div class="seg" role="group" aria-label="algorithm">${["selection", "bubble", "insertion"].map((k, i) => `<button type="button" data-al="${k}" aria-pressed="${i === 1}">${k}</button>`).join("")}</div>
+        <div class="win"><label>array <input type="text" class="wide" value="5 2 4 6 1 3 8 7" data-k="a"></label></div>
+        <div class="wsbars"></div><div class="wres two"><div><code>comparisons</code><b data-out="c"></b></div><div><code>swaps</code><b data-out="s"></b></div></div>
+        <div class="btns"><button type="button" class="btn primary" data-step>Next step</button><button type="button" class="btn" data-play>Play</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        let algo = "bubble", S, k, timer, base, fin;
+        const inp = el.querySelector("input"), fb = el.querySelector(".wfb");
+        const draw = () => {
+          const st = k > 0 ? S[k - 1] : { a: base, on: [], text: "Ready" }, mx = Math.max(...base, 1);
+          if (st.done !== undefined) fin.add(st.done);
+          swap(el.querySelector(".wsbars"), st.a.map((v, i) => `<div class="${st.on.includes(i) ? (st.kind === "swap" ? "sw" : "cmp") : fin.has(i) ? "fin" : ""}" style="--h:${(v / mx) * 100}%"><i></i><span>${v}</span></div>`).join(""), ":scope > div");
+          const c = S.slice(0, k).filter(x => x.kind === "cmp").length, s = S.slice(0, k).filter(x => x.kind === "swap").length;
+          [["c", c], ["s", s]].forEach(([q, v]) => { const o = el.querySelector(`[data-out="${q}"]`); if (o.textContent !== String(v)) { o.textContent = v; pop(o); } });
+          say(fb, k === S.length ? "ok" : "", k === S.length ? `Sorted with ${c} comparisons and ${s} swaps` : st.text);
+        };
+        const reset = () => { clearInterval(timer); base = ints(inp.value).slice(0, 14).map(x => Math.max(0, x)); if (base.length < 2) base = [3, 1, 2]; S = sortSteps(algo, base); k = 0; fin = new Set(); draw(); };
+        const step = () => { if (k < S.length) { k++; draw(); return true; } return false; };
+        el.onclick = e => {
+          const b = e.target.closest("[data-al]");
+          if (b) { algo = b.dataset.al; el.querySelectorAll("[data-al]").forEach(x => x.setAttribute("aria-pressed", x === b)); return reset(); }
+          if (e.target.closest("[data-reset]")) return reset();
+          if (e.target.closest("[data-step]")) { clearInterval(timer); step(); }
+          if (e.target.closest("[data-play]")) { clearInterval(timer); timer = setInterval(() => step() || clearInterval(timer), 160); }
+        };
+        inp.oninput = reset;
+        reset();
+      },
+    },
+    inversions: {
+      title: "Count the inversions",
+      html: () => `<div class="win"><label>array <input type="text" value="2 4 1 3 5" data-k="a"></label></div><div class="wrow"></div><div class="wchips wpairs"></div><div class="wclock"><b></b><small>inversions = bubble sort swaps</small></div>`,
+      init(el) {
+        const inp = el.querySelector("input");
+        const run = () => {
+          const a = ints(inp.value).slice(0, 12), P = [];
+          a.forEach((x, i) => a.forEach((y, j) => { if (i < j && x > y) P.push([i, j]); }));
+          const inv = new Set(P.flat());
+          swap(el.querySelector(".wrow"), cellRow(a, k => (inv.has(k) ? "on" : ""), k => k), ".wcells span");
+          swap(el.querySelector(".wpairs"), P.map(([i, j]) => `<span>(${a[i]}, ${a[j]})</span>`).join("") || '<span class="more">none: already sorted</span>', "span");
+          const o = el.querySelector(".wclock b"); o.textContent = P.length; pop(o);
+        };
+        inp.oninput = run;
+        run();
+      },
+    },
+    nth: {
+      title: "The k-th smallest without a full sort",
+      html: () => `<div class="win"><label>array <input type="text" value="4 3 2 1 5 9 7" data-k="a"></label><label>k (0 based) <input type="range" value="1" min="0" max="6" data-k="k"></label><b class="mono wn"></b></div><div class="wrow"></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const [ia, ik] = el.querySelectorAll("input"), fb = el.querySelector(".wfb");
+        const run = () => {
+          const a = ints(ia.value).slice(0, 12); if (!a.length) return;
+          ik.max = a.length - 1; const k = Math.min(+ik.value, a.length - 1), v = [...a].sort((x, y) => x - y)[k];
+          const left = a.filter(x => x < v), mid = a.filter(x => x === v), right = a.filter(x => x > v), arr = [...left, ...mid, ...right];
+          el.querySelector(".wn").textContent = `k = ${k}`;
+          swap(el.querySelector(".wrow"), cellRow(arr, i => (i === k ? "hit" : i < k ? "on" : ""), i => (i === k ? "a[k]" : i)), ".wcells span");
+          say(fb, "ok", `After nth_element, a[${k}] = ${v}: everything before it is ≤ ${v} and everything after is ≥ ${v}. Neither side is sorted, which is why it is O(n) on average`);
+        };
+        ia.oninput = ik.oninput = run;
+        run();
+      },
+    },
+    uniq: {
+      title: "sort, unique, erase",
+      html: () => `<div class="win"><label>values <input type="text" class="wide" value="20 40 32 67 40 20 89 300 400 15" data-k="a"></label></div><div class="wstages"></div>`,
+      init(el) {
+        const inp = el.querySelector("input");
+        const run = () => {
+          const a = ints(inp.value).slice(0, 14), s = [...a].sort((x, y) => x - y), u = s.filter((x, i) => i === 0 || x !== s[i - 1]);
+          const tail = s.length - u.length, after = [...u, ...s.slice(u.length)];
+          swap(el.querySelector(".wstages"), [["input", a, () => ""], ["sort", s, i => (i > 0 && s[i] === s[i - 1] ? "bad" : "")], ["unique", after, i => (i >= u.length ? "ghost" : "hit")], ["erase", u, () => "hit"]].map(([l, v, c]) => `<div class="frow"><code>${l}</code>${cellRow(v, c, () => "")}</div>`).join("") + `<p class="floop">${tail ? `unique moved ${u.length} kept values to the front; erase cut the ${tail} left over` : "No duplicates: nothing to erase"}. ${u.length} distinct values</p>`, ".frow");
+        };
+        inp.oninput = run;
+        run();
+      },
+    },
+    ladder: {
+      title: "A comparator ladder",
+      S: [[1, 90, 67, 80], [2, 87, 66, 91], [3, 78, 89, 91], [4, 88, 99, 77], [5, 67, 89, 64], [6, 78, 89, 98]],
+      html: () => `<div class="wpre"><button type="button" class="chip" data-k="0" aria-pressed="true">total, then Chinese, then id</button><button type="button" class="chip" data-k="1" aria-pressed="false">total only</button><button type="button" class="chip" data-k="2" aria-pressed="false">Chinese, then id</button></div>
+        <div class="tablewrap"><table class="wtab"><thead><tr><th>#</th><th>id</th><th>Chinese</th><th>math</th><th>English</th><th>total</th></tr></thead><tbody></tbody></table></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const S = WIDGET.ladder.S.map(([id, c, m, e]) => ({ id, c, m, e, t: c + m + e })), fb = el.querySelector(".wfb");
+        const C = [(x, y) => (x.t !== y.t ? y.t - x.t : x.c !== y.c ? y.c - x.c : x.id - y.id), (x, y) => y.t - x.t, (x, y) => (x.c !== y.c ? y.c - x.c : x.id - y.id)];
+        const run = k => {
+          const b = [...S].sort(C[k]);
+          swap(el.querySelector("tbody"), b.map((x, i) => `<tr><td>${i + 1}</td><td>${x.id}</td><td>${x.c}</td><td>${x.m}</td><td>${x.e}</td><td>${x.t}</td></tr>`).join(""), "tr");
+          say(fb, "", ["The total decides first. Chinese only matters when two totals tie, and the id only when both tie", "With total only, equal totals have no defined order: add a last rung (the id) to fix it", "Students 3 and 6 both have Chinese 78: the id decides, 3 before 6"][k]);
+        };
+        el.querySelector(".wpre").onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; el.querySelectorAll("[data-k]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(+b.dataset.k); };
+        run(0);
+      },
+    },
+    bigvotes: quizWidget("Which vote count is bigger?", [
+      ['"98765" or "1022356"', ["98765", "1022356"], 1, "More digits means bigger, whatever the first digit"],
+      ['"87954" or "98765"', ["87954", "98765"], 1, "Same length: compare like a dictionary, '9' > '8'"],
+      ['"100" or "99"', ["100", "99"], 0, "As plain strings \"99\" > \"100\", so check the length first"],
+      ['"0042" or "41"', ["0042", "41"], 0, "Strip leading zeros first, or the length test lies"],
+    ], q => esc(q)),
+  });
+  addVis("基9", {
+    title: "Selection sort: pick the minimum of the rest",
+    frames() {
+      const a = [5, 2, 4, 6, 1, 3], n = a.length, F = [], fin = new Set();
+      const snap = (m, text) => F.push({ rows: [{ label: "a", vals: [...a], marks: Object.assign(Object.fromEntries([...fin].map(i => [i, "done"])), m) }], text });
+      snap({}, "For each position from the left, find the smallest value in the rest and swap it in");
+      for (let i = 0; i < n - 1; i++) {
+        let m = i;
+        for (let j = i + 1; j < n; j++) if (a[j] < a[m]) m = j;
+        snap({ [i]: "on", [m]: "hit" }, `The minimum of a[${i}..${n - 1}] is ${a[m]} at index ${m}`);
+        [a[i], a[m]] = [a[m], a[i]]; fin.add(i);
+        snap({ [i]: "hit" }, `Swap it into position ${i}. Position ${i} is now final`);
+      }
+      fin.add(n - 1); snap({}, "At most n − 1 swaps, but always about n²/2 comparisons");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基9", {
+    title: "Bubble sort counts inversions",
+    frames() {
+      const a = [4, 3, 2, 1], n = a.length, F = []; let swaps = 0;
+      const snap = (m, text) => F.push({ rows: [{ label: "a", vals: [...a], marks: m }], text: `${text}. Swaps so far: ${swaps}` });
+      snap({}, "4 3 2 1 has 6 inversions: every pair is out of order");
+      for (let p = 0; p < n - 1; p++) {
+        for (let j = 0; j + 1 < n - p; j++) { if (a[j] > a[j + 1]) { [a[j], a[j + 1]] = [a[j + 1], a[j]]; swaps++; snap({ [j]: "hit", [j + 1]: "hit" }, `Swap ${a[j + 1]} and ${a[j]}`); } else snap({ [j]: "on", [j + 1]: "on" }, `${a[j]} and ${a[j + 1]} are in order`); }
+        snap(mk(range(p + 1).map(k => n - 1 - k), "done"), `Pass ${p + 1}: the largest remaining value is in place`);
+      }
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基9", {
+    title: "Quicksort: partition around the middle pivot",
+    frames() {
+      const a = [4, 9, 1, 5, 7, 3, 8], F = [];
+      const snap = (m, text) => F.push({ rows: [{ label: "a", vals: [...a], marks: m }], text });
+      const part = (l, r) => {
+        if (l >= r) return;
+        const pv = a[(l + r) >> 1]; let i = l, j = r;
+        snap({ [(l + r) >> 1]: "on" }, `Sort a[${l}..${r}] with pivot ${pv}`);
+        while (i <= j) {
+          while (a[i] < pv) i++;
+          while (a[j] > pv) j--;
+          if (i <= j) { const x = a[i], y = a[j]; [a[i], a[j]] = [a[j], a[i]]; snap({ [i]: "hit", [j]: "hit" }, i === j ? `i and j meet at ${x}` : `${x} ≥ ${pv} on the left and ${y} ≤ ${pv} on the right: swap them`); i++; j--; }
+        }
+        snap(Object.assign(mk(range(j - l + 1).map(x => x + l), "done"), mk(range(r - i + 1).map(x => x + i), "bad")), `Left part ${j >= l ? `a[${l}..${j}]` : "(empty)"} ≤ ${pv} ≤ right part ${r >= i ? `a[${i}..${r}]` : "(empty)"}. Now sort each side`);
+        part(l, j); part(i, r);
+      };
+      part(0, a.length - 1);
+      snap(mk(range(a.length), "done"), "Sorted. About log n levels of O(n) work each: O(n log n) on average");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基9", {
+    title: "Merge sort counts inversions while merging",
+    frames() {
+      const a = [2, 4, 1, 3, 5], F = []; let inv = 0;
+      const snap = (m, text) => F.push({ rows: [{ label: "a", vals: [...a], marks: m }], text: `${text}. Inversions: ${inv}` });
+      const ms = (l, r) => {
+        if (l >= r) return;
+        const m = (l + r) >> 1; ms(l, m); ms(m + 1, r);
+        const L = a.slice(l, m + 1), R = a.slice(m + 1, r + 1), out = []; let i = 0, j = 0, note = [];
+        while (i < L.length && j < R.length) { if (L[i] <= R[j]) out.push(L[i++]); else { inv += L.length - i; note.push(`${R[j]} jumps over ${L.length - i}`); out.push(R[j++]); } }
+        out.push(...L.slice(i), ...R.slice(j));
+        out.forEach((v, k) => (a[l + k] = v));
+        snap(mk(range(r - l + 1).map(x => x + l), "hit"), `Merge [${L}] and [${R}] into [${out}]${note.length ? `: ${note.join(", ")}` : ""}`);
+      };
+      snap({}, "Sort each half, then merge two sorted lists by taking the smaller front value");
+      ms(0, a.length - 1);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基9", {
+    title: "Counting sort for votes",
+    frames() {
+      const v = [2, 5, 2, 2, 5, 2, 2, 2, 1, 2], cnt = Array(6).fill(0), out = [], F = [];
+      const snap = (m, vm, text) => F.push({ rows: [{ label: "votes", vals: v, marks: vm }, { label: "cnt", vals: cnt.slice(1), base: 1, marks: m }, { label: "output", vals: out.length ? [...out] : [""] }], text });
+      snap({}, {}, "Candidates 1 to 5. One counter per candidate, no comparisons");
+      v.forEach((x, k) => { cnt[x]++; snap({ [x - 1]: "on" }, { [k]: "on" }, `Vote for ${x}: cnt[${x}] = ${cnt[x]}`); });
+      for (let c = 1; c <= 5; c++) if (cnt[c]) { for (let t = 0; t < cnt[c]; t++) out.push(c); snap({ [c - 1]: "hit" }, {}, `Print ${c} ${cnt[c]} time${cnt[c] > 1 ? "s" : ""}`); }
+      snap({}, {}, "O(n + range): with millions of votes, fast input matters more than the sort");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基9", {
+    title: "Sort, then unique removes the repeats",
+    frames() {
+      const a = [20, 40, 32, 67, 40, 20, 89, 15], F = [];
+      const snap = (vals, m, text) => F.push({ rows: [{ label: "v", vals, marks: m }], text });
+      snap(a, {}, "unique only removes repeats that are next to each other");
+      const s = [...a].sort((x, y) => x - y); snap(s, { 1: "bad", 2: "bad", 4: "bad", 5: "bad" }, "After sort, the two 20s and the two 40s are neighbours");
+      const u = s.filter((x, i) => !i || x !== s[i - 1]), rest = s.length - u.length;
+      snap([...u, ...s.slice(u.length)], Object.assign(mk(range(u.length), "hit"), mk(range(rest).map(k => u.length + k), "ghost")), `unique moves the ${u.length} kept values to the front and returns where they end`);
+      snap(u, mk(range(u.length), "done"), `erase cuts off the leftovers: ${u.length} distinct values`);
       return F;
     },
     mount: rowsMount,
