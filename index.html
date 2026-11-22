@@ -1626,6 +1626,34 @@ svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
 .wpardon span.zero.l2 { background: color-mix(in srgb, var(--v-done) 12%, var(--bg)); }
 .wn { font-size: 18px; }
 
+
+/* 基8 widgets */
+.wgames > div { align-content: start; }
+.wgames span { display: flex; flex-wrap: wrap; gap: 6px; }
+.wgames span b { padding: 4px 10px; border-radius: 6px; background: var(--raised); font: 600 15px var(--f-mono); }
+.wgames span b.open { background: none; border: 1.5px dashed var(--line-strong); color: var(--fg-2); }
+.wcirc { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.wcirc svg { width: min(100%, 280px); }
+.wcirc .toy circle { fill: var(--bg); stroke: var(--line-strong); stroke-width: 1.5; transition: fill .2s var(--ease), stroke .2s var(--ease); }
+.wcirc .toy text { fill: var(--fg); font: 600 13px var(--f-mono); text-anchor: middle; }
+.wcirc .toy text.nm { fill: var(--muted); font-size: 10.5px; font-weight: 500; }
+.wcirc .toy.seen circle { fill: color-mix(in srgb, var(--v-cmp) 18%, var(--surface)); stroke: var(--v-cmp); }
+.wcirc .toy.cur circle { fill: color-mix(in srgb, var(--v-done) 30%, var(--surface)); stroke: var(--v-done); stroke-width: 2.5; }
+.wcirc .toy.cur text.nm { fill: var(--v-done); font-weight: 700; }
+.wterms { display: grid; gap: 6px; }
+.wterms > div { display: grid; grid-template-columns: minmax(90px, auto) 1fr; gap: 14px; align-items: center; padding: 8px 12px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+.wterms > div.skip { opacity: .5; text-decoration: line-through; }
+.wterms small { color: var(--muted); font-size: 12.5px; }
+.wcols { display: grid; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
+.wcrow { display: flex; gap: 4px; align-items: center; }
+.wcrow small { flex: none; width: 92px; color: var(--muted); font-size: 12px; }
+.wcrow span { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); font: 600 14px var(--f-mono); }
+.wcrow:last-child:not(.idx) span, .wcrow:nth-last-child(2) span { border-color: var(--v-done); }
+.wcrow.idx span { background: none; border: 0; color: var(--muted); font-size: 11px; height: 18px; }
+.wcrow:first-child span { color: var(--v-cmp); font-size: 11px; }
+.wbig { padding: 12px 14px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--line); font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; max-height: 9em; overflow-y: auto; }
+@media (max-width: 640px) { .wcrow small { width: 70px; } .wcrow span { width: 28px; height: 30px; } }
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -7271,6 +7299,300 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         snap({ [j - 1]: "hit" }, `${a[j - 1][0]} moves up`);
       }
       snap(mk(range(4), "done"), "cat 300, amy 240, bob 240, dan 180");
+      return F;
+    },
+    mount: rowsMount,
+  });
+
+
+  // ---- 基7: four more step players ----
+  addVis("基7", {
+    title: "A call jumps in and returns a value",
+    frames() {
+      const code = ["double dist(double x1, double y1, double x2, double y2) {", "    double dx = x1 - x2, dy = y1 - y2;", "    return sqrt(dx * dx + dy * dy);", "}", "p = dist(0, 0, 0, 3) + dist(0, 3, 4, 0) + dist(4, 0, 0, 0);"], F = [], s = traceF(code, F);
+      const calls = [[0, 0, 0, 3], [0, 3, 4, 0], [4, 0, 0, 0]], got = [];
+      s(4, {}, "main reaches a call: it pauses and jumps into dist");
+      calls.forEach(([x1, y1, x2, y2], k) => {
+        const v = { x1, y1, x2, y2 };
+        s(0, v, `Call ${k + 1}: the arguments are copied into the parameters`);
+        v.dx = x1 - x2; v.dy = y1 - y2; s(1, v, `dx = ${v.dx}, dy = ${v.dy}`);
+        const r = Math.hypot(v.dx, v.dy); got.push(r); s(2, { ...v, "return": r }, `return sqrt(${v.dx * v.dx} + ${v.dy * v.dy}) = ${r}. The call ends and its variables disappear`);
+        s(4, { p: got.join(" + ") }, `Back in main with ${r}`);
+      });
+      s(4, { p: got.reduce((a, b) => a + b, 0) }, "One function, written once, used three times", "12.00");
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基7", {
+    title: "Peaches: recursion working backwards",
+    frames() {
+      const n = 4, st = [], F = [], snap = text => F.push({ stack: st.map(x => ({ ...x })), text });
+      snap("peaches(1) asks for day 1. It needs day 2 first, which needs day 3, …");
+      for (let d = 1; d <= n; d++) { st.forEach(x => (x.c = "")); st.push({ name: `peaches(${d})`, note: d === n ? "day n: base case, 1" : `waits for peaches(${d + 1})`, c: "on" }); snap(d === n ? `peaches(${n}) is the base case: on day ${n} one peach is left` : `peaches(${d}) calls peaches(${d + 1}) and waits on the stack`); }
+      let v = 1;
+      for (let d = n; d >= 1; d--) {
+        const top = st.pop();
+        if (d < n) v = (v + 1) * 2;
+        if (st.length) { st.forEach(x => (x.c = "")); st[st.length - 1].c = "on"; }
+        snap(d === n ? `peaches(${n}) returns 1` : `peaches(${d}) = (peaches(${d + 1}) + 1) × 2 = ${v}, returned to its caller`);
+        void top;
+      }
+      snap(`On day 1 there were ${v} peaches. The same answer comes from a loop, without the stack`);
+      return F;
+    },
+    mount: stackMount,
+  });
+  addVis("基7", {
+    title: "The pardon picture, one recursion level at a time",
+    frames() {
+      const s = 8, g = range(s).map(() => Array(s).fill(1)), F = [];
+      const snap = (m, text) => F.push({ rows: g.map((r, i) => ({ label: `row ${i}`, vals: [...r], marks: m[i] || {} })), text });
+      snap({}, "An 8 × 8 square of 1s. solve(0, 0, 8) clears its top left quarter, then calls itself on the other three quarters");
+      let level = [[0, 0, s]];
+      while (level.length && level[0][2] > 1) {
+        const next = [], m = {};
+        level.forEach(([r, c, sz]) => { const h = sz / 2; for (let i = 0; i < h; i++) for (let j = 0; j < h; j++) { g[r + i][c + j] = 0; (m[r + i] = m[r + i] || {})[c + j] = "on"; } next.push([r, c + h, h], [r + h, c, h], [r + h, c + h, h]); });
+        snap(m, `${level.length} call${level.length > 1 ? "s" : ""} of size ${level[0][2]}: each clears a ${level[0][2] / 2} × ${level[0][2] / 2} quarter, then makes 3 calls of size ${level[0][2] / 2}`);
+        level = next;
+      }
+      snap({}, "Size 1 is the base case: nothing to do. The finished picture");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基7", {
+    title: "Global and local names",
+    frames() {
+      const code = ["int cnt = 0;            // global", "void hit() { cnt++; }", "for (int i = 0; i < 3; i++) hit();", "int cnt = 10;           // local, inside main", "cout << cnt << \" \" << ::cnt;"], F = [], s = traceF(code, F), v = { "::cnt": 0 };
+      s(0, v, "A global lives for the whole program and starts at 0");
+      for (let i = 0; i < 3; i++) { v["::cnt"]++; s(1, { ...v, i }, `hit() changes the global: cnt = ${v["::cnt"]}`); }
+      v["cnt (local)"] = 10; s(3, v, "A local with the same name hides the global inside main");
+      s(4, v, "cnt means the local (10); ::cnt reaches the global (3)", "10 3");
+      return F;
+    },
+    mount: traceMount,
+  });
+
+  // ---- 基8: figures, widgets and step players ----
+  const bigAdd = (a, b) => (BigInt(a) + BigInt(b)).toString(), bigSub = (a, b) => (BigInt(a) - BigInt(b)).toString(), bigMul = (a, b) => (BigInt(a) * BigInt(b)).toString();
+  Object.assign(FIG, {
+    simloop: () => `<div class="fflow">${[["Read", "every rule", ""], ["State", "which variables", ""], ["Step", "one event", " hot"], ["Output", "the exact format", " ok"]].map(([h, s, c], k) => `${k ? '<i aria-hidden="true">→</i>' : ""}<div class="fchip${c}"><b>${k + 1}</b><span>${h}</span><small>${s}</small></div>`).join("")}</div><p class="floop"><span aria-hidden="true">↺</span> Repeat the step until the stop condition. Most wrong answers are misread rules</p>`,
+    bigdigits: () => `<div class="fbox"><code>string s = "987";</code>${cellRow(["9", "8", "7"], () => "", k => `s[${k}]`)}<p class="floop">↓ stored backwards, ones digit first</p>${cellRow([7, 8, 9], k => (k === 0 ? "on" : ""), k => `d[${k}]`)}<p class="floop">Now digit i of every number sits at index i, and a carry just moves to index i + 1</p></div>`,
+  });
+  Object.assign(WIDGET, {
+    tennis: {
+      title: "Score the rallies",
+      html: () => `<div class="wpre">${[["WWWWWWWWWWWWL", "the sample"], ["WLWLWLWLWLWLWLWLWLWLWWWW", "deuce"], ["WWWWWWWWWWW", "exactly 11:0"], ["", "empty"]].map(([v, l]) => `<button type="button" class="chip" data-s="${v}">${l}</button>`).join("")}</div>
+        <div class="win"><label>record <input type="text" class="wide" value="WWWWWWWWWWWWL" data-k="s"></label></div><div class="wres two wgames"><div><code>to 11</code><span data-g="11"></span></div><div><code>to 21</code><span data-g="21"></span></div></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const inp = el.querySelector("input"), fb = el.querySelector(".wfb");
+        const play = (s, t) => { const out = []; let w = 0, l = 0; for (const ch of s) { ch === "W" ? w++ : l++; if (Math.max(w, l) >= t && Math.abs(w - l) >= 2) { out.push([w, l, 1]); w = l = 0; } } out.push([w, l, 0]); return out; };
+        const run = () => {
+          const s = inp.value.toUpperCase().replace(/[^WL]/g, "");
+          [11, 21].forEach(t => swap(el.querySelector(`[data-g="${t}"]`), play(s, t).map(([w, l, done]) => `<b class="${done ? "" : "open"}">${w}:${l}</b>`).join(""), "b"));
+          say(fb, "", s ? "A game ends at the target with a 2 point lead. The last, unfinished game is printed too (dashed)" : "Even with no rallies, each rule set prints 0:0");
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-s]"); if (!c) return; inp.value = c.dataset.s; run(); };
+        inp.oninput = run;
+        run();
+      },
+    },
+    circle: {
+      title: "Walk round the circle of toys",
+      P: [[0, "singer"], [0, "reader"], [0, "mengbier"], [1, "thinker"], [1, "archer"], [0, "writer"], [1, "mogician"]],
+      I: [[0, 3], [1, 1], [0, 2]],
+      html: () => `<div class="wcirc"><svg viewBox="0 0 260 260" role="img" aria-label="Seven toys in a circle"></svg><div class="wcode small wops"></div></div>
+        <div class="btns"><button type="button" class="btn primary" data-step>Next instruction</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const P = WIDGET.circle.P, I = WIDGET.circle.I, n = P.length, svg = el.querySelector("svg"), fb = el.querySelector(".wfb");
+        let p, k, trail;
+        const xy = i => [130 + 95 * Math.sin((i / n) * 2 * Math.PI), 130 - 95 * Math.cos((i / n) * 2 * Math.PI)];
+        const draw = () => {
+          swap(svg, P.map(([f, nm], i) => { const [x, y] = xy(i); return `<g class="toy${i === p ? " cur" : trail.includes(i) ? " seen" : ""}"><circle cx="${x}" cy="${y}" r="20"/><text x="${x}" y="${y + 4}">${i}</text><text class="nm" x="${x}" y="${y + (y > 130 ? 36 : -28)}">${nm}${f ? " ↗" : " ↙"}</text></g>`; }).join(""), "g");
+          el.querySelector(".wops").innerHTML = I.map(([a, s], i) => `<span class="${i < k ? "done" : i === k ? "on" : ""}">${a ? "right" : "left"} ${s}</span>`).join("");
+        };
+        const reset = () => { p = 0; k = 0; trail = [0]; el.querySelector("[data-step]").disabled = false; draw(); say(fb, "", "Start at seat 0. ↙ faces in, ↗ faces out. Facing out swaps left and right"); };
+        el.onclick = e => {
+          if (e.target.closest("[data-reset]")) return reset();
+          if (!e.target.closest("[data-step]") || k >= I.length) return;
+          const [a, s] = I[k], back = P[p][0] === a, from = p;
+          p = back ? (p - (s % n) + n) % n : (p + s) % n; trail.push(p); k++;
+          draw();
+          say(fb, k === I.length ? "ok" : "", `${P[from][1]} faces ${P[from][0] ? "out" : "in"} and the instruction says ${a ? "right" : "left"}: ${back ? `(p − ${s} + n) % n` : `(p + ${s}) % n`} = ${p}${k === I.length ? `. The answer is ${P[p][1]}` : ""}`);
+          if (k === I.length) el.querySelector("[data-step]").disabled = true;
+        };
+        reset();
+      },
+    },
+    rps: {
+      title: "Rock, paper, scissors, lizard, Spock",
+      G: ["scissors", "rock", "paper", "lizard", "Spock"],
+      W: [[0, 0, 1, 1, 0], [1, 0, 0, 1, 0], [0, 1, 0, 0, 1], [0, 0, 1, 0, 1], [1, 1, 0, 0, 0]],
+      html: () => `<div class="win"><label>A repeats <input type="text" value="0 1 2 3 4" data-k="a"></label><label>B repeats <input type="text" value="0 3 4 2 1 0" data-k="b"></label><label>rounds <input type="number" value="10" min="1" max="30" data-k="n"></label></div>
+        <div class="tablewrap"><table class="wtab"><thead><tr><th>i</th><th>A[i % na]</th><th>B[i % nb]</th><th>point</th></tr></thead><tbody></tbody></table></div><div class="wclock"><b class="sm"></b><small>A : B</small></div>`,
+      init(el) {
+        const [ia, ib, inn] = el.querySelectorAll("input"), G = WIDGET.rps.G, Wt = WIDGET.rps.W;
+        const run = () => {
+          const A = ints(ia.value).filter(x => x >= 0 && x < 5), B = ints(ib.value).filter(x => x >= 0 && x < 5), n = Math.max(1, Math.min(30, Math.trunc(+inn.value || 1)));
+          if (!A.length || !B.length) return;
+          let sa = 0, sb = 0; const rows = [];
+          for (let i = 0; i < n; i++) { const x = A[i % A.length], y = B[i % B.length]; sa += Wt[x][y]; sb += Wt[y][x]; rows.push(`<tr><td>${i}</td><td>${G[x]}</td><td>${G[y]}</td><td>${Wt[x][y] ? "A" : Wt[y][x] ? "B" : "tie"}</td></tr>`); }
+          swap(el.querySelector("tbody"), rows.join(""), "tr");
+          const o = el.querySelector(".wclock b"); o.textContent = `${sa} : ${sb}`; pop(o);
+        };
+        ia.oninput = ib.oninput = inn.oninput = run;
+        run();
+      },
+    },
+    poly: {
+      title: "Print a polynomial, rule by rule",
+      html: () => `<div class="wpre">${[["100 -1 1 -3 0 10", "the sample"], ["-1 1", "−x+1"], ["0 0 1", "just 1"], ["1 0 -1 0", "x³−x"]].map(([v, l]) => `<button type="button" class="chip" data-c="${v}">${l}</button>`).join("")}</div>
+        <div class="win"><label>coefficients, highest power first <input type="text" class="wide" value="100 -1 1 -3 0 10" data-k="c"></label></div><div class="wterms"></div><div class="wclock"><b class="sm mono"></b></div>`,
+      init(el) {
+        const inp = el.querySelector("input");
+        const run = () => {
+          const a = ints(inp.value), n = a.length - 1; let out = "", first = true; const parts = [];
+          a.forEach((c, k) => {
+            const i = n - k;
+            if (c === 0) { parts.push([`${c}x^${i}`, "zero: skipped", "skip"]); return; }
+            let t = c < 0 ? "-" : first ? "" : "+";
+            if (Math.abs(c) !== 1 || i === 0) t += Math.abs(c);
+            if (i > 0) t += "x"; if (i > 1) t += "^" + i;
+            parts.push([t, [c < 0 ? "minus" : first ? "no + at the start" : "+", Math.abs(c) === 1 && i > 0 ? "hide the 1" : "", i === 1 ? "x, not x^1" : i === 0 ? "no x" : ""].filter(Boolean).join(", "), ""]);
+            out += t; first = false;
+          });
+          swap(el.querySelector(".wterms"), parts.map(([t, why, c]) => `<div class="${c}"><code>${esc(t)}</code><small>${why}</small></div>`).join(""), ":scope > div");
+          const o = el.querySelector(".wclock b"); o.textContent = out || "0"; pop(o);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-c]"); if (!c) return; inp.value = c.dataset.c; run(); };
+        inp.oninput = run;
+        run();
+      },
+    },
+    bigcalc: {
+      title: "Big number calculator, column by column",
+      html: () => `<div class="seg" role="group" aria-label="operation">${[["+", "add"], ["−", "sub"], ["×", "mul"]].map(([l, k], i) => `<button type="button" data-op="${k}" aria-pressed="${i === 0}">${l}</button>`).join("")}</div>
+        <div class="win"><label>a <input type="text" class="wide" value="987" inputmode="numeric" data-k="a"></label><label>b <input type="text" class="wide" value="45" inputmode="numeric" data-k="b"></label></div>
+        <div class="wcols"></div><div class="wclock"><b class="sm mono"></b><small>checked against exact BigInt arithmetic</small></div>`,
+      init(el) {
+        let op = "add";
+        const [ia, ib] = el.querySelectorAll("input");
+        const run = () => {
+          const a = (ia.value.replace(/\D/g, "") || "0").replace(/^0+(?=\d)/, ""), b = (ib.value.replace(/\D/g, "") || "0").replace(/^0+(?=\d)/, "");
+          const A = [...a].reverse().map(Number), B = [...b].reverse().map(Number);
+          let rows, res;
+          if (op === "add") {
+            const c = [], car = []; let carry = 0;
+            for (let i = 0; i < Math.max(A.length, B.length) || carry; i++) { const s = (A[i] || 0) + (B[i] || 0) + carry; car.push(carry || ""); c.push(s % 10); carry = Math.floor(s / 10); }
+            rows = [["carry in", car], ["a", A], ["b", B], ["sum", c]]; res = c.slice().reverse().join("").replace(/^0+(?=\d)/, "");
+          } else if (op === "sub") {
+            const neg = BigInt(a) < BigInt(b), X = neg ? B : A, Y = neg ? A : B, c = [...X], bor = [];
+            for (let i = 0; i < c.length; i++) { c[i] -= Y[i] || 0; bor.push(""); if (c[i] < 0) { c[i] += 10; c[i + 1]--; bor[i] = "borrow"; } }
+            rows = [["borrow", bor], [neg ? "b" : "a", X], [neg ? "a" : "b", Y], ["diff", c]]; res = (neg ? "-" : "") + c.slice().reverse().join("").replace(/^0+(?=\d)/, "");
+          } else {
+            const c = Array(A.length + B.length).fill(0);
+            A.forEach((x, i) => B.forEach((y, j) => (c[i + j] += x * y)));
+            const sums = [...c], r = []; let carry = 0;
+            c.forEach(v => { const t = v + carry; r.push(t % 10); carry = Math.floor(t / 10); });
+            rows = [["a", A], ["b", B], ["Σ a[i]·b[j]", sums], ["digits", r]]; res = r.slice().reverse().join("").replace(/^0+(?=\d)/, "");
+          }
+          const w = Math.max(...rows.map(r => r[1].length));
+          swap(el.querySelector(".wcols"), rows.map(([l, v]) => `<div class="wcrow"><small>${l}</small>${range(w).map(i => `<span>${v[i] ?? ""}</span>`).join("")}</div>`).join("") + `<div class="wcrow idx"><small>index</small>${range(w).map(i => `<span>${i}</span>`).join("")}</div>`, "span");
+          const exact = op === "add" ? bigAdd(a, b) : op === "sub" ? bigSub(a, b) : bigMul(a, b), o = el.querySelector(".wclock b");
+          o.textContent = res === exact ? res : `${res} (expected ${exact})`; o.classList.toggle("bad", res !== exact); pop(o);
+        };
+        el.onclick = e => { const b = e.target.closest("[data-op]"); if (!b) return; op = b.dataset.op; el.querySelectorAll("[data-op]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); };
+        ia.oninput = ib.oninput = run;
+        run();
+      },
+    },
+    factdigits: {
+      title: "How big is n!?",
+      html: () => `<div class="win"><label>n <input type="range" value="30" min="1" max="200" data-k="n"></label><b class="mono wn"></b></div><div class="wbig mono"></div><div class="wbars"></div>`,
+      init(el) {
+        const inp = el.querySelector("input");
+        const run = () => {
+          const n = +inp.value; let f = 1n; for (let k = 2n; k <= BigInt(n); k++) f *= k;
+          const s = f.toString(), cnt = range(10).map(d => [...s].filter(c => +c === d).length), mx = Math.max(...cnt);
+          el.querySelector(".wn").textContent = `${n}! has ${s.length} digit${s.length > 1 ? "s" : ""}`;
+          el.querySelector(".wbig").textContent = s;
+          swap(el.querySelector(".wbars"), cnt.map((c, d) => `<div style="--h:${(c / mx) * 100}%"><b>${c}</b><i></i><span>${d}</span></div>`).join(""), ":scope > div");
+        };
+        inp.oninput = run;
+        run();
+      },
+    },
+  });
+  addVis("基8", {
+    title: "Subtraction with borrows: 1000 − 1",
+    frames() {
+      const a = [0, 0, 0, 1], b = [1], F = [], bor = Array(4).fill("");
+      const snap = (i, text) => F.push({ rows: [{ label: "borrow", vals: [...bor] }, { label: "a", vals: [...a], marks: i >= 0 ? { [i]: "on" } : {} }, { label: "b", vals: [1, "", "", ""] }], text });
+      snap(-1, "Digits stored backwards: a = 1000 is 0 0 0 1. Subtract b = 1 from the ones digit up");
+      for (let i = 0; i < 4; i++) {
+        if (i < b.length) a[i] -= b[i];
+        if (a[i] < 0) { a[i] += 10; a[i + 1]--; bor[i] = "−1 →"; snap(i, `Digit ${i} went negative: add 10 (it becomes ${a[i]}) and take 1 from digit ${i + 1}`); }
+        else snap(i, `Digit ${i} is ${a[i]}: no borrow`);
+      }
+      snap(-1, "Trim the leading zero: 0 9 9 9 read backwards is 999, not 0999");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基8", {
+    title: "Long division by a small number",
+    frames() {
+      const x = "1000000000000000000000".slice(0, 10), k = 7, q = Array(x.length).fill(""), F = [];
+      let rem = 0;
+      const snap = (i, text) => F.push({ rows: [{ label: "digits", vals: [...x], marks: i >= 0 ? { [i]: "on" } : {} }, { label: "quotient", vals: [...q], marks: i >= 0 ? { [i]: "hit" } : {} }], text: `${text}` });
+      snap(-1, `${x} ÷ ${k}. Long division goes from the highest digit down`);
+      [...x].forEach((c, i) => { rem = rem * 10 + +c; q[i] = Math.floor(rem / k); const r2 = rem % k; snap(i, `Bring down ${c}: rem = ${rem}. ${rem} / ${k} = ${q[i]}, remainder ${r2}`); rem = r2; });
+      snap(-1, `Quotient ${q.join("").replace(/^0+/, "")}, remainder ${rem}. Only rem is needed to test divisibility`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基8", {
+    title: "Building n! with repeated mulSmall",
+    frames() {
+      let d = [1]; const F = [];
+      const snap = (k, text) => F.push({ rows: [{ label: `${k}!`, vals: [...d], marks: mk(range(d.length), "on") }], text });
+      snap(1, "f = 1, stored backwards");
+      for (let k = 2; k <= 12; k++) {
+        let carry = 0; d = d.map(x => { const t = x * k + carry; carry = Math.floor(t / 10); return t % 10; });
+        const was = d.length; while (carry) { d.push(carry % 10); carry = Math.floor(carry / 10); }
+        snap(k, `f × ${k}: each digit × ${k} + carry. ${d.length > was ? `The carry added ${d.length - was} new digit${d.length - was > 1 ? "s" : ""}. ` : ""}${k}! = ${[...d].reverse().join("")}`);
+      }
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基8", {
+    title: "Scoring table tennis to 11",
+    frames() {
+      const s = "WWWWWWWWWWWWL", code = ["for each ch:", "    ch == 'W' ? w++ : l++;", "    if (max(w, l) >= 11 && abs(w - l) >= 2)", "        print w:l, then w = l = 0;", "print the unfinished game w:l"], F = [], t = traceF(code, F), v = { w: 0, l: 0 }, out = [];
+      t(0, { ...v }, `The record ${s}`);
+      [...s].forEach((ch, i) => {
+        ch === "W" ? v.w++ : v.l++;
+        const done = Math.max(v.w, v.l) >= 11 && Math.abs(v.w - v.l) >= 2;
+        if (i === 0 || i >= 9) t(done ? 3 : 1, { ...v, ch }, done ? `${v.w}:${v.l}: 11 reached with a lead of 2, the game ends` : `${ch}: ${v.w}:${v.l}`, out.join("  "));
+        if (done) { out.push(`${v.w}:${v.l}`); v.w = v.l = 0; }
+      });
+      out.push(`${v.w}:${v.l}`); t(4, { ...v }, "The input ends mid game: print it anyway", out.join("  "));
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基8", {
+    title: "Walking round a circle with %",
+    frames() {
+      const n = 7, names = ["singer", "reader", "mengbier", "thinker", "archer", "writer", "mogician"], face = [0, 0, 0, 1, 1, 0, 1], F = [];
+      let p = 0;
+      const snap = (m, text) => F.push({ rows: [{ label: "seat", vals: names.map(x => x.slice(0, 4)), marks: m }, { label: "faces", vals: face.map(f => (f ? "out" : "in")) }], text });
+      snap({ 0: "on" }, "Seats 0 to 6 round a circle. Start at seat 0");
+      for (const [a, s] of [[0, 3], [1, 1], [0, 2]]) { const back = face[p] === a, q = back ? (p - (s % n) + n) % n : (p + s) % n; snap({ [p]: "on", [q]: "hit" }, `${names[p]} faces ${face[p] ? "out" : "in"}, told to go ${a ? "right" : "left"} ${s}: ${back ? `(${p} − ${s} + 7) % 7` : `(${p} + ${s}) % 7`} = ${q}`); p = q; }
+      snap({ [p]: "done" }, `The answer is ${names[p]}`);
       return F;
     },
     mount: rowsMount,
