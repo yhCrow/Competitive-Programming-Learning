@@ -1684,6 +1684,13 @@ svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
 .wlegend i { width: 18px; height: 3px; border-radius: 2px; }
 .wlegend .in i { background: var(--v-cur); } .wlegend .out i { background: var(--v-cmp); }
 
+
+/* a swap in the sort widget: the two bars slide past each other */
+.wsbars > div { position: relative; transition: transform .38s var(--ease-in-out); }
+.wsbars em { position: absolute; top: -4px; left: 50%; translate: -50% -100%; font-style: normal; font-weight: 700; font-size: 16px; color: var(--v-bad); }
+.wsbars .sw span { color: var(--v-bad); font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .wsbars > div { transition: none; } }
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -7651,7 +7658,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const sw = (i, j, text) => { [a[i], a[j]] = [a[j], a[i]]; S.push({ a: [...a], on: [i, j], text, kind: "swap" }); };
     const n = a.length;
     if (algo === "selection") for (let i = 0; i < n - 1; i++) { let m = i; for (let j = i + 1; j < n; j++) { cmp(j, m, `Is ${a[j]} smaller than the minimum so far, ${a[m]}?`); if (a[j] < a[m]) m = j; } if (m !== i) sw(i, m, `Swap the minimum ${a[m]} into position ${i}`); S.push({ a: [...a], on: [], done: i, text: `Position ${i} is final`, kind: "mark" }); }
-    if (algo === "bubble") for (let p = 0; p < n - 1; p++) { for (let j = 0; j + 1 < n - p; j++) { cmp(j, j + 1, `Neighbours ${a[j]} and ${a[j + 1]}: in order?`); if (a[j] > a[j + 1]) sw(j, j + 1, `${a[j + 1]} > ${a[j]}: swap them. Each swap fixes one inversion`); } S.push({ a: [...a], on: [], done: n - 1 - p, text: `Pass ${p + 1} done: the largest left has bubbled to position ${n - 1 - p}`, kind: "mark" }); }
+    if (algo === "bubble") for (let p = 0; p < n - 1; p++) { for (let j = 0; j + 1 < n - p; j++) { cmp(j, j + 1, `Neighbours ${a[j]} and ${a[j + 1]}: in order?`); if (a[j] > a[j + 1]) sw(j, j + 1, `${a[j]} > ${a[j + 1]}: swap them. Each swap fixes one inversion`); } S.push({ a: [...a], on: [], done: n - 1 - p, text: `Pass ${p + 1} done: the largest left has bubbled to position ${n - 1 - p}`, kind: "mark" }); }
     if (algo === "insertion") for (let i = 1; i < n; i++) { for (let j = i; j > 0; j--) { cmp(j - 1, j, `Is ${a[j - 1]} bigger than ${a[j]}?`); if (a[j - 1] > a[j]) sw(j - 1, j, `Yes: slide ${a[j - 1]} right`); else break; } S.push({ a: [...a], on: [], done: i, text: `The first ${i + 1} values are sorted`, kind: "mark" }); }
     return S;
   };
@@ -7668,7 +7675,15 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         const draw = () => {
           const st = k > 0 ? S[k - 1] : { a: base, on: [], text: "Ready" }, mx = Math.max(...base, 1);
           if (st.done !== undefined) fin.add(st.done);
-          swap(el.querySelector(".wsbars"), st.a.map((v, i) => `<div class="${st.on.includes(i) ? (st.kind === "swap" ? "sw" : "cmp") : fin.has(i) ? "fin" : ""}" style="--h:${(v / mx) * 100}%"><i></i><span>${v}</span></div>`).join(""), ":scope > div");
+          const box = el.querySelector(".wsbars");
+          swap(box, st.a.map((v, i) => `<div class="${st.on.includes(i) ? (st.kind === "swap" ? "sw" : "cmp") : fin.has(i) ? "fin" : ""}" style="--h:${(v / mx) * 100}%">${st.kind === "swap" && st.on.includes(i) ? '<em aria-hidden="true">⇄</em>' : ""}<i></i><span>${v}</span></div>`).join(""), ":scope > div");
+          if (st.kind === "swap" && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            // each bar starts where its value came from, then slides to its new place
+            const bars = box.children, [p, q] = st.on, step = bars.length > 1 ? bars[1].offsetLeft - bars[0].offsetLeft : 0;
+            [[p, q], [q, p]].forEach(([to, from]) => { const b = bars[to]; b.style.transition = "none"; b.style.transform = `translateX(${(from - to) * step}px)`; });
+            box.getBoundingClientRect();
+            [p, q].forEach(t => { const b = bars[t]; b.style.transition = ""; b.style.transform = ""; });
+          }
           const c = S.slice(0, k).filter(x => x.kind === "cmp").length, s = S.slice(0, k).filter(x => x.kind === "swap").length;
           [["c", c], ["s", s]].forEach(([q, v]) => { const o = el.querySelector(`[data-out="${q}"]`); if (o.textContent !== String(v)) { o.textContent = v; pop(o); } });
           say(fb, k === S.length ? "ok" : "", k === S.length ? `Sorted with ${c} comparisons and ${s} swaps` : st.text);
@@ -7680,7 +7695,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           if (b) { algo = b.dataset.al; el.querySelectorAll("[data-al]").forEach(x => x.setAttribute("aria-pressed", x === b)); return reset(); }
           if (e.target.closest("[data-reset]")) return reset();
           if (e.target.closest("[data-step]")) { clearInterval(timer); step(); }
-          if (e.target.closest("[data-play]")) { clearInterval(timer); timer = setInterval(() => step() || clearInterval(timer), 160); }
+          if (e.target.closest("[data-play]")) { clearInterval(timer); timer = setInterval(() => step() || clearInterval(timer), 420); }
         };
         inp.oninput = reset;
         reset();
@@ -7762,14 +7777,14 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     title: "Selection sort: pick the minimum of the rest",
     frames() {
       const a = [5, 2, 4, 6, 1, 3], n = a.length, F = [], fin = new Set();
-      const snap = (m, text) => F.push({ rows: [{ label: "a", vals: [...a], marks: Object.assign(Object.fromEntries([...fin].map(i => [i, "done"])), m) }], text });
+      const snap = (m, text, sw = []) => F.push({ rows: [{ label: "a", vals: [...a], marks: Object.assign(Object.fromEntries([...fin].map(i => [i, "done"])), m) }, { label: "swap", vals: a.map((_, k) => (sw.includes(k) ? "⇄" : "")), marks: mk(sw, "bad") }], text });
       snap({}, "For each position from the left, find the smallest value in the rest and swap it in");
       for (let i = 0; i < n - 1; i++) {
         let m = i;
         for (let j = i + 1; j < n; j++) if (a[j] < a[m]) m = j;
         snap({ [i]: "on", [m]: "hit" }, `The minimum of a[${i}..${n - 1}] is ${a[m]} at index ${m}`);
         [a[i], a[m]] = [a[m], a[i]]; fin.add(i);
-        snap({ [i]: "hit" }, `Swap it into position ${i}. Position ${i} is now final`);
+        snap({ [i]: "hit", ...(m !== i ? { [m]: "hit" } : {}) }, m !== i ? `Swap a[${i}] and a[${m}]: ${a[i]} moves to position ${i}, which is now final` : `${a[i]} is already in place: no swap needed`, m !== i ? [i, m] : []);
       }
       fin.add(n - 1); snap({}, "At most n − 1 swaps, but always about n²/2 comparisons");
       return F;
@@ -7780,10 +7795,10 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     title: "Bubble sort counts inversions",
     frames() {
       const a = [4, 3, 2, 1], n = a.length, F = []; let swaps = 0;
-      const snap = (m, text) => F.push({ rows: [{ label: "a", vals: [...a], marks: m }], text: `${text}. Swaps so far: ${swaps}` });
+      const snap = (m, text, sw = []) => F.push({ rows: [{ label: "a", vals: [...a], marks: m }, { label: "swap", vals: a.map((_, k) => (sw.includes(k) ? "⇄" : "")), marks: mk(sw, "bad") }], text: `${text}. Swaps so far: ${swaps}` });
       snap({}, "4 3 2 1 has 6 inversions: every pair is out of order");
       for (let p = 0; p < n - 1; p++) {
-        for (let j = 0; j + 1 < n - p; j++) { if (a[j] > a[j + 1]) { [a[j], a[j + 1]] = [a[j + 1], a[j]]; swaps++; snap({ [j]: "hit", [j + 1]: "hit" }, `Swap ${a[j + 1]} and ${a[j]}`); } else snap({ [j]: "on", [j + 1]: "on" }, `${a[j]} and ${a[j + 1]} are in order`); }
+        for (let j = 0; j + 1 < n - p; j++) { if (a[j] > a[j + 1]) { [a[j], a[j + 1]] = [a[j + 1], a[j]]; swaps++; snap({ [j]: "hit", [j + 1]: "hit" }, `Swap: ${a[j + 1]} and ${a[j]} trade places`, [j, j + 1]); } else snap({ [j]: "on", [j + 1]: "on" }, `${a[j]} and ${a[j + 1]} are in order`); }
         snap(mk(range(p + 1).map(k => n - 1 - k), "done"), `Pass ${p + 1}: the largest remaining value is in place`);
       }
       return F;
@@ -7794,7 +7809,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     title: "Quicksort: partition around the middle pivot",
     frames() {
       const a = [4, 9, 1, 5, 7, 3, 8], F = [];
-      const snap = (m, text) => F.push({ rows: [{ label: "a", vals: [...a], marks: m }], text });
+      const snap = (m, text, sw = []) => F.push({ rows: [{ label: "a", vals: [...a], marks: m }, { label: "swap", vals: a.map((_, k) => (sw.includes(k) ? "⇄" : "")), marks: mk(sw, "bad") }], text });
       const part = (l, r) => {
         if (l >= r) return;
         const pv = a[(l + r) >> 1]; let i = l, j = r;
@@ -7802,7 +7817,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         while (i <= j) {
           while (a[i] < pv) i++;
           while (a[j] > pv) j--;
-          if (i <= j) { const x = a[i], y = a[j]; [a[i], a[j]] = [a[j], a[i]]; snap({ [i]: "hit", [j]: "hit" }, i === j ? `i and j meet at ${x}` : `${x} ≥ ${pv} on the left and ${y} ≤ ${pv} on the right: swap them`); i++; j--; }
+          if (i <= j) { const x = a[i], y = a[j]; [a[i], a[j]] = [a[j], a[i]]; snap({ [i]: "hit", [j]: "hit" }, i === j ? `i and j meet at ${x}` : `${x} ≥ ${pv} on the left and ${y} ≤ ${pv} on the right: swap them`, i === j ? [] : [i, j]); i++; j--; }
         }
         snap(Object.assign(mk(range(j - l + 1).map(x => x + l), "done"), mk(range(r - i + 1).map(x => x + i), "bad")), `Left part ${j >= l ? `a[${l}..${j}]` : "(empty)"} ≤ ${pv} ≤ right part ${r >= i ? `a[${i}..${r}]` : "(empty)"}. Now sort each side`);
         part(l, j); part(i, r);
