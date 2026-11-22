@@ -1311,7 +1311,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 /* lesson pieces rise in as they scroll into view, their parts one after another */
 .rv { opacity: 0; transform: translateY(14px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
 .rv.in { opacity: 1; transform: none; }
-.rv.in :is(.fchip, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fascii > div, .fverd > div, .fprec > div, .fchain .row, .frow), .rv.in .forder > div > * { animation: lsIn .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
+.rv.in :is(.fchip, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fascii > div, .fverd > div, .fprec > div, .fchain .row, .frow, .fkeys > div, .fstruct > div), .rv.in .forder > div > * { animation: lsIn .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
 .rv.in .forder > div > * { animation-delay: calc(var(--i, 0) * 260ms + 150ms); }
 .rv.in .fflow > i { animation: lsIn .4s var(--ease) both; animation-delay: .45s; }
 .rv.in .fline .arc { stroke-dashoffset: 0; animation: lsDraw .8s var(--ease) .35s both; }
@@ -1365,7 +1365,10 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .wres.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .wres b.bad { color: var(--v-bad); }
 .wres b.sm { font-size: 18px; letter-spacing: .04em; }
-.win input[type="text"] { width: 70px; text-align: center; }
+.win label { min-width: 0; max-width: 100%; }
+.win input[type="text"] { width: min(380px, 100%); text-align: left; font-size: 17px; }
+.win input[type="text"][maxlength="1"] { width: 70px; text-align: center; font-size: 18px; }
+.win input[type="range"] { width: 200px; height: auto; border: 0; padding: 0; background: none; accent-color: var(--accent); }
 .chip.mono { font-family: var(--f-mono); }
 .wpre .chip[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--fg); }
 .wprint { display: grid; gap: 10px; padding: 16px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--line); }
@@ -1463,7 +1466,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .wdiv span.no { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
 .wdiv span.bad { background: color-mix(in srgb, var(--v-bad) 22%, var(--surface)); color: var(--v-bad); }
 .wdiv span.more { background: none; color: var(--muted); font-weight: 500; }
-.win input.wide { width: min(320px, 100%); text-align: left; }
+.win input.wide { width: min(600px, 100%); }
 .wtab { font-size: 14.5px; }
 .wtab th, .wtab td { text-align: center; padding: 8px 10px; position: static; font-variant-numeric: tabular-nums; }
 .wtab td:first-child { font-weight: 700; }
@@ -1593,6 +1596,35 @@ svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
 .wjoin > div.best b { color: var(--v-done); }
 @media (max-width: 640px) { .wres.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wbars > div { width: 26px; } }
 @media (prefers-reduced-motion: reduce) { .wbars i { transition: none; } }
+
+
+/* 基7 figures and widgets */
+.fanat { display: grid; gap: 18px; width: 100%; }
+.fanat > code { font-size: 15px; line-height: 2; padding: 14px 16px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--line); overflow-x: auto; white-space: pre-wrap; }
+.fanat span { border-bottom: 3px solid; padding-bottom: 1px; }
+.fanat .p1 { border-color: var(--v-cur); } .fanat .p2 { border-color: var(--v-cmp); } .fanat .p3 { border-color: var(--v-done); } .fanat .p4 { border-color: var(--line-strong); } .fanat .p5 { border-color: var(--v-bad); }
+.fkeys { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.fkeys > div { display: grid; gap: 4px; padding: 10px 12px; border-radius: 8px; background: var(--bg); border-top: 3px solid; }
+.fkeys > div small { color: var(--muted); font-size: 12px; }
+.fkeys .p1 { border-color: var(--v-cur); } .fkeys .p2 { border-color: var(--v-cmp); } .fkeys .p3 { border-color: var(--v-done); } .fkeys .p4 { border-color: var(--line-strong); } .fkeys .p5 { border-color: var(--v-bad); }
+.fstruct { display: grid; gap: 8px; width: 100%; max-width: 380px; }
+.fstruct > code { font-weight: 600; }
+.fstruct > div { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+.fstruct > div.fn { border-color: var(--v-done); }
+.fstruct b { font: 600 15px var(--f-mono); }
+.wvr { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.wvr > div { display: grid; gap: 10px; justify-items: center; }
+.wvr > div > small { color: var(--muted); font-size: 12.5px; }
+.wvr .wlink { width: 60px; height: 0; border-top: 2px dashed var(--line-strong); }
+.wvr.same .wlink { border-top: 3px solid var(--v-done); }
+.wvr.same .vbox { border-color: var(--v-done); }
+.wpardon { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 2px; width: min(100%, 420px); }
+.wpardon span { aspect-ratio: 1; display: grid; place-items: center; border-radius: 3px; font: 600 12px var(--f-mono); }
+.wpardon span.one { background: color-mix(in srgb, var(--v-cur) 40%, var(--surface)); }
+.wpardon span.zero { background: var(--bg); color: var(--muted); }
+.wpardon span.zero.l1 { background: color-mix(in srgb, var(--v-cmp) 12%, var(--bg)); }
+.wpardon span.zero.l2 { background: color-mix(in srgb, var(--v-done) 12%, var(--bg)); }
+.wn { font-size: 18px; }
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -3639,7 +3671,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
     document.querySelectorAll(".flow.lesson :is(.lfig, .lwid, .ltable, .lsteps, .lcards, .box, details.prog, .vis)").forEach(el => {
       el.classList.add("rv"); io.observe(el);
-      [...el.querySelectorAll(".fchip, .forder > div, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fsize > div, .fascii > div, .fverd > div, .fprec > div, .wpacks > div, .frow")].forEach((c, k) => c.style.setProperty("--i", k));
+      [...el.querySelectorAll(".fchip, .forder > div, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fsize > div, .fascii > div, .fverd > div, .fprec > div, .wpacks > div, .frow, .fkeys > div, .fstruct > div")].forEach((c, k) => c.style.setProperty("--i", k));
     });
   }
 
@@ -7073,6 +7105,172 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       snap({}, `Search " to " in the padded line. The spaces stop it matching inside other words`);
       for (let p = text.indexOf(w); p >= 0; p = text.indexOf(w, p + 1)) { hits.push(p); snap(mk(range(w.length).map(i => p + i), "hit"), `find(w, from) returns ${p}. That is the word's start in the original line. Next search from ${p + 1}`); }
       snap({}, `No more: find returns npos. ${hits.length} matches, the first at ${hits[0]}`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+
+
+  // ---- 基7: figures, widgets and step players ----
+  Object.assign(FIG, {
+    func: () => `<div class="fanat"><code><span class="p1">double</span> <span class="p2">dist</span>(<span class="p3">double x1, double y1, double x2, double y2</span>) <span class="p4">{ … <span class="p5">return sqrt(dx * dx + dy * dy);</span> }</span></code>
+      <div class="fkeys">${[["p1", "return type", "what comes back"], ["p2", "name", "how you call it"], ["p3", "parameters", "copies of the arguments"], ["p4", "body", "the steps"], ["p5", "return", "ends the call with a value"]].map(([c, h, s], k) => `<div class="${c}" style="--i:${k}"><b>${h}</b><small>${s}</small></div>`).join("")}</div></div>`,
+    callflow: () => `<div class="fflow">${[["main", "p = dist(0, 0, 0, 3)", ""], ["jump in", "x1 = 0, y1 = 0, …", " hot"], ["body runs", "dx = 0, dy = −3", ""], ["return", "sqrt(9) = 3", " ok"]].map(([h, s, c], k) => `${k ? '<i aria-hidden="true">→</i>' : ""}<div class="fchip${c}"><b>${k + 1}</b><span>${h}</span><small class="mono">${esc(s)}</small></div>`).join("")}</div>
+      <p class="floop"><span aria-hidden="true">↺</span> The value 3 lands back where the call was written, and main carries on</p>`,
+    student: () => `<div class="fstruct"><code>Student s</code>${[["s.name", '"senpai"'], ["s.chinese", "114"], ["s.math", "51"], ["s.english", "4"], ["s.total()", "169"]].map(([f, v], k) => `<div class="${k === 4 ? "fn" : ""}" style="--i:${k}"><code>${f}</code><b>${v}</b></div>`).join("")}<p class="floop">One record carries all its fields together; <code>total()</code> is a member function that uses them</p></div>`,
+  });
+  const isPrimeJ = x => { if (x < 2) return false; for (let i = 2; i * i <= x; i++) if (x % i === 0) return false; return true; };
+  Object.assign(WIDGET, {
+    valref: {
+      title: "Copy or the original?",
+      html: () => `<div class="seg" role="group" aria-label="parameter"><button type="button" data-r="0" aria-pressed="true">void f(int x)</button><button type="button" data-r="1" aria-pressed="false">void f(int &amp;x)</button></div>
+        <div class="wvr"><div><small>in main</small><span class="vbox" data-b="a"><small>a</small><b>1</b></span></div><i class="wlink" aria-hidden="true"></i><div><small>inside f</small><span class="vbox" data-b="x"><small>x</small><b>1</b></span></div></div>
+        <div class="btns"><button type="button" class="btn primary" data-call>Call f(a), which does x = 100</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        let ref = false;
+        const fb = el.querySelector(".wfb"), box = n => el.querySelector(`[data-b="${n}"]`);
+        const set = (n, v) => { const b = box(n), o = b.querySelector("b"); if (o.textContent !== String(v)) { o.textContent = v; b.classList.remove("glow"); void b.offsetWidth; b.classList.add("glow"); } };
+        const reset = () => { set("a", 1); set("x", 1); el.querySelector(".wvr").classList.toggle("same", ref); say(fb, "", ref ? "With &, x is another name for a: one box with two names" : "Without &, x is a separate copy of a"); };
+        el.onclick = e => {
+          const b = e.target.closest("[data-r]");
+          if (b) { ref = b.dataset.r === "1"; el.querySelectorAll("[data-r]").forEach(q => q.setAttribute("aria-pressed", q === b)); return reset(); }
+          if (e.target.closest("[data-reset]")) return reset();
+          if (e.target.closest("[data-call]")) { set("x", 100); if (ref) set("a", 100); say(fb, ref ? "ok" : "bad", ref ? "a changed to 100: the function wrote into the caller's box" : "Only the copy changed. Back in main, a is still 1"); }
+        };
+        reset();
+      },
+    },
+    goldbach: {
+      title: "Goldbach with an isPrime helper",
+      html: () => `<div class="wpre">${[10, 28, 98, 100].map(e => `<button type="button" class="chip" data-e="${e}">${e}</button>`).join("")}</div>
+        <div class="win"><label>even number <input type="number" value="28" min="4" step="2" data-k="e"></label></div><div class="wchips wdiv"></div><div class="wclock"><b class="sm"></b><small>smallest p first</small></div>`,
+      init(el) {
+        const inp = el.querySelector("input");
+        const run = () => {
+          let e = Math.max(4, Math.trunc(+inp.value || 4)); if (e % 2) e++;
+          const tried = []; let hit = 0;
+          for (let p = 2; p <= e / 2; p++) { if (!isPrimeJ(p)) continue; tried.push(p); if (isPrimeJ(e - p)) { hit = p; break; } }
+          swap(el.querySelector(".wdiv"), tried.map(p => `<span class="${p === hit ? "hit" : "no"}">${p}</span>`).join(""), "span");
+          const o = el.querySelector(".wclock b"); o.textContent = hit ? `${e} = ${hit} + ${e - hit}` : "—"; pop(o);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-e]"); if (!c) return; inp.value = c.dataset.e; run(); };
+        inp.oninput = run;
+        run();
+      },
+    },
+    pardon: {
+      title: "A picture drawn by recursion",
+      html: () => `<div class="win"><label>n <input type="number" value="3" min="1" max="5" data-k="n"></label><label>depth <input type="range" value="1" min="0" max="3" data-k="d"></label></div>
+        <div class="wpardon"></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const [inN, inD] = el.querySelectorAll("input"), fb = el.querySelector(".wfb");
+        const run = () => {
+          const n = Math.max(1, Math.min(5, Math.trunc(+inN.value || 1))), s = 1 << n;
+          inD.max = n; const D = Math.min(+inD.value, n);
+          const g = range(s).map(() => Array(s).fill(1)), lvl = range(s).map(() => Array(s).fill(-1));
+          const solve = (r, c, sz, d) => { if (sz === 1 || d >= D) return; const h = sz / 2; for (let i = 0; i < h; i++) for (let j = 0; j < h; j++) { g[r + i][c + j] = 0; lvl[r + i][c + j] = d; } solve(r, c + h, h, d + 1); solve(r + h, c, h, d + 1); solve(r + h, c + h, h, d + 1); };
+          solve(0, 0, s, 0);
+          const w = el.querySelector(".wpardon"); w.style.setProperty("--n", s);
+          swap(w, g.map((row, i) => row.map((v, j) => `<span class="${v ? "one" : `zero l${lvl[i][j] % 4}`}">${s <= 16 ? v : ""}</span>`).join("")).join(""), "span");
+          say(fb, "", D === 0 ? "Depth 0: nothing pardoned yet, every cell is 1" : `Depth ${D}: each call clears its top left quarter, then calls itself on the other three at half the size${D === n ? ". This is the full picture" : ""}`);
+        };
+        inN.oninput = inD.oninput = run;
+        run();
+      },
+    },
+    fibcalls: {
+      title: "How many calls does fib(n) make?",
+      html: () => `<div class="win"><label>n <input type="range" value="20" min="1" max="40" data-k="n"></label><b class="mono wn"></b></div>
+        <div class="wres two"><div><code>plain recursion</code><b data-out="p"></b></div><div><code>with memo[]</code><b data-out="m"></b></div></div><div class="wmeter wlog" aria-hidden="true"><i></i><span>calls, log scale</span></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const inp = el.querySelector("input"), fb = el.querySelector(".wfb"), C = [0, 1, 1];
+        for (let k = 3; k <= 40; k++) C[k] = C[k - 1] + C[k - 2] + 1;
+        const run = () => {
+          const n = +inp.value, plain = C[n], memo = n <= 2 ? 1 : 2 * n - 3;
+          el.querySelector(".wn").textContent = `fib(${n})`;
+          [["p", plain], ["m", memo]].forEach(([k, v]) => { const o = el.querySelector(`[data-out="${k}"]`); if (o.textContent !== v.toLocaleString("en-US")) { o.textContent = v.toLocaleString("en-US"); pop(o); } });
+          const bar = el.querySelector(".wmeter i"); bar.style.width = (Math.log10(plain + 1) / 9) * 100 + "%"; bar.classList.toggle("bad", plain > 1e6);
+          say(fb, plain > 1e6 ? "bad" : "", `Plain recursion recomputes the same values again and again: about 1.6ⁿ calls. Memo computes each fib(k) once: ${memo} call${memo > 1 ? "s" : ""}`);
+        };
+        inp.oninput = run;
+        run();
+      },
+    },
+    sorter: {
+      title: "Sort structs with a comparator",
+      CMP: [["score high first, then name", (x, y) => (x.s !== y.s ? x.s > y.s : x.n < y.n)], ["score high first only", (x, y) => x.s > y.s], ["name A to Z", (x, y) => x.n < y.n]],
+      html: () => `<div class="wpre">${WIDGET.sorter.CMP.map(([l], k) => `<button type="button" class="chip" data-c="${k}" aria-pressed="${k === 0}">${l}</button>`).join("")}</div>
+        <div class="tablewrap"><table class="wtab"><thead><tr><th>#</th><th>name</th><th>score</th></tr></thead><tbody></tbody></table></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const A = [{ n: "bob", s: 240 }, { n: "amy", s: 240 }, { n: "cat", s: 300 }, { n: "dan", s: 180 }], fb = el.querySelector(".wfb");
+        const run = k => {
+          const cmp = WIDGET.sorter.CMP[k][1], b = [...A];
+          for (let i = 1; i < b.length; i++) for (let j = i; j > 0 && cmp(b[j], b[j - 1]); j--) [b[j], b[j - 1]] = [b[j - 1], b[j]]; // stable, so ties keep input order
+          swap(el.querySelector("tbody"), b.map((x, i) => `<tr><td>${i + 1}</td><td>${x.n}</td><td>${x.s}</td></tr>`).join(""), "tr");
+          say(fb, "", k === 0 ? "amy and bob tie on 240, so the name decides: amy first" : k === 1 ? "With no tie rule, amy and bob may come out in either order. sort promises nothing about ties" : "Only the names matter now");
+        };
+        el.querySelector(".wpre").onclick = e => { const b = e.target.closest("[data-c]"); if (!b) return; el.querySelectorAll("[data-c]").forEach(q => q.setAttribute("aria-pressed", q === b)); run(+b.dataset.c); };
+        run(0);
+      },
+    },
+    scopequiz: quizWidget("What does it print?", [
+      ["void f(int x) { x = 5; }  …  int a = 1; f(a); cout << a;", ["1", "5"], 0, "x is a copy, so a is untouched"],
+      ["void f(int &x) { x = 5; }  …  int a = 1; f(a); cout << a;", ["1", "5"], 1, "x is a reference to a, so a becomes 5"],
+      ["void f(int arr[]) { arr[0] = 9; }  …  int a[3] = {1}; f(a); cout << a[0];", ["1", "9"], 1, "Arrays are never copied: f changes the caller's array"],
+      ["int cnt = 3;  int main() { int cnt = 7; cout << cnt << ::cnt; }", ["37", "73", "77"], 1, "The local cnt hides the global one; ::cnt reaches the global"],
+      ["int sq(int x) { return x * x; }  …  cout << sq(sq(2));", ["4", "8", "16"], 2, "sq(2) is 4, then sq(4) is 16"],
+    ], q => `<code>${esc(q)}</code>`),
+  });
+  addVis("基7", {
+    title: "By value or by reference",
+    frames() {
+      const code = ["void byValue(int x) { x = 100; }", "void byRef(int &x) { x = 100; }", "int a = 1;", "byValue(a);", "byRef(a);"], F = [], s = traceF(code, F), v = {};
+      v.a = 1; s(2, v, "a = 1 in main");
+      v.x = 1; s(3, v, "byValue(a): x is a new box holding a copy of a");
+      v.x = 100; s(0, v, "x = 100 changes only the copy");
+      delete v.x; s(3, v, "The call ends and the copy is thrown away. a is still 1");
+      v["x (= a)"] = 1; s(4, v, "byRef(a): x is another name for a itself");
+      v["x (= a)"] = 100; v.a = 100; s(1, v, "x = 100 writes into a");
+      delete v["x (= a)"]; s(4, v, "Back in main: a is 100");
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基7", {
+    title: "fib with a memo table",
+    frames() {
+      const n = 8, memo = Array(n + 1).fill(""), F = [];
+      const snap = (m, text) => F.push({ rows: [{ label: "memo", vals: memo.slice(1), base: 1, marks: m }], text });
+      snap({}, "memo[k] starts empty. fib(k) fills it the first time and reuses it after that");
+      const fib = k => {
+        if (k <= 2) { if (memo[k] === "") { memo[k] = 1; snap({ [k - 1]: "hit" }, `fib(${k}) = 1, the base case`); } return 1; }
+        if (memo[k] !== "") { snap({ [k - 1]: "done" }, `fib(${k}) is already in memo: ${memo[k]}. No new calls`); return memo[k]; }
+        snap({ [k - 1]: "on" }, `fib(${k}) is new: compute fib(${k - 1}) + fib(${k - 2})`);
+        const v = fib(k - 1) + fib(k - 2);
+        memo[k] = v; snap({ [k - 1]: "hit", [k - 2]: "on", [k - 3]: "on" }, `fib(${k}) = ${memo[k - 1]} + ${memo[k - 2]} = ${v}, stored`);
+        return v;
+      };
+      fib(n);
+      snap({}, `fib(${n}) = ${memo[n]}. Each value was computed once: O(n) instead of about 1.6ⁿ calls`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基7", {
+    title: "Sorting structs: score first, then name",
+    frames() {
+      const a = [["bob", 240], ["amy", 240], ["cat", 300], ["dan", 180]], F = [];
+      const cmp = (x, y) => (x[1] !== y[1] ? x[1] > y[1] : x[0] < y[0]);
+      const snap = (m, text) => F.push({ rows: [{ label: "name", vals: a.map(x => x[0]), marks: m }, { label: "score", vals: a.map(x => x[1]), marks: m }], text });
+      snap({}, "cmp(x, y) answers: must x come before y? Higher score first; on a tie, A to Z");
+      for (let i = 1; i < a.length; i++) for (let j = i; j > 0; j--) {
+        const go = cmp(a[j], a[j - 1]), why = a[j][1] !== a[j - 1][1] ? `${a[j][1]} ${a[j][1] > a[j - 1][1] ? ">" : "<"} ${a[j - 1][1]}` : `tie, ${a[j][0]} ${a[j][0] < a[j - 1][0] ? "<" : ">"} ${a[j - 1][0]}`;
+        snap({ [j]: "on", [j - 1]: "on" }, `cmp(${a[j][0]}, ${a[j - 1][0]}): ${why}, so ${go ? "swap" : "keep"}`);
+        if (!go) break;
+        [a[j], a[j - 1]] = [a[j - 1], a[j]];
+        snap({ [j - 1]: "hit" }, `${a[j - 1][0]} moves up`);
+      }
+      snap(mk(range(4), "done"), "cat 300, amy 240, bob 240, dan 180");
       return F;
     },
     mount: rowsMount,
