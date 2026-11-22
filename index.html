@@ -1691,6 +1691,14 @@ svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
 .wsbars .sw span { color: var(--v-bad); font-weight: 700; }
 @media (prefers-reduced-motion: reduce) { .wsbars > div { transition: none; } }
 
+
+/* code-synced sorting: the array on top, the running code below */
+.cr-rows { margin-bottom: 10px; }
+.cr-code .trace { margin-top: 4px; }
+.wsortrun { display: grid; gap: 10px; }
+.wsortrun .wres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wsortrun .wres > [hidden] { display: none; }
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -3222,7 +3230,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     return f => {
       const mark = c => [...c.classList].filter(x => x !== "cell" && x !== "w" && x !== "glow").join(" ");
       const old = [...stage.querySelectorAll(".cell")].map(c => [c.textContent, mark(c)]);
-      stage.innerHTML = f.rows.map(r => `<div class="arow"><span class="alabel">${r.label}</span><div class="row${r.vals.length > 12 ? " tight" : ""}">${r.vals.map((v, k) => `<div class="cell ${r.wide ? "w " : ""}${(r.marks || {})[k] || ""}"><small>${r.idx ? r.idx[k] : k + (r.base ?? 0)}</small>${v}</div>`).join("")}</div></div>`).join("");
+      stage.innerHTML = f.rows.map(r => `<div class="arow"><span class="alabel">${r.label}</span><div class="row${r.vals.length > 12 || r.tight ? " tight" : ""}">${r.vals.map((v, k) => `<div class="cell ${r.wide ? "w " : ""}${(r.marks || {})[k] || ""}"><small>${r.idx ? r.idx[k] : k + (r.base ?? 0)}</small>${v}</div>`).join("")}</div></div>`).join("");
       if (old.length) stage.querySelectorAll(".cell").forEach((c, k) => { const o = old[k], m = mark(c); if (o && (o[0] !== c.textContent || (m && o[1] !== m))) c.classList.add("glow"); });
     };
   }
@@ -7652,14 +7660,41 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     partition: () => `<div class="fbox">${cellRow([4, 9, 5, 1, 7, 3, 8], k => (k === 2 ? "on" : ""), k => k)}<p class="floop">↓ partition around the pivot 5</p>${cellRow([4, 1, 3, 5, 7, 9, 8], k => (k < 3 ? "hit" : k === 3 ? "on" : "bad"), k => (k < 3 ? "≤ 5" : k === 3 ? "pivot" : "≥ 5"))}<p class="floop">Smaller values to the left, bigger to the right. Then sort each side the same way</p></div>`,
   });
   // step through a simple sort, recording every comparison and swap
+  // the three simple sorts, the same code the step players show; every recorded step names its code line
+  const SORT_CODE = {
+    selection: ["for (int i = 0; i < n - 1; i++) {", "    int m = i;", "    for (int j = i + 1; j < n; j++)", "        if (a[j] < a[m]) m = j;", "    swap(a[i], a[m]);", "}"],
+    bubble: ["for (int pass = 0; pass < n - 1; pass++)", "    for (int j = 0; j + 1 < n - pass; j++)", "        if (a[j] > a[j + 1]) {", "            swap(a[j], a[j + 1]);", "            swaps++;", "        }"],
+    insertion: ["for (int i = 1; i < n; i++) {", "    int x = a[i], j = i - 1;", "    while (j >= 0 && a[j] > x) {", "        a[j + 1] = a[j];       // shift right", "        j--;", "    }", "    a[j + 1] = x;", "}"],
+  };
   const sortSteps = (algo, arr) => {
-    const a = [...arr], S = [];
-    const cmp = (i, j, text) => S.push({ a: [...a], on: [i, j], text, kind: "cmp" });
-    const sw = (i, j, text) => { [a[i], a[j]] = [a[j], a[i]]; S.push({ a: [...a], on: [i, j], text, kind: "swap" }); };
-    const n = a.length;
-    if (algo === "selection") for (let i = 0; i < n - 1; i++) { let m = i; for (let j = i + 1; j < n; j++) { cmp(j, m, `Is ${a[j]} smaller than the minimum so far, ${a[m]}?`); if (a[j] < a[m]) m = j; } if (m !== i) sw(i, m, `Swap the minimum ${a[m]} into position ${i}`); S.push({ a: [...a], on: [], done: i, text: `Position ${i} is final`, kind: "mark" }); }
-    if (algo === "bubble") for (let p = 0; p < n - 1; p++) { for (let j = 0; j + 1 < n - p; j++) { cmp(j, j + 1, `Neighbours ${a[j]} and ${a[j + 1]}: in order?`); if (a[j] > a[j + 1]) sw(j, j + 1, `${a[j]} > ${a[j + 1]}: swap them. Each swap fixes one inversion`); } S.push({ a: [...a], on: [], done: n - 1 - p, text: `Pass ${p + 1} done: the largest left has bubbled to position ${n - 1 - p}`, kind: "mark" }); }
-    if (algo === "insertion") for (let i = 1; i < n; i++) { for (let j = i; j > 0; j--) { cmp(j - 1, j, `Is ${a[j - 1]} bigger than ${a[j]}?`); if (a[j - 1] > a[j]) sw(j - 1, j, `Yes: slide ${a[j - 1]} right`); else break; } S.push({ a: [...a], on: [], done: i, text: `The first ${i + 1} values are sorted`, kind: "mark" }); }
+    const a = [...arr], S = [], n = a.length;
+    const rec = (line, on, text, kind, extra = {}) => S.push({ a: [...a], on, text, kind, line, ...extra });
+    if (algo === "selection") for (let i = 0; i < n - 1; i++) {
+      let m = i; rec(1, [i], `Position ${i}: assume the minimum is a[${i}] = ${a[i]}`, "mark");
+      for (let j = i + 1; j < n; j++) { rec(3, [j, m], `Is a[${j}] = ${a[j]} smaller than a[m] = ${a[m]}?`, "cmp"); if (a[j] < a[m]) m = j; }
+      if (m !== i) { const x = a[m]; [a[i], a[m]] = [a[m], a[i]]; rec(4, [i, m], `Swap the minimum ${x} into position ${i}`, "swap"); }
+      else rec(4, [i], `a[${i}] is already the minimum: no move`, "mark");
+      rec(0, [], `Position ${i} is final`, "mark", { done: i });
+    }
+    if (algo === "bubble") for (let p = 0; p < n - 1; p++) {
+      for (let j = 0; j + 1 < n - p; j++) { rec(2, [j, j + 1], `Neighbours ${a[j]} and ${a[j + 1]}: in order?`, "cmp"); if (a[j] > a[j + 1]) { const x = a[j], y = a[j + 1]; [a[j], a[j + 1]] = [a[j + 1], a[j]]; rec(3, [j, j + 1], `${x} > ${y}: swap them. Each swap fixes one inversion`, "swap"); } }
+      rec(0, [], `Pass ${p + 1} done: the largest left has bubbled to position ${n - 1 - p}`, "mark", { done: n - 1 - p });
+    }
+    if (algo === "insertion") {
+      rec(0, [], "a[0] alone is a sorted prefix", "mark", { done: 0 });
+      for (let i = 1; i < n; i++) {
+        const x = a[i]; let j = i - 1;
+        rec(1, [i], `Hold x = ${x}. Its old box can now be overwritten`, "mark", { hold: x });
+        while (true) {
+          const go = j >= 0 && a[j] > x;
+          rec(2, j >= 0 ? [j] : [], j < 0 ? "j = −1: the left end, stop" : `a[${j}] = ${a[j]} ${go ? ">" : "≤"} x = ${x}: ${go ? "shift it" : "stop"}`, "cmp", { hold: x });
+          if (!go) break;
+          a[j + 1] = a[j]; rec(3, [j, j + 1], `Copy ${a[j]} from a[${j}] into a[${j + 1}]`, "shift", { hold: x });
+          j--;
+        }
+        a[j + 1] = x; rec(6, [j + 1], `Drop x = ${x} into a[${j + 1}]. The first ${i + 1} values are sorted`, "place", { done: i });
+      }
+    }
     return S;
   };
   Object.assign(WIDGET, {
@@ -7667,7 +7702,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       title: "Watch a simple sort",
       html: () => `<div class="seg" role="group" aria-label="algorithm">${["selection", "bubble", "insertion"].map((k, i) => `<button type="button" data-al="${k}" aria-pressed="${i === 1}">${k}</button>`).join("")}</div>
         <div class="win"><label>array <input type="text" class="wide" value="5 2 4 6 1 3 8 7" data-k="a"></label></div>
-        <div class="wsbars"></div><div class="wres two"><div><code>comparisons</code><b data-out="c"></b></div><div><code>swaps</code><b data-out="s"></b></div></div>
+        <div class="wsbars"></div><div class="wsortrun"><pre class="trace"></pre><div class="wres two"><div><code>comparisons</code><b data-out="c"></b></div><div><code class="wslabel">swaps</code><b data-out="s"></b></div><div class="whold" hidden><code>x (held)</code><b></b></div></div></div>
         <div class="btns"><button type="button" class="btn primary" data-step>Next step</button><button type="button" class="btn" data-play>Play</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
       init(el) {
         let algo = "bubble", S, k, timer, base, fin;
@@ -7676,7 +7711,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           const st = k > 0 ? S[k - 1] : { a: base, on: [], text: "Ready" }, mx = Math.max(...base, 1);
           if (st.done !== undefined) fin.add(st.done);
           const box = el.querySelector(".wsbars");
-          swap(box, st.a.map((v, i) => `<div class="${st.on.includes(i) ? (st.kind === "swap" ? "sw" : "cmp") : fin.has(i) ? "fin" : ""}" style="--h:${(v / mx) * 100}%">${st.kind === "swap" && st.on.includes(i) ? '<em aria-hidden="true">⇄</em>' : ""}<i></i><span>${v}</span></div>`).join(""), ":scope > div");
+          swap(box, st.a.map((v, i) => `<div class="${st.on.includes(i) ? (st.kind === "swap" || st.kind === "shift" ? "sw" : st.kind === "place" ? "fin" : "cmp") : fin.has(i) ? "fin" : ""}" style="--h:${(v / mx) * 100}%">${st.kind === "swap" && st.on.includes(i) ? '<em aria-hidden="true">⇄</em>' : ""}<i></i><span>${v}</span></div>`).join(""), ":scope > div");
           if (st.kind === "swap" && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
             // each bar starts where its value came from, then slides to its new place
             const bars = box.children, [p, q] = st.on, step = bars.length > 1 ? bars[1].offsetLeft - bars[0].offsetLeft : 0;
@@ -7684,11 +7719,22 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
             box.getBoundingClientRect();
             [p, q].forEach(t => { const b = bars[t]; b.style.transition = ""; b.style.transform = ""; });
           }
-          const c = S.slice(0, k).filter(x => x.kind === "cmp").length, s = S.slice(0, k).filter(x => x.kind === "swap").length;
+          const c = S.slice(0, k).filter(x => x.kind === "cmp").length, s = S.slice(0, k).filter(x => x.kind === "swap" || x.kind === "shift").length;
+          // the code panel: highlight the line this step ran, and slide the bar to it
+          const pre = el.querySelector(".wsortrun .trace"), lines = [...pre.querySelectorAll("span")], on = k > 0 ? lines[st.line] : null, bar = pre.querySelector(".tbar");
+          lines.forEach(l => l.classList.toggle("on", l === on));
+          bar.style.opacity = on ? 1 : 0;
+          if (on) { bar.style.transform = `translateY(${on.offsetTop}px)`; bar.style.height = on.offsetHeight + "px"; }
+          const hold = el.querySelector(".whold"); hold.hidden = algo !== "insertion"; hold.querySelector("b").textContent = st.hold ?? "—";
           [["c", c], ["s", s]].forEach(([q, v]) => { const o = el.querySelector(`[data-out="${q}"]`); if (o.textContent !== String(v)) { o.textContent = v; pop(o); } });
-          say(fb, k === S.length ? "ok" : "", k === S.length ? `Sorted with ${c} comparisons and ${s} swaps` : st.text);
+          say(fb, k === S.length ? "ok" : "", k === S.length ? `Sorted with ${c} comparisons and ${s} ${algo === "insertion" ? "shifts" : "swaps"}` : st.text);
         };
-        const reset = () => { clearInterval(timer); base = ints(inp.value).slice(0, 14).map(x => Math.max(0, x)); if (base.length < 2) base = [3, 1, 2]; S = sortSteps(algo, base); k = 0; fin = new Set(); draw(); };
+        const reset = () => {
+          clearInterval(timer); base = ints(inp.value).slice(0, 14).map(x => Math.max(0, x)); if (base.length < 2) base = [3, 1, 2]; S = sortSteps(algo, base); k = 0; fin = new Set();
+          el.querySelector(".wsortrun .trace").innerHTML = '<i class="tbar" aria-hidden="true"></i>' + SORT_CODE[algo].map(l => `<span>${esc(l)}</span>`).join("");
+          el.querySelector(".wslabel").textContent = algo === "insertion" ? "shifts" : "swaps";
+          draw();
+        };
         const step = () => { if (k < S.length) { k++; draw(); return true; } return false; };
         el.onclick = e => {
           const b = e.target.closest("[data-al]");
@@ -7875,6 +7921,184 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     },
     mount: rowsMount,
   });
+
+
+  // ---- sorting players that step through their code: the array on top, the code with the running line below ----
+  function codeRowsMount(stage) {
+    stage.innerHTML = '<div class="cr-rows"></div><div class="cr-code"></div>';
+    const rows = rowsMount(stage.firstChild), code = traceMount(stage.lastChild);
+    return f => { rows(f); code(f); };
+  }
+  // a sorting run recorded line by line: line(l, text, vars, marks, ptrs, extraRows)
+  const sortRun = (code, a, pointerOf) => {
+    const F = [];
+    const line = (l, text, vars, marks = {}, extra = []) => {
+      const ptr = a.map((_, k) => pointerOf(vars, k));
+      const tight = a.length >= 8;
+      F.push({ code, line: l, vars: { ...vars }, text, rows: [{ label: "a", vals: [...a], marks, tight }, { label: "", vals: ptr, marks: mk(range(a.length).filter(k => ptr[k]), "on"), tight }, ...extra] });
+    };
+    return { F, line };
+  };
+  const ptrs = names => (v, k) => names.filter(n => v[n] === k).join(" ");
+  const SORT_SPECS = {
+    insertion: () => ({
+      title: "Insertion sort, line by line",
+      speed: 2,
+      frames() {
+        const code = ["for (int i = 1; i < n; i++) {", "    int x = a[i], j = i - 1;", "    while (j >= 0 && a[j] > x) {", "        a[j + 1] = a[j];       // shift right", "        j--;", "    }", "    a[j + 1] = x;              // drop x in", "}"];
+        const a = [5, 2, 4, 6, 1, 3], n = a.length, { F, line } = sortRun(code, a, ptrs(["i", "j"])), sorted = k => mk(range(k), "done");
+        line(-1, "The first value alone is a sorted prefix", {}, sorted(1));
+        for (let i = 1; i < n; i++) {
+          const x = a[i]; let j = i - 1;
+          line(0, `i = ${i}: insert a[${i}] into the sorted part a[0..${i - 1}]`, { i, x: "?", j: "?" }, sorted(i));
+          line(1, `Hold x = ${x}. j starts just left of it`, { i, x, j }, { ...sorted(i), [i]: "on" });
+          while (true) {
+            const go = j >= 0 && a[j] > x;
+            line(2, j < 0 ? "j = −1: we ran off the left end, stop" : `a[${j}] = ${a[j]} ${go ? ">" : "≤"} x = ${x}: ${go ? "keep shifting" : "stop here"}`, { i, x, j }, j >= 0 ? { [j]: "on" } : {});
+            if (!go) break;
+            a[j + 1] = a[j]; line(3, `Copy ${a[j]} one place right, into a[${j + 1}]`, { i, x, j }, { [j + 1]: "hit" });
+            j--; line(4, `j−− → ${j}`, { i, x, j });
+          }
+          a[j + 1] = x; line(6, `Put x = ${x} into the gap at a[${j + 1}]`, { i, x, j }, { ...sorted(i + 1), [j + 1]: "hit" });
+        }
+        line(-1, "Sorted. Few shifts when the data is almost sorted", {}, sorted(n));
+        return F;
+      },
+      mount: codeRowsMount,
+    }),
+    selection: () => ({
+      title: "Selection sort, line by line",
+      speed: 2,
+      frames() {
+        const code = ["for (int i = 0; i < n - 1; i++) {", "    int m = i;", "    for (int j = i + 1; j < n; j++)", "        if (a[j] < a[m]) m = j;", "    swap(a[i], a[m]);", "}"];
+        const a = [5, 2, 4, 6, 1, 3], n = a.length, { F, line } = sortRun(code, a, ptrs(["i", "j", "m"])), fin = k => mk(range(k), "done");
+        for (let i = 0; i < n - 1; i++) {
+          line(0, `Position ${i}: find the smallest value in a[${i}..${n - 1}]`, { i }, fin(i));
+          let m = i; line(1, `Assume the minimum is a[${i}] = ${a[i]}`, { i, m }, { ...fin(i), [m]: "hit" });
+          for (let j = i + 1; j < n; j++) {
+            const lt = a[j] < a[m];
+            line(3, `a[${j}] = ${a[j]} ${lt ? "<" : "≥"} a[m] = ${a[m]}${lt ? `: new minimum, m = ${j}` : ""}`, { i, m, j }, { ...fin(i), [m]: "hit", [j]: "on" });
+            if (lt) m = j;
+          }
+          [a[i], a[m]] = [a[m], a[i]];
+          line(4, m === i ? `a[${i}] is already the minimum: the swap changes nothing` : `Swap a[${i}] and a[${m}]: ${a[i]} moves to position ${i}`, { i, m }, { ...fin(i + 1), [m]: "hit", [i]: "hit" });
+        }
+        line(-1, "Sorted. Always about n²/2 comparisons, at most n − 1 swaps", {}, fin(n));
+        return F;
+      },
+      mount: codeRowsMount,
+    }),
+    bubble: () => ({
+      title: "Bubble sort, line by line",
+      speed: 2,
+      frames() {
+        const code = ["for (int pass = 0; pass < n - 1; pass++)", "    for (int j = 0; j + 1 < n - pass; j++)", "        if (a[j] > a[j + 1]) {", "            swap(a[j], a[j + 1]);", "            swaps++;", "        }"];
+        const a = [5, 2, 4, 6, 1, 3], n = a.length, { F, line } = sortRun(code, a, (v, k) => (v.j === k ? "j" : v.j + 1 === k ? "j+1" : "")), end = p => mk(range(p).map(x => n - 1 - x), "done");
+        let swaps = 0;
+        for (let pass = 0; pass < n - 1; pass++) {
+          line(0, `Pass ${pass + 1}`, { pass, swaps }, end(pass));
+          for (let j = 0; j + 1 < n - pass; j++) {
+            const out = a[j] > a[j + 1];
+            line(2, `a[${j}] = ${a[j]} ${out ? ">" : "≤"} a[${j + 1}] = ${a[j + 1]}: ${out ? "out of order" : "fine"}`, { pass, j, swaps }, { ...end(pass), [j]: "on", [j + 1]: "on" });
+            if (out) { [a[j], a[j + 1]] = [a[j + 1], a[j]]; line(3, `Swap: ${a[j + 1]} and ${a[j]} trade places`, { pass, j, swaps }, { ...end(pass), [j]: "hit", [j + 1]: "hit" }); swaps++; line(4, `swaps = ${swaps}: one inversion fixed`, { pass, j, swaps }, end(pass)); }
+          }
+        }
+        line(-1, `Sorted with ${swaps} swaps: exactly the number of inversions`, { swaps }, end(n));
+        return F;
+      },
+      mount: codeRowsMount,
+    }),
+    quick: () => ({
+      title: "Quicksort on 3 8 4 10 6 7 2 5 9 1",
+      speed: 2,
+      frames() {
+        const code = ["void quickSort(int l, int r) {", "    if (l >= r) return;", "    int pivot = a[(l + r) / 2], i = l, j = r;", "    while (i <= j) {", "        while (a[i] < pivot) i++;", "        while (a[j] > pivot) j--;", "        if (i <= j) { swap(a[i], a[j]); i++; j--; }", "    }", "    quickSort(l, j);", "    quickSort(i, r);", "}"];
+        const a = [3, 8, 4, 10, 6, 7, 2, 5, 9, 1], n = a.length, { F, line } = sortRun(code, a, ptrs(["i", "j"]));
+        let round = 0;
+        const shade = (l, r) => Object.fromEntries(range(n).filter(k => k < l || k > r).map(k => [k, "done"]));
+        const qs = (l, r, depth) => {
+          const V = x => ({ l, r, ...x });
+          line(0, `quickSort(${l}, ${r})${depth ? `, a call at depth ${depth}` : ""}`, V({}), shade(l, r));
+          if (l >= r) { line(1, `l ≥ r: ${l >= r && l === r ? "one value" : "nothing"} to sort, return`, V({}), shade(l, r)); return; }
+          const pv = a[(l + r) >> 1]; let i = l, j = r; round++;
+          line(2, `pivot = a[(${l} + ${r}) / 2] = a[${(l + r) >> 1}] = ${pv}. i = ${l}, j = ${r}`, V({ pivot: pv, i, j }), { ...shade(l, r), [(l + r) >> 1]: "hit" });
+          while (i <= j) {
+            while (a[i] < pv) { line(4, `a[${i}] = ${a[i]} < ${pv}: already on the correct side, i++`, V({ pivot: pv, i, j }), { ...shade(l, r), [i]: "on" }); i++; }
+            line(4, `a[${i}] = ${a[i]} ≥ ${pv}: i stops at ${i}`, V({ pivot: pv, i, j }), { ...shade(l, r), [i]: "bad" });
+            while (a[j] > pv) { line(5, `a[${j}] = ${a[j]} > ${pv}: already on the correct side, j−−`, V({ pivot: pv, i, j }), { ...shade(l, r), [j]: "on" }); j--; }
+            line(5, `a[${j}] = ${a[j]} ≤ ${pv}: j stops at ${j}`, V({ pivot: pv, i, j }), { ...shade(l, r), [i]: "bad", [j]: "bad" });
+            if (i <= j) {
+              const x = a[i], y = a[j]; [a[i], a[j]] = [a[j], a[i]];
+              line(6, i === j ? `i = j = ${i}: swap a value with itself, then move both on` : `Swap i = ${i} and j = ${j}: ${x} ↔ ${y}`, V({ pivot: pv, i, j }), { ...shade(l, r), [i]: "hit", [j]: "hit" });
+              i++; j--;
+            }
+            line(3, i <= j ? `i = ${i} ≤ j = ${j}: keep going` : `i = ${i} > j = ${j}: this round is done`, V({ pivot: pv, i, j }), shade(l, r));
+          }
+          line(7, `a[${l}..${j}] are all ≤ ${pv}, a[${i}..${r}] are all ≥ ${pv}`, V({ pivot: pv, i, j }), Object.assign(shade(l, r), mk(range(Math.max(0, j - l + 1)).map(x => x + l), "on"), mk(range(Math.max(0, r - i + 1)).map(x => x + i), "bad")));
+          line(8, `Sort the left part a[${l}..${j}]`, V({ pivot: pv, i, j }), shade(l, j)); qs(l, j, depth + 1);
+          line(9, `Sort the right part a[${i}..${r}]`, V({ pivot: pv, i, j }), shade(i, r)); qs(i, r, depth + 1);
+        };
+        qs(0, n - 1, 0);
+        line(-1, `Sorted after ${round} partition rounds: 1 2 3 4 5 6 7 8 9 10`, {}, mk(range(n), "done"));
+        return F;
+      },
+      mount: codeRowsMount,
+    }),
+    merge: () => ({
+      title: "Merge sort, line by line",
+      speed: 2,
+      frames() {
+        const code = ["void mergeSort(int l, int r) {", "    if (l >= r) return;", "    int m = (l + r) / 2;", "    mergeSort(l, m); mergeSort(m + 1, r);", "    int i = l, j = m + 1, k = l;", "    while (i <= m && j <= r) {", "        if (a[i] <= a[j]) tmp[k++] = a[i++];", "        else { tmp[k++] = a[j++]; inv += m - i + 1; }", "    }", "    while (i <= m) tmp[k++] = a[i++];", "    while (j <= r) tmp[k++] = a[j++];", "    for (int t = l; t <= r; t++) a[t] = tmp[t];", "}"];
+        const a = [2, 4, 1, 3, 5], n = a.length, tmp = Array(n).fill(""), F = [];
+        let inv = 0;
+        const line = (l, text, v, marks = {}, tm = {}) => {
+          const ptr = a.map((_, k) => [v.i === k ? "i" : "", v.j === k ? "j" : ""].filter(Boolean).join(" "));
+          F.push({ code, line: l, vars: { ...v, inv }, text, rows: [{ label: "a", vals: [...a], marks }, { label: "", vals: ptr, marks: mk(range(n).filter(k => ptr[k]), "on") }, { label: "tmp", vals: [...tmp], marks: tm }] });
+        };
+        const ms = (l, r) => {
+          line(0, `mergeSort(${l}, ${r})`, { l, r }, mk(range(r - l + 1).map(x => x + l), "on"));
+          if (l >= r) { line(1, "One value is already sorted", { l, r }); return; }
+          const m = (l + r) >> 1;
+          line(2, `Split at m = ${m}: a[${l}..${m}] and a[${m + 1}..${r}]`, { l, r, m });
+          line(3, "Sort both halves first", { l, r, m }); ms(l, m); ms(m + 1, r);
+          let i = l, j = m + 1, k = l; tmp.fill("");
+          line(4, `Merge: i = ${i}, j = ${j}`, { l, r, m, i, j, k });
+          while (i <= m && j <= r) {
+            if (a[i] <= a[j]) { tmp[k] = a[i]; line(6, `a[i] = ${a[i]} ≤ a[j] = ${a[j]}: take ${a[i]} from the left`, { l, r, m, i, j, k }, { [i]: "hit" }, { [k]: "hit" }); k++; i++; }
+            else { tmp[k] = a[j]; inv += m - i + 1; line(7, `a[j] = ${a[j]} < a[i] = ${a[i]}: take ${a[j]}. It jumps over ${m - i + 1} left value${m - i ? "s" : ""}: inv += ${m - i + 1}`, { l, r, m, i, j, k }, { [j]: "hit" }, { [k]: "hit" }); k++; j++; }
+          }
+          while (i <= m) { tmp[k] = a[i]; line(9, `Copy the rest of the left half: ${a[i]}`, { l, r, m, i, j, k }, { [i]: "hit" }, { [k]: "hit" }); k++; i++; }
+          while (j <= r) { tmp[k] = a[j]; line(10, `Copy the rest of the right half: ${a[j]}`, { l, r, m, i, j, k }, { [j]: "hit" }, { [k]: "hit" }); k++; j++; }
+          for (let t = l; t <= r; t++) a[t] = tmp[t];
+          line(11, `Copy tmp back: a[${l}..${r}] is sorted`, { l, r, m }, mk(range(r - l + 1).map(x => x + l), "done"));
+        };
+        ms(0, n - 1);
+        line(-1, `Sorted, with ${inv} inversions counted along the way`, {}, mk(range(n), "done"));
+        return F;
+      },
+      mount: codeRowsMount,
+    }),
+    counting: () => ({
+      title: "Counting sort, line by line",
+      speed: 2,
+      frames() {
+        const code = ["for (int i = 0; i < m; i++) { cin >> v; cnt[v]++; }", "for (int v = 1; v <= n; v++)", "    for (int k = 0; k < cnt[v]; k++) cout << v << \" \";"];
+        const votes = [2, 5, 2, 2, 5, 2, 2, 2, 1, 2], cnt = Array(6).fill(0), F = [];
+        let out = "";
+        const line = (l, text, v, vm = {}, cm = {}) => F.push({ code, line: l, vars: { ...v }, out, text, rows: [{ label: "votes", vals: votes, marks: vm }, { label: "cnt", vals: cnt.slice(1), base: 1, marks: cm }] });
+        votes.forEach((x, i) => { cnt[x]++; line(0, `Vote ${i + 1} is for ${x}: cnt[${x}]++ → ${cnt[x]}`, { i, v: x }, { [i]: "on" }, { [x - 1]: "hit" }); });
+        for (let v = 1; v <= 5; v++) {
+          line(1, `v = ${v}: cnt[${v}] = ${cnt[v]}`, { v }, {}, { [v - 1]: "on" });
+          for (let k = 0; k < cnt[v]; k++) { out += v + " "; line(2, `Print ${v} (${k + 1} of ${cnt[v]})`, { v, k }, {}, { [v - 1]: "hit" }); }
+        }
+        line(-1, "Sorted without a single comparison: O(n + range)", {});
+        return F;
+      },
+      mount: codeRowsMount,
+    }),
+  };
+  // chapter 9's sorting players: insertion, selection, bubble, quick, merge, counting (the unique player stays)
+  VIS["基9"].splice(0, 6, ...["insertion", "selection", "bubble", "quick", "merge", "counting"].map(k => SORT_SPECS[k]()));
 
   // ---- shared numbers: tier, streaks, milestones, next chapter ----
   function longestStreak() {
