@@ -822,7 +822,7 @@ svg.far .node .badge { display: none; }
 :is(svg.arriving, .gbox:hover) .gi-geo .id { animation: iDraw .8s var(--ease) both, iSpin .9s var(--ease) both; }
 :is(svg.arriving, .gbox:hover) .gi-geo circle { animation: iPop .45s var(--ease) .6s both; }
 /* level polygons on the lane names: square, pentagon, hexagon, heptagon */
-.rail-key { display: inline-flex; align-items: center; gap: 6px; }
+.rail-key { display: inline-flex; align-items: center; gap: 6px; line-height: 26px; } /* tall enough for the Chinese font's line */
 .licon { width: 22px; height: 22px; flex: none; overflow: visible; }
 .licon .lp { fill: color-mix(in srgb, var(--c) 18%, transparent); stroke: var(--c); stroke-width: 1.8; stroke-linejoin: round; stroke-dasharray: 1; }
 .licon circle { fill: var(--c); transform-box: fill-box; transform-origin: center; }
@@ -1305,7 +1305,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     let x = X0, y = 24, rowH = 0;
     gs.forEach(g => {
       const cols = Math.ceil(g.ids.length / PER), rows = Math.ceil(g.ids.length / cols);
-      const w = cols * COLW - (COLW - W) + 2 * PAD, h = HEAD + rows * ROWH - (ROWH - H) + PAD;
+      // the header (icon, name, count) must fit too: a one-column group is narrower than "Dynamic programming"
+      const nameW = [...g.name].reduce((n, ch) => n + (ch.charCodeAt(0) > 0x2e80 ? 29 : 15.6), 0);
+      const countW = `${g.ids.length} · ${g.ids.filter(id => statusOf(id) === "learned").length} learned`.length * 9.6;
+      const headW = (TOPIC_ICON[g.key] ? 64 : 24) + nameW + 28 + countW + 24;
+      const w = Math.max(cols * COLW - (COLW - W) + 2 * PAD, Math.ceil(headW)), h = HEAD + rows * ROWH - (ROWH - H) + PAD;
       if (x > X0 && x + w > maxW) { x = X0; y += rowH + GAP; rowH = 0; }
       g.ids.forEach((id, i) => (xy[id] = { x: x + PAD + (i % cols) * COLW, y: y + HEAD + Math.floor(i / cols) * ROWH }));
       boxes.push({ ...g, x, y, w, h, dim: front !== "all" && g.key !== front });
