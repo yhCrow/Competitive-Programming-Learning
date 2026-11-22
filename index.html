@@ -1141,6 +1141,98 @@ svg.pointing .hm-trace { display: none; }
 .plane rect.band { fill: color-mix(in srgb, var(--v-cmp) 14%, transparent); }
 @media (prefers-reduced-motion: reduce) { .trace span, .gsvg line, .gsvg text.w, .gn { transition: none; } }
 
+/* hand-written lessons: one idea per block, lots of air, pictures and tables instead of run-on text */
+.flow.lesson { gap: 24px; max-width: 760px; }
+.flow.lesson .sec { margin: 88px 0 0; padding-top: 32px; }
+.flow.lesson .sec:first-child { margin-top: 8px; }
+.flow.lesson .sub { margin: 56px 0 0; }
+.flow.lesson .lede { margin: 0 0 8px; }
+.flow.lesson .para { max-width: 60ch; }
+.flow.lesson .box { padding: 18px 22px 20px; }
+.flow.lesson .prog { margin: 0; }
+.flow.lesson .vis { margin: 0; }
+.flow.lesson :is(.para, .lede, .box, .lcard, .lsteps, .floop) code:not(.bigo), .ltable code { font-family: var(--f-mono); font-size: .92em; background: var(--raised); border-radius: 5px; padding: 1px 6px; overflow-wrap: anywhere; }
+.flow.lesson strong { font-weight: 600; color: var(--fg); }
+.ltable code { overflow-wrap: normal !important; white-space: nowrap; }
+.ltitle { margin: 0 0 10px; font-size: 13px; color: var(--muted); }
+.ltable table { font-size: 14.5px; }
+.ltable td { padding: 12px 16px; line-height: 1.6; vertical-align: top; }
+.ltable th { padding: 10px 16px; position: static; }
+.ltable tr:last-child td { border-bottom: 0; }
+.ltable td:first-child { white-space: nowrap; }
+.ltable td a.mono { font-weight: 600; text-decoration: none; }
+.lfig { margin: 8px 0; padding: 28px 24px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); display: grid; gap: 18px; justify-items: center; }
+.fflow { display: flex; align-items: stretch; justify-content: center; gap: 8px; width: 100%; }
+.fflow > i { align-self: center; font-style: normal; color: var(--muted); }
+.fchip { flex: 1 1 0; min-width: 0; max-width: 150px; display: grid; gap: 4px; justify-items: center; align-content: start; text-align: center; padding: 14px 8px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--bg); }
+.fchip b { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--raised); color: var(--fg-2); }
+.fchip > span { font-weight: 600; }
+.fchip small { color: var(--muted); font-size: 12px; max-width: 14ch; line-height: 1.4; }
+.fchip.hot { border-color: var(--v-cur); background: color-mix(in srgb, var(--v-cur) 10%, var(--surface)); }
+.fchip.ok { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 10%, var(--surface)); }
+.fchip.ok b { background: var(--v-done); color: #fff; }
+.floop { margin: 0; color: var(--fg-2); font-size: 14px; text-align: center; }
+.floop span { color: var(--v-cmp); font-size: 18px; margin-right: 4px; }
+.forder { display: grid; grid-template-columns: 28px max-content 1fr; gap: 14px 16px; align-items: center; width: 100%; max-width: 560px; }
+.forder > div { display: contents; }
+.forder .n { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--raised); color: var(--fg-2); }
+.forder code { font-size: 17px; white-space: pre; background: none !important; padding: 0 !important; }
+.forder mark { background: color-mix(in srgb, var(--v-cmp) 24%, transparent); color: inherit; border-radius: 4px; padding: 1px 4px; }
+.forder mark.ok { background: color-mix(in srgb, var(--v-done) 24%, transparent); }
+.forder small { color: var(--muted); font-size: 13px; }
+.fline { width: 100%; max-width: 520px; }
+.fline .ax { stroke: var(--line-strong); stroke-width: 1.5; }
+.fline .t { fill: var(--muted); font: 12px var(--f-mono); text-anchor: middle; }
+.fline .l { fill: var(--fg); font: 13px var(--f-mono); }
+.fline .zero { fill: var(--fg-2); }
+.fline .from { fill: none; stroke: var(--v-cmp); stroke-width: 2; }
+.fline .to { fill: var(--v-done); }
+.fline .arc { fill: none; stroke: var(--v-done); stroke-width: 1.8; stroke-dasharray: 4 3; }
+.vbox { position: relative; width: 64px; height: 56px; display: grid; place-items: center; border: 2px solid var(--line-strong); border-radius: 10px; background: var(--bg); font: 600 20px var(--f-mono); font-variant-numeric: tabular-nums; }
+.vbox small { position: absolute; top: -10px; left: 8px; padding: 0 5px; background: var(--surface); color: var(--muted); font-size: 12px; font-weight: 500; }
+.vbox.bad { border-style: dashed; color: var(--v-bad); }
+.vbox.ok { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 12%, var(--surface)); }
+.vbox.tmp { border-style: dashed; }
+.fvars { display: flex; gap: 28px 36px; flex-wrap: wrap; justify-content: center; }
+.fvars > div, .fswap > div { display: grid; gap: 12px; justify-items: center; text-align: center; }
+.fvars > div > small { color: var(--muted); font-size: 12.5px; max-width: 16ch; line-height: 1.4; }
+.fswap { display: flex; gap: 28px; flex-wrap: wrap; justify-content: center; }
+.fswap > div { gap: 16px; padding: 0 4px; }
+.fswap .vbox small { display: none; }
+.fswap .names span { height: 56px; display: grid; place-items: center; color: var(--muted); font-weight: 600; }
+.lsteps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.lsteps li { display: grid; grid-template-columns: 26px 112px minmax(0, 1fr); gap: 16px; align-items: center; padding: 16px 20px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); line-height: 1.5; }
+.lsteps .n { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: color-mix(in srgb, var(--c, var(--accent)) 16%, var(--surface)); color: var(--c, var(--accent)); }
+.lsteps li span:last-child { color: var(--fg-2); }
+.lcards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.lcards .ltitle { grid-column: 1 / -1; margin: 0; }
+.lcard { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; padding: 16px 18px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); line-height: 1.6; }
+.lcard .n { color: var(--v-done); font-weight: 600; }
+.lcards.try .lcard .n { color: var(--v-cmp); font-size: 12.5px; white-space: nowrap; padding-top: 2px; }
+@media (max-width: 640px) {
+  .flow.lesson .sec { margin-top: 64px; }
+  .lfig { padding: 22px 14px; }
+  .fflow { flex-direction: column; align-items: center; }
+  .fflow > i { transform: rotate(90deg); }
+  .fflow { gap: 6px; align-items: stretch; }
+  .fflow > i { display: none; }
+  .fchip { flex: none; width: 100%; max-width: none; grid-template-columns: 24px auto 1fr; justify-items: start; align-items: center; column-gap: 12px; text-align: left; padding: 10px 14px; }
+  .fchip > :first-child:not(b) { grid-column: 1 / 3; }
+  .fchip small { max-width: none; justify-self: end; text-align: right; }
+  .forder { grid-template-columns: 28px 1fr; }
+  .forder small { grid-column: 2; margin-top: -10px; }
+  .ltable thead { display: none; }
+  .ltable tr { display: grid; gap: 6px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .ltable tr:last-child { border-bottom: 0; }
+  .ltable td { padding: 0; border: 0; white-space: normal !important; }
+  .ltable td:first-child { font-weight: 600; }
+  .ltable td + td { color: var(--fg-2); }
+  .lcards { grid-template-columns: minmax(0, 1fr); }
+  .lsteps li { grid-template-columns: 26px minmax(0, 1fr); gap: 4px 14px; }
+  .lsteps li span:last-child { grid-column: 2; }
+  .fswap { gap: 14px; }
+}
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -1153,7 +1245,9 @@ details.prog summary small { color: var(--muted); font-size: 13px; }
 details.prog summary .show { margin-left: auto; font-size: 13px; color: var(--accent); }
 details.prog summary .show::before { content: "▸ "; display: inline-block; transition: transform .2s var(--ease); }
 details.prog[open] summary .show::before { transform: rotate(90deg); }
-details.prog[open] summary .show { color: var(--muted); }
+details.prog[open] summary .show { color: var(--muted); font-size: 0; }
+details.prog[open] summary .show::before { font-size: 13px; }
+details.prog[open] summary .show::after { content: "Hide code"; font-size: 13px; }
 details.prog[open] summary { border-bottom: 1px solid var(--line); }
 .progbar { display: flex; justify-content: flex-end; padding: 6px 12px 0; background: var(--code-bg); }
 details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
@@ -2023,18 +2117,31 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       return `<p class="empty">Loading the chapter text</p>`;
     }
     const pdf = page => `handouts/${c.slug}.pdf#page=${page}`;
-    const vis = VIS[c.id] ? `<div class="vis" id="vis"></div>` : "";
-    const html = vis + (c.flow || []).map(b => {
+    const flow = c.flow || [];
+    // a hand-written lesson places its own visualizer and uses the roomier layout
+    const lesson = flow.some(b => LESSON_BLOCKS.has(b.t));
+    const vis = VIS[c.id] && !flow.some(b => b.t === "vis") ? `<div class="vis" id="vis"></div>` : "";
+    const luogu = s => s.replace(/\b([PB]\d{4})\b/g, id => `<a class="mono" href="${problemUrl("luogu", id)}" target="_blank" rel="noopener">${id}</a>`);
+    const html = vis + flow.map(b => {
       switch (b.t) {
         case "h2": return `<div class="sec" id="${secId(b.num)}"><span class="n">${b.num}</span><h3>${esc(b.title)}</h3></div>`;
         case "h3": return `<h4 class="sub" id="${secId(b.num)}"><span class="n">${b.num}</span> ${esc(b.title)}</h4>`;
-        case "lede": return `<p class="lede">${bigO(esc(b.text))}</p>`;
-        case "p": return `<p class="para">${bigO(esc(b.text))}</p>`;
-        case "li": { const m = b.text.match(/^(\d+)\.\s*([\s\S]*)$/); return m ? `<p class="para li"><span class="num">${m[1]}</span><span>${bigO(esc(m[2]))}</span></p>` : `<p class="para li">${bigO(esc(b.text))}</p>`; }
-        case "box": { const k = CALLOUT[b.kind] || CALLOUT.NOTE; return `<div class="box ${k.cls}"><b>${k.icon}<span>${k.zh}</span><span class="hint">${k.en}</span></b><div>${bigO(esc(b.text))}</div></div>`; }
+        case "lede": return `<p class="lede">${rich(b.text)}</p>`;
+        case "p": return `<p class="para">${rich(b.text)}</p>`;
+        case "li": { const m = b.text.match(/^(\d+)\.\s*([\s\S]*)$/); return m ? `<p class="para li"><span class="num">${m[1]}</span><span>${rich(m[2])}</span></p>` : `<p class="para li">${rich(b.text)}</p>`; }
+        case "box": { const k = CALLOUT[b.kind] || CALLOUT.NOTE; return `<div class="box ${k.cls}"><b>${k.icon}<span>${k.zh}</span><span class="hint">${k.en}</span></b><div>${rich(b.text)}</div></div>`; }
         case "pre": return `<div class="tbl"><pre>${esc(b.lines.join("\n"))}</pre><a class="jump" href="${pdf(b.page)}" target="_blank" rel="noopener">Laid out properly in the PDF, page ${b.page} →</a></div>`;
         case "fig": return `<a class="jump fig" href="${pdf(b.page)}" target="_blank" rel="noopener">Diagram on PDF page ${b.page} →</a>`;
-        case "prog": { const k = c.programs.findIndex(p => p.file === b.file); return k < 0 ? "" : progBlock(c, k); }
+        case "prog": { const k = c.programs.findIndex(p => p.file === b.file); return k < 0 ? "" : progBlock(c, k, b.open); }
+        case "figure": return FIG[b.name] ? `<figure class="lfig">${FIG[b.name]()}</figure>` : "";
+        case "vis": return VIS[c.id] ? `<div class="vis" id="vis"></div>` : "";
+        case "table": {
+          const code = new Set(b.code || []);
+          const cell = (v, j) => (j === b.link ? `<a class="mono" href="${problemUrl("luogu", v)}" target="_blank" rel="noopener">${esc(v)}</a>` : code.has(j) ? `<code>${esc(v)}</code>` : rich(v));
+          return `<div class="ltable">${b.title ? `<p class="ltitle">${esc(b.title)}</p>` : ""}<div class="tablewrap"><table><thead><tr>${b.cols.map(h => `<th>${esc(h)}</th>`).join("")}</tr></thead><tbody>${b.rows.map(r => `<tr>${r.map((v, j) => `<td>${cell(v, j)}</td>`).join("")}</tr>`).join("")}</tbody></table></div></div>`;
+        }
+        case "steps": return `<ol class="lsteps">${b.items.map((s, k) => `<li><span class="n">${k + 1}</span><b>${esc(s.h)}</b><span>${luogu(rich(s.p))}</span></li>`).join("")}</ol>`;
+        case "cards": return `<div class="lcards${b.try ? " try" : ""}">${b.title ? `<p class="ltitle">${esc(b.title)}</p>` : ""}${b.items.map((t, k) => `<div class="lcard"><span class="n">${b.try ? "Try " + (k + 1) : "✓"}</span><span>${rich(t)}</span></div>`).join("")}</div>`;
         default: return "";
       }
     }).join("");
@@ -2042,12 +2149,12 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const placed = new Set((c.flow || []).filter(b => b.t === "prog").map(b => b.file));
     const rest = c.programs.map((p, k) => (placed.has(p.file) ? "" : progBlock(c, k))).join("");
     const all = html + (rest ? `<div class="sec"><span class="n">+</span><h3>More programs</h3></div>${rest}` : "");
-    return all ? `<div class="flow">${all}</div>` : `<p class="empty">This handout's text could not be read. Open the PDF instead</p>`;
+    return all ? `<div class="flow${lesson ? " lesson" : ""}">${all}</div>` : `<p class="empty">This handout's text could not be read. Open the PDF instead</p>`;
   }
-  // A program sits folded where the handout shows it; clicking opens the code, its samples and copy buttons.
-  function progBlock(c, i) {
+  // A program sits folded where the handout shows it (a lesson may show it open); clicking opens the code, its samples and copy buttons.
+  function progBlock(c, i, open) {
     const p = c.programs[i];
-    return `<details class="prog" id="prog-${i}"><summary><span class="mono">${esc(p.file)}</span><small>${p.code.split("\n").length} lines${p.samples.length ? " · sample input and output" : ""}</small><span class="show">Show code</span></summary>
+    return `<details class="prog" id="prog-${i}"${open ? " open" : ""}><summary><span class="mono">${esc(p.file)}</span><small>${p.code.split("\n").length} lines${p.samples.length ? " · sample input and output" : ""}</small><span class="show">Show code</span></summary>
       <div class="progbody"><div class="progbar"><button class="copy" data-copy-prog="${i}">Copy code</button></div><pre class="code"><code>${codeHtml(p.code)}</code></pre>
       ${p.samples.length ? `<div class="io">${p.samples.map((s, j) => `<div><b><span>${esc(s.label)}</span><button class="copy" data-copy-io="${i}:${j}">Copy</button></b><pre>${esc(s.text)}</pre></div>`).join("")}</div>` : ""}</div></details>`;
   }
@@ -3009,6 +3116,30 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 
   // Big-O in prose reads as code: O(n log n), O(n²), O((n + m) log n)
   const bigO = html => html.replace(/O\((?:[^()]|\([^()]*\))*\)/g, m => `<code class="bigo">${m}</code>`);
+  // Lesson text: `code` and **bold** inside a sentence.
+  const rich = s => bigO(esc(s)).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  const LESSON_BLOCKS = new Set(["figure", "table", "steps", "cards", "vis"]);
+  // The handouts' diagrams, redrawn so they sit in the page and follow the theme.
+  const FIG = {
+    cycle: () => `<div class="fflow">${[["Read", "the problem"], ["Write", "the code"], ["Compile", "g++"], ["Test", "samples and small cases"]].map(([h, s], k) => `<div class="fchip"><b>${k + 1}</b><span>${h}</span><small>${s}</small></div><i aria-hidden="true">→</i>`).join("")}<div class="fchip ok"><b>✓</b><span>Submit</span><small>when all pass</small></div></div>
+      <p class="floop"><span aria-hidden="true">↺</span> A compile error or a wrong answer sends you back to step 2</p>`,
+    build: () => `<div class="fflow">${[["a.cpp", "your code, as text", ""], ["g++", "the compiler", " hot"], ["a.exe", "a program you can run", ""], ["output", "on the screen", " ok"]].map(([h, s, c], k) => `${k ? '<i aria-hidden="true">→</i>' : ""}<div class="fchip${c}"><span class="mono">${h}</span><small>${s}</small></div>`).join("")}</div>
+      <p class="floop"><span aria-hidden="true">⤷</span> Instead of typing the input, <code>./a &lt; in.txt</code> reads it from a file</p>`,
+    order: () => `<div class="forder">${[["<mark>2 * 3</mark> - 4 / 2", "* and / come first, left to right"], ["6 - <mark>4 / 2</mark>", "then the next one"], ["<mark>6 - 2</mark>", "+ and − come last"], ["<mark class=\"ok\">4</mark>", "the answer"]].map(([e, s], k) => `<div><span class="n">${k + 1}</span><code>${e}</code><small>${s}</small></div>`).join("")}</div>`,
+    divline: () => {
+      const X = v => 30 + (v + 4) * 40, tick = range(9).map(k => k - 4);
+      return `<svg class="fline" viewBox="0 0 380 120" role="img" aria-label="Integer division cuts toward zero: 3.5 becomes 3 and minus 3.5 becomes minus 3">
+        <line class="ax" x1="20" y1="70" x2="360" y2="70"/>${tick.map(v => `<line class="ax" x1="${X(v)}" y1="64" x2="${X(v)}" y2="76"/><text class="t" x="${X(v)}" y="94">${v < 0 ? "−" + -v : v}</text>`).join("")}
+        <circle class="zero" cx="${X(0)}" cy="70" r="5"/>
+        ${[[-3.5, -3, "−7 / 2"], [3.5, 3, "7 / 2"]].map(([a, b, l]) => `<circle class="from" cx="${X(a)}" cy="70" r="5"/><path class="arc" d="M${X(a)} 62 Q${(X(a) + X(b)) / 2} 34 ${X(b)} 62"/><circle class="to" cx="${X(b)}" cy="70" r="6"/><text class="l" x="${a < 0 ? 12 : 368}" y="22" text-anchor="${a < 0 ? "start" : "end"}">${l} = ${a < 0 ? "−" + -a : a} → ${b < 0 ? "−" + -b : b}</text>`).join("")}
+        <text class="t" x="${X(0)}" y="114">toward 0</text></svg>`;
+    },
+    box: () => `<div class="fvars">${[["int a;", "?", "bad", "made, but holds garbage"], ["a = 5;", "5", "", "a value goes in"], ["a = 8;", "8", "ok", "the old 5 is gone"], ["cin >> a;", "17", "", "filled from the input"]].map(([code, v, c, s]) => `<div><code>${code}</code><span class="vbox ${c}"><small>a</small>${v}</span><small>${s}</small></div>`).join("")}</div>`,
+    swap: () => {
+      const st = [["start", { a: 3, b: 5, t: "?" }, ""], ["t = a;", { a: 3, b: 5, t: 3 }, "t"], ["a = b;", { a: 5, b: 5, t: 3 }, "a"], ["b = t;", { a: 5, b: 3, t: 3 }, "b"]];
+      return `<div class="fswap"><div class="names" aria-hidden="true"><code>&nbsp;</code><span>a</span><span>b</span><span>t</span></div>${st.map(([code, v, hot]) => `<div><code>${code}</code>${["a", "b", "t"].map(n => `<span class="vbox${n === hot ? " ok" : ""}${n === "t" ? " tmp" : ""}"><small>${n}</small>${v[n]}</span>`).join("")}</div>`).join("")}</div>`;
+    },
+  };
 
 
   // ---- callouts: each handout box kind gets an icon and a bilingual label ----
