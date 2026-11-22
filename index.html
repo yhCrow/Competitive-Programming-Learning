@@ -1671,6 +1671,19 @@ svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
 @media (max-width: 640px) { .fverd.four { grid-template-columns: minmax(0, 1fr); } .wsbars { gap: 3px; } .wstages .frow { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) { .wsbars i { transition: none; } }
 
+
+/* the toy circle: arrows show which way each toy faces */
+.wcirc svg { width: min(100%, 400px); }
+.wcirc .ring { fill: none; stroke: var(--line); stroke-dasharray: 3 4; }
+.wcirc .face { stroke-width: 3; stroke-linecap: round; }
+.wcirc .toy.in .face { stroke: var(--v-cur); } .wcirc .tip.in { fill: var(--v-cur); }
+.wcirc .toy.out .face { stroke: var(--v-cmp); } .wcirc .tip.out { fill: var(--v-cmp); }
+.wcirc .toy text.nm { font-size: 12px; fill: var(--fg-2); }
+.wlegend { margin: 4px 0 0; display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--fg-2); }
+.wlegend span { display: inline-flex; align-items: center; gap: 6px; }
+.wlegend i { width: 18px; height: 3px; border-radius: 2px; }
+.wlegend .in i { background: var(--v-cur); } .wlegend .out i { background: var(--v-cmp); }
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -7424,17 +7437,22 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       title: "Walk round the circle of toys",
       P: [[0, "singer"], [0, "reader"], [0, "mengbier"], [1, "thinker"], [1, "archer"], [0, "writer"], [1, "mogician"]],
       I: [[0, 3], [1, 1], [0, 2]],
-      html: () => `<div class="wcirc"><svg viewBox="0 0 260 260" role="img" aria-label="Seven toys in a circle"></svg><div class="wcode small wops"></div></div>
+      html: () => `<div class="wcirc"><div><svg viewBox="-55 0 440 330" role="img" aria-label="Seven toys in a circle, each with an arrow showing which way it faces"></svg><p class="wlegend"><span class="in"><i></i> faces in, toward the centre</span><span class="out"><i></i> faces out</span></p></div><div class="wcode small wops"></div></div>
         <div class="btns"><button type="button" class="btn primary" data-step>Next instruction</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
       init(el) {
         const P = WIDGET.circle.P, I = WIDGET.circle.I, n = P.length, svg = el.querySelector("svg"), fb = el.querySelector(".wfb");
         let p, k, trail;
-        const xy = i => [130 + 95 * Math.sin((i / n) * 2 * Math.PI), 130 - 95 * Math.cos((i / n) * 2 * Math.PI)];
+        const C = 165, R = 92, at = (i, r) => [C + r * Math.sin((i / n) * 2 * Math.PI), C - r * Math.cos((i / n) * 2 * Math.PI)];
+        const defs = `<defs>${["in", "out"].map(k => `<marker id="tip-${k}" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path class="tip ${k}" d="M0 0L8 4L0 8z"/></marker>`).join("")}</defs><circle class="ring" cx="${C}" cy="${C}" r="${R}"/>`;
         const draw = () => {
-          swap(svg, P.map(([f, nm], i) => { const [x, y] = xy(i); return `<g class="toy${i === p ? " cur" : trail.includes(i) ? " seen" : ""}"><circle cx="${x}" cy="${y}" r="20"/><text x="${x}" y="${y + 4}">${i}</text><text class="nm" x="${x}" y="${y + (y > 130 ? 36 : -28)}">${nm}${f ? " ↗" : " ↙"}</text></g>`; }).join(""), "g");
+          swap(svg, defs + P.map(([f, nm], i) => {
+            const [x, y] = at(i, R), [a1, b1] = at(i, f ? R + 22 : R - 22), [a2, b2] = at(i, f ? R + 42 : R - 42), [lx, ly] = at(i, R + 62);
+            const anchor = lx > C + 12 ? "start" : lx < C - 12 ? "end" : "middle";
+            return `<g class="toy ${f ? "out" : "in"}${i === p ? " cur" : trail.includes(i) ? " seen" : ""}"><line class="face" x1="${a1}" y1="${b1}" x2="${a2}" y2="${b2}" marker-end="url(#tip-${f ? "out" : "in"})"/><circle cx="${x}" cy="${y}" r="20"/><text x="${x}" y="${y + 4}">${i}</text><text class="nm" x="${lx}" y="${ly + 4}" text-anchor="${anchor}">${nm}</text></g>`;
+          }).join(""), "g");
           el.querySelector(".wops").innerHTML = I.map(([a, s], i) => `<span class="${i < k ? "done" : i === k ? "on" : ""}">${a ? "right" : "left"} ${s}</span>`).join("");
         };
-        const reset = () => { p = 0; k = 0; trail = [0]; el.querySelector("[data-step]").disabled = false; draw(); say(fb, "", "Start at seat 0. ↙ faces in, ↗ faces out. Facing out swaps left and right"); };
+        const reset = () => { p = 0; k = 0; trail = [0]; el.querySelector("[data-step]").disabled = false; draw(); say(fb, "", "Start at seat 0. Each arrow shows which way that toy faces. A toy facing out has left and right swapped"); };
         el.onclick = e => {
           if (e.target.closest("[data-reset]")) return reset();
           if (!e.target.closest("[data-step]") || k >= I.length) return;
@@ -7554,7 +7572,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       snap(-1, "Digits stored backwards: a = 1000 is 0 0 0 1. Subtract b = 1 from the ones digit up");
       for (let i = 0; i < 4; i++) {
         if (i < b.length) a[i] -= b[i];
-        if (a[i] < 0) { a[i] += 10; a[i + 1]--; bor[i] = "−1 →"; snap(i, `Digit ${i} went negative: add 10 (it becomes ${a[i]}) and take 1 from digit ${i + 1}`); }
+        if (a[i] < 0) { a[i] += 10; a[i + 1]--; bor[i] = "−1"; snap(i, `Digit ${i} went negative: add 10 (it becomes ${a[i]}) and take 1 from digit ${i + 1}`); }
         else snap(i, `Digit ${i} is ${a[i]}: no borrow`);
       }
       snap(-1, "Trim the leading zero: 0 9 9 9 read backwards is 999, not 0999");
