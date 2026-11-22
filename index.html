@@ -899,6 +899,7 @@ svg.pointing .hm-trace { display: none; }
 .lp-logos-label { font-size: 14px; color: var(--muted); width: 100%; text-align: center; }
 .logo-link { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--fg); padding: 8px 12px; border-radius: 12px; transition: background-color .3s ease, transform .5s var(--ease); }
 .logo-link img, .logo-link svg { width: 28px; height: 28px; border-radius: 6px; flex: none; }
+img.lglogo { object-fit: contain; border-radius: 0; }
 .logo-link span { display: grid; } .logo-link b { font-size: 16px; } .logo-link small { font-size: 12px; color: var(--muted); }
 .logo-link:hover { background: var(--raised); } .logo-link:active { transform: scale(.98); }
 .logo-fallback { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: #3498db; color: #fff; font-family: var(--f-cjk); font-size: 16px; }
@@ -1443,6 +1444,40 @@ svg.pointing .hm-trace { display: none; }
   .fchain .row { grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) { .wtree .tn.hit, .wsort > div { animation: none; } .wplane .pt { transition: none; } }
+
+
+/* 基4 figures and widgets */
+.fverd.fthree { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.fthree > div { grid-template-columns: 1fr; align-content: start; }
+.fthree .vd { grid-row: auto; justify-self: start; font-size: 14px; }
+.fthree small { grid-column: 1; }
+.wfor { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; padding: 14px 16px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--line); font-size: 15px; line-height: 2.2; }
+.wfor [data-p] { padding: 2px 6px; border-radius: 6px; transition: background-color .2s var(--ease), box-shadow .2s var(--ease); }
+.wfor [data-p].on { background: color-mix(in srgb, var(--v-cmp) 24%, transparent); box-shadow: inset 0 -2px 0 var(--v-cmp); }
+.wfor input { width: 56px; height: 30px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--bg); color: var(--fg); font: 600 15px var(--f-mono); text-align: center; }
+.wchips { display: flex; gap: 6px; flex-wrap: wrap; min-height: 34px; }
+.wchips span { min-width: 34px; height: 34px; padding: 0 6px; display: grid; place-items: center; border-radius: 8px; background: var(--raised); font: 600 14px var(--f-mono); animation: lsPop .25s var(--ease) both; }
+.wchips span.on { background: color-mix(in srgb, var(--v-cmp) 30%, var(--surface)); }
+.wdiv span { animation-delay: calc(var(--k) * 25ms); }
+.wdiv span.no { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
+.wdiv span.bad { background: color-mix(in srgb, var(--v-bad) 22%, var(--surface)); color: var(--v-bad); }
+.wdiv span.more { background: none; color: var(--muted); font-weight: 500; }
+.win input.wide { width: min(320px, 100%); text-align: left; }
+.wtab { font-size: 14.5px; }
+.wtab th, .wtab td { text-align: center; padding: 8px 10px; position: static; font-variant-numeric: tabular-nums; }
+.wtab td:first-child { font-weight: 700; }
+.wtab tbody tr { animation: lsIn .3s var(--ease) both; }
+.wtab td.chg { color: var(--v-cmp); font-weight: 600; }
+.wgrid { display: grid; grid-template-columns: repeat(var(--n), 32px); gap: 5px; }
+.wgrid span { height: 32px; border-radius: 6px; background: var(--raised); opacity: .35; display: grid; place-items: center; font: 600 11px var(--f-mono); color: transparent; }
+.wgrid span.on { opacity: 1; background: color-mix(in srgb, var(--v-cur) 45%, var(--surface)); color: var(--fg); animation: lsPop .25s var(--ease) both; animation-delay: calc(var(--k) * 28ms); }
+.wmeter.wlog::after { left: 66.67%; }
+@media (max-width: 640px) {
+  .fverd.fthree { grid-template-columns: minmax(0, 1fr); }
+  .wgrid { grid-template-columns: repeat(var(--n), minmax(0, 28px)); gap: 4px; }
+  .wgrid span { height: 26px; }
+}
+@media (prefers-reduced-motion: reduce) { .wchips span, .wtab tbody tr, .wgrid span.on { animation: none; } }
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -2582,7 +2617,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
   // Brand marks: the sites' own logos (with a drawn stand-in if their server can't be reached) and GitHub's mark.
   const LOGO = {
-    luogu: `<img src="https://cdn.luogu.com.cn/fe/logo.png" alt="" width="28" height="28" referrerpolicy="no-referrer" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'logo-fallback lg',textContent:'洛'}))">`,
+    luogu: `<img class="lglogo" src="data:image/png;base64,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" alt="" width="28" height="28">`,
     cf: `<img src="https://codeforces.org/s/0/favicon-32x32.png" alt="" width="28" height="28" referrerpolicy="no-referrer" loading="lazy" onerror="this.outerHTML='<svg viewBox=&quot;0 0 24 24&quot; width=&quot;28&quot; height=&quot;28&quot;><rect x=&quot;2&quot; y=&quot;9&quot; width=&quot;5&quot; height=&quot;11&quot; rx=&quot;1&quot; fill=&quot;#f8c12c&quot;/><rect x=&quot;9.5&quot; y=&quot;4&quot; width=&quot;5&quot; height=&quot;16&quot; rx=&quot;1&quot; fill=&quot;#1e88d6&quot;/><rect x=&quot;17&quot; y=&quot;11&quot; width=&quot;5&quot; height=&quot;9&quot; rx=&quot;1&quot; fill=&quot;#e04848&quot;/></svg>'">`,
     gh: `<svg viewBox="0 0 16 16" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>`,
   };
@@ -6063,6 +6098,182 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         };
         el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-n]"); if (!c) return; inp.value = c.dataset.n; run(); };
         inp.oninput = run;
+        run();
+      },
+    },
+  });
+
+
+  // ---- 基4: figures and widgets ----
+  Object.assign(FIG, {
+    loops: () => `<div class="fverd fthree">${[["for", "The number of rounds is known", "for (int i = 0; i < n; i++)"], ["while", "Stop when a condition fails", "while (x > 0) { … }"], ["do … while", "The body must run at least once", "do { … } while (cond);"]].map(([k, s, c]) => `<div><b class="vd">${k}</b><span>${s}</span><small class="mono">${esc(c)}</small></div>`).join("")}</div>`,
+    forloop: () => `<div class="fflow">${[["init", "int i = 0", ""], ["test", "i < n ?", " hot"], ["body", "runs once", ""], ["update", "i++", ""]].map(([h, s, c], k) => `${k ? '<i aria-hidden="true">→</i>' : ""}<div class="fchip${c}"><b>${k + 1}</b><span>${h}</span><small class="mono">${esc(s)}</small></div>`).join("")}</div>
+      <p class="floop"><span aria-hidden="true">↺</span> After the update, back to the test. When the test is false, the loop ends</p>`,
+  });
+  const fmtN = x => (x >= 1e6 ? x.toExponential(1).replace("e+", " × 10^") : String(Math.round(x)));
+  Object.assign(WIDGET, {
+    loopstep: {
+      title: "Step through a for loop",
+      html: () => `<p class="wq">Change the numbers, then step one part at a time</p>
+        <div class="wfor mono">for (<span data-p="init">int i = <input type="number" value="1" data-k="a">;</span> <span data-p="test">i &lt; <input type="number" value="10" data-k="b">;</span> <span data-p="upd">i += <input type="number" value="3" data-k="s"></span>) <span data-p="body">sum += i;</span></div>
+        <div class="wres"><div><code>i</code><b data-out="i"></b></div><div><code>sum</code><b data-out="sum"></b></div><div><code>rounds</code><b data-out="r"></b></div></div>
+        <div class="wchips" aria-label="values of i"></div>
+        <div class="btns"><button type="button" class="btn primary" data-step>Next step</button><button type="button" class="btn" data-all>Run to the end</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const ins = [...el.querySelectorAll("input")], fb = el.querySelector(".wfb");
+        let st;
+        const val = () => ins.map(x => Math.trunc(+x.value || 0));
+        const show = (part, text, cls = "") => {
+          el.querySelectorAll("[data-p]").forEach(p => p.classList.toggle("on", p.dataset.p === part));
+          [["i", st.i ?? "—"], ["sum", st.sum], ["r", st.r]].forEach(([k, v]) => { const o = el.querySelector(`[data-out="${k}"]`); if (o.textContent !== String(v)) { o.textContent = v; pop(o); } });
+          el.querySelector(".wchips").innerHTML = st.seen.map((v, k) => `<span class="${k === st.seen.length - 1 && part === "body" ? "on" : ""}">${v}</span>`).join("");
+          say(fb, cls, text);
+        };
+        const reset = () => { st = { phase: "init", i: null, sum: 0, r: 0, seen: [] }; el.querySelector("[data-step]").disabled = el.querySelector("[data-all]").disabled = false; show("", "Nothing has run yet"); };
+        const step = () => {
+          const [a, b, s] = val();
+          if (st.phase === "init") { st.i = a; st.phase = "test"; return show("init", `init runs once: i = ${a}`); }
+          if (st.phase === "test") {
+            if (st.r >= 40) { st.phase = "done"; return show("test", `Stopped after 40 rounds: with i += ${s}, i never reaches ${b}. A real program would loop forever`, "bad"); }
+            const ok = st.i < b;
+            st.phase = ok ? "body" : "done";
+            return show("test", ok ? `${st.i} < ${b} is true: run the body` : `${st.i} < ${b} is false: the loop ends after ${st.r} round${st.r === 1 ? "" : "s"}`, ok ? "" : "ok");
+          }
+          if (st.phase === "body") { st.sum += st.i; st.r++; st.seen.push(st.i); st.phase = "upd"; return show("body", `sum += ${st.i}, so sum is ${st.sum}`); }
+          if (st.phase === "upd") { st.i += s; st.phase = "test"; return show("upd", `i += ${s}: i is now ${st.i}`); }
+        };
+        el.onclick = e => {
+          if (e.target.closest("[data-reset]")) return reset();
+          if (e.target.closest("[data-step]")) step();
+          if (e.target.closest("[data-all]")) while (st.phase !== "done") step();
+          if (st.phase === "done") el.querySelector("[data-step]").disabled = el.querySelector("[data-all]").disabled = true;
+        };
+        ins.forEach(x => (x.oninput = reset));
+        reset();
+      },
+    },
+    runvals: {
+      title: "Running values, one number at a time",
+      html: () => `<div class="win"><label>input <input type="text" value="3 4 5 1 2 3 4 1" class="wide" data-k="xs"></label></div>
+        <div class="tablewrap"><table class="wtab"><thead><tr><th>x</th><th>sum</th><th>min</th><th>max</th><th>run</th><th>best</th></tr></thead><tbody></tbody></table></div>
+        <div class="btns"><button type="button" class="btn primary" data-step>Read next x</button><button type="button" class="btn" data-all>Read them all</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const inp = el.querySelector("input"), body = el.querySelector("tbody"), fb = el.querySelector(".wfb");
+        let xs, k, st;
+        const reset = () => { xs = inp.value.trim().split(/\s+/).map(Number).filter(Number.isFinite); k = 0; st = { sum: 0, mn: Infinity, mx: -Infinity, cur: 0, best: 0, prev: 0 }; body.innerHTML = ""; say(fb, "", `${xs.length} numbers to read. No array needed: just six running values`); };
+        const step = () => {
+          if (k >= xs.length) return;
+          const x = xs[k], old = { ...st };
+          st.sum += x; st.mn = Math.min(st.mn, x); st.mx = Math.max(st.mx, x); st.cur = k > 0 && x === st.prev + 1 ? st.cur + 1 : 1; st.best = Math.max(st.best, st.cur); st.prev = x;
+          const ch = c => (st[c] !== old[c] ? ' class="chg"' : "");
+          body.insertAdjacentHTML("beforeend", `<tr><td>${x}</td><td${ch("sum")}>${st.sum}</td><td${ch("mn")}>${st.mn}</td><td${ch("mx")}>${st.mx}</td><td${ch("cur")}>${st.cur}</td><td${ch("best")}>${st.best}</td></tr>`);
+          k++;
+          say(fb, k === xs.length ? "ok" : "", k === xs.length ? `Done: sum ${st.sum}, min ${st.mn}, max ${st.mx}, longest +1 run ${st.best}` : `x = ${x}${st.cur > 1 ? `: it is the previous value + 1, so the run grows to ${st.cur}` : k > 1 ? ": not previous + 1, so the run restarts at 1" : ""}`);
+        };
+        el.onclick = e => {
+          if (e.target.closest("[data-reset]")) return reset();
+          if (e.target.closest("[data-step]")) step();
+          if (e.target.closest("[data-all]")) while (k < xs.length) step();
+        };
+        inp.oninput = reset;
+        reset();
+      },
+    },
+    nested: {
+      title: "Loops inside loops",
+      html: () => `<div class="seg" role="group" aria-label="Shape"><button type="button" data-s="sq" aria-pressed="true">j from 1 to n</button><button type="button" data-s="tri" aria-pressed="false">j from 1 to i</button></div>
+        <div class="win"><label>n <input type="number" value="6" min="1" max="10" data-k="n"></label></div>
+        <code class="wcall"></code><div class="wgrid" aria-hidden="true"></div>
+        <div class="btns"><button type="button" class="btn" data-play>Play again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        let shape = "sq";
+        const inp = el.querySelector("input"), grid = el.querySelector(".wgrid"), fb = el.querySelector(".wfb");
+        const run = () => {
+          const n = Math.max(1, Math.min(10, Math.trunc(+inp.value || 1)));
+          let k = 0;
+          grid.style.setProperty("--n", n);
+          grid.innerHTML = range(n).map(i => range(n).map(j => { const on = shape === "sq" || j <= i; return `<span class="${on ? "on" : ""}" style="${on ? `--k:${k++}` : ""}">${on ? k : ""}</span>`; }).join("")).join("");
+          el.querySelector(".wcall").textContent = `for (i = 1; i <= ${n}; i++)  for (j = 1; j <= ${shape === "sq" ? "n" : "i"}; j++)  ...`;
+          say(fb, "", shape === "sq" ? `${n} rows × ${n} columns = ${k} steps. Doubling n makes it 4 times as many: O(n²)` : `1 + 2 + … + ${n} = ${k} steps, about half of ${n * n}. Still O(n²)`);
+        };
+        el.onclick = e => {
+          const b = e.target.closest("[data-s]");
+          if (b) { shape = b.dataset.s; el.querySelectorAll("[data-s]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); }
+          if (e.target.closest("[data-play]")) run();
+        };
+        inp.oninput = run;
+        run();
+      },
+    },
+    count: quizWidget("How many times does the body run?", [
+      ["for (int i = 0; i < 10; i++)", ["9", "10", "11"], 1, "i takes 0, 1, …, 9: ten values"],
+      ["for (int i = 1; i <= 10; i += 3)", ["3", "4", "10"], 1, "i is 1, 4, 7, 10. Then 13 fails the test"],
+      ["for (int i = 1; i * i <= 100; i++)", ["10", "100", "50"], 0, "It stops once i passes √100 = 10"],
+      ["for (int i = 16; i > 0; i /= 2)", ["4", "5", "16"], 1, "16, 8, 4, 2, 1, then 0 stops it: about log₂ n rounds"],
+      ["for (i = 0; i < 5; i++) for (j = 0; j < i; j++)", ["25", "10", "15"], 1, "0 + 1 + 2 + 3 + 4 = 10"],
+      ["int x = 0; do { x--; } while (x > 0);", ["0", "1"], 1, "A do while runs its body once before the first test"],
+    ], q => `<code>${esc(q)}</code>`),
+    prime: {
+      title: "Is it prime? Test divisors up to √n",
+      html: () => `<div class="wpre">${[91, 97, 221, 1009, 1].map(n => `<button type="button" class="chip" data-n="${n}">${n}</button>`).join("")}</div>
+        <div class="win"><label>n <input type="number" value="91" min="1" data-k="n"></label></div><div class="wchips wdiv"></div><div class="wclock"><b></b></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const inp = el.querySelector("input"), fb = el.querySelector(".wfb");
+        const run = () => {
+          const n = Math.max(1, Math.min(1e12, Math.trunc(+inp.value || 1))), tried = [];
+          let div = 0;
+          for (let i = 2; i * i <= n; i++) { tried.push(i); if (n % i === 0) { div = i; break; } }
+          const shown = tried.slice(0, 60);
+          el.querySelector(".wdiv").innerHTML = shown.map((i, k) => `<span class="${i === div ? "bad" : "no"}" style="--k:${k}">${i}</span>`).join("") + (tried.length > 60 ? `<span class="more">… ${tried.length - 60} more</span>` : "");
+          const prime = n >= 2 && !div, out = el.querySelector(".wclock b");
+          out.textContent = prime ? "prime" : "not prime"; out.classList.toggle("bad", !prime); pop(out);
+          say(fb, prime ? "ok" : "bad", n < 2 ? "Numbers below 2 are not prime" : div ? `${n} % ${div} == 0, so ${n} = ${div} × ${n / div}. Found after ${tried.length} test${tried.length === 1 ? "" : "s"}` : `No divisor up to √${n} ≈ ${Math.floor(Math.sqrt(n))}: ${tried.length} tests instead of ${n - 2}`);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-n]"); if (!c) return; inp.value = c.dataset.n; run(); };
+        inp.oninput = run;
+        run();
+      },
+    },
+    gcd: {
+      title: "Euclid's gcd, step by step",
+      html: () => `<div class="wpre">${[[84, 91], [48, 18], [1071, 462], [17, 5]].map(([a, b]) => `<button type="button" class="chip" data-ab="${a} ${b}">${a}, ${b}</button>`).join("")}</div>
+        <div class="win"><label>a <input type="number" value="91" min="0" data-k="a"></label><label>b <input type="number" value="84" min="0" data-k="b"></label></div><div class="forder wsteps"></div><div class="wclock"><b></b><small>the gcd</small></div>`,
+      init(el) {
+        const [ia, ib] = el.querySelectorAll("input");
+        const run = () => {
+          let a = Math.abs(Math.trunc(+ia.value || 0)), b = Math.abs(Math.trunc(+ib.value || 0));
+          const rows = [];
+          while (b !== 0 && rows.length < 30) { const r = a % b; rows.push([`gcd(${a}, ${b})`, `${a} % ${b} = ${r}`]); a = b; b = r; }
+          rows.push([`gcd(${a}, 0) = ${a}`, "b is 0: stop"]);
+          el.querySelector(".wsteps").innerHTML = rows.map(([e, s], k) => `<div style="--i:${k}"><span class="n">${k + 1}</span><code>${e}</code><small>${s}</small></div>`).join("");
+          const o = el.querySelector(".wclock b"); o.textContent = a; pop(o);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-ab]"); if (!c) return; [ia.value, ib.value] = c.dataset.ab.split(" "); run(); };
+        ia.oninput = ib.oninput = run;
+        run();
+      },
+    },
+    budget: {
+      title: "Will it run in time?",
+      C: [["O(log n)", n => Math.log2(Math.max(2, n))], ["O(√n)", n => Math.sqrt(n)], ["O(n)", n => n], ["O(n log n)", n => n * Math.log2(Math.max(2, n))], ["O(n√n)", n => n * Math.sqrt(n)], ["O(n²)", n => n * n], ["O(n³)", n => n ** 3], ["O(2ⁿ)", n => 2 ** Math.min(n, 1100)]],
+      html: () => `<div class="wpre">${[[20, "20"], [500, "500"], [5000, "5000"], [1e5, "10^5"], [1e6, "10^6"], [1e9, "10^9"]].map(([v, l]) => `<button type="button" class="chip" data-n="${v}" aria-pressed="${v === 1e5}">n = ${l}</button>`).join("")}</div>
+        <div class="wpre">${WIDGET.budget.C.map(([c], k) => `<button type="button" class="chip mono" data-c="${k}" aria-pressed="${k === 5}">${c}</button>`).join("")}</div>
+        <div class="wmeter wlog" aria-hidden="true"><i></i><span>10^8 operations ≈ 1 second</span></div><div class="wclock"><b></b><small></small></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        let n = 1e5, c = 5;
+        const fb = el.querySelector(".wfb"), bar = el.querySelector(".wmeter i");
+        const run = () => {
+          const ops = WIDGET.budget.C[c][1](n), sec = ops / 1e8, ok = sec <= 1;
+          bar.style.width = Math.min(100, (Math.log10(Math.max(1, ops)) / 12) * 100) + "%"; bar.classList.toggle("bad", !ok);
+          const o = el.querySelector(".wclock b"); o.textContent = ops > 1e15 ? "forever" : sec < 0.001 ? "instant" : sec < 1 ? `${sec.toFixed(sec < 0.1 ? 3 : 2)} s` : sec < 3600 ? `${Math.round(sec)} s` : sec < 86400 * 365 ? `${(sec / 3600).toFixed(1)} h` : "years"; o.classList.toggle("bad", !ok); pop(o);
+          el.querySelector(".wclock small").textContent = `about ${fmtN(ops)} operations`;
+          say(fb, ok ? "ok" : "bad", ok ? "Fits in a 1 second limit" : "Too slow for a 1 second limit: you need a faster algorithm, not a faster computer");
+        };
+        el.onclick = e => {
+          const a = e.target.closest("[data-n]"), b = e.target.closest("[data-c]");
+          if (a) { n = +a.dataset.n; el.querySelectorAll("[data-n]").forEach(x => x.setAttribute("aria-pressed", x === a)); run(); }
+          if (b) { c = +b.dataset.c; el.querySelectorAll("[data-c]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); }
+        };
         run();
       },
     },
