@@ -310,28 +310,16 @@ tr td { transition: opacity .15s var(--ease); }
 .resume a { text-decoration: none; }
 .resume a:hover .cjk { text-decoration: underline; }
 /* front page */
-.home { display: grid; gap: 96px; }
-.hero { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; min-height: calc(100vh - 160px); }
-.hero > * { animation: rise .32s var(--ease) both; }
-.hero > * + * { animation-delay: .06s; }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } }
-.home h1 { font-family: var(--f-cjk); font-size: clamp(30px, 4vw, 44px); line-height: 1.15; margin: 0 0 16px; text-wrap: balance; letter-spacing: -0.01em; }
-.home h2 { font-family: var(--f-cjk); font-size: clamp(22px, 2.6vw, 28px); line-height: 1.25; margin: 0 0 12px; text-wrap: balance; }
-.home .fact { font-size: 14.5px; color: var(--fg); font-variant-numeric: tabular-nums; margin: 0 0 16px; }
-.home .lead { color: var(--fg-2); max-width: 56ch; line-height: 1.7; margin: 0 0 24px; }
 .frame { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); overflow: hidden; min-width: 0; }
 .frame .top { display: flex; justify-content: space-between; gap: 12px; padding: 8px 16px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--muted); }
 .frame svg { display: block; width: 100%; height: auto; }
-.showcase { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: start; }
-.showcase .prog { margin: 0; }
 .stars { display: grid; gap: 8px; margin: 16px 0 0; padding: 0; list-style: none; }
 .stars li { display: flex; gap: 12px; align-items: center; font-size: 14.5px; }
 .stars a { font-weight: 600; text-decoration: none; }
 .term { background: var(--code-bg); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px; font-family: var(--f-mono); font-size: 14.5px; line-height: 1.9; }
 .term .p { color: var(--muted); }
 .outlinks { display: flex; gap: 8px 20px; flex-wrap: wrap; font-size: 14.5px; }
-.close { border-top: 1px solid var(--line); padding-top: 48px; display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
-.close h2 { margin: 0; }
 .empty { color: var(--muted); padding: 24px; text-align: center; }
 .status { display: flex; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); overflow: hidden; }
 .status button { flex: 1 1 auto; border: 0; background: transparent; height: 32px; padding: 0 8px; font-size: 13px; color: var(--fg-2); white-space: nowrap; transition: background-color .15s var(--ease), transform .12s var(--ease); }
@@ -527,7 +515,8 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 .node .pulse { fill: none; stroke: var(--accent); stroke-width: 3; transform-box: fill-box; transform-origin: center; animation: pulse 1.2s var(--ease) 2; pointer-events: none; }
 @keyframes pulse { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(1.35); } }
 .sw.locked { border-style: dashed; opacity: .6; } .sw.ready { border-color: var(--fg-2); background: radial-gradient(circle at 78% 30%, var(--fg-2) 0 2px, transparent 2.5px); } .sw.learning { border-color: var(--v-cmp); border-style: solid; } .sw.learned { background: var(--muted); }
-.ln { width: 18px; height: 3px; border-radius: 2px; display: inline-block; } .ln.in { background: #22b8cf; } .ln.out { background: var(--v-done); }
+.ln { width: 22px; height: 4px; border-radius: 2px; display: inline-block; background-size: 8px 4px; }
+.ln.in { background-image: linear-gradient(90deg, #22b8cf 0 5px, transparent 5px); } .ln.out { background-image: linear-gradient(90deg, var(--v-done) 0 5px, transparent 5px); }
 
 /* chapter list: queue, card actions, table */
 .tilewrap { position: relative; min-width: 0; }
@@ -633,6 +622,7 @@ svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
 .node.ready:not(.learned):not(.learning) circle.ready { transform-box: fill-box; transform-origin: center; animation: breathe 2.2s ease-in-out 3; }
 @media (max-width: 767px) {
   .mapwrap { grid-template-columns: 64px minmax(0, 1fr); gap: 0 6px; }
+  .lanerail { width: 64px; }
   .rail-label { padding: 10px 6px; }
   .rail-name, .rail-en, .rail-bar { display: none; }
   .rail-key { font-size: 22px; text-align: center; }
@@ -701,9 +691,11 @@ svg.searching .node:not(.match) { opacity: .22; }
 
 
 /* ---- tree: far mode, floating card, filters menu, skip link ---- */
-.node text.far { display: none; font-family: var(--f-mono); font-size: 34px; font-weight: 700; fill: var(--c); }
-svg.far .node text.t, svg.far .node text.en, svg.far .node text.id, svg.far .node circle.ready, svg.far .node .lock { display: none; }
-svg.far .node text.far { display: block; }
+/* past 45% the details fade out and the large id fades (and grows) in, both ways */
+.node text.far { opacity: 0; font-family: var(--f-mono); font-size: 34px; font-weight: 700; fill: var(--c); transform-box: fill-box; transform-origin: center; scale: .75; transition: opacity .4s var(--ease), scale .5s var(--ease); }
+.node text.t, .node text.en, .node text.id, .node circle.ready, .node .lock, .node .badge, .node .lbar { transition: opacity .4s var(--ease); }
+svg.far .node text.t, svg.far .node text.en, svg.far .node text.id, svg.far .node circle.ready, svg.far .node .lock { opacity: 0; }
+svg.far .node text.far { opacity: 1; scale: 1; }
 svg.far .node.learned text.far { fill: var(--surface); }
 .node.sel rect.box { stroke-dasharray: none; }
 ::placeholder { color: var(--muted); opacity: 1; }
@@ -739,11 +731,16 @@ body.mapopen { overflow: hidden; }
 .mapbar { display: none; }
 .toast { z-index: 60; }
 /* the level rail slides away for other arrangements and flows back slowly for Prerequisites */
-.lanerail, .steprow, .minimap { transition: opacity .9s ease .1s, transform 1.1s var(--ease) .1s; }
+/* the rail keeps its width and slides by exactly as much as its column grows or shrinks, so its edge pushes the map's
+   edge (the column width does animate: a deliberate cost for the push) */
+.mapwrap { transition: grid-template-columns .7s var(--ease), column-gap .7s var(--ease); }
+.lanerail { width: 176px; transition: transform .7s var(--ease), opacity .35s ease; }
+.mapmain { overflow: hidden; }
+.steprow, .minimap { transition: opacity .5s ease .2s, transform .6s var(--ease) .2s; }
 .mapwrap.grouped { grid-template-columns: 0px minmax(0, 1fr); column-gap: 0; }
-.mapwrap.railout .lanerail, .mapwrap.railout .steprow, .mapwrap.railout .minimap, .mapwrap.grouped .lanerail, .mapwrap.grouped .steprow, .mapwrap.grouped .minimap { opacity: 0; pointer-events: none; transition-duration: .3s, .4s; transition-delay: 0s; }
-.mapwrap.railout .lanerail, .mapwrap.grouped .lanerail { transform: translateX(-48px); }
-.mapwrap.railout .steprow, .mapwrap.grouped .steprow { transform: translateY(-8px); }
+.mapwrap.grouped .lanerail { transform: translateX(-100%); pointer-events: none; }
+.mapwrap.grouped .steprow, .mapwrap.grouped .minimap { opacity: 0; pointer-events: none; transition-delay: 0s; }
+.mapwrap.grouped .steprow { transform: translateY(-8px); }
 .rail-label { transition: opacity .4s ease; }
 .rail-item { display: flex; flex-direction: column; justify-content: flex-start; } /* a button centres its content; the name belongs at the top of its lane */
 .arrsub { margin-top: 10px; }
@@ -765,7 +762,7 @@ body.mapopen { overflow: hidden; }
 .node.ready .badge { fill: var(--c); } .node.learning .badge { fill: var(--v-cmp); }
 .node .lbar { fill: var(--v-cmp); }
 .node.learning circle.ready { display: none; }
-svg.far .node .badge { display: none; }
+svg.far .node .badge { opacity: 0; }
 .sw.locked { background: repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--fg) 14%, transparent) 3px 5px); border-style: dashed; opacity: 1; }
 .sw.ready { background: color-mix(in srgb, var(--accent) 18%, transparent); border-color: var(--accent); border-width: 2px; }
 .sw.learning { background: linear-gradient(to top, var(--v-cmp) 0 3px, color-mix(in srgb, var(--v-cmp) 18%, transparent) 3px); border-color: var(--v-cmp); border-width: 2px; border-style: solid; }
@@ -833,7 +830,7 @@ svg.far .node .badge { display: none; }
 @media (hover: hover) and (pointer: fine) { .rail-item:hover .licon { animation: lTurn .9s var(--ease); } }
 .rail-item.tight .licon { width: 18px; height: 18px; }
 @media (prefers-reduced-motion: reduce) {
-  .lanerail, .steprow, .minimap { transition: none; }
+  .mapwrap, .lanerail, .steprow, .minimap { transition: none; }
   .gicon *, .licon, .licon * { animation: none !important; }
 }
 .mappanel .seg.arr { display: grid; }
@@ -865,6 +862,222 @@ svg.edgesback .edges { animation: fadein .5s ease-out 1.05s both; }
   .peekt { font-size: 18px; }
 }
 @media (prefers-reduced-motion: reduce) { .peek { animation: none; } }
+
+
+/* ================= Home ================= */
+.lp { display: grid; gap: 96px; padding-bottom: 32px; }
+.lp-hero { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 7fr); gap: 48px; align-items: center; min-height: calc(100vh - 140px); }
+.lp-h1 { font-family: var(--f-cjk); font-size: 48px; line-height: 1.1; font-weight: 600; margin: 0 0 24px; max-width: 680px; letter-spacing: -0.02em; color: var(--fg); }
+/* each word carries its own slice of one gradient across the heading (a gradient on the heading itself doesn't paint inside animated words) */
+.lp-h1 .hw { background-image: linear-gradient(90deg, var(--fg), color-mix(in srgb, var(--fg) 58%, var(--bg))); background-size: var(--gw, 100%) 100%; background-position: calc(-1px * var(--gx, 0)) 0; background-repeat: no-repeat; -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hw { display: inline-block; animation: hwIn .7s var(--ease) both; animation-delay: calc(var(--i) * 60ms); }
+.lp-h1 br + .hw, .lp-h1 br ~ .hw { animation-delay: calc(.3s + var(--i) * 60ms); }
+@keyframes hwIn { from { opacity: 0; transform: translateY(24px); } }
+.lp-sub { max-width: 680px; font-size: 18px; line-height: 28px; color: var(--fg-2); margin: 0 0 32px; text-wrap: pretty; animation: hwIn .7s var(--ease) .45s both; }
+.lp-cta { margin: 0; animation: hwIn .7s var(--ease) .6s both; }
+.btn.lg { height: auto; padding: 8px 12px; font-size: 16px; line-height: 24px; font-weight: 600; }
+.lp-proof { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 24px 0 0; font-size: 14px; color: var(--muted); animation: hwIn .7s var(--ease) .75s both; }
+.lp-proof b { color: var(--fg); font-size: 16px; font-variant-numeric: tabular-nums; }
+.lp-resume { margin: 24px 0 0; animation: hwIn .7s var(--ease) .9s both; }
+.lp-heromap { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 16px; display: grid; gap: 8px; animation: hwIn .9s var(--ease) .2s both; }
+.lp-heromap svg { display: block; width: 100%; height: auto; max-height: 64vh; }
+.lp-heromap figcaption { margin: 0; min-height: 20px; font-size: 14px; }
+.hm-lane { fill: var(--c); opacity: .07; }
+.hm-edge { fill: none; stroke: color-mix(in srgb, var(--fg) 16%, transparent); stroke-width: 4; transition: stroke .25s ease, opacity .25s ease; }
+.hm-block { fill: var(--c); opacity: .32; cursor: pointer; transform-box: fill-box; transform-origin: center; transition: opacity .25s ease; animation: hmPop .5s var(--ease) both; animation-delay: calc(.3s + var(--d) * 70ms); }
+.hm-block.learned { opacity: .95; } .hm-block.learning { opacity: .7; }
+@keyframes hmPop { from { opacity: 0; transform: scale(.6); } }
+.hm-trace { fill: none; stroke: var(--fg); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: .5; animation: hmTrace 2.4s var(--ease) 1.6s 2 both; }
+@keyframes hmTrace { 0% { stroke-dashoffset: 1; opacity: .55; } 70% { stroke-dashoffset: 0; opacity: .55; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+svg.pointing .hm-block { opacity: .14; } svg.pointing .hm-block.lit { opacity: 1; }
+svg.pointing .hm-edge { opacity: .25; } svg.pointing .hm-edge.lit { opacity: 1; stroke: var(--accent); stroke-width: 6; }
+svg.pointing .hm-trace { display: none; }
+/* logos */
+.lp-logos { display: flex; align-items: center; justify-content: center; gap: 16px 40px; flex-wrap: wrap; padding: 24px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); }
+.lp-logos-label { font-size: 14px; color: var(--muted); width: 100%; text-align: center; }
+.logo-link { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; color: var(--fg); padding: 8px 12px; border-radius: 12px; transition: background-color .3s ease, transform .5s var(--ease); }
+.logo-link img, .logo-link svg { width: 28px; height: 28px; border-radius: 6px; flex: none; }
+.logo-link span { display: grid; } .logo-link b { font-size: 16px; } .logo-link small { font-size: 12px; color: var(--muted); }
+.logo-link:hover { background: var(--raised); } .logo-link:active { transform: scale(.98); }
+.logo-fallback { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: #3498db; color: #fff; font-family: var(--f-cjk); font-size: 16px; }
+.js-reveal .lp-logos.reveal .logo-link { opacity: 0; transform: translateY(16px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
+.js-reveal .lp-logos.reveal.in .logo-link { opacity: 1; transform: none; }
+.lp-logos.in .logo-link:nth-of-type(2) { transition-delay: .08s; } .lp-logos.in .logo-link:nth-of-type(3) { transition-delay: .16s; }
+/* section scaffolding and the scroll reveal */
+.lp-h2 { font-family: var(--f-cjk); font-size: 36px; line-height: 40px; font-weight: 600; margin: 0 0 12px; text-wrap: balance; }
+.lp-h5 { font-size: 20px; line-height: 28px; font-weight: 600; }
+.lp-lead { color: var(--fg-2); font-size: 16px; line-height: 24px; margin: 0 0 32px; max-width: 680px; text-wrap: pretty; }
+.js-reveal .reveal { opacity: 0; transform: translateY(32px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+.js-reveal .reveal.in { opacity: 1; transform: none; }
+/* levels */
+.lp-levels { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.lp-level { display: grid; gap: 8px; align-content: start; text-decoration: none; color: var(--fg); padding: 24px; border-radius: 24px; border: 1px solid color-mix(in srgb, var(--c) 30%, var(--line)); background: color-mix(in srgb, var(--c) 7%, var(--surface)); transition: transform .5s var(--ease), border-color .3s ease; }
+.lp-level b { font-size: 30px; line-height: 36px; font-weight: 600; color: var(--c); }
+.lp-level-icon .licon { width: 40px; height: 40px; }
+.lp-level-path { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 14px; color: var(--fg-2); }
+.js-reveal .reveal .lp-level { opacity: 0; transform: translateY(24px); transition: opacity .6s var(--ease), transform .6s var(--ease); transition-delay: calc(var(--i) * 80ms); }
+.js-reveal .reveal.in .lp-level { opacity: 1; transform: none; }
+.reveal.in .lp-level .licon .lp { animation: iDraw 1s var(--ease) both; animation-delay: calc(.3s + var(--i) * 120ms); }
+.reveal.in .lp-level .licon circle { animation: iPop .4s var(--ease) both; animation-delay: calc(.9s + var(--i) * 120ms + var(--k) * 80ms); }
+.reveal.in .lp-level .licon { animation: lTurn 1.2s var(--ease) both; animation-delay: calc(1.4s + var(--i) * 120ms); }
+@media (hover: hover) and (pointer: fine) { .lp-level:hover { transform: translateY(-4px); border-color: var(--c); } .lp-level:hover .licon { animation: lTurn .9s var(--ease); } }
+/* tagline: each word lights up as it crosses the line */
+.lp-tagline { padding: 64px 0; }
+.lp-tagline p { font-family: var(--f-cjk); font-size: 48px; line-height: 1.15; font-weight: 600; margin: 0 auto; max-width: 900px; text-wrap: balance; text-align: center; }
+.tw { color: color-mix(in srgb, var(--fg) 28%, transparent); transition: color .6s var(--ease); }
+.tw.in { color: var(--fg); }
+/* features */
+.lp-bento { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.lp-feat { display: grid; gap: 8px; align-content: start; text-decoration: none; color: var(--fg); padding: 24px; border-radius: 24px; border: 1px solid var(--line); background: var(--surface); transition: transform .5s var(--ease), border-color .3s ease; }
+.lp-feat.wide { grid-column: span 2; } .lp-feat.full { grid-column: 1 / -1; }
+.lp-feat b { font-size: 18px; line-height: 28px; font-weight: 600; } .lp-feat span { font-size: 14px; line-height: 20px; color: var(--fg-2); }
+@media (hover: hover) and (pointer: fine) { .lp-feat:hover { transform: translateY(-4px); border-color: var(--line-strong); } }
+.lp-feat:active, .lp-level:active { transform: scale(.98); }
+.js-reveal .reveal .lp-feat { opacity: 0; transform: translateY(24px); transition: opacity .6s var(--ease), transform .6s var(--ease), border-color .3s ease; transition-delay: calc(var(--i) * 70ms); }
+.js-reveal .reveal.in .lp-feat { opacity: 1; transform: none; }
+.art { width: 100%; height: 88px; margin-bottom: 8px; overflow: visible; }
+.art * { transform-box: fill-box; transform-origin: center; }
+.art-map path { fill: none; stroke: var(--accent); stroke-width: 2; stroke-dasharray: 1; }
+.art-map rect { fill: color-mix(in srgb, var(--accent) 22%, var(--surface)); stroke: var(--accent); stroke-width: 1.5; }
+.reveal.in .art-map path { animation: iDraw 1.2s var(--ease) .5s both; }
+.reveal.in .art-map rect { animation: iPop .45s var(--ease) both; animation-delay: calc(.2s + var(--k) * 90ms); }
+.art-vis rect { fill: color-mix(in srgb, var(--v-cmp) 60%, var(--surface)); transform-origin: 50% 100%; }
+.reveal.in .art-vis rect { animation: iGrowY .6s var(--ease) both, artSort 2.4s var(--ease) 1s 2; animation-delay: calc(var(--k) * 70ms), calc(1s + var(--k) * 40ms); }
+@keyframes artSort { 40% { transform: translateY(-6px); } 60% { transform: none; } }
+.art-code rect { fill: color-mix(in srgb, var(--fg) 30%, transparent); transform-origin: 0 50%; }
+.art-code .caret { fill: var(--accent); }
+.reveal.in .art-code rect:not(.caret) { animation: iGrowX .5s var(--ease) both; animation-delay: calc(.2s + var(--k) * 110ms); }
+.reveal.in .art-code .caret { animation: iBlink 1s steps(1) .9s 3; }
+.art-stars path { fill: #f0b429; }
+.reveal.in .art-stars path { animation: iPop .5s var(--ease) both; animation-delay: calc(.3s + var(--k) * 140ms); }
+.reveal.in .art-stars rect { animation: hwIn .5s var(--ease) both; animation-delay: calc(.7s + var(--k) * 100ms); }
+.art-check rect, .art-check circle { fill: none; stroke: var(--v-done); stroke-width: 2.5; }
+.art-check path { fill: none; stroke: var(--v-done); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; }
+.art-check text { font-family: var(--f-mono); font-size: 9px; fill: var(--fg-2); text-anchor: middle; }
+.reveal.in .art-check path { animation: iDraw .7s var(--ease) .4s both; }
+.reveal.in .art-check g { animation: iPop .45s var(--ease) both; animation-delay: calc(.9s + var(--k) * 140ms); }
+.art-clock circle { fill: none; stroke: var(--fg-2); stroke-width: 2.5; } .art-clock .pin { fill: var(--fg); stroke: none; }
+.art-clock .hand, .art-clock .hand2 { stroke: var(--accent); stroke-width: 3; stroke-linecap: round; transform-box: view-box; transform-origin: 80px 40px; }
+.reveal.in .art-clock .hand { animation: spin 2s var(--ease) .3s both; }
+@keyframes spin { from { transform: rotate(-360deg); } }
+.art-calc rect.ok { fill: var(--v-done); } .art-calc rect.no { fill: color-mix(in srgb, var(--v-bad) 70%, transparent); } .art-calc rect { transform-origin: 0 50%; }
+.art-calc .limit { stroke: var(--fg); stroke-width: 1.5; stroke-dasharray: 3 3; }
+.reveal.in .art-calc rect { animation: iGrowX .6s var(--ease) both; animation-delay: calc(.2s + var(--k) * 100ms); }
+.art-offline > rect:first-child { fill: none; stroke: var(--fg-2); stroke-width: 2.5; } .art-offline .bar { fill: var(--fg-2); transform-origin: 50% 100%; }
+.art-offline .ok { fill: none; stroke: var(--v-done); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; }
+.reveal.in .art-offline .bar { animation: offBar 1.2s var(--ease) both; animation-delay: calc(.2s + var(--k) * 90ms); }
+@keyframes offBar { 0% { transform: scaleY(0); } 40% { transform: none; } 75% { opacity: 1; } 100% { opacity: .2; } }
+.reveal.in .art-offline .ok { animation: iDraw .6s var(--ease) 1.3s both; }
+/* simulators */
+.lp-sim { border: 1px solid var(--line); border-radius: 24px; background: var(--surface); padding: 16px; display: grid; gap: 16px; }
+.lp-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+.lp-tabs button { display: grid; text-align: left; gap: 2px; border: 1px solid var(--line-strong); background: var(--surface); color: var(--fg-2); border-radius: 12px; padding: 8px 12px; font-size: 14px; font-weight: 600; transition: background-color .3s ease, color .3s ease, border-color .3s ease, transform .5s var(--ease); }
+.lp-tabs button small { font-size: 12px; font-weight: 400; color: var(--muted); }
+.lp-tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); } .lp-tabs button[aria-selected="true"] small { color: color-mix(in srgb, var(--bg) 70%, transparent); }
+.lp-tabs button:hover { border-color: var(--fg-2); } .lp-tabs button:active { transform: scale(.98); }
+.lp-vis { margin: 0; border: 0; padding: 0; background: none; }
+.lp-vis.swap { animation: hwIn .5s var(--ease) both; }
+.lp-race { margin-top: 16px; display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 16px 32px; align-items: center; padding: 24px; border-radius: 24px; }
+.lp-race > .btn { grid-column: 1 / -1; justify-self: start; }
+.lp-race input[type=range] { width: 100%; }
+.race-n { margin: 0 0 8px; font-size: 14px; color: var(--fg-2); } .race-n b { color: var(--fg); font-size: 18px; font-variant-numeric: tabular-nums; }
+.race { position: relative; display: grid; gap: 8px; --race-x: 104px; --race-r: 80px; }
+.race-row { display: grid; grid-template-columns: 96px minmax(0, 1fr) 72px; gap: 8px; align-items: center; }
+.race-track { height: 10px; border-radius: 5px; background: var(--raised); overflow: hidden; }
+.race-track i { display: block; height: 100%; border-radius: 5px; transform-origin: 0 50%; transition: transform .5s var(--ease), background-color .3s ease; }
+.race-row.fits i { background: var(--v-done); } .race-row.slow i { background: var(--v-bad); }
+.race-v { font-size: 12px; font-weight: 600; } .race-row.fits .race-v { color: var(--fg); } .race-row.slow .race-v { color: var(--muted); }
+.race-line { position: absolute; top: -4px; bottom: -4px; width: 0; border-left: 2px dashed var(--fg-2); }
+/* a chapter */
+.lp-chapter { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: start; }
+.lp-code { margin: 0; }
+.js-reveal .lp-code .l { opacity: 0; transform: translateX(-8px); transition: opacity .4s var(--ease), transform .4s var(--ease); }
+.lp-chapter.in .lp-code .l { opacity: 1; transform: none; }
+/* how it works */
+.lp-steps { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; counter-reset: none; }
+.lp-steps li { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 16px; padding: 24px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); }
+.lp-steps li > div { display: grid; gap: 4px; } .lp-steps b { font-size: 18px; line-height: 28px; }
+.lp-step-n { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--fg); color: var(--bg); font-size: 20px; font-weight: 600; }
+.js-reveal .reveal .lp-steps li { opacity: 0; transform: translateY(24px); transition: opacity .6s var(--ease), transform .6s var(--ease); transition-delay: calc(var(--i) * 120ms); }
+.js-reveal .reveal.in .lp-steps li { opacity: 1; transform: none; }
+.reveal.in .lp-step-n { animation: iPop .5s var(--ease) both; animation-delay: calc(.2s + var(--i) * 120ms); }
+#lpPlaces { margin-top: 12px; } .pickrow { margin: 12px 0 0; font-size: 14px; }
+/* questions */
+.lp-faq { display: grid; gap: 8px; max-width: 880px; }
+.lp-faq details { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); padding: 0 16px; transition: border-color .3s ease; }
+.lp-faq details[open] { border-color: var(--line-strong); }
+.lp-faq summary { cursor: pointer; list-style: none; padding: 16px 0; font-size: 16px; font-weight: 600; display: flex; justify-content: space-between; gap: 16px; }
+.lp-faq summary::-webkit-details-marker { display: none; }
+.lp-faq summary::after { content: ""; width: 8px; height: 8px; margin-top: 6px; border-right: 2px solid var(--fg-2); border-bottom: 2px solid var(--fg-2); transform: rotate(45deg); transition: transform .5s var(--ease); flex: none; }
+.lp-faq details[open] summary::after { transform: rotate(-135deg); }
+.lp-faq p { margin: 0 0 16px; color: var(--fg-2); line-height: 24px; text-wrap: pretty; }
+.lp-faq details[open] p { animation: hwIn .5s var(--ease) both; }
+/* the final call */
+.lp-final { text-align: center; display: grid; justify-items: center; gap: 24px; padding: 64px 24px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); }
+.lp-final .lp-h2 { margin: 0; }
+.lp-foot { max-width: 560px; margin: 0; text-wrap: pretty; }
+@media (max-width: 1000px) {
+  .lp-hero, .lp-chapter, .lp-race { grid-template-columns: minmax(0, 1fr); min-height: 0; }
+  .lp-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .lp { gap: 64px; }
+  .lp-h1 { font-size: 36px; line-height: 40px; }
+  .lp-h2 { font-size: 30px; line-height: 36px; }
+  .lp-tagline p { font-size: 30px; line-height: 36px; }
+  .lp-bento { grid-template-columns: minmax(0, 1fr); } .lp-feat.wide { grid-column: auto; }
+  .lp-steps li { grid-template-columns: 40px minmax(0, 1fr); padding: 16px; } .lp-step-n { width: 40px; height: 40px; font-size: 18px; }
+  .race-row { grid-template-columns: 84px minmax(0, 1fr) 64px; } .race { --race-x: 92px; --race-r: 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hw, .lp-sub, .lp-cta, .lp-proof, .lp-resume, .lp-heromap, .hm-block, .lp-vis.swap, .lp-faq details[open] p { animation: none; }
+  .hm-trace { display: none; }
+  .art *, .lp-step-n, .lp-level .licon, .lp-level .licon * { animation: none !important; }
+  .tw { color: var(--fg); transition: none; }
+}
+
+
+/* legend animations: locked shakes, ready sends out a ring, learning half fills, learned fills and checks, needs flows in,
+   unlocks flows out. They play when the legend appears and again when you point at an entry (the second names restart them). */
+.legend .sw { position: relative; width: 22px; height: 14px; }
+@keyframes swShake { 20% { transform: rotate(-9deg); } 40% { transform: rotate(7deg); } 60% { transform: rotate(-4deg); } 80% { transform: rotate(2deg); } }
+@keyframes swShake2 { 20% { transform: rotate(-9deg); } 40% { transform: rotate(7deg); } 60% { transform: rotate(-4deg); } 80% { transform: rotate(2deg); } }
+@keyframes swRing { from { transform: scale(.7); opacity: .9; } to { transform: scale(1.5); opacity: 0; } }
+@keyframes swRing2 { from { transform: scale(.7); opacity: .9; } to { transform: scale(1.5); opacity: 0; } }
+@keyframes swHalf { from { transform: scaleX(0); } to { transform: scaleX(.5); } }
+@keyframes swHalf2 { from { transform: scaleX(0); } to { transform: scaleX(.5); } }
+@keyframes swFill { from { transform: scaleX(0); } }
+@keyframes swFill2 { from { transform: scaleX(0); } }
+@keyframes swTick { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.3); opacity: 1; } }
+@keyframes swTick2 { 0% { transform: scale(0); opacity: 0; } 70% { transform: scale(1.3); opacity: 1; } }
+@keyframes lnIn { from { background-position: -16px 0; } to { background-position: 0 0; } }
+@keyframes lnIn2 { from { background-position: -16px 0; } to { background-position: 0 0; } }
+@keyframes lnOut { from { background-position: 0 0; } to { background-position: 16px 0; } }
+@keyframes lnOut2 { from { background-position: 0 0; } to { background-position: 16px 0; } }
+.legend .sw.locked { animation: swShake .7s var(--ease) .3s both; }
+.legend .sw.ready::after { content: ""; position: absolute; inset: -4px; border-radius: 6px; border: 2px solid var(--accent); opacity: 0; animation: swRing 1.2s ease-out .4s 2; }
+.legend .sw.learning { background: color-mix(in srgb, var(--v-cmp) 18%, transparent); }
+.legend .sw.learning::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--v-cmp); transform-origin: left; transform: scaleX(.5); animation: swHalf 1.1s var(--ease) .5s both; }
+.legend .sw.learned { background: none; border-color: var(--v-done); overflow: hidden; }
+.legend .sw.learned::before { content: ""; position: absolute; inset: 0; background: var(--v-done); transform-origin: left; animation: swFill .6s var(--ease) .6s both; }
+.legend .sw.learned::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 10px; line-height: 1; color: var(--surface); animation: swTick .45s var(--ease) 1.1s both; }
+.legend .ln.in { animation: lnIn .8s linear .3s 3; } .legend .ln.out { animation: lnOut .8s linear .3s 3; }
+.legend span:hover .sw.locked { animation: swShake2 .7s var(--ease); }
+.legend span:hover .sw.ready::after { animation: swRing2 1.2s ease-out 2; }
+.legend span:hover .sw.learning::after { animation: swHalf2 1.1s var(--ease) both; }
+.legend span:hover .sw.learned::before { animation: swFill2 .6s var(--ease) both; } .legend span:hover .sw.learned::after { animation: swTick2 .45s var(--ease) .5s both; }
+.legend span:hover .ln.in { animation: lnIn2 .8s linear 3; } .legend span:hover .ln.out { animation: lnOut2 .8s linear 3; }
+/* ready to learn next: each chapter is a box that lifts when you point at it */
+.readybox ol.path { list-style: none; padding: 0; display: grid; gap: 8px; }
+.readybox ol.path li { margin: 0; }
+.readybox ol.path a { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--surface); transition: transform .3s var(--ease), box-shadow .3s ease, border-color .3s ease; }
+.readybox ol.path a:hover .cjk { text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .readybox ol.path a:hover { transform: translateY(-4px); border-color: var(--fg-2); box-shadow: 0 10px 22px rgba(0, 0, 0, .22); } }
+.readybox ol.path a:active { transform: scale(.98); }
+@media (prefers-reduced-motion: reduce) {
+  .legend .sw, .legend .sw::before, .legend .sw::after, .legend .ln { animation: none !important; }
+  .readybox ol.path a:hover { transform: none; }
+}
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -947,9 +1160,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 }
 
 @media (max-width: 1000px) {
-  .treeview, .chapter, .hero, .showcase { grid-template-columns: minmax(0, 1fr); }
-  .hero { min-height: 0; }
-  .home { gap: 64px; }
+  .treeview, .chapter { grid-template-columns: minmax(0, 1fr); }
   .side, .aside { position: static; }
 }
 @media (max-width: 560px) {
@@ -967,7 +1178,6 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
 }
 /* Reduced motion: drop movement, keep the fades and colour changes that confirm an action. */
 @media (prefers-reduced-motion: reduce) {
-  .hero > * { animation: none; }
   .toast, .toast.show { transform: translate(-50%, 0); }
   .btn:active, .status button:active, .copy:active, .chip:active, .seg button:active, .iconbtn:active { transform: none; }
   .chip:hover .ficon, .tile:hover .ficon, .trackcard:hover .ficon, .mrow:hover .ficon, .box:hover .ci,
@@ -1250,7 +1460,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         <div class="legend"><span><i class="sw locked"></i>Locked</span><span><i class="sw ready"></i>Ready</span><span><i class="sw learning"></i>Learning</span><span><i class="sw learned"></i>Learned</span><span><i class="ln in"></i>needs</span><span><i class="ln out"></i>unlocks</span></div>
         <p class="hint" style="margin-top:12px">Steps count prerequisites: a step 3 chapter builds on chapters from steps 1 and 2. Prerequisites are estimated from the chapter contents</p></div>
         ${goalHtml()}
-        <div class="block"><p class="label">Ready to learn next</p>${ready.length ? pathList(ready) : `<p class="hint">Everything is learned</p>`}</div>`;
+        <div class="block readybox"><p class="label">Ready to learn next</p>${ready.length ? pathList(ready) : `<p class="hint">Everything is learned</p>`}</div>`;
     }
     const c = byId[selected];
     const need = pathTo(c.id);
@@ -1369,18 +1579,15 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     document.querySelectorAll("[data-arrange]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.arrange === mode)));
     const sub = $("#arrSub"); if (sub) sub.classList.add("swap");
     const wrap = $(".mapwrap");
-    if (arrange === "map") wrap.classList.add("railout"); // the rail slides away while the chapters lift
+    if (mode !== "map") wrap.classList.add("grouped"); // the rail retracts, pulling the map's edge with it, while the chapters lift
     if (mode !== "map") canvas.scrollTo({ left: 0, top: 0, behavior: "smooth" }); // start heading home while the boxes fade
     morph(() => {
       arrange = mode; grouped = null;
       if (mode !== "topic") topicFilter = "all";
       if (sub) { sub.innerHTML = arrSub(); sub.classList.remove("swap"); }
       if (mode === "map") { const r = $("#laneRail"); if (r) { r.classList.add("fresh"); setTimeout(() => r.classList.remove("fresh"), 2600); } }
-      // the column changes in one step while the rail is invisible: for Prerequisites it then flows back in slowly
-      wrap.classList.add("railout");
-      wrap.classList.toggle("grouped", mode !== "map");
-      groupWrap = Math.max(W + 96, canvas.clientWidth / curS - 24); // groups wrap to the width you can see at this zoom
-      if (mode === "map") setTimeout(() => wrap.classList.remove("railout"), 150);
+      wrap.classList.toggle("grouped", mode !== "map"); // back to Prerequisites: the rail pushes the map's edge over
+      groupWrap = Math.max(W + 96, wrap.clientWidth / curS - 24); // groups wrap to the full width (the column may still be moving)
     }, () => { if (mode === "map") placeCanvas(true); });
   }
   function exitMap() {
@@ -1849,56 +2056,217 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
 
   // ---- front page: what the site is, shown with its own map, one chapter and the CP Coach link ----
+  // ================= Home: what the site is, what you learn, what you get, and a few things to try =================
+  const PLACES = [["基1", "New to programming", "Start from your first C++ program"], ["进1", "Know the basics · CSP-J", "Start at the intermediate techniques"], ["拓1", "Experienced · CSP-S / NOIP", "Start at the extended topics"]];
+  function placesHtml() {
+    const pick = startPick && byId[startPick];
+    return `<div id="lpPlaces"><div class="places">${PLACES.map(([id, who, what]) => `<button class="place${startPick === id ? " on" : ""}" data-start="${id}"><b>${who}</b><span class="hint">${what}</span><span class="lv ${lvClass(byId[id])}">${id} ${esc(byId[id].title)}</span></button>`).join("")}</div>
+      ${pick ? `<p class="pickrow">Your starting point is <a href="#ch-${pick.slug}" class="cjk"><span class="lv ${lvClass(pick)}">${pick.id}</span> ${esc(pick.title)}</a>. It is ringed on the map and in the chapter list.</p>` : ""}</div>`;
+  }
+  // Returning students see where they stand first.
+  function progressHtml() {
+    if (!learnedN() && !Object.keys(days).length) return "";
+    const n = learnedN(), pct = Math.round((n / A.length) * 100), streakN = (() => { let k = 0; for (let d = new Date(); days[dayKey(d.getTime())]; d.setDate(d.getDate() - 1)) k++; return k; })();
+    return `<section class="lp-section reveal" aria-label="Your progress"><div class="dash">
+      <div class="ringcard"><svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="rtrack" cx="60" cy="60" r="50" pathLength="100"/><circle class="rfill" cx="60" cy="60" r="50" pathLength="100" style="stroke-dashoffset:${100 - pct}"/></svg>
+        <div class="ringtext"><b data-count="${pct}" data-suffix="%">${pct}%</b><span class="hint">of the course</span></div></div>
+      <div class="stats">
+        <div class="stat"><b data-count="${n}">${n}</b><span>chapters learned</span></div>
+        <div class="stat"><b data-count="${solved.size}">${solved.size}</b><span>problems ticked</span></div>
+        <div class="stat"><b data-count="${streakN}">${streakN}</b><span>day streak</span></div>
+        <div class="stat"><b data-count="${dueReviews().length}">${dueReviews().length}</b><span>reviews due</span></div>
+      </div></div>
+      <div class="dash2" style="margin-top:16px">${dailyHtml()}${reviewsHtml()}</div></section>`;
+  }
+  // The hero's map: every chapter as a block that pops in by step, a path that traces itself, and blocks you can point at.
+  function heroMapSvg() {
+    const { xy, lanes, mapWidth: width, mapHeight: height } = layout, cur = nextChapter().cur;
+    const chain = [...pathTo("进6"), "进6"].sort((a, b) => depthOf(a) - depthOf(b));
+    const trace = chain.map((id, k) => `${k ? "L" : "M"}${xy[id].x + W / 2},${xy[id].y + H / 2}`).join(" ");
+    return `<svg viewBox="0 0 ${width - 216} ${height}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="The course map: every chapter as a block, one lane per level">
+      ${lanes.map(({ level: l, top, height: h }) => `<rect class="hm-lane" x="0" y="${top}" width="${width - 216}" height="${h}" rx="18" style="--c: var(--lv-${l.slug})"/>`).join("")}
+      ${A.flatMap(c => c.pre.map(p => { const a = xy[p], b = xy[c.id]; return `<path class="hm-edge" data-f="${p}" data-t="${c.id}" d="M${a.x + W},${a.y + H / 2} C${a.x + W + 60},${a.y + H / 2} ${b.x - 60},${b.y + H / 2} ${b.x},${b.y + H / 2}"/>`; })).join("")}
+      <path class="hm-trace" pathLength="1" d="${trace}"/>
+      ${A.map(c => { const st = statusOf(c.id); return `<rect class="hm-block ${st}" data-heroid="${c.id}" x="${xy[c.id].x}" y="${xy[c.id].y}" width="${W}" height="${H}" rx="12" style="--c: var(--${lvClass(c)}); --d:${depthOf(c.id)}"><title>${esc(c.id + " " + c.title + " · " + c.en)}</title></rect>`; }).join("")}
+      ${cur ? `<rect class="pvhere" x="${xy[cur.id].x - 10}" y="${xy[cur.id].y - 10}" width="${W + 20}" height="${H + 20}" rx="18"/>` : ""}</svg>`;
+  }
+  // Pointing at a block lights the chain it needs; the caption names it.
+  function wireHeroMap() {
+    const box = $("#heroMap"), cap = $("#heroCap");
+    if (!box) return;
+    const svg = box.querySelector("svg");
+    box.addEventListener("pointerover", e => {
+      const r = e.target.closest("[data-heroid]");
+      if (!r) return;
+      const id = r.dataset.heroid, need = ancestors(id);
+      svg.classList.add("pointing");
+      svg.querySelectorAll(".hm-block").forEach(b => b.classList.toggle("lit", b.dataset.heroid === id || need.has(b.dataset.heroid)));
+      svg.querySelectorAll(".hm-edge").forEach(p => p.classList.toggle("lit", (p.dataset.t === id || need.has(p.dataset.t)) && need.has(p.dataset.f)));
+      cap.innerHTML = `<span class="lv ${lvClass(byId[id])}">${id}</span> <span class="cjk">${esc(byId[id].title)}</span> · needs ${need.size} chapter${need.size === 1 ? "" : "s"} first. Click to open it on the map`;
+    });
+    box.addEventListener("pointerleave", () => { svg.classList.remove("pointing"); svg.querySelectorAll(".lit").forEach(x => x.classList.remove("lit")); cap.textContent = "Point at any block to see what it needs"; });
+  }
+  // Sections rise into view once; numbers and drawings start when they arrive.
+  function revealHome() {
+    const root = $(".lp");
+    if (!root || matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) { document.querySelectorAll(".lp .reveal, .lp .tw").forEach(x => x.classList.add("in")); return; }
+    root.classList.add("js-reveal");
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -12% 0px" });
+    document.querySelectorAll(".lp .reveal").forEach(x => io.observe(x));
+    // the tagline: each word turns on as it crosses a line 40% up from the bottom
+    const wio = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); wio.unobserve(e.target); } }), { rootMargin: "0px 0px -40% 0px" });
+    document.querySelectorAll(".lp .tw").forEach(x => wio.observe(x));
+  }
+  // Brand marks: the sites' own logos (with a drawn stand-in if their server can't be reached) and GitHub's mark.
+  const LOGO = {
+    luogu: `<img src="https://cdn.luogu.com.cn/fe/logo.png" alt="" width="28" height="28" referrerpolicy="no-referrer" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'logo-fallback lg',textContent:'洛'}))">`,
+    cf: `<img src="https://codeforces.org/s/0/favicon-32x32.png" alt="" width="28" height="28" referrerpolicy="no-referrer" loading="lazy" onerror="this.outerHTML='<svg viewBox=&quot;0 0 24 24&quot; width=&quot;28&quot; height=&quot;28&quot;><rect x=&quot;2&quot; y=&quot;9&quot; width=&quot;5&quot; height=&quot;11&quot; rx=&quot;1&quot; fill=&quot;#f8c12c&quot;/><rect x=&quot;9.5&quot; y=&quot;4&quot; width=&quot;5&quot; height=&quot;16&quot; rx=&quot;1&quot; fill=&quot;#1e88d6&quot;/><rect x=&quot;17&quot; y=&quot;11&quot; width=&quot;5&quot; height=&quot;9&quot; rx=&quot;1&quot; fill=&quot;#e04848&quot;/></svg>'">`,
+    gh: `<svg viewBox="0 0 16 16" width="26" height="26" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>`,
+  };
+  // The complexity race: how many steps each running time takes for n, against a judge's one second.
+  const RACE = [["O(log n)", n => Math.log2(n)], ["O(n)", n => n], ["O(n log n)", n => n * Math.log2(n)], ["O(n²)", n => n * n], ["O(2ⁿ)", n => (n > 60 ? Infinity : 2 ** n)]];
+  function raceHtml(v) {
+    const n = Math.round(10 ** v), cap = 12; // bars show up to 10¹² steps
+    return `<p class="race-n">n = <b>${n.toLocaleString("en-US")}</b></p>
+      <div class="race">${RACE.map(([o, f]) => { const ops = f(n), fits = ops <= 1e8, w = Math.min(1, Math.log10(Math.max(1, ops)) / cap);
+        return `<div class="race-row ${fits ? "fits" : "slow"}"><code class="bigo">${o}</code><span class="race-track"><i style="transform:scaleX(${Math.max(0.02, w)})"></i></span><span class="race-v">${fits ? "fits" : "too slow"}</span></div>`; }).join("")}
+        <span class="race-line" style="left:calc(var(--race-x) + (100% - var(--race-x) - var(--race-r)) * ${8 / cap})" title="10⁸ steps: about one second"></span></div>`;
+  }
+  const SIMS = [["基13", "Binary search"], ["基9", "Sorting"], ["进6", "Segment tree"], ["进10", "Dijkstra"], ["基17", "Union find"], ["进13", "Knapsack DP"]];
+  const words = text => text.split(/(\s+)/).map((w, k) => (w.trim() ? `<span class="hw" style="--i:${k >> 1}">${esc(w)}</span>` : w)).join("");
   function viewHome() {
     if (!layout) computeLayout();
-    const sel = selected; selected = null;
-    const map = svgTree();
-    selected = sel;
-    const programsN = A.reduce((s, c) => s + c.programs.length, 0);
-    const lg = A.reduce((s, c) => s + c.counts.luogu, 0), cf = A.reduce((s, c) => s + c.counts.codeforces, 0);
+    const programsN = A.reduce((n, c) => n + c.programs.length, 0);
+    const lg = A.reduce((n, c) => n + c.counts.luogu, 0), cf = A.reduce((n, c) => n + c.counts.codeforces, 0);
+    const visN = new Set(Object.values(VIS)).size;
+    if (!gloss) buildGloss();
     const c = byId["进6"], key = c.boxes.find(b => b.kind === "KEY POINT") || c.boxes[0], p = c.programs[0];
-    const code = p.code.split("\n").slice(0, 18).join("\n");
+    const code = p.code.split("\n").slice(0, 16).join("\n");
     const stars = c.stars.luogu.slice(0, 3);
-    $("#view").innerHTML = `<div class="home">
-      <section class="hero">
-        <div>
-          <h1>A map of all ${A.length} 深入浅出程序设计竞赛 chapters, for C++ contest students</h1>
-          <p class="fact">${A.length} chapters · ${programsN} C++ programs · ${lg.toLocaleString("en-US")} Luogu and ${cf.toLocaleString("en-US")} Codeforces problems</p>
-          <p class="lead">Each chapter shows what it needs, what it unlocks, its key ideas, its tested code and a ladder of problems from 入门 to NOI.</p>
-          <div class="btns"><a class="btn primary" href="#tree">Open the tree</a><a class="btn" href="#list">Browse chapters</a></div>
-          ${resumeHtml().replace('class="resume"', 'class="resume" style="margin:24px 0 0"')}
+    const tagline = "Learn each technique once, in the order it builds on itself, then prove it on real contest problems.";
+    const FAQ = [
+      ["Is it free?", "Yes. The whole site is free and open source on GitHub, and there is nothing to sign up for."],
+      ["Which book does it follow?", `The 101 chapter handouts of 深入浅出程序设计竞赛, in four levels: 基础篇, 进阶篇, 拓展篇 and NOI篇. Each chapter's PDF is one click away.`],
+      ["Where do the problems come from?", `Every chapter has its own Luogu and Codeforces list, ${(lg + cf).toLocaleString("en-US")} problems in all, sorted easiest first. A ★ marks the ones that test exactly that chapter's technique.`],
+      ["Do I need an account?", "No. Your progress is saved in this browser. Download a backup file from the Progress page to keep it safe or move it to another device."],
+      ["Where should I start?", "Pick a starting point in How it works below. New to programming starts at 基1; if you know the basics, 进1; if you already compete, 拓1."],
+      ["How do I know I really learned a chapter?", "Before a chapter is marked learned, a quick self check asks you to recall three of its boxes. Reviews then come back after 7, 21 and 60 days."],
+      ["Does it work on my phone, offline?", "Yes. Add it to your home screen; after the first visit it opens with no signal, and handout PDFs you opened stay available."],
+      ["What is CP Coach?", "A companion mod for Claude Code that teaches a chapter from its handout, gives hints in steps and picks your next problems. The site works on its own without it."],
+    ];
+    const FEATURES = [
+      ["map", "wide", "A map of the whole course", "Every chapter placed by what it needs. Point at one to see its path; set a goal and the map lights the shortest route there.", "#map"],
+      ["vis", "", `${visN} step by step visualizers`, "Binary search, segment trees, Dijkstra, union find, knapsack and more, played one step at a time.", "#ch-j6"],
+      ["code", "", `${programsN} tested C++ programs`, "Every program from the handouts with its sample input and output, folded until you open it.", "#ch-b1"],
+      ["stars", "", `${(lg + cf).toLocaleString("en-US")} ranked problems`, "Luogu and Codeforces lists per chapter, easiest first, with ★ on the ones that test the technique and a 题解 link once you solve one.", "#ch-j6-problems"],
+      ["check", "", "Progress you can trust", "A recall check before Learned, reviews at 7, 21 and 60 days, a study heatmap and milestones.", "#progress"],
+      ["clock", "", "A practice hub", `A problem of the day, contest mode with a timer, flashcards of every trap and a ${gloss.length} term Chinese and English glossary.`, "#practice"],
+      ["calc", "", "A constraint calculator", "Type n and the time limit and see which running time fits, with the chapter that teaches it.", "#practice"],
+      ["offline", "full", "Works offline, shares easily", "Install it on your phone, keep a backup file, and send friends a read only link to your map.", "#progress"],
+    ];
+    const ART = {
+      map: `<svg viewBox="0 0 160 80" class="art art-map" aria-hidden="true"><path pathLength="1" d="M30 20 C55 20 55 40 80 40 M30 20 C55 20 55 62 80 62 M100 40 C120 40 120 22 140 22"/>${[[10, 12], [60, 32], [60, 54], [120, 14], [120, 50]].map(([x, y], k) => `<rect x="${x}" y="${y}" width="36" height="16" rx="4" style="--k:${k}"/>`).join("")}</svg>`,
+      vis: `<svg viewBox="0 0 160 80" class="art art-vis" aria-hidden="true">${[42, 18, 58, 30, 50, 24].map((h, k) => `<rect x="${14 + k * 23}" y="${72 - h}" width="16" height="${h}" rx="3" style="--k:${k}"/>`).join("")}</svg>`,
+      code: `<svg viewBox="0 0 160 80" class="art art-code" aria-hidden="true">${[[10, 90], [22, 60], [22, 104], [34, 70], [10, 30]].map(([x, w], k) => `<rect x="${x}" y="${10 + k * 13}" width="${w}" height="6" rx="3" style="--k:${k}"/>`).join("")}<rect class="caret" x="44" y="62" width="2" height="10"/></svg>`,
+      stars: `<svg viewBox="0 0 160 80" class="art art-stars" aria-hidden="true">${[0, 1, 2].map(k => `<path style="--k:${k}" d="M${30 + k * 50} 18l5.5 11 12 1.8-8.7 8.5 2 12-10.8-5.7-10.8 5.7 2-12-8.7-8.5 12-1.8z"/>`).join("")}${["#fe4c61", "#f39c11", "#3fa415"].map((col, k) => `<rect x="${18 + k * 48}" y="62" width="34" height="9" rx="4.5" style="--k:${k}; fill:${col}"/>`).join("")}</svg>`,
+      check: `<svg viewBox="0 0 160 80" class="art art-check" aria-hidden="true"><rect x="16" y="20" width="40" height="40" rx="9"/><path pathLength="1" d="M26 40l9 9 15-18"/>${[7, 21, 60].map((d, k) => `<g style="--k:${k}"><circle cx="${84 + k * 28}" cy="40" r="10"/><text x="${84 + k * 28}" y="44">${d}</text></g>`).join("")}</svg>`,
+      clock: `<svg viewBox="0 0 160 80" class="art art-clock" aria-hidden="true"><circle cx="80" cy="40" r="28"/><path class="hand" d="M80 40V20"/><path class="hand2" d="M80 40h14"/><circle class="pin" cx="80" cy="40" r="3"/></svg>`,
+      calc: `<svg viewBox="0 0 160 80" class="art art-calc" aria-hidden="true">${[30, 52, 74, 108, 140].map((w, k) => `<rect x="12" y="${8 + k * 14}" width="${w}" height="8" rx="4" style="--k:${k}" class="${w <= 90 ? "ok" : "no"}"/>`).join("")}<path class="limit" d="M100 4V76"/></svg>`,
+      offline: `<svg viewBox="0 0 160 80" class="art art-offline" aria-hidden="true"><rect x="58" y="6" width="44" height="68" rx="8"/>${[0, 1, 2, 3].map(k => `<rect class="bar" x="${68 + k * 7}" y="${30 - k * 5}" width="4" height="${8 + k * 5}" rx="1.5" style="--k:${k}"/>`).join("")}<path class="ok" pathLength="1" d="M70 56l6 6 12-13"/></svg>`,
+    };
+    $("#view").innerHTML = `<div class="lp">
+      <section class="lp-hero" aria-labelledby="lpTitle">
+        <div class="lp-copy">
+          <h1 id="lpTitle" class="lp-h1">${words("From your first C++")}<br>${words("program to NOI,")}<br>${words("one chapter at a time")}</h1>
+          <p class="lp-sub hw-sub">A guided map of all ${A.length} chapters of <span class="cjk">深入浅出程序设计竞赛</span>: what each one needs, its key ideas, its tested code, and the problems that prove you learned it.</p>
+          <div class="btns lp-cta"><a class="btn primary lg" href="#map">Open the map</a><a class="btn lg" href="#list">Browse chapters</a></div>
+          <p class="lp-proof"><span><b data-count="${A.length}">${A.length}</b> chapters</span><span><b data-count="${programsN}">${programsN}</b> C++ programs</span><span><b data-count="${lg + cf}">${(lg + cf).toLocaleString("en-US")}</b> problems</span><span>free, no account</span></p>
+          ${resumeHtml().replace('class="resume"', 'class="resume lp-resume"')}
         </div>
-        <div class="frame"><div class="top"><span>Whole course · four levels</span><span>Click a chapter to trace its path</span></div>${map}</div>
+        <figure class="lp-heromap" id="heroMap">${heroMapSvg()}<figcaption id="heroCap" class="hint">Point at any block to see what it needs</figcaption></figure>
       </section>
 
-      ${homeDash()}
-
-      ${cheatHtml()}
-
-      <section class="showcase">
-        <div>
-          <h2>Every chapter: its ideas, its code, its problems</h2>
-          <p class="lead">A chapter page collects the handout's Idea, Key point and Trap boxes, every program with its sample input and output, and the chapter's Luogu and Codeforces lists, starred where a problem tests exactly that technique.</p>
-          <div class="box"><b>Key point · ${c.id} ${esc(c.title)}</b>${esc(key.text)}</div>
-          <ul class="stars">${stars.map(s => `<li><span class="diff" style="background:${LUOGU[s.d][1]}">${LUOGU[s.d][0]}</span><a href="${problemUrl("luogu", s.id)}" target="_blank" rel="noopener">★ ${esc(s.id)}</a><span class="cjk">${esc(s.name)}</span></li>`).join("")}</ul>
-          <div class="btns"><a class="btn" href="#ch-${c.slug}">Open ${c.id} ${esc(c.title)}</a></div>
-        </div>
-        <article class="prog"><header><span><span class="mono">${esc(p.file)}</span> <small>§${esc(p.section)} · first 18 of ${p.code.split("\n").length} lines</small></span><a class="copy" style="display:inline-flex;align-items:center;text-decoration:none" href="#ch-${c.slug}">All programs</a></header>
-          <pre class="code"><code>${codeHtml(code)}</code></pre>
-          ${p.samples.length ? `<div class="io">${p.samples.map(s => `<div><b><span>${esc(s.label)}</span></b><pre>${esc(s.text)}</pre></div>`).join("")}</div>` : ""}</article>
+      <section class="lp-logos reveal" aria-label="Practise on">
+        <span class="lp-logos-label">Practise on the judges students use</span>
+        <a class="logo-link" href="https://www.luogu.com.cn/" target="_blank" rel="noopener">${LOGO.luogu}<span><b>Luogu</b><small>${lg.toLocaleString("en-US")} problems</small></span></a>
+        <a class="logo-link" href="https://codeforces.com/" target="_blank" rel="noopener">${LOGO.cf}<span><b>Codeforces</b><small>${cf.toLocaleString("en-US")} problems</small></span></a>
+        <a class="logo-link" href="https://github.com/yhCrow/Competitive-Programming-Learning" target="_blank" rel="noopener">${LOGO.gh}<span><b>GitHub</b><small>open source</small></span></a>
       </section>
 
-      <section class="showcase">
-        <div>
-          <h2>Track your progress, then practise with CP Coach</h2>
-          <p class="lead">Mark chapters learned and tick problems as you solve them. Progress stays in this browser. If you use the CP Coach mod in Claude Code, these two commands teach a chapter from its handout and pick its next problems.</p>
-          <div class="outlinks"><a href="https://www.luogu.com.cn/" target="_blank" rel="noopener">Luogu</a><a href="https://codeforces.com/" target="_blank" rel="noopener">Codeforces</a><a href="https://github.com/yhCrow/Competitive-Programming-Learning" target="_blank" rel="noopener">Source on GitHub</a></div>
-        </div>
-        <div>${stripHtml().replace(/<p class="resume">[\s\S]*<\/p>$/, "")}<div class="term"><div><span class="p">&gt;</span> /learn ${c.id}</div><div><span class="p">&gt;</span> /practice ${c.id}</div></div></div>
+      ${progressHtml()}
+
+      <section class="lp-section reveal" aria-labelledby="lpLearn">
+        <h2 id="lpLearn" class="lp-h2">What you will learn</h2>
+        <p class="lp-lead">Four levels, each building on the last. Every level has its own shape on the map.</p>
+        <div class="lp-levels">${LEVELS.map((l, k) => { const list = A.filter(x => x.id.startsWith(l.key)), done = list.filter(x => statusOf(x.id) === "learned").length, fams = [...new Set(list.map(x => x.fam))];
+          return `<a class="lp-level" href="#tree?level=${encodeURIComponent(l.key)}" style="--c: var(--lv-${l.slug}); --i:${k}">
+            <span class="lp-level-icon">${levelIcon(l.key)}</span><b class="cjk">${l.name}</b><span class="hint">${l.en} · ${list.length} chapters</span>
+            <span class="lp-level-path"><span class="cjk">${esc(list[0].title)}</span><span aria-hidden="true">→</span><span class="cjk">${esc(list[list.length - 1].title)}</span></span>
+            <span class="ticons">${fams.map(icon).join("")}</span>
+            <span class="tbar"><i style="width:${(done / list.length) * 100}%"></i></span><span class="hint">${done}/${list.length} learned</span></a>`; }).join("")}</div>
       </section>
 
-      <section class="close"><h2>Start at 基1, or jump to the chapter you're on</h2><a class="btn primary" href="#tree">Open the tree</a></section>
+      <section class="lp-tagline" aria-label="${esc(tagline)}"><p>${tagline.split(" ").map((w, k) => `<span class="tw" style="--i:${k}">${esc(w)}</span>`).join(" ")}</p></section>
+
+      <section class="lp-section reveal" aria-labelledby="lpGet">
+        <h2 id="lpGet" class="lp-h2">What you get</h2>
+        <p class="lp-lead">Everything a chapter needs in one place, and the tools to keep going after it.</p>
+        <div class="lp-bento">${FEATURES.map(([art, size, title, text, href], k) => `<a class="lp-feat ${size}" href="${href}" style="--i:${k}">${ART[art]}<b>${title}</b><span>${text}</span></a>`).join("")}</div>
+      </section>
+
+      <section class="lp-section reveal" aria-labelledby="lpTry">
+        <h2 id="lpTry" class="lp-h2">Try it right here</h2>
+        <p class="lp-lead">The same step by step players that sit inside the chapters. Press Play, or drag the slider.</p>
+        <div class="lp-sim">
+          <div class="lp-tabs" role="tablist" aria-label="Visualizers">${SIMS.map(([id, name], k) => `<button role="tab" aria-selected="${k === 0}" data-simtab="${id}">${name}<small>${id}</small></button>`).join("")}</div>
+          <div class="vis lp-vis" id="homeVis"></div>
+        </div>
+        <div class="lp-race card">
+          <div><b class="lp-h5">How fast is fast enough?</b><p class="hint" style="margin:4px 0 12px">A judge runs about 10⁸ simple steps a second. Slide n and watch which running times still fit.</p>
+            <input type="range" id="raceN" min="1" max="7" step="0.25" value="5" aria-label="Size of n, from 10 to 10 million"></div>
+          <div id="raceOut">${raceHtml(5)}</div>
+          <a class="btn" href="#practice">Open the full constraint calculator</a>
+        </div>
+      </section>
+
+      <section class="lp-section reveal lp-chapter" aria-labelledby="lpInside">
+        <div>
+          <h2 id="lpInside" class="lp-h2">Inside a chapter</h2>
+          <p class="lp-lead">The handout's ideas, key points and traps, every program with its samples, and a ladder of problems from 入门 to NOI.</p>
+          <div class="box"><b>Key point · ${c.id} <span class="cjk">${esc(c.title)}</span></b>${esc(key.text)}</div>
+          <ul class="stars">${stars.map(st => `<li><span class="diff" style="background:${LUOGU[st.d][1]}">${LUOGU[st.d][0]}</span><a href="${problemUrl("luogu", st.id)}" target="_blank" rel="noopener">★ ${esc(st.id)}</a><span class="cjk">${esc(st.name)}</span></li>`).join("")}</ul>
+          <div class="btns"><a class="btn" href="#ch-${c.slug}">Open ${c.id} <span class="cjk">${esc(c.title)}</span></a></div>
+        </div>
+        <article class="prog lp-code"><header><span><span class="mono">${esc(p.file)}</span> <small>first 16 of ${p.code.split("\n").length} lines</small></span></header>
+          <pre class="code"><code>${codeHtml(code)}</code></pre></article>
+      </section>
+
+      <section class="lp-section reveal" aria-labelledby="lpHow">
+        <h2 id="lpHow" class="lp-h2">How it works</h2>
+        <ol class="lp-steps">
+          <li style="--i:0"><span class="lp-step-n">1</span><div><b>Pick where you start</b><span class="hint">Choose the line that fits you; it is ringed on the map.</span>${placesHtml()}</div></li>
+          <li style="--i:1"><span class="lp-step-n">2</span><div><b>Learn the chapter</b><span class="hint">Read its boxes, play its visualizer, open its programs, then pass the recall check.</span></div></li>
+          <li style="--i:2"><span class="lp-step-n">3</span><div><b>Prove it on real problems</b><span class="hint">Solve its ★ problems on Luogu or Codeforces, tick them off, and try contest mode.</span></div></li>
+        </ol>
+      </section>
+
+      <section class="lp-section reveal" aria-labelledby="lpFaq">
+        <h2 id="lpFaq" class="lp-h2">Questions</h2>
+        <div class="lp-faq">${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${a}</p></details>`).join("")}</div>
+      </section>
+
+      <section class="lp-final reveal">
+        <h2 class="lp-h2">Start at <span class="cjk">基1</span>, or jump to where you are</h2>
+        <div class="btns lp-cta"><a class="btn primary lg" href="#map">Open the map</a></div>
+        <p class="lp-foot hint">Progress stays in your browser; nothing is collected. Problems link to <a href="https://www.luogu.com.cn/" target="_blank" rel="noopener">Luogu</a> and <a href="https://codeforces.com/" target="_blank" rel="noopener">Codeforces</a>. Source on <a href="https://github.com/yhCrow/Competitive-Programming-Learning" target="_blank" rel="noopener">GitHub</a>.</p>
+      </section>
     </div>`;
+    wireHeroMap();
+    const h1 = $(".lp-h1"), hw = h1.offsetWidth;
+    h1.querySelectorAll(".hw").forEach(w => { w.style.setProperty("--gx", w.offsetLeft); w.style.setProperty("--gw", hw + "px"); });
+    document.querySelectorAll(".lp-code .l").forEach((l, k) => (l.style.transitionDelay = k * 45 + "ms")); // the code types itself in, line by line
+    mountVisInto($("#homeVis"), VIS[SIMS[0][0]]);
+    revealHome();
     window.scrollTo(0, 0);
   }
 
@@ -2371,9 +2739,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     mount: rowsMount,
   };
 
-  function mountVis(c) {
+  function mountVis(c) { mountVisInto(document.getElementById("vis"), VIS[c.id]); }
+  function mountVisInto(host, spec) {
     clearInterval(visTimer); visTimer = null;
-    const spec = VIS[c.id], host = document.getElementById("vis");
     if (!spec || !host) return;
     const frames = spec.frames();
     let i = 0;
@@ -2488,20 +2856,6 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     stack: "栈", queue: "队列", sieve: "筛", mobius: "莫比乌斯", "game theory": "博弈", geometry: "几何", hash: "哈希",
     sa: "后缀数组", "suffix array": "后缀数组", sam: "后缀自动机", "aho-corasick": "AC 自动机", scc: "强连通", tarjan: "Tarjan",
   };
-
-  const CHEAT = [
-    ["n ≤ 12", "O(n!)", "try every order", "基10"], ["n ≤ 20", "O(2ⁿ · n)", "every subset, bitmask DP", "进17"],
-    ["n ≤ 40", "O(2ⁿᐟ²)", "meet in the middle", "进4"], ["n ≤ 500", "O(n³)", "Floyd, interval DP", "进15"],
-    ["n ≤ 5000", "O(n²)", "pairwise DP", "进14"], ["n ≤ 10⁵ to 10⁶", "O(n log n)", "sort, binary search, segment tree", "进6"],
-    ["n ≤ 10⁷", "O(n)", "prefix sums, two pointers", "进2"], ["n ≤ 10¹²", "O(√n)", "divisors, factoring", "基21"],
-    ["n ≤ 10¹⁸", "O(log n)", "fast power, matrix power", "进19"],
-  ];
-  const cheatHtml = () => `<section class="showcase">
-      <div><h2>Read the constraints first</h2><p class="lead">A judge runs about 10⁸ simple steps a second. The limit on n tells you how fast the solution must be, and so which chapter's technique to reach for.</p></div>
-      <div class="tablewrap"><table class="cheat"><thead><tr><th>Input size</th><th>Fits in 1 s</th><th>Typical approach</th><th>Chapter</th></tr></thead><tbody>
-        ${CHEAT.map(([n, o, how, id], k) => `<tr style="--i:${k}"><td class="mono">${n}</td><td><code class="bigo">${o}</code></td><td>${how}</td><td>${chLink(id)}</td></tr>`).join("")}</tbody></table>
-      ${calcCard()}</div>
-    </section>`;
 
   // Big-O in prose reads as code: O(n log n), O(n²), O((n + m) log n)
   const bigO = html => html.replace(/O\((?:[^()]|\([^()]*\))*\)/g, m => `<code class="bigo">${m}</code>`);
@@ -2656,33 +3010,6 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       <div class="btns" style="margin:0"><a class="btn primary" href="#ch-${c.slug}">Start</a><button class="btn" data-locate="${c.id}">Locate</button></div></div></div>`;
   }
   // ---- front page dashboard: ring, rolling counters, tracks, where to start ----
-  const PLACES = [["基1", "New to programming", "Start from your first C++ program"], ["进1", "Know the basics · CSP-J", "Start at the intermediate techniques"], ["拓1", "Experienced · CSP-S / NOIP", "Start at the extended topics"]];
-  function homeDash() {
-    const n = learnedN(), pct = Math.round((n / A.length) * 100), streakN = (() => { let k = 0; for (let d = new Date(); days[dayKey(d.getTime())]; d.setDate(d.getDate() - 1)) k++; return k; })();
-    const pick = startPick && byId[startPick];
-    return `<section class="dash">
-      <div class="ringcard"><svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="rtrack" cx="60" cy="60" r="50" pathLength="100"/><circle class="rfill" cx="60" cy="60" r="50" pathLength="100" style="stroke-dashoffset:${100 - pct}"/></svg>
-        <div class="ringtext"><b data-count="${pct}" data-suffix="%">${pct}%</b><span class="hint">of the course</span></div></div>
-      <div class="stats">
-        <div class="stat"><b data-count="${n}">${n}</b><span>chapters learned</span></div>
-        <div class="stat"><b data-count="${solved.size}">${solved.size}</b><span>problems ticked</span></div>
-        <div class="stat"><b data-count="${streakN}">${streakN}</b><span>day streak</span></div>
-        <div class="stat"><b data-count="${dueReviews().length}">${dueReviews().length}</b><span>reviews due</span></div>
-      </div>
-    </section>
-    <section class="dash2">${dailyHtml()}${reviewsHtml()}</section>
-    <section>
-      <h2>Four tracks, one after another</h2>
-      <div class="tracks">${LEVELS.map(l => { const list = A.filter(c => c.id.startsWith(l.key)), done = list.filter(c => statusOf(c.id) === "learned").length; const fams = [...new Set(list.map(c => c.fam))]; return `<a class="trackcard" href="#tree?level=${encodeURIComponent(l.key)}" style="--c: var(--lv-${l.slug})">
-        <span class="lv lv-${l.slug}">${l.key}1 – ${l.key}${list.length}</span><b class="cjk">${l.name}</b><span class="hint">${l.en} · ${list.length} chapters</span>
-        <span class="ticons">${fams.map(icon).join("")}</span><span class="tbar"><i style="width:${(done / list.length) * 100}%"></i></span><span class="hint"><b data-count="${done}">${done}</b>/${list.length} learned</span></a>`; }).join("")}</div>
-    </section>
-    <section>
-      <h2>Where should I start?</h2>
-      <div class="places">${PLACES.map(([id, who, what]) => `<button class="place${startPick === id ? " on" : ""}" data-start="${id}"><b>${who}</b><span class="hint">${what}</span><span class="lv ${lvClass(byId[id])}">${id} ${esc(byId[id].title)}</span></button>`).join("")}</div>
-      ${pick ? `<div class="pickrow"><span>Your starting point: <a href="#ch-${pick.slug}" class="cjk"><span class="lv ${lvClass(pick)}">${pick.id}</span> ${esc(pick.title)}</a>. It is ringed on the map and the chapter list.</span><button class="btn" data-locate="${pick.id}">Locate in tree</button></div>` : ""}
-    </section>`;
-  }
   // Numbers roll up from zero the first time a view opens in this visit; after that they are just shown.
   const rolledViews = new Set();
   function rollCounters() {
@@ -2694,7 +3021,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const to = +el.dataset.count, suf = el.dataset.suffix || "";
       if (!to) return;
       const t0 = performance.now(), dur = 700;
-      const tick = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e) + suf; if (k < 1) requestAnimationFrame(tick); };
+      const tick = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e).toLocaleString("en-US") + suf; if (k < 1) requestAnimationFrame(tick); };
       requestAnimationFrame(tick);
     });
   }
@@ -3212,7 +3539,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const lv2 = e.target.closest("[data-lview]");
     if (lv2) { listView = lv2.dataset.lview; viewList(); return; }
     const sp = e.target.closest("[data-start]");
-    if (sp) { startPick = startPick === sp.dataset.start ? null : sp.dataset.start; store.set("start", startPick); viewHome(); return; }
+    if (sp) { startPick = startPick === sp.dataset.start ? null : sp.dataset.start; store.set("start", startPick); const pl = $("#lpPlaces"); if (pl) pl.outerHTML = placesHtml(); else viewHome(); return; }
     const rf = e.target.closest("[data-railfit]");
     if (rf) { selected = null; refreshTree(); fitLane($("#canvas"), rf.dataset.railfit); return; }
     const tf = e.target.closest("[data-tagfill]");
@@ -3224,6 +3551,14 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       document.querySelectorAll("[data-topic]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.topic === topicFilter)));
       return;
     }
+    const st = e.target.closest("[data-simtab]");
+    if (st) {
+      document.querySelectorAll("[data-simtab]").forEach(b => b.setAttribute("aria-selected", String(b === st)));
+      const host = $("#homeVis"); host.classList.remove("swap"); void host.offsetWidth; host.classList.add("swap");
+      mountVisInto(host, VIS[st.dataset.simtab]); return;
+    }
+    const hb = e.target.closest("[data-heroid]");
+    if (hb) { selected = hb.dataset.heroid; zoomS = 1; pulseId = selected; location.hash = "map"; return; }
     const ex = e.target.closest("[data-readyonly],[data-arrange],[data-panel],[data-peekmore],[data-skipmap],[data-fold],[data-goal],[data-goalqueue],[data-chk],[data-mdel],[data-stuck],[data-copy-share],[data-card-img],[data-cardflip],[data-cardgrade],[data-cards],[data-contest],[data-csolve-btn]");
     if (ex && extraClick(ex, e)) return;
     const rv = e.target.closest("[data-reviewed]");
@@ -3302,6 +3637,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   let pqTimer = 0;
   document.addEventListener("input", e => {
     const t = e.target;
+    if (t.id === "raceN") { const o = $("#raceOut"); if (o) o.innerHTML = raceHtml(+t.value); return; }
     if (t.id === "calcN" || t.id === "calcT") { const o = $("#calcOut"); if (o) o.innerHTML = calcHtml($("#calcN").value, $("#calcT").value); return; }
     if (t.id === "glossQ") { glossQ = t.value.trim().toLowerCase(); const b = $("#glossBody"); if (b) b.innerHTML = glossRows(); return; }
     if (t.id === "pq") { clearTimeout(pqTimer); pqTimer = setTimeout(() => { pstate.q = t.value.trim().toLowerCase(); const pos = t.selectionStart; route(); const n = $("#pq"); if (n) { n.focus(); n.setSelectionRange(pos, pos); } }, 250); }
