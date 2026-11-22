@@ -607,7 +607,8 @@ table.syl tr.learned td { opacity: .7; }
 .rail-bar { height: 5px; background: var(--raised); border-radius: 3px; overflow: hidden; margin-top: 4px; }
 .rail-bar i { display: block; height: 100%; background: var(--c); transform-origin: left; animation: grow .8s var(--ease) both; }
 .rail-n { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; } .rail-n b { color: var(--fg); font-size: 15.5px; }
-.rail-item.tight .rail-en, .rail-item.tight .rail-bar, .rail-item.tight .rail-n { display: none; }
+.rail-en, .rail-bar, .rail-n { transition: opacity .35s ease, max-height .35s ease, margin .35s ease; max-height: 40px; overflow: hidden; }
+.rail-item.tight .rail-en, .rail-item.tight .rail-bar, .rail-item.tight .rail-n { opacity: 0; max-height: 0; margin: 0; }
 .steprow { position: relative; height: 30px; overflow: hidden; }
 .step i { font-style: normal; } .steprow.narrow .step i { display: none; }
 .step { position: absolute; left: 0; top: 6px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; transition: opacity .15s ease; }
@@ -735,17 +736,17 @@ body.mapopen { overflow: hidden; }
 .mapwrap.grouped .lanerail, .mapwrap.grouped .steprow, .mapwrap.grouped .minimap { opacity: 0; pointer-events: none; transition-duration: .35s, .6s; transition-delay: 0s; }
 .mapwrap.grouped .lanerail { transform: translateX(-48px); }
 .mapwrap.grouped .steprow { transform: translateY(-8px); }
-.rail-label { transition: opacity .25s ease; }
+.rail-label { transition: opacity .4s ease; }
+.rail-item { display: flex; flex-direction: column; justify-content: flex-start; } /* a button centres its content; the name belongs at the top of its lane */
 .arrsub { margin-top: 10px; }
 .mappanel .seg.arr { grid-template-columns: repeat(3, 1fr); }
 /* no scrollbars on the map or its panel: drag, wheel and touch move them */
 .mapfull .canvas, .mappanel { scrollbar-width: none; }
 .mapfull .canvas::-webkit-scrollbar, .mappanel::-webkit-scrollbar { display: none; }
-/* the ripple that covers the moment boxes change places */
-.mapcol::after { content: ""; position: absolute; inset: 30px 0 0; pointer-events: none; border-radius: var(--r-card); opacity: 0;
-  background: radial-gradient(circle at 50% 45%, transparent 0 22%, color-mix(in srgb, var(--accent) 16%, transparent) 24%, transparent 27%, transparent 40%, color-mix(in srgb, var(--accent) 10%, transparent) 42%, transparent 46%); }
-.mapcol.shifting::after { animation: ripple 1.4s cubic-bezier(0.22, 1, 0.36, 1); }
-@keyframes ripple { 0% { opacity: 0; transform: scale(.35); } 20% { opacity: 1; } 100% { opacity: 0; transform: scale(1.6); } }
+/* chapters can fly through space outside the drawing while they move */
+.canvas svg { overflow: visible; }
+.arrsub { transition: opacity .2s ease; } .arrsub.swap { opacity: 0; }
+@keyframes gIn { from { opacity: 0; transform: scale(.985); } }
 /* chapter states, readable at a glance */
 .hatchbg { fill: var(--surface); } .hatchln { stroke: color-mix(in srgb, var(--fg) 9%, transparent); stroke-width: 3.5; }
 .node.locked rect.box { fill: url(#hatch); stroke: color-mix(in srgb, var(--fg) 30%, transparent); stroke-width: 1.4; stroke-dasharray: 5 4; }
@@ -809,7 +810,6 @@ svg.far .node .badge { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .mapwrap, .lanerail, .steprow, .minimap { transition: none; }
   .gicon *, .licon, .licon * { animation: none !important; }
-  .mapcol.shifting::after { animation: none; }
 }
 .mappanel .seg.arr { display: grid; }
 @media (min-width: 768px) { .mapfull .peek { display: none; } }
@@ -820,10 +820,10 @@ svg.far .node .badge { display: none; }
 .gcount { font-family: var(--f-mono); font-size: 16px; fill: var(--muted); }
 .gbox { transition: opacity .3s ease; }
 .gbox.dim { opacity: .3; }
-svg.leaving .edge, svg.leaving .lane-bg, svg.leaving .lane-rule, svg.leaving .glayer { opacity: 0; transition: opacity .18s ease; }
+svg.leaving .edge, svg.leaving .lane-bg, svg.leaving .lane-rule, svg.leaving .glayer, svg.leaving .foldbar, svg.leaving .foldtxt { opacity: 0; transition: opacity .22s ease; }
 @keyframes fadein { from { opacity: 0; } }
-svg.arriving .glayer { animation: fadein .6s ease-out .3s both; }
-svg.edgesback .edge, svg.edgesback .lane-bg { animation: fadein .6s ease-out 1.05s both; }
+svg.arriving .gbox, svg.arriving .lane-bg, svg.arriving .lane-rule, svg.arriving .foldbar, svg.arriving .foldtxt { animation: gIn .3s ease-out both; transform-box: fill-box; transform-origin: center; }
+svg.edgesback .edge { animation: fadein .5s ease-out 1.05s both; }
 @media (max-width: 767px) {
   .mapfull { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); padding: calc(8px + env(safe-area-inset-top, 0px)) 8px 8px; gap: 8px; }
   .mapbar { display: flex; justify-content: space-between; gap: 8px; }
@@ -1133,25 +1133,20 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       height = place();
     }
     layout = { xy, lanes, maxD, width: LANEW + maxD * COLW + W + 24 + 216, height: height - LANEGAP + 12, mapHeight: height - LANEGAP + 12 }; // +216: room to scroll past the minimap
+    layout.mapWidth = layout.width;
     grouped = null;
   }
 
 
-  // A line from a chapter to one that builds on it: side to side when they sit apart horizontally, else top to bottom.
+  // A line from a chapter to one that builds on it, left to right.
   function edgeD(a, b) {
-    if (arrange === "map") {
-      const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = x1 + Math.max(24, (x2 - x1) / 2);
-      return `M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}`;
-    }
-    const ax = a.x + W / 2, ay = a.y + H / 2, bx = b.x + W / 2, by = b.y + H / 2, dx = bx - ax, dy = by - ay;
-    if (Math.abs(dx) >= Math.abs(dy)) { const sx = ax + Math.sign(dx) * W / 2, ex = bx - Math.sign(dx) * W / 2, m = (sx + ex) / 2; return `M${sx},${ay} C${m},${ay} ${m},${by} ${ex},${by}`; }
-    const sy = ay + Math.sign(dy) * H / 2, ey = by - Math.sign(dy) * H / 2, m = (sy + ey) / 2;
-    return `M${ax},${sy} C${ax},${m} ${bx},${m} ${bx},${ey}`;
+    const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = x1 + Math.max(24, (x2 - x1) / 2);
+    return `M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}`;
   }
 
   function svgTree() {
     if (!layout) computeLayout();
-    if (arrange === "map") layout.height = layout.mapHeight; else computeGroups();
+    if (arrange === "map") { layout.width = layout.mapWidth; layout.height = layout.mapHeight; } else computeGroups();
     const xy = curXY(), { width, height, lanes, maxD } = layout;
     const goalSet = goal && byId[goal] ? new Set([goal, ...pathTo(goal)]) : null;
     const anc = selected ? ancestors(selected) : null, desc = selected ? descendants(selected) : null;
@@ -1165,7 +1160,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/>${lanes.find(x => x.level === l).folded ? `<rect class="foldbar" x="${LANEW + 4}" y="${top + 4}" width="${Math.min(width - LANEW - 8, 900)}" height="${h - 8}" rx="12"/><text class="foldtxt" x="${LANEW + 22}" y="${top + 27}">✓ ${l.name} complete · ${list.length} of ${list.length} learned · folded</text>` : ""}</g>`;
     });
     A.forEach(c => c.pre.forEach(p => {
-      if (arrange === "map" && (isFoldedId(c.id) || isFoldedId(p))) return;
+      if (arrange !== "map" || isFoldedId(c.id) || isFoldedId(p)) return; // groups read better without lines
       const a = xy[p], b = xy[c.id];
       const inc = selected && ((c.id === selected && anc.has(p)) || (anc.has(c.id) && anc.has(p)));
       const outg = selected && (p === selected || (desc.has(c.id) && desc.has(p)));
@@ -1279,7 +1274,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function computeGroups() {
     const front = arrange === "topic" ? topicFilter : "all";
     const gs = ARRANGE[arrange]().filter(g => g.ids.length).sort((a, b) => (b.key === front) - (a.key === front));
-    const xy = {}, boxes = [], PAD = 24, HEAD = 64, GAP = 48, PER = 6, X0 = 24, maxW = Math.max(W + 2 * PAD + X0, groupWrap || layout.width);
+    const xy = {}, boxes = [], PAD = 24, HEAD = 64, GAP = 48, PER = 6, X0 = 24, maxW = Math.max(W + 2 * PAD + X0, groupWrap || layout.mapWidth);
     let x = X0, y = 24, rowH = 0;
     gs.forEach(g => {
       const cols = Math.ceil(g.ids.length / PER), rows = Math.ceil(g.ids.length / cols);
@@ -1290,7 +1285,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       x += w + GAP; rowH = Math.max(rowH, h);
     });
     grouped = { xy, boxes, height: y + rowH + 24 };
-    layout.height = Math.max(layout.mapHeight, grouped.height);
+    layout.width = Math.max(...boxes.map(b => b.x + b.w)) + 24; layout.height = grouped.height;
   }
   const curXY = () => { if (arrange === "map") return layout.xy; if (!grouped) computeGroups(); return grouped.xy; };
   // A box that changes place drifts there on a gentle curve, dips as if settling into water, and comes to rest.
@@ -1308,21 +1303,25 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const mx = b.x + dx / 2 - (dy / d) * amp, my = b.y + dy / 2 + (dx / d) * amp;
       const at = (x, y, r) => `translate(${x}px, ${y}px) rotate(${r}deg)`;
       n.animate([
-        { transform: at(b.x, b.y, 0), easing: "cubic-bezier(0.45, 0, 0.55, 1)" },
-        { transform: at(mx, my, rot), offset: 0.5, easing: "cubic-bezier(0.33, 0, 0.2, 1)" },
-        { transform: at(a.x, a.y + 8, -rot * 0.45), offset: 0.8, easing: "ease-in-out" },
-        { transform: at(a.x, a.y - 3, rot * 0.15), offset: 0.92, easing: "ease-in-out" },
+        { transform: at(b.x, b.y, 0), easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+        { transform: at(mx, my, rot), offset: 0.55, easing: "cubic-bezier(0.25, 1.25, 0.5, 1)" },
         { transform: at(a.x, a.y, 0) },
-      ], { duration: 1100 + Math.random() * 300, delay: Math.random() * 320, fill: "backwards" });
+      ], { duration: 820 + Math.random() * 160, delay: 200 + Math.random() * 110, fill: "backwards" }); // wait for the group boxes to fade in, then fly in one go
     });
     return moved;
   }
-  // A soft ripple across the map while boxes are between places.
-  function shimmer() {
-    const col = document.querySelector(".mapcol");
-    if (!col || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    col.classList.remove("shifting"); void col.offsetWidth; col.classList.add("shifting");
-    setTimeout(() => col.classList.remove("shifting"), 1500);
+  // Change what the map shows in three beats: the old group boxes and lines fade out, the new ones fade in,
+  // then each chapter flies to its place (floatNodes); lines come back after they land.
+  function morph(apply, after) {
+    const svg = $("#canvas svg");
+    const run = () => {
+      apply(); refreshTree();
+      const s2 = $("#canvas svg"); if (s2) s2.classList.add("arriving", "edgesback");
+      if (after) after();
+    };
+    if (!svg || matchMedia("(prefers-reduced-motion: reduce)").matches) return run();
+    svg.classList.add("leaving");
+    setTimeout(run, 240);
   }
   const arrSub = () => arrange === "topic" ? `<p class="label">Bring a topic to the front</p>${topicPills()}`
     : arrange === "status" ? `<p class="hint">Chapters gather by where you are: learned, learning, ready and locked</p>`
@@ -1330,22 +1329,17 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function rearrange(mode) {
     const canvas = $("#canvas");
     if (!canvas || mode === arrange) return;
-    const go = () => {
+    document.querySelectorAll("[data-arrange]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.arrange === mode)));
+    const sub = $("#arrSub"); if (sub) sub.classList.add("swap");
+    if (mode !== "map") canvas.scrollTo({ left: 0, top: 0, behavior: "smooth" }); // start heading home while the boxes fade
+    morph(() => {
       arrange = mode; grouped = null;
       if (mode !== "topic") topicFilter = "all";
-      const sub = $("#arrSub"); if (sub) sub.innerHTML = arrSub();
+      if (sub) { sub.innerHTML = arrSub(); sub.classList.remove("swap"); }
       if (mode === "map") { const r = $("#laneRail"); if (r) { r.classList.add("fresh"); setTimeout(() => r.classList.remove("fresh"), 2600); } }
       groupWrap = Math.max(W + 96, canvas.clientWidth / curS - 24); // groups wrap to the width you can see at this zoom
       $(".mapwrap").classList.toggle("grouped", mode !== "map");
-      refreshTree();
-      const svg = $("#canvas svg"); if (svg) svg.classList.add("edgesback", ...(mode === "map" ? [] : ["arriving"]));
-      document.querySelectorAll("[data-arrange]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.arrange === arrange)));
-      if (mode === "map") placeCanvas(); else canvas.scrollTo({ left: 0, top: 0, behavior: "smooth" });
-    };
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return go();
-    const svg = $("#canvas svg"); if (svg) svg.classList.add("leaving");
-    shimmer();
-    setTimeout(go, 180);
+    }, () => { if (mode === "map") placeCanvas(true); });
   }
   function exitMap() {
     const leave = () => { skipHash = true; location.hash = "tree"; route(); };
@@ -1387,9 +1381,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
 
   // ---- map zoom: the svg is redrawn at width x scale, so text stays sharp and the canvas scrolls natively ----
-  const clampS = s => Math.min(1, Math.max(ZMIN, s));
+  // Zooming out stops where the whole arrangement fits on screen.
+  const fitAll = () => { const c = $("#canvas"); return c && layout ? Math.min(1, Math.max(0.08, Math.min((c.clientWidth - 2) / layout.width, (c.clientHeight - 2) / layout.height))) : ZMIN; };
+  const clampS = s => Math.min(1, Math.max(fitAll(), s));
   const viewH = () => Math.max(560, innerHeight - 150);
-  const fitScale = canvas => clampS((canvas.clientWidth - 2) / layout.width);
+  const fitScale = () => fitAll();
   function sizeSvg(canvas, s) {
     const svg = canvas.querySelector("svg");
     curS = s;
@@ -1425,17 +1421,30 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
   function fitBox(canvas, x0, y0, x1, y1) {
     const s = clampS(Math.min(canvas.clientWidth / (x1 - x0), viewH() / (y1 - y0)));
-    sizeSvg(canvas, s);
     zoomS = s;
-    canvas.scrollLeft = x0 * s;
-    canvas.scrollTop = y0 * s;
+    glideTo(canvas, s, x0 * s, y0 * s);
+  }
+  // Ease the zoom and the scroll together to a new view.
+  function glideTo(canvas, s1, left, top, ms = 700) {
+    const s0 = curS, l0 = canvas.scrollLeft, t0 = canvas.scrollTop, start = performance.now();
+    zTarget = null;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { sizeSvg(canvas, s1); canvas.scrollLeft = left; canvas.scrollTop = top; return; }
+    const ease = k => (k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2);
+    const step = now => {
+      if (!canvas.isConnected) return;
+      const k = Math.min(1, (now - start) / ms), e = ease(k);
+      sizeSvg(canvas, s0 + (s1 - s0) * e);
+      canvas.scrollLeft = l0 + (left - l0) * e; canvas.scrollTop = t0 + (top - t0) * e;
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
   function fitLane(canvas, key) {
     const ids = A.filter(c => c.id.startsWith(key)).map(c => layout.xy[c.id]);
     const lane = layout.lanes.find(l => l.level.key === key);
     fitBox(canvas, Math.min(...ids.map(p => p.x)) - 24, lane.top, Math.max(...ids.map(p => p.x)) + W + 24, lane.top + lane.height);
   }
-  function placeCanvas() {
+  function placeCanvas(smooth) {
     const canvas = $("#canvas");
     if (!canvas) return;
     sizeSvg(canvas, zoomS ?? fitScale(canvas));
@@ -1444,7 +1453,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const p = curXY()[focusId];
     const left = Math.max(0, p.x * curS - (selected ? canvas.clientWidth / 2 - W * curS / 2 : canvas.clientWidth / 3));
     const top = Math.max(0, p.y * curS - canvas.clientHeight / 2 + H * curS / 2);
-    if (pulseId && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (smooth) canvas.scrollTo({ left, top, behavior: "smooth" });
+    else if (pulseId && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
       canvas.scrollTo({ left: Math.max(0, left - 400), top: Math.max(0, top - 200) });
       requestAnimationFrame(() => canvas.scrollTo({ left, top, behavior: "smooth" }));
     } else { canvas.scrollLeft = left; canvas.scrollTop = top; }
@@ -1504,7 +1514,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   // A thumbnail can't show text: draw each chapter as a block in its level's colour, brighter the further you are,
   // with a ring on the chapter you're up to.
   function previewSvg() {
-    const { xy, lanes, width, mapHeight: height } = layout, cur = nextChapter().cur;
+    const { xy, lanes, mapWidth: width, mapHeight: height } = layout, cur = nextChapter().cur;
     return `<svg viewBox="0 0 ${width - 216} ${height}" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
       ${lanes.map(({ level: l, top, height: h }) => `<rect x="0" y="${top}" width="${width - 216}" height="${h}" rx="18" style="fill: var(--lv-${l.slug}); opacity: .07"/>`).join("")}
       ${A.flatMap(c => c.pre.map(p => { const a = xy[p], b = xy[c.id]; return `<path d="M${a.x + W},${a.y + H / 2} C${a.x + W + 60},${a.y + H / 2} ${b.x - 60},${b.y + H / 2} ${b.x},${b.y + H / 2}" class="pvedge"/>`; })).join("")}
@@ -1550,6 +1560,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     canvasRO.observe(canvas);
     placeCanvas();
     updateMinimap();
+    updateRail();
   }
   function refreshTree() {
     if (!layout) computeLayout();
@@ -1558,7 +1569,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const sl = canvas.scrollLeft, st = canvas.scrollTop, before = {};
     canvas.querySelectorAll(".node").forEach(n => { const m = n.getAttribute("transform").match(/translate\(([-\d.]+),([-\d.]+)\)/); if (m) before[n.dataset.id] = { x: +m[1], y: +m[2] }; });
     canvas.innerHTML = svgTree();
-    if (floatNodes(before)) { canvas.querySelector("svg").classList.add("edgesback"); shimmer(); }
+    if (floatNodes(before)) canvas.querySelector("svg").classList.add("edgesback");
+    updateRail();
     sizeSvg(canvas, curS);
     canvas.scrollLeft = sl; canvas.scrollTop = st;
     const mm = $("#minimap");
@@ -2642,11 +2654,14 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       item.style.transform = `translateY(${top}px)`;
       item.style.height = h + "px";
       const label = item.firstElementChild;
-      item.classList.toggle("tight", h < label.offsetHeight + 8);
-      const lh = label.offsetHeight, room = h + Math.min(0, top); // how much of the lane is still below the top edge
-      // the label sticks to the top of its lane while the lane is on screen, and fades as the lane runs out
+      const room = h + Math.min(0, top); // how much of the lane is still below the top edge of the map
+      // the details (English name, bar, count) fade out when the lane can't hold them; the margins stop it flickering
+      if (!item.classList.contains("tight") && room < 150) item.classList.add("tight");
+      else if (item.classList.contains("tight") && room > 170) item.classList.remove("tight");
+      const lh = label.offsetHeight; // follows the details as they fade, so the name eases down instead of jumping
+      // the name sticks to the top of its lane while the lane is on screen, and fades gently as the lane runs out
       label.style.transform = `translateY(${Math.max(0, Math.min(-top, h - lh))}px)`;
-      label.style.opacity = Math.max(0, Math.min(1, (room - lh * 0.55) / (lh * 0.6)));
+      label.style.opacity = Math.max(0, Math.min(1, (room - lh * 0.5) / (lh * 0.5)));
     });
     if (row) row.classList.toggle("narrow", COLW * curS < 72);
     if (row) [...row.children].forEach(el => {
@@ -3020,9 +3035,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const done = finishedLevels();
       if (!foldDone && !done.length) { toast("No level is finished yet. A level folds into one bar once every chapter in it is learned"); return true; }
       if (arrange !== "map") { toast("Folding works on the Prerequisites arrangement"); return true; }
-      foldDone = !foldDone; store.set("foldDone", foldDone); layout = null;
+      foldDone = !foldDone; store.set("foldDone", foldDone);
       el.setAttribute("aria-pressed", String(foldDone));
-      refreshTree(); shimmer();
+      morph(() => (layout = null));
       toast(foldDone ? `Folded ${done.map(l => l.name).join(", ")} into ${done.length === 1 ? "one bar" : "bars"}` : "Unfolded every level");
       return true;
     }
@@ -3124,8 +3139,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (tf) { q.value = "#" + tf.dataset.tagfill; q.focus(); search(); return; }
     const tp = e.target.closest("[data-topic]");
     if (tp) {
-      topicFilter = tp.dataset.topic;
-      location.hash.startsWith("#list") ? viewList() : refreshTree();
+      const pick = tp.dataset.topic;
+      if (location.hash.startsWith("#list")) { topicFilter = pick; viewList(); } else morph(() => (topicFilter = pick));
       document.querySelectorAll("[data-topic]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.topic === topicFilter)));
       return;
     }
@@ -3176,7 +3191,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       smoothZoom($("#canvas"), next ?? (up ? 1 : ZMIN));
       return;
     }
-    if (t.hasAttribute("data-zoomfit")) { zoomS = null; placeCanvas(); $("#canvas").scrollTo(0, 0); return; }
+    if (t.hasAttribute("data-zoomfit")) { const cv = $("#canvas"); glideTo(cv, fitAll(), 0, 0); zoomS = null; return; }
     if (t.hasAttribute("data-clear")) { selected = null; refreshTree(); return; }
     if (t.dataset.select) { selected = t.dataset.select; zoomS = 1; pulseId = selected; }
     const c = bySlug[(location.hash.match(/ch-([a-z]\d+)/) || [])[1]];
