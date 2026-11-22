@@ -613,10 +613,11 @@ table.syl tr.learned td { opacity: .7; }
 .steprow { position: relative; height: 30px; overflow: hidden; }
 .step i { font-style: normal; } .steprow.narrow .step i { display: none; }
 .step { position: absolute; left: 0; top: 6px; font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; transition: opacity .15s ease; }
-svg .node rect.box, svg .edge { transition: opacity .18s ease, stroke .18s ease, stroke-width .2s ease; }
-/* one moving part per chapter: translate and scale apply on top of the box's own position */
-.node { transition: translate .2s var(--ease), scale .2s var(--ease); }
-svg.lifting .node { translate: 0 -7px; scale: 1.035; }
+svg .node rect.box, svg .edge { transition: opacity .18s ease, stroke .18s ease, stroke-width .2s ease, scale .2s var(--ease); }
+/* one moving part per chapter: translate applies on top of the box's own position. (Not the scale property:
+   on an SVG box it grows around the corner of the whole map, so far-away boxes jump.) */
+.node { transition: translate .2s var(--ease); }
+svg.lifting .node { translate: 0 -7px; }
 .glayer rect { transition: fill .25s ease, stroke .25s ease, stroke-width .25s ease, filter .3s ease; }
 svg.hovering .node:not(.hl) { opacity: .28; }
 svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
@@ -624,8 +625,8 @@ svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
 .node rect.box { transform-box: fill-box; transform-origin: center; }
 @media (hover: hover) and (pointer: fine) {
   /* a chapter rises toward you with a glow in its level colour; a group box brightens and its icon plays */
-  .node:hover { translate: 0 -3px; scale: 1.035; }
-  .node:hover rect.box { stroke: var(--c); stroke-width: 3; }
+  .node:hover { translate: 0 -4px; }
+  .node:hover rect.box { stroke: var(--c); stroke-width: 3; scale: 1.03; } /* the border grows around its own centre */
   .gbox:hover rect { fill: color-mix(in srgb, var(--c) 12%, transparent); stroke: color-mix(in srgb, var(--c) 65%, transparent); stroke-width: 2.5; filter: drop-shadow(0 10px 24px color-mix(in srgb, var(--c) 22%, transparent)); }
 }
 @keyframes breathe { 50% { transform: scale(1.7); opacity: .35; } }
@@ -640,7 +641,7 @@ svg.hovering .edge:not(.hin):not(.hout) { opacity: .1; }
 @media (prefers-reduced-motion: reduce) {
   .edge.hot, .edge.hin, .edge.hout { animation: none; stroke-dasharray: none; }
   .node.ready circle.ready, .rail-bar i { animation: none; }
-  .node:hover, svg.lifting .node { translate: none; scale: none; }
+  .node:hover, svg.lifting .node { translate: none; } .node:hover rect.box { scale: none; }
 }
 
 
@@ -1307,7 +1308,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (!b || !a) return;
       const dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy), lift = liftFrom;
       if (d < 2) {
-        if (lift) n.animate([{ transform: `translate(${b.x}px, ${b.y - lift}px) scale(1.035)` }, { transform: `translate(${a.x}px, ${a.y}px) scale(1)` }], { duration: 380, delay: 150, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)", fill: "backwards" });
+        if (lift) n.animate([{ transform: `translate(${b.x}px, ${b.y - lift}px)` }, { transform: `translate(${a.x}px, ${a.y}px)` }], { duration: 380, delay: 150, easing: "cubic-bezier(0.2, 0.8, 0.3, 1)", fill: "backwards" });
         return;
       }
       moved++;
@@ -1315,7 +1316,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const mx = b.x + dx / 2 - (dy / d) * amp, my = b.y + dy / 2 + (dx / d) * amp;
       const at = (x, y, k = 1) => `translate(${x}px, ${y}px) scale(${k})`;
       n.animate([
-        { transform: at(b.x, b.y - lift, lift ? 1.035 : 1), easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
+        { transform: at(b.x, b.y - lift), easing: "cubic-bezier(0.4, 0, 0.2, 1)" },
         { transform: at(mx, my), offset: 0.55, easing: "cubic-bezier(0.25, 1.25, 0.5, 1)" },
         { transform: at(a.x, a.y) },
       ], { duration: 820 + Math.random() * 160, delay: 200 + Math.random() * 220, fill: "backwards" }); // wait for the group boxes to fade in; spread launches so fewer fly at once
