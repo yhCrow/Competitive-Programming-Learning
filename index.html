@@ -1274,7 +1274,7 @@ svg.pointing .hm-trace { display: none; }
 .wpre { display: flex; gap: 8px; flex-wrap: wrap; }
 .win { display: flex; gap: 16px; flex-wrap: wrap; }
 .win label { display: flex; gap: 10px; align-items: center; font-weight: 600; }
-.win input { width: 110px; height: 40px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--bg); color: var(--fg); font: 600 18px var(--f-mono); padding: 0 12px; }
+.win input { width: 130px; height: 40px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--bg); color: var(--fg); font: 600 18px var(--f-mono); padding: 0 12px; }
 .win input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .wres { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .wres > div { display: grid; gap: 8px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
@@ -1308,7 +1308,7 @@ svg.pointing .hm-trace { display: none; }
 /* lesson pieces rise in as they scroll into view, their parts one after another */
 .rv { opacity: 0; transform: translateY(14px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
 .rv.in { opacity: 1; transform: none; }
-.rv.in :is(.fchip, .fvars > div, .fswap > div, .lsteps > li, .lcard), .rv.in .forder > div > * { animation: lsIn .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
+.rv.in :is(.fchip, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fascii > div, .fverd > div), .rv.in .forder > div > * { animation: lsIn .45s var(--ease) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
 .rv.in .forder > div > * { animation-delay: calc(var(--i, 0) * 260ms + 150ms); }
 .rv.in .fflow > i { animation: lsIn .4s var(--ease) both; animation-delay: .45s; }
 .rv.in .fline .arc { stroke-dashoffset: 0; animation: lsDraw .8s var(--ease) .35s both; }
@@ -1327,6 +1327,63 @@ svg.pointing .hm-trace { display: none; }
   .trace .tbar, .vis-ctl input[type="range"] { transition: none; }
   .qcell.chg, .wfb.show, .pop, .wcode button.bad, .wopts .btn.ok, .wopts .btn.bad, .wdone, .wcode .fix { animation: none; }
 }
+
+
+/* 基2 figures and widgets */
+.fsize { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content; gap: 12px 16px; align-items: center; width: 100%; max-width: 620px; }
+.fsize > div { display: contents; }
+.fsize .bar { display: flex; gap: 3px; }
+.fsize .bar i { flex: 0 1 22px; height: 22px; border-radius: 4px; background: color-mix(in srgb, var(--v-cur) 55%, var(--surface)); }
+.fsize small { color: var(--muted); font-size: 12.5px; }
+.rv.in .fsize .bar i { animation: lsPop .3s var(--ease) both; animation-delay: calc(var(--i, 0) * 120ms + 150ms); }
+.fascii { display: flex; gap: 12px; align-items: stretch; justify-content: center; flex-wrap: wrap; }
+.fascii > div { display: grid; gap: 6px; justify-items: center; text-align: center; padding: 14px 16px; min-width: 130px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--bg); }
+.fascii b { font: 600 18px var(--f-mono); }
+.fascii small { color: var(--muted); font-size: 12px; }
+.fascii .plus { align-self: center; font-style: normal; color: var(--v-cmp); font-weight: 600; font-size: 13px; }
+.fline .band { fill: color-mix(in srgb, var(--v-done) 22%, transparent); }
+.fline .tri { fill: color-mix(in srgb, var(--v-cur) 14%, transparent); stroke: var(--v-cur); stroke-width: 2; }
+.fheron { display: flex; gap: 24px; align-items: center; justify-content: center; flex-wrap: wrap; width: 100%; }
+.fheron .fline { width: 200px; max-width: 200px; }
+.fheron .forder { width: auto; }
+.fverd { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; }
+.fverd > div { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); }
+.fverd small { grid-column: 2; color: var(--muted); font-size: 12.5px; line-height: 1.5; }
+.fverd > div > span { font-weight: 600; }
+.vd { grid-row: span 2; min-width: 48px; text-align: center; padding: 6px 8px; border-radius: 8px; font: 700 15px var(--f-mono); background: var(--raised); color: var(--fg-2); }
+.vd.ok { background: color-mix(in srgb, var(--v-done) 20%, var(--surface)); color: var(--v-done); }
+.vd.bad { background: color-mix(in srgb, var(--v-bad) 18%, var(--surface)); color: var(--v-bad); }
+.vd.warn { background: color-mix(in srgb, var(--v-cmp) 20%, var(--surface)); color: var(--v-cmp); }
+.wmeter { position: relative; height: 26px; border-radius: 8px; background: var(--raised); overflow: hidden; }
+.wmeter i { position: absolute; inset: 0 auto 0 0; width: 0; background: color-mix(in srgb, var(--v-done) 45%, var(--surface)); transition: width .45s var(--ease), background-color .3s var(--ease); }
+.wmeter i.bad { background: color-mix(in srgb, var(--v-bad) 50%, var(--surface)); }
+.wmeter::after { content: ""; position: absolute; top: 0; bottom: 0; left: calc(100% / 1.15); border-left: 2px dashed var(--fg-2); }
+.wmeter span { position: absolute; left: 10px; top: 4px; z-index: 1; font-size: 12px; color: var(--fg-2); }
+.wres.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wres b.bad { color: var(--v-bad); }
+.wres b.sm { font-size: 18px; letter-spacing: .04em; }
+.win input[type="text"] { width: 70px; text-align: center; }
+.chip.mono { font-family: var(--f-mono); }
+.wpre .chip[aria-pressed="true"] { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--fg); }
+.wprint { display: grid; gap: 10px; padding: 16px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--line); }
+.wcall { color: var(--muted); font-size: 13.5px; }
+.wout { display: flex; gap: 3px; min-height: 40px; flex-wrap: wrap; }
+.wout span { width: 26px; height: 38px; display: grid; place-items: center; border-radius: 6px; background: var(--raised); font: 600 18px var(--f-mono); animation: lsIn .25s var(--ease) both; animation-delay: calc(var(--i) * 30ms); }
+.wout span.pad { color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 14%, transparent); }
+.wsteps { max-width: none; }
+.wsteps code { white-space: normal !important; }
+.wclock { display: flex; gap: 12px; align-items: baseline; }
+.wclock b { font: 700 36px var(--f-mono); font-variant-numeric: tabular-nums; color: var(--v-done); display: inline-block; }
+.wclock small { color: var(--muted); }
+@media (max-width: 640px) {
+  .fsize { grid-template-columns: max-content minmax(0, 1fr); }
+  .fsize small { grid-column: 2; margin-top: -8px; }
+  .fsize .bar i { height: 16px; }
+  .fverd { grid-template-columns: minmax(0, 1fr); }
+  .wres.two { grid-template-columns: minmax(0, 1fr); }
+  .fascii .plus { width: 100%; text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) { .wout span, .rv.in .fsize .bar i { animation: none; } .wmeter i { transition: none; } }
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -3217,6 +3274,40 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   const rich = s => bigO(esc(s)).replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
   const LESSON_BLOCKS = new Set(["figure", "table", "steps", "cards", "vis", "widget"]);
   // Small exercises a lesson places with {t: "widget", name}. html() draws it, init(el) wires it after the page draws.
+  // A one question at a time quiz: Q = [[prompt, options, right index, why]], ask(prompt) is the question's HTML.
+  const quizWidget = (title, Q, ask) => ({
+    title,
+    html: () => `<div class="wquiz"></div>`,
+    init(el) {
+      const box = el.querySelector(".wquiz");
+      let k = 0, score = 0;
+      const draw = () => {
+        if (k === Q.length) {
+          box.innerHTML = `<div class="wdone"><b>${score} / ${Q.length}</b><span>${score === Q.length ? "All right. You have the rules" : "Read the section again, then try once more"}</span><button type="button" class="btn" data-again>Try again</button></div>`;
+          return;
+        }
+        const [e, opts] = Q[k];
+        box.innerHTML = `<div class="wdots">${Q.map((_, j) => `<i class="${j < k ? "d" : j === k ? "c" : ""}"></i>`).join("")}</div>
+          <p class="wq">${ask(e)}</p>
+          <div class="wopts">${opts.map((o, j) => `<button type="button" class="btn" data-o="${j}">${esc(o)}</button>`).join("")}</div><p class="wfb" aria-live="polite"></p>`;
+      };
+      box.onclick = e => {
+        if (e.target.closest("[data-again]")) { k = score = 0; return draw(); }
+        if (e.target.closest("[data-next]")) { k++; return draw(); }
+        const b = e.target.closest("[data-o]");
+        if (!b || box.dataset.answered === String(k)) return;
+        box.dataset.answered = k;
+        const [, , right, why] = Q[k], ok = +b.dataset.o === right;
+        if (ok) score++;
+        box.querySelectorAll("[data-o]").forEach(x => { x.disabled = true; if (+x.dataset.o === right) x.classList.add("ok"); });
+        if (!ok) b.classList.add("bad");
+        const fb = box.querySelector(".wfb");
+        say(fb, ok ? "ok" : "bad", `${ok ? "Right." : "Not quite."} ${why}`);
+        fb.insertAdjacentHTML("beforeend", ` <button type="button" class="linkish" data-next>${k + 1 < Q.length ? "Next →" : "See score →"}</button>`);
+      };
+      draw();
+    },
+  });
   const WIDGET = {
     bug: {
       title: "Find the bug",
@@ -3263,47 +3354,14 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         run();
       },
     },
-    predict: {
-      title: "Predict the output",
-      Q: [
+    predict: quizWidget("Predict the output", [
         ["7 / 2", ["3.5", "3", "4"], 1, "Two ints: the fraction is dropped"],
         ["-7 / 2", ["-4", "-3", "-3.5"], 1, "It cuts toward 0, so -3.5 becomes -3, not -4"],
         ["-7 % 3", ["2", "-1", "1"], 1, "% takes the sign of the left side: -7 = 3 × (-2) - 1"],
         ["1 + 2 * 3", ["9", "7"], 1, "* runs before +"],
         ["7.0 / 2", ["3", "3.5", "4"], 1, "One double makes it real division"],
         ["(7 + 3 - 1) / 3", ["2", "3", "3.33"], 1, "That is 9 / 3 = 3: the round up trick for 7 / 3"],
-      ],
-      html: () => `<div class="wquiz"></div>`,
-      init(el) {
-        const Q = WIDGET.predict.Q, box = el.querySelector(".wquiz");
-        let k = 0, score = 0;
-        const draw = () => {
-          if (k === Q.length) {
-            box.innerHTML = `<div class="wdone"><b>${score} / ${Q.length}</b><span>${score === Q.length ? "All right. You have the rules" : "Read the table above again, then try once more"}</span><button type="button" class="btn" data-again>Try again</button></div>`;
-            return;
-          }
-          const [e, opts] = Q[k];
-          box.innerHTML = `<div class="wdots">${Q.map((_, j) => `<i class="${j < k ? "d" : j === k ? "c" : ""}"></i>`).join("")}</div>
-            <p class="wq">What does <code>cout &lt;&lt; ${esc(e)};</code> print?</p>
-            <div class="wopts">${opts.map((o, j) => `<button type="button" class="btn" data-o="${j}">${esc(o)}</button>`).join("")}</div><p class="wfb" aria-live="polite"></p>`;
-        };
-        box.onclick = e => {
-          if (e.target.closest("[data-again]")) { k = score = 0; return draw(); }
-          if (e.target.closest("[data-next]")) { k++; return draw(); }
-          const b = e.target.closest("[data-o]");
-          if (!b || box.dataset.answered === String(k)) return;
-          box.dataset.answered = k;
-          const [, , right, why] = Q[k], ok = +b.dataset.o === right;
-          if (ok) score++;
-          box.querySelectorAll("[data-o]").forEach(x => { x.disabled = true; if (+x.dataset.o === right) x.classList.add("ok"); });
-          if (!ok) b.classList.add("bad");
-          const fb = box.querySelector(".wfb");
-          say(fb, ok ? "ok" : "bad", `${ok ? "Right." : "Not quite."} ${why}`);
-          fb.insertAdjacentHTML("beforeend", ` <button type="button" class="linkish" data-next>${k + 1 < Q.length ? "Next →" : "See score →"}</button>`);
-        };
-        draw();
-      },
-    },
+      ], e => `What does <code>cout &lt;&lt; ${esc(e)};</code> print?`),
     swap: {
       title: "Swap two boxes",
       M: { right: ["int t = a;", "a = b;", "b = t;"], wrong: ["a = b;", "b = a;"] },
@@ -3351,7 +3409,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
     document.querySelectorAll(".flow.lesson :is(.lfig, .lwid, .ltable, .lsteps, .lcards, .box, details.prog, .vis)").forEach(el => {
       el.classList.add("rv"); io.observe(el);
-      [...el.querySelectorAll(".fchip, .forder > div, .fvars > div, .fswap > div, .lsteps > li, .lcard")].forEach((c, k) => c.style.setProperty("--i", k));
+      [...el.querySelectorAll(".fchip, .forder > div, .fvars > div, .fswap > div, .lsteps > li, .lcard, .fsize > div, .fascii > div, .fverd > div")].forEach((c, k) => c.style.setProperty("--i", k));
     });
   }
 
@@ -5712,6 +5770,121 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     mount: netMount(N25G),
   });
 
+
+
+  // ---- 基2: figures and widgets ----
+  const n32 = v => Number(BigInt.asIntN(32, BigInt(v))), n64 = v => BigInt.asIntN(64, BigInt(v));
+  Object.assign(FIG, {
+    sizes: () => `<div class="fsize">${[["char", 1, "one character"], ["bool", 1, "true or false"], ["int", 4, "±2.1 × 10⁹"], ["double", 8, "15 digits"], ["long long", 8, "±9.2 × 10¹⁸"], ["long double", 16, "18 digits"]].map(([t, b, r]) => `<div><code>${t}</code><span class="bar" style="--b:${b}">${"<i></i>".repeat(b)}</span><small>${b} byte${b > 1 ? "s" : ""} · ${r}</small></div>`).join("")}</div>`,
+    ascii: () => `<div class="fascii">${[["'0' … '9'", "48 … 57", "c - '0' is the digit"], ["'A' … 'Z'", "65 … 90", "c - 'A' is 0 … 25"], ["'a' … 'z'", "97 … 122", "uppercase + 32"]].map(([c, n, s], k) => `${k === 2 ? '<i class="plus" aria-hidden="true">+32 →</i>' : ""}<div><code>${c}</code><b>${n}</b><small>${s}</small></div>`).join("")}</div>`,
+    ipo: () => `<div class="fflow">${[["Read", "cin >> a >> b"], ["Compute", "t = …"], ["Print", "cout << t"]].map(([h, s], k) => `${k ? '<i aria-hidden="true">→</i>' : ""}<div class="fchip${k === 1 ? " hot" : k === 2 ? " ok" : ""}"><b>${k + 1}</b><span>${h}</span><small class="mono">${esc(s)}</small></div>`).join("")}</div>`,
+    clock: () => {
+      const X = m => 20 + (m / 1440) * 340, A = 12 * 60 + 50, B = 19 * 60 + 10;
+      return `<svg class="fline" viewBox="0 0 410 130" role="img" aria-label="12:50 is minute 770 and 19:10 is minute 1150; the gap is 380 minutes, 6 hours 20 minutes">
+        <line class="ax" x1="20" y1="70" x2="360" y2="70"/>${[0, 360, 720, 1080, 1440].map(m => `<line class="ax" x1="${X(m)}" y1="64" x2="${X(m)}" y2="76"/><text class="t" x="${X(m)}" y="94">${String(m / 60).padStart(2, "0")}:00</text>`).join("")}
+        <rect class="band" x="${X(A)}" y="60" width="${X(B) - X(A)}" height="20" rx="4"/>
+        <circle class="from" cx="${X(A)}" cy="70" r="5"/><circle class="to" cx="${X(B)}" cy="70" r="6"/>
+        <line class="ax" x1="${X(A)}" y1="30" x2="${X(A)}" y2="62"/><line class="ax" x1="${X(B)}" y1="50" x2="${X(B)}" y2="62"/><text class="l" x="${X(A) - 4}" y="24" text-anchor="end">12:50 = 770</text><text class="l" x="${X(B) + 4}" y="44">19:10 = 1150</text>
+        <text class="t" x="${(X(A) + X(B)) / 2}" y="118">1150 − 770 = 380 min = 6 h 20 min</text></svg>`;
+    },
+    heron: () => `<div class="fheron"><svg class="fline" viewBox="0 0 200 150" role="img" aria-label="A right triangle with sides 3, 4 and 5 and area 6">
+        <polygon class="tri" points="30,130 30,40 150,130"/><text class="l" x="16" y="90" text-anchor="middle">3</text><text class="l" x="90" y="146" text-anchor="middle">4</text><text class="l" x="100" y="78" text-anchor="middle">5</text><text class="t" x="62" y="112">area 6</text></svg>
+        <div class="forder">${[["p = (3 + 4 + 5) / 2 = 6", "half the perimeter"], ["6 × 3 × 2 × 1 = 36", "p(p − a)(p − b)(p − c)"], ["sqrt(36) = 6", "the area"]].map(([e, s], k) => `<div><span class="n">${k + 1}</span><code>${e}</code><small>${s}</small></div>`).join("")}</div></div>`,
+    verdicts: () => `<div class="fverd">${[["AC", "ok", "Accepted", "Every hidden test passed"], ["WA", "bad", "Wrong Answer", "Misread rule, overflow, output format, a missed edge case"], ["TLE", "warn", "Time Limit Exceeded", "Too slow for the limits, an endless loop, slow input"], ["MLE", "warn", "Memory Limit Exceeded", "Arrays far too big, recursion that stores too much"], ["RE", "bad", "Runtime Error", "Index out of range, division by 0, recursion too deep"], ["CE", "", "Compile Error", "A syntax error, or the wrong language chosen"]].map(([c, k, n, s]) => `<div><b class="vd ${k}">${c}</b><span>${n}</span><small>${s}</small></div>`).join("")}</div>`,
+  });
+  Object.assign(WIDGET, {
+    overflow: {
+      title: "Will it overflow?",
+      html: () => `<div class="wpre">${[[1000, 1000], [46340, 46340], [46341, 46341], [100000, 100000]].map(([a, b]) => `<button type="button" class="chip" data-ab="${a} ${b}">${a} × ${b}</button>`).join("")}</div>
+        <div class="win"><label>a <input type="number" value="100000" data-k="a" inputmode="numeric"></label><label>b <input type="number" value="100000" data-k="b" inputmode="numeric"></label></div>
+        <div class="wmeter" aria-hidden="true"><i></i><span>int limit 2147483647</span></div>
+        <div class="wres two"><div><code>int a * b</code><b data-out="i"></b></div><div><code>1LL * a * b</code><b data-out="l"></b></div></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const [ia, ib] = el.querySelectorAll("input"), fb = el.querySelector(".wfb"), bar = el.querySelector(".wmeter i");
+        const set = (k, v, bad) => { const o = el.querySelector(`[data-out="${k}"]`); o.classList.toggle("bad", !!bad); if (o.textContent !== v) { o.textContent = v; pop(o); } };
+        const run = () => {
+          const a = Math.trunc(+ia.value || 0), b = Math.trunc(+ib.value || 0), exact = BigInt(a) * BigInt(b), i = n32(exact), over = BigInt(i) !== exact;
+          set("i", String(i), over); set("l", String(n64(exact)));
+          const f = Math.min(1.15, Math.abs(Number(exact)) / 2147483647);
+          bar.style.width = (f / 1.15) * 100 + "%"; bar.classList.toggle("bad", over);
+          say(fb, over ? "bad" : "ok", over ? `${exact} does not fit in an int, so it silently wraps to ${i}. No crash, just a wrong number` : `${exact} fits in an int. Both answers agree`);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-ab]"); if (!c) return; [ia.value, ib.value] = c.dataset.ab.split(" "); run(); };
+        ia.oninput = ib.oninput = run;
+        run();
+      },
+    },
+    chars: {
+      title: "Characters are numbers",
+      html: () => `<div class="wpre">${["a", "z", "A", "0", "7", " "].map(c => `<button type="button" class="chip mono" data-c="${c}">'${c === " " ? "␣" : c}'</button>`).join("")}</div>
+        <div class="win"><label>c <input type="text" value="a" maxlength="1" data-k="c"></label></div>
+        <div class="wres"><div><code>(int)c</code><b data-out="code"></b></div><div><code>binary</code><b data-out="bin" class="sm"></b></div><div><code data-out="rule"></code><b data-out="conv"></b></div></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const inp = el.querySelector("input"), fb = el.querySelector(".wfb"), o = k => el.querySelector(`[data-out="${k}"]`);
+        const set = (k, v) => { if (o(k).textContent !== v) { o(k).textContent = v; pop(o(k)); } };
+        const run = () => {
+          const c = inp.value || " ", n = c.charCodeAt(0);
+          set("code", String(n)); set("bin", n.toString(2).padStart(8, "0"));
+          if (c >= "a" && c <= "z") { o("rule").textContent = "c - 'a' + 'A'"; set("conv", `'${String.fromCharCode(n - 32)}'`); say(fb, "", `A lowercase letter. Its uppercase partner is 32 smaller: ${n} − 32 = ${n - 32}`); }
+          else if (c >= "A" && c <= "Z") { o("rule").textContent = "c - 'A' + 'a'"; set("conv", `'${String.fromCharCode(n + 32)}'`); say(fb, "", `An uppercase letter. Add 32 for lowercase: ${n} + 32 = ${n + 32}`); }
+          else if (c >= "0" && c <= "9") { o("rule").textContent = "c - '0'"; set("conv", String(n - 48)); say(fb, "", `The character '${c}' is code ${n}, not the number ${c}. Subtract '0' (48) to get its value`); }
+          else { o("rule").textContent = "c"; set("conv", n > 32 ? `'${c}'` : "space"); say(fb, "", n === 32 ? "A space is a character too, code 32" : `This symbol is code ${n}`); }
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-c]"); if (!c) return; inp.value = c.dataset.c; run(); };
+        inp.oninput = run;
+        run();
+      },
+    },
+    printf: {
+      title: "printf playground",
+      F: ["%d", "%5d", "%-5d", "%05d", "%.2f", "%.0f", "%8.3f", "%f"],
+      html: () => `<div class="win"><label>n <input type="number" value="42" data-k="n" inputmode="numeric"></label><label>x <input type="number" value="3.14159" step="any" data-k="x"></label></div>
+        <div class="wpre">${WIDGET.printf.F.map(f => `<button type="button" class="chip mono" data-f="${f}" aria-pressed="${f === "%5d"}">${f}</button>`).join("")}</div>
+        <div class="wprint"><code class="wcall"></code><div class="wout" aria-live="polite"></div></div><p class="wfb"></p>`,
+      init(el) {
+        const [inN, inX] = el.querySelectorAll("input"), fb = el.querySelector(".wfb");
+        let f = "%5d";
+        const run = () => {
+          const m = f.match(/^%(-?)(0?)(\d*)(?:\.(\d+))?([df])$/), [, left, zero, w, prec, type] = m;
+          let s = type === "d" ? String(Math.trunc(+inN.value || 0)) : (+inX.value || 0).toFixed(prec === undefined ? 6 : +prec);
+          const width = +w || 0, pad = Math.max(0, width - s.length);
+          const cells = left ? [...s].map(ch => [ch, ""]).concat(Array(pad).fill(["·", "pad"])) : zero ? Array(pad).fill(["0", "pad"]).concat([...s].map(ch => [ch, ""])) : Array(pad).fill(["·", "pad"]).concat([...s].map(ch => [ch, ""]));
+          el.querySelector(".wcall").textContent = `printf("${f}", ${type === "d" ? "n" : "x"});`;
+          el.querySelector(".wout").innerHTML = cells.map(([ch, c], k) => `<span class="${c}" style="--i:${k}">${esc(ch)}</span>`).join("");
+          say(fb, "", ({ "%d": "The int as it is", "%5d": "Width 5: padded with spaces on the left (shown as dots)", "%-5d": "The minus sign moves the padding to the right", "%05d": "A leading 0 pads with zeros instead of spaces", "%.2f": "Exactly 2 decimals, rounded", "%.0f": "No decimals: rounded to a whole number", "%8.3f": "3 decimals inside a width of 8", "%f": "Plain %f always shows 6 decimals" })[f]);
+        };
+        el.querySelector(".wpre").onclick = e => { const b = e.target.closest("[data-f]"); if (!b) return; f = b.dataset.f; el.querySelectorAll("[data-f]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); };
+        inN.oninput = inX.oninput = run;
+        run();
+      },
+    },
+    leave: {
+      title: "When must you leave home?",
+      html: () => `<div class="wpre">${[[100, 99], [500, 10], [10000, 1]].map(([s, v]) => `<button type="button" class="chip" data-sv="${s} ${v}">s = ${s}, v = ${v}</button>`).join("")}</div>
+        <div class="win"><label>s <input type="number" value="100" min="1" data-k="s" inputmode="numeric"></label><label>v <input type="number" value="99" min="1" data-k="v" inputmode="numeric"></label></div>
+        <div class="forder wsteps"></div><div class="wclock"><b></b><small>leave at</small></div>`,
+      init(el) {
+        const [is, iv] = el.querySelectorAll("input");
+        const run = () => {
+          const s = Math.max(1, Math.trunc(+is.value || 1)), v = Math.max(1, Math.trunc(+iv.value || 1)), need = Math.floor((s + v - 1) / v) + 10, raw = 480 - need, t = ((raw % 1440) + 1440) % 1440;
+          const hm = m => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+          el.querySelector(".wsteps").innerHTML = [[`(${s} + ${v} − 1) / ${v} + 10 = ${need}`, "minutes walking (rounded up) plus 10"], [`8 × 60 − ${need} = ${raw}`, "minutes after midnight"], [`(${raw} % 1440 + 1440) % 1440 = ${t}`, raw < 0 ? "negative, so wrap into the day before" : "already inside the day"]].map(([e, sm], k) => `<div style="--i:${k}"><span class="n">${k + 1}</span><code>${e}</code><small>${sm}</small></div>`).join("");
+          const c = el.querySelector(".wclock b"); c.textContent = hm(t); pop(c);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-sv]"); if (!c) return; [is.value, iv.value] = c.dataset.sv.split(" "); run(); };
+        is.oninput = iv.oninput = run;
+        run();
+      },
+    },
+    verdict: quizWidget("Name the verdict", [
+      ["The samples pass, but you print 3.1 where the answer needs 3.10", 1, "The output text differs, so it is a wrong answer"],
+      ["n can be 100000 and your two nested loops run n × n steps", 2, "10¹⁰ steps is far past about 10⁸ per second"],
+      ["You add 100000 numbers up to 10⁹ in an int", 1, "The sum passes 2.1 × 10⁹ and wraps silently"],
+      ["You read 100000 numbers into int a[100]", 4, "Writing past the end of an array crashes at run time"],
+      ["You forgot a ; after a statement", 5, "It never even compiled"],
+      ["You declared int a[1000000000]", 3, "That array needs 4 GB, far over the limit"],
+    ].map(([q, r, why]) => [q, ["AC", "WA", "TLE", "MLE", "RE", "CE"], r, why]), q => esc(q)),
+  });
 
   // ---- shared numbers: tier, streaks, milestones, next chapter ----
   function longestStreak() {
