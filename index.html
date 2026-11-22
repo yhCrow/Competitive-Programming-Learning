@@ -178,7 +178,7 @@ main { max-width: 1520px; margin: 0 auto; padding-block: 24px 64px; }
 .sw.learned { background: var(--muted); }
 
 /* side and aside: plain sections, one card for the selected chapter */
-.aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 80px); display: grid; gap: 24px; min-width: 0; align-content: start; }
+.aside { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 80px); display: grid; gap: 24px; min-width: 0; align-content: start; grid-template-columns: minmax(0, 1fr); }
 .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-card); padding: 16px; min-width: 0; }
 .card h2 { margin: 8px 0 0; font-family: var(--f-cjk); font-size: 22px; line-height: 1.3; text-wrap: balance; }
 .en { color: var(--muted); margin: 0 0 8px; }
@@ -1111,6 +1111,35 @@ svg.pointing .hm-trace { display: none; }
 .bank-table .star { color: #f0b429; }
 @media (max-width: 767px) { .bank-table th:nth-child(5), .bank-table td:nth-child(5), .bank-table th:nth-child(7), .bank-table td:nth-child(7) { display: none; } }
 @media (prefers-reduced-motion: reduce) { .bank-table tbody tr, .tagchip.pop { animation: none; } }
+
+
+/* more visualizers: concept chips, traces, call stacks, planes and extra node states */
+.vis-pick { margin-bottom: 4px; }
+.vis-pick .chip { height: auto; min-height: 28px; padding: 4px 12px; text-align: left; }
+.cell.w { width: 54px; }
+.cells .row.tight { gap: 3px; } .row.tight .cell { width: 28px; font-size: 12px; } .row.tight .cell small { left: 2px; font-size: 8px; }
+.trace { margin: 0 0 4px; font-family: var(--f-mono); font-size: 13px; line-height: 1.6; overflow-x: auto; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 0; }
+.trace span { display: block; padding: 0 10px; border-left: 3px solid transparent; white-space: pre; transition: background-color .15s ease; }
+.trace span.on { background: color-mix(in srgb, var(--v-cmp) 18%, transparent); border-left-color: var(--v-cmp); }
+.stk { display: grid; gap: 4px; max-width: 420px; }
+.stk div { display: flex; justify-content: space-between; gap: 12px; border: 1px solid var(--line-strong); border-radius: 6px; padding: 6px 10px; font-family: var(--f-mono); font-size: 13px; }
+.stk div.on { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 14%, var(--surface)); }
+.gsvg marker path { fill: var(--line-strong); }
+.gsvg line, .gsvg text.w, .gn { transition: opacity .2s ease; }
+.gsvg .hid, .gn.hid { opacity: 0; }
+.gsvg line.fail, .gsvg path.extra { fill: none; stroke: var(--v-cmp); stroke-width: 1.3; stroke-dasharray: 4 3; }
+.gn.hit circle { fill: var(--v-done); stroke: var(--v-done); } .gn.hit text:not(.d) { fill: #fff; }
+.gn.alt circle { fill: color-mix(in srgb, var(--v-cmp) 30%, var(--surface)); stroke: var(--v-cmp); }
+.gn.bad circle { fill: color-mix(in srgb, var(--v-bad) 18%, var(--surface)); stroke: var(--v-bad); }
+.gn.end circle { stroke: var(--v-done); stroke-width: 3; }
+.plane .pt { fill: var(--fg-2); } .plane .pt.on { fill: var(--v-cmp); } .plane .pt.hit { fill: var(--v-done); } .plane .pt.bad { fill: var(--v-bad); }
+.plane .ax { stroke: var(--line-strong); stroke-width: 1; }
+.plane .curve { fill: none; stroke: var(--fg-2); stroke-width: 1.6; }
+.plane .hull { fill: color-mix(in srgb, var(--v-done) 12%, transparent); stroke: var(--v-done); stroke-width: 2; }
+.plane .poly { fill: color-mix(in srgb, var(--v-cur) 10%, transparent); stroke: var(--fg-2); stroke-width: 1.5; }
+.plane .lbl { font-size: 11px; fill: var(--muted); font-family: var(--f-mono); }
+.plane rect.band { fill: color-mix(in srgb, var(--v-cmp) 14%, transparent); }
+@media (prefers-reduced-motion: reduce) { .trace span, .gsvg line, .gsvg text.w, .gn { transition: none; } }
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -2256,7 +2285,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (!layout) computeLayout();
     const programsN = A.reduce((n, c) => n + c.programs.length, 0);
     const lg = A.reduce((n, c) => n + c.counts.luogu, 0), cf = A.reduce((n, c) => n + c.counts.codeforces, 0);
-    const visN = new Set(Object.values(VIS)).size;
+    const visN = new Set(Object.values(VIS).flat()).size;
     if (!gloss) buildGloss();
     const c = byId["进6"], key = c.boxes.find(b => b.kind === "KEY POINT") || c.boxes[0], p = c.programs[0];
     const code = p.code.split("\n").slice(0, 16).join("\n");
@@ -2383,7 +2412,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const h1 = $(".lp-h1"), hw = h1.offsetWidth;
     h1.querySelectorAll(".hw").forEach(w => { w.style.setProperty("--gx", w.offsetLeft); w.style.setProperty("--gw", hw + "px"); });
     document.querySelectorAll(".lp-code .l").forEach((l, k) => (l.style.transitionDelay = k * 45 + "ms")); // the code types itself in, line by line
-    mountVisInto($("#homeVis"), VIS[SIMS[0][0]]);
+    mountVisInto($("#homeVis"), [].concat(VIS[SIMS[0][0]])[0]);
     animateHome();
     window.scrollTo(0, 0);
   }
@@ -2619,7 +2648,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function rowsMount(stage) {
     stage.classList.add("cells");
     return f => {
-      stage.innerHTML = f.rows.map(r => `<div class="arow"><span class="alabel">${r.label}</span><div class="row">${r.vals.map((v, k) => `<div class="cell ${(r.marks || {})[k] || ""}"><small>${r.idx ? r.idx[k] : k + (r.base ?? 0)}</small>${v}</div>`).join("")}</div></div>`).join("");
+      stage.innerHTML = f.rows.map(r => `<div class="arow"><span class="alabel">${r.label}</span><div class="row${r.vals.length > 12 ? " tight" : ""}">${r.vals.map((v, k) => `<div class="cell ${r.wide ? "w " : ""}${(r.marks || {})[k] || ""}"><small>${r.idx ? r.idx[k] : k + (r.base ?? 0)}</small>${v}</div>`).join("")}</div></div>`).join("");
     };
   }
   VIS["进2"] = {
@@ -2858,12 +2887,13 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   };
 
   function mountVis(c) { mountVisInto(document.getElementById("vis"), VIS[c.id]); }
-  function mountVisInto(host, spec) {
+  function mountVisInto(host, specs, pick = 0) {
     clearInterval(visTimer); visTimer = null;
-    if (!spec || !host) return;
+    if (!specs || !host) return;
+    const list = [].concat(specs), spec = list[pick] || list[0];
     const frames = spec.frames();
     let i = 0;
-    host.innerHTML = `<div class="vis-head"><b>${spec.title}</b><span class="vkey"><i class="k-cur"></i>current <i class="k-cmp"></i>comparing <i class="k-done"></i>done <i class="k-bad"></i>rejected</span></div>
+    host.innerHTML = `${list.length > 1 ? `<div class="vis-pick chipset" role="group" aria-label="Concept">${list.map((s, k) => `<button class="chip" data-vpick="${k}" aria-pressed="${k === pick}">${esc(s.title)}</button>`).join("")}</div>` : ""}<div class="vis-head"><b>${spec.title}</b><span class="vkey"><i class="k-cur"></i>current <i class="k-cmp"></i>comparing <i class="k-done"></i>done <i class="k-bad"></i>rejected</span></div>
       <div class="vis-stage" id="visStage"></div><p class="vis-cap" id="visCap" aria-live="polite"></p>
       <div class="vis-ctl"><button class="btn" data-v="prev" aria-label="Previous step">‹</button><button class="btn" data-v="play">Play</button><button class="btn" data-v="next" aria-label="Next step">›</button>
       <input type="range" id="visRange" min="0" max="${frames.length - 1}" value="0" aria-label="Step"><span class="hint" id="visN"></span>
@@ -2879,6 +2909,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       host.querySelector("#visN").textContent = `${i + 1} / ${frames.length}`;
     };
     host.onclick = e => {
+      const p = e.target.closest("[data-vpick]");
+      if (p) { mountVisInto(host, list, +p.dataset.vpick); host.querySelector(`[data-vpick="${p.dataset.vpick}"]`).focus(); return; }
       const b = e.target.closest("[data-v]");
       if (!b) return;
       if (b.dataset.v === "prev") { stop(); show(i - 1); }
@@ -3095,6 +3127,1689 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       return f => { stage.innerHTML = row("int a[5]", 6, f.zero, 0).replace(/(<div class="cell[^"]*")>(<small>5<\/small>)5/, '$1 style="border-style:dashed">$2·') + row("int a[5 + 2]", 7, f.one, 1); };
     },
   };
+
+
+  // ---- more visualizers. A chapter may hold several: VIS[id] is then a list, and the player shows a picker ----
+  const addVis = (id, spec) => { VIS[id] = VIS[id] ? [].concat(VIS[id], spec) : spec; };
+  const mk = (ks, c) => Object.fromEntries(ks.map(k => [k, c]));
+  const range = n => [...Array(n).keys()];
+  const qlist = (label, items) => `<span class="hint">${label}</span>${items.length ? items.map(x => `<span class="qcell">${x}</span>`).join("") : '<span class="hint">empty</span>'}`;
+  // A rooted tree (parent array, the root has −1) laid out: leaves left to right, each parent centred over its children.
+  function treePos(par, { w = 340, top = 30, dy = 46, left = 22 } = {}) {
+    const kids = par.map(() => []), pos = [], depth = [];
+    let root = 0;
+    par.forEach((p, k) => (p < 0 ? (root = k) : kids[p].push(k)));
+    let leaf = 0;
+    const go = (u, d) => { depth[u] = d; if (!kids[u].length) { pos[u] = leaf++; return; } kids[u].forEach(v => go(v, d + 1)); pos[u] = (pos[kids[u][0]] + pos[kids[u][kids[u].length - 1]]) / 2; };
+    go(root, 0);
+    const sx = leaf > 1 ? (w - 2 * left) / (leaf - 1) : 0, ox = leaf > 1 ? left : w / 2;
+    const edges = [], pe = {};
+    par.forEach((p, k) => { if (p >= 0) { pe[k] = edges.length; edges.push([p, k]); } });
+    return { pos: pos.map((x, k) => [ox + x * sx, top + depth[k] * dy]), edges, pe, kids, root, depth };
+  }
+  // A fixed drawing of nodes and edges. Frames set node classes (f.node), labels above nodes (f.label), edge classes
+  // (f.edge), edge texts (f.elab), node texts (f.names) and the list under the drawing (f.list).
+  function netMount(g) {
+    return stage => {
+      const r = g.r || 15, P = g.pos;
+      const seg = ([u, v]) => { const [x1, y1] = P[u], [x2, y2] = P[v], d = Math.hypot(x2 - x1, y2 - y1) || 1, a = g.dir ? r / d : 0, b = g.dir ? (r + 4) / d : 0; return [x1 + (x2 - x1) * a, y1 + (y2 - y1) * a, x2 - (x2 - x1) * b, y2 - (y2 - y1) * b]; };
+      stage.innerHTML = `<svg viewBox="${g.vb || "0 0 350 200"}" class="gsvg">${g.dir ? '<defs><marker id="arw" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z"/></marker></defs>' : ""}
+        ${g.edges.map((e, k) => { const [x1, y1, x2, y2] = seg(e); return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"${g.dir ? ' marker-end="url(#arw)"' : ""}/><text class="w" x="${(x1 + x2) / 2 + (g.dir ? 6 : 0)}" y="${(y1 + y2) / 2 - 5}">${e[2] ?? ""}</text>`; }).join("")}
+        ${P.map(([x, y], k) => `<g class="gn" transform="translate(${x},${y})"><circle r="${r}"/><text dy="4">${g.names[k]}</text><text class="d" dy="${-r - 6}"></text></g>`).join("")}</svg><div class="queue"></div>`;
+      const nodes = [...stage.querySelectorAll(".gn")], lines = [...stage.querySelectorAll("line")], wts = [...stage.querySelectorAll("text.w")], list = stage.querySelector(".queue");
+      return f => {
+        nodes.forEach((n, k) => { n.setAttribute("class", "gn " + ((f.node || {})[k] || "")); n.querySelector(".d").textContent = (f.label || {})[k] ?? ""; if (f.names) n.querySelector("text").textContent = f.names[k]; });
+        lines.forEach((l, e) => l.setAttribute("class", (f.edge || {})[e] || ""));
+        wts.forEach((t, e) => { const v = (f.elab || {})[e]; if (v !== undefined) t.textContent = v; t.setAttribute("class", "w " + ((f.edge || {})[e] === "hid" ? "hid" : "")); });
+        list.innerHTML = f.list || "";
+        list.hidden = !f.list;
+      };
+    };
+  }
+  // A binary tree whose shape changes between frames: f.t = [{k, l, r, c, s}] (l, r are indexes or −1), f.root or f.roots.
+  function bstMount(stage) {
+    return f => {
+      const x = {}, y = {};
+      let c = 0, md = 0;
+      const go = (u, d) => { if (u == null || u < 0) return; go(f.t[u].l, d + 1); x[u] = c++; y[u] = d; md = Math.max(md, d); go(f.t[u].r, d + 1); };
+      (f.roots || [f.root]).forEach(rt => { go(rt, 0); c += 0.6; });
+      const ids = Object.keys(x).map(Number), X = u => 24 + x[u] * 40, Y = u => 30 + y[u] * 50, W = Math.max(160, 48 + (c - 1.6) * 40), H = 56 + md * 50;
+      const kid = v => v != null && v >= 0;
+      stage.innerHTML = `<svg viewBox="0 0 ${W} ${H}" class="gsvg" style="max-width:${Math.min(480, W * 1.25)}px">${ids.flatMap(u => [f.t[u].l, f.t[u].r].filter(kid).map(v => `<line x1="${X(u)}" y1="${Y(u)}" x2="${X(v)}" y2="${Y(v)}"/>`)).join("")}
+        ${ids.map(u => `<g class="gn ${f.t[u].c || ""}" transform="translate(${X(u)},${Y(u)})"><circle r="15"/><text dy="4">${f.t[u].k}</text><text class="d" dy="-21">${f.t[u].s ?? ""}</text></g>`).join("")}</svg>${f.list ? `<div class="queue">${f.list}</div>` : ""}`;
+    };
+  }
+  // A rooted tree that grows between frames: f.par, f.names; f.extra = [[u, v]] drawn as dashed curves (links such as fail links).
+  function dynTreeMount(stage) {
+    return f => {
+      const w = f.w || 340, T = treePos(f.par, { w }), P = T.pos, H = Math.max(...P.map(p => p[1])) + 30;
+      const curve = ([u, v]) => { const [x1, y1] = P[u], [x2, y2] = P[v], mx = (x1 + x2) / 2 + (y2 - y1) * 0.3, my = (y1 + y2) / 2 - (x2 - x1) * 0.3; return `M${x1} ${y1}Q${mx} ${my} ${x2} ${y2}`; };
+      stage.innerHTML = `<svg viewBox="0 0 ${w} ${H}" class="gsvg">${T.edges.map(([u, v]) => `<line x1="${P[u][0]}" y1="${P[u][1]}" x2="${P[v][0]}" y2="${P[v][1]}" class="${(f.edge || {})[v] || ""}"/>`).join("")}
+        ${(f.extra || []).map(e => `<path class="extra ${e[2] || ""}" d="${curve(e)}"/>`).join("")}
+        ${P.map(([x, y], k) => `<g class="gn ${(f.node || {})[k] || ""}" transform="translate(${x},${y})"><circle r="13"/><text dy="4">${f.names[k]}</text><text class="d" dy="-19">${(f.label || {})[k] ?? ""}</text></g>`).join("")}</svg>${f.list ? `<div class="queue">${f.list}</div>` : ""}`;
+    };
+  }
+  // Free drawing on a plane: f.svg is the picture for this frame.
+  const svgMount = vb => stage => f => { stage.innerHTML = `<svg viewBox="${vb}" class="gsvg plane">${f.svg}</svg>${f.list ? `<div class="queue">${f.list}</div>` : ""}`; };
+  // A short program run line by line: f.code, f.line (the line about to run), f.vars, f.out.
+  function traceMount(stage) {
+    return f => {
+      stage.innerHTML = `<pre class="trace">${f.code.map((l, k) => `<span class="${k === f.line ? "on" : ""}">${esc(l) || " "}</span>`).join("")}</pre>
+        <div class="queue">${qlist("Variables", Object.entries(f.vars).map(([k, v]) => `${esc(k)} = ${esc(String(v))}`))}</div>${f.out != null ? `<div class="queue"><span class="hint">Output</span><span class="qcell">${esc(f.out) || "&nbsp;"}</span></div>` : ""}`;
+    };
+  }
+  // A call stack: f.stack = [{name, note, c}], the newest call on top.
+  function stackMount(stage) {
+    return f => { stage.innerHTML = `<div class="stk">${f.stack.slice().reverse().map(s => `<div class="${s.c || ""}"><span>${esc(s.name)}</span><span class="hint">${esc(s.note)}</span></div>`).join("") || '<p class="hint">The stack is empty</p>'}</div>${f.list ? `<div class="queue">${f.list}</div>` : ""}`; };
+  }
+
+  // ===== 基础篇 =====
+  addVis("基1", {
+    title: "A program runs one line at a time",
+    frames() {
+      const code = ["int a, b;", "cin >> a >> b;            // input: 17 5", "int q = a / b;", "int r = a % b;", "double d = 1.0 * a / b;", 'cout << q << " " << r << " " << d;'];
+      const F = [], vars = {};
+      const s = (line, text, out) => F.push({ code, line, vars: { ...vars }, out, text });
+      vars.a = "?"; vars.b = "?"; s(0, "Two int boxes are made. Until something is stored in them their values are garbage");
+      vars.a = 17; vars.b = 5; s(1, "cin reads the input: 17 goes into a, 5 into b");
+      vars.q = 3; s(2, "Dividing two ints throws the fraction away: 17 / 5 is 3, not 3.4");
+      vars.r = 2; s(3, "% is the remainder: 17 = 5 × 3 + 2. Together b × q + r gives a back");
+      vars.d = 3.4; s(4, "Multiplying by 1.0 first turns the division into a floating point one: 3.4");
+      s(5, "cout prints in the order the program reaches it", "3 2 3.4");
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基3", {
+    title: "if, else if, else: is the year a leap year?",
+    frames() {
+      const code = ["if (y % 400 == 0) leap = true;", "else if (y % 100 == 0) leap = false;", "else if (y % 4 == 0) leap = true;", "else leap = false;"];
+      const tests = [[400, true], [100, false], [4, true]], F = [];
+      for (const y of [2024, 1900, 2000, 2023]) {
+        let leap = null;
+        for (let i = 0; i < 3 && leap === null; i++) {
+          const [m, v] = tests[i], hit = y % m === 0;
+          if (hit) leap = v;
+          F.push({ code, line: i, vars: leap === null ? { y } : { y, leap }, text: `${y} % ${m} = ${y % m}${hit ? `: true, so leap = ${v} and every branch below is skipped` : ": false, so try the next else if"}` });
+        }
+        if (leap === null) { leap = false; F.push({ code, line: 3, vars: { y, leap }, text: `Every test failed for ${y}: the final else runs, leap = false` }); }
+      }
+      F.push({ code, line: -1, vars: {}, text: "The order matters: test 400 before 100 before 4, or 1900 and 2000 come out wrong. Only one branch of a chain ever runs" });
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基4", {
+    title: "A while loop takes a number apart digit by digit",
+    frames() {
+      const code = ["int n = 1234, sum = 0, rev = 0;", "while (n > 0) {", "  int d = n % 10;", "  sum += d;  rev = rev * 10 + d;", "  n /= 10;", "}"];
+      const F = [];
+      let n = 1234, sum = 0, rev = 0, d;
+      const s = (line, text) => F.push({ code, line, vars: d === undefined ? { n, sum, rev } : { n, d, sum, rev }, text });
+      s(0, "Start with n = 1234; sum and rev begin at 0");
+      while (true) {
+        if (!(n > 0)) { s(1, "n is 0, so the condition is false and the loop ends"); break; }
+        s(1, `n = ${n} > 0: run the body again`);
+        d = n % 10; s(2, `n % 10 = ${d} is the last digit`);
+        sum += d; rev = rev * 10 + d; s(3, `Add it to sum (${sum}) and append it to rev (${rev})`);
+        n = Math.floor(n / 10); s(4, `n / 10 drops that digit: n = ${n}`);
+      }
+      F.push({ code, line: -1, vars: { sum, rev }, text: "The body ran once per digit: O(log₁₀ n). % 10 reads a digit, / 10 removes it" });
+      return F;
+    },
+    mount: traceMount,
+  });
+  addVis("基6", {
+    title: "Characters are numbers: a Caesar shift by 3",
+    frames() {
+      const s = "HI ZOE!".split(""), code = s.map(c => c.charCodeAt(0)), out = s.map(() => ""), F = [];
+      const snap = (i, text) => F.push({ rows: [{ label: "char", vals: s, marks: i >= 0 ? { [i]: "on" } : {} }, { label: "ASCII", vals: code, marks: i >= 0 ? { [i]: "on" } : {} }, { label: "shifted", vals: [...out], marks: i >= 0 ? { [i]: "hit" } : {} }], text });
+      snap(-1, "A char is stored as its ASCII code: 'A' is 65, 'Z' is 90. Letters can be moved with plain arithmetic");
+      s.forEach((c, i) => {
+        if (c >= "A" && c <= "Z") { const k = c.charCodeAt(0) - 65, t = (k + 3) % 26; out[i] = String.fromCharCode(65 + t); snap(i, `'${c}' − 'A' = ${k}; (${k} + 3) % 26 = ${t}; + 'A' gives '${out[i]}'${k + 3 >= 26 ? ". The % 26 wraps past Z back to A" : ""}`); }
+        else { out[i] = c === " " ? "␣" : c; snap(i, `'${c === " " ? "space" : c}' is not a capital letter, so it stays as it is`); }
+      });
+      snap(-1, "Work with c − 'A' (0 to 25), shift, take % 26, add 'A' back. Shifting by 23 undoes a shift of 3");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基7", {
+    title: "The call stack of fact(4)",
+    frames() {
+      const st = [], F = [];
+      const snap = text => F.push({ stack: st.map(x => ({ ...x })), text });
+      const fact = n => {
+        st.forEach(x => (x.c = "")); st.push({ name: `fact(${n})`, note: `n = ${n}`, c: "on" });
+        snap(n === 4 ? "main calls fact(4). The call gets its own frame holding its own n" : `fact(${n + 1}) needs fact(${n}): a new frame goes on top, and the one below waits`);
+        let r;
+        if (n <= 1) { r = 1; st[st.length - 1].note = "n ≤ 1: return 1"; snap("The base case answers without calling again. Without it the stack would grow until the program crashes"); }
+        else { const sub = fact(n - 1); r = n * sub; st[st.length - 1].note = `${n} × ${sub} = ${r}`; st[st.length - 1].c = "on"; snap(`Back in fact(${n}): its n is still ${n}, so it returns ${n} × ${sub} = ${r}`); }
+        st.pop(); if (st.length) st[st.length - 1].c = "on";
+        return r;
+      };
+      snap("Before the call, only main is running");
+      const r = fact(4);
+      F.push({ stack: [], text: `fact(4) = ${r}. Each call used one frame; recursion about 10⁵ deep or more can overflow the stack`, list: qlist("Returned", [r]) });
+      return F;
+    },
+    mount: stackMount,
+  });
+  addVis("基8", [{
+    title: "High precision addition: 9876 + 345",
+    frames() {
+      const A = [6, 7, 8, 9], B = [5, 4, 3], n = 5, c = Array(n).fill(""), F = [];
+      let carry = 0;
+      const pad = a => a.concat(Array(n - a.length).fill(""));
+      const snap = (i, text) => F.push({ rows: [{ label: "a (reversed)", vals: pad(A), marks: i >= 0 ? { [i]: "on" } : {} }, { label: "b (reversed)", vals: pad(B), marks: i >= 0 ? { [i]: "on" } : {} }, { label: "carry in", vals: Array(n).fill("").map((_, k) => (k === i ? carry : "")), marks: i >= 0 ? { [i]: "on" } : {} }, { label: "c", vals: [...c], marks: i >= 0 ? { [i]: "hit" } : {} }], text });
+      snap(-1, "Digits are stored backwards: index 0 is the ones digit, so a carry moves to the next index");
+      for (let i = 0; i < n; i++) {
+        const s = (A[i] || 0) + (B[i] || 0) + carry;
+        if (i >= Math.max(A.length, B.length) && !carry) break;
+        const cin = carry;
+        c[i] = s % 10;
+        snap(i, `c[${i}] = ${A[i] || 0} + ${B[i] || 0} + carry ${cin} = ${s}: keep ${s % 10}, carry ${Math.floor(s / 10)}`);
+        carry = Math.floor(s / 10);
+      }
+      const len = c.filter(x => x !== "").length;
+      snap(-1, `Read c backwards: ${c.slice(0, len).reverse().join("")}. The answer can be one digit longer than the longer input`);
+      return F;
+    },
+    mount: rowsMount,
+  }, {
+    title: "High precision multiplication: 123 × 45",
+    frames() {
+      const A = [3, 2, 1], B = [5, 4], n = 5, c = Array(n).fill(0), F = [];
+      const pad = a => a.concat(Array(n - a.length).fill(""));
+      const snap = (ma, mb, mc, text) => F.push({ rows: [{ label: "a (reversed)", vals: pad(A), marks: ma }, { label: "b (reversed)", vals: pad(B), marks: mb }, { label: "c", vals: [...c], marks: mc }], text });
+      snap({}, {}, {}, "Stored backwards again. The digit a[i] × b[j] belongs at index i + j, because 10ⁱ × 10ʲ = 10ⁱ⁺ʲ");
+      A.forEach((x, i) => B.forEach((y, j) => { c[i + j] += x * y; snap({ [i]: "on" }, { [j]: "on" }, { [i + j]: "hit" }, `c[${i} + ${j}] += a[${i}] × b[${j}] = ${x} × ${y}: c[${i + j}] is now ${c[i + j]}. Cells may pass 9 for now`); }));
+      for (let k = 0; k < n - 1; k++) { const cur = c[k]; c[k + 1] += Math.floor(cur / 10); c[k] = cur % 10; snap({}, {}, { [k]: "hit", [k + 1]: "on" }, `Carry pass: c[${k}] = ${cur} keeps ${cur % 10} and gives ${Math.floor(cur / 10)} to c[${k + 1}]`); }
+      let len = n; while (len > 1 && c[len - 1] === 0) len--;
+      snap({}, {}, {}, `Strip leading zeros and read backwards: ${c.slice(0, len).reverse().join("")}. One carry pass at the end, after every product is added, is the safe order`);
+      return F;
+    },
+    mount: rowsMount,
+  }]);
+  addVis("基10", [{
+    title: "Every subset of {3, 5, 6, 7} as a bitmask",
+    frames() {
+      const a = [3, 5, 6, 7], T = 13, F = [], found = [];
+      F.push({ rows: [{ label: "a", vals: a }, { label: "bit", vals: a.map(() => 0) }], text: `Bit i of the mask says whether a[i] is taken. Look for subsets that sum to ${T}` });
+      for (let m = 0; m < 1 << a.length; m++) {
+        const take = a.map((_, i) => (m >> i) & 1), sum = a.reduce((s, x, i) => s + (take[i] ? x : 0), 0), ok = sum === T;
+        if (ok) found.push(a.filter((_, i) => take[i]).join("+"));
+        F.push({ rows: [{ label: "a", vals: a, marks: mk(a.map((_, i) => i).filter(i => take[i]), ok ? "hit" : "on") }, { label: `mask ${m}`, vals: take, marks: mk(a.map((_, i) => i).filter(i => take[i]), "on") }], text: `mask = ${m} = ${m.toString(2).padStart(4, "0")}₂ (read the bits right to left): sum ${sum}${ok ? `. It matches ${T}` : ""}` });
+      }
+      F.push({ rows: [{ label: "a", vals: a }], text: `${1 << a.length} masks cover every subset exactly once: O(2ⁿ · n). Sums of ${T}: ${found.join(", ")}` });
+      return F;
+    },
+    mount: rowsMount,
+  }, {
+    title: "next_permutation, one step at a time",
+    frames() {
+      const a = [1, 2, 3, 4], F = [];
+      const snap = (marks, text) => F.push({ rows: [{ label: "a", vals: [...a], marks }], text });
+      snap({}, "Start from the smallest order. Each call moves to the next order in dictionary order");
+      for (let step = 0; step < 5; step++) {
+        let i = a.length - 2; while (i >= 0 && a[i] >= a[i + 1]) i--;
+        const tail = range(a.length).filter(k => k > i);
+        snap({ [i]: "on", ...mk(tail, "done") }, `From the right, the first a[i] smaller than its neighbour is a[${i}] = ${a[i]}. Everything after it is falling`);
+        let j = a.length - 1; while (a[j] <= a[i]) j--;
+        [a[i], a[j]] = [a[j], a[i]];
+        snap({ [i]: "hit", [j]: "on" }, `Swap it with the smallest bigger value to its right, a[${j}]`);
+        a.splice(i + 1, a.length - i - 1, ...a.slice(i + 1).reverse());
+        snap({ ...mk(tail, "hit") }, `Reverse the part after index ${i} so it is rising again: ${a.join(" ")}`);
+      }
+      snap({}, "Each call is O(n), and do { } while (next_permutation(...)) visits all n! orders; sort first or you miss some");
+      return F;
+    },
+    mount: rowsMount,
+  }]);
+  {
+    const T7 = treePos([-1, 0, 0, 1, 1, 2, 2], { w: 300 }), names = "ABCDEFG";
+    addVis("基16", [{
+      title: "Preorder, inorder and postorder",
+      frames() {
+        const left = [1, 3, 5, -1, -1, -1, -1], right = [2, 4, 6, -1, -1, -1, -1], F = [];
+        const runs = [["Preorder", "root, left, right"], ["Inorder", "left, root, right"], ["Postorder", "left, right, root"]];
+        runs.forEach(([nm, rule], r) => {
+          const out = [], seen = new Set();
+          const emit = u => { out.push(names[u]); seen.add(u); F.push({ node: { ...mk([...seen], "seen"), [u]: "cur" }, label: Object.fromEntries(out.map((x, k) => [names.indexOf(x), k + 1])), list: qlist(nm, out), text: `${nm} (${rule}): write ${names[u]}` }); };
+          const go = u => { if (u < 0) return; if (r === 0) emit(u); go(left[u]); if (r === 1) emit(u); go(right[u]); if (r === 2) emit(u); };
+          F.push({ node: {}, label: {}, list: qlist(nm, []), text: `${nm}: visit ${rule}. The numbers show the order` });
+          go(0);
+        });
+        F.push({ node: {}, label: {}, text: "Preorder starts with the root, postorder ends with it, and inorder puts it between the two subtrees: that is why preorder plus inorder rebuilds the tree" });
+        return F;
+      },
+      mount: netMount({ ...T7, names: names.split(""), vb: "0 0 300 140" }),
+    }, {
+      title: "Binary search tree: insert, smaller goes left",
+      frames() {
+        const t = [], F = [];
+        let root = -1;
+        const snap = (cls, text) => F.push({ t: t.map((n, k) => ({ ...n, c: cls[k] || "" })), root, text });
+        snap({}, "Every key in a node's left subtree is smaller, every key in its right subtree is bigger");
+        for (const k of [50, 30, 70, 20, 40, 60, 80, 35]) {
+          const id = t.length; t.push({ k, l: -1, r: -1 });
+          if (root < 0) { root = id; snap({ [id]: "cur" }, `${k} becomes the root`); continue; }
+          let u = root;
+          const path = [];
+          for (;;) {
+            path.push(u);
+            const side = k < t[u].k ? "l" : "r";
+            if (t[u][side] < 0) { t[u][side] = id; break; }
+            u = t[u][side];
+          }
+          snap({ ...mk(path, "seen"), [id]: "cur" }, `${k}: ${path.map(p => `${k < t[p].k ? "<" : ">"} ${t[p].k}`).join(", ")}, so it hangs ${k < t[path[path.length - 1]].k ? "left" : "right"} of ${t[path[path.length - 1]].k}`);
+        }
+        snap({}, "An inorder walk reads 20 30 35 40 50 60 70 80: sorted. Search and insert cost the height, O(log n) if balanced but O(n) for sorted input");
+        return F;
+      },
+      mount: bstMount,
+    }]);
+  }
+  addVis("基20", {
+    title: "Pascal's triangle: C(n, k) = C(n−1, k−1) + C(n−1, k)",
+    frames() {
+      const N = 6, C = range(N + 1).map(() => Array(N + 1).fill("")), F = [];
+      const rows = marks => C.map((r, n) => ({ label: `n = ${n}`, vals: r, marks: marks[n] || {} }));
+      for (let n = 0; n <= N; n++) {
+        C[n][0] = 1; C[n][n] = 1;
+        for (let k = 1; k < n; k++) {
+          C[n][k] = C[n - 1][k - 1] + C[n - 1][k];
+          if (n <= 4 || k === 2) F.push({ rows: rows({ [n]: { [k]: "hit" }, [n - 1]: { [k - 1]: "on", [k]: "on" } }), text: `C(${n}, ${k}) = C(${n - 1}, ${k - 1}) + C(${n - 1}, ${k}) = ${C[n - 1][k - 1]} + ${C[n - 1][k]} = ${C[n][k]}: the last item is either chosen or not` });
+        }
+        if (n < 2) F.push({ rows: rows({ [n]: mk(range(n + 1), "hit") }), text: n ? "C(n, 0) = C(n, n) = 1: choose nothing, or everything" : "C(0, 0) = 1: one way to choose nothing" });
+      }
+      F.push({ rows: rows({ [N]: mk(range(N + 1), "done") }), text: "Row n sums to 2ⁿ. Fill the table once in O(n²) and every C(n, k) mod p is a lookup, with no division needed" });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基14", {
+    title: "Backtracking: four queens",
+    frames() {
+      const n = 4, col = [], F = [];
+      const snap = (trying, bad, text) => F.push({ rows: range(n).map(r => ({ label: `row ${r}`, vals: range(n).map(c => (col[r] === c || (r === trying && c === bad) ? "Q" : "")), marks: { ...(col[r] !== undefined ? { [col[r]]: "hit" } : {}), ...(r === trying && bad >= 0 ? { [bad]: "bad" } : {}) } })), text });
+      const safe = (r, c) => col.slice(0, r).every((cc, rr) => cc !== c && Math.abs(cc - c) !== r - rr);
+      let done = false;
+      const go = r => {
+        if (r === n) { done = true; snap(-1, -1, "All four rows hold a queen and none attack each other: a solution"); return; }
+        for (let c = 0; c < n && !done; c++) {
+          if (!safe(r, c)) { snap(r, c, `Row ${r}, column ${c} is attacked by an earlier queen: prune this branch`); continue; }
+          col[r] = c; snap(-1, -1, `Place a queen at row ${r}, column ${c} and go on to row ${r + 1}`);
+          go(r + 1);
+          if (!done) { col.length = r; snap(-1, -1, `Row ${r + 1} has no safe column: undo row ${r} and try its next column`); }
+        }
+      };
+      snap(-1, -1, "Place one queen per row. Before each step check the column and both diagonals");
+      go(0);
+      snap(-1, -1, "Undoing a choice and trying the next is backtracking. Checking early cuts most of the 4⁴ placements; 8 queens has 92 solutions");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  {
+    const D = { names: "ABCDEFG".split(""), pos: [[40, 60], [130, 30], [130, 120], [220, 60], [310, 100], [220, 170], [40, 170]], edges: [[0, 1], [0, 2], [1, 3], [2, 3], [3, 4], [2, 5], [5, 4], [6, 5]], dir: true, vb: "0 0 350 200" };
+    addVis("基18", {
+      title: "Topological order by removing nodes with no incoming edge",
+      frames() {
+        const indeg = D.names.map(() => 0), F = [], out = [], used = {};
+        D.edges.forEach(([, v]) => indeg[v]++);
+        const q = range(7).filter(k => !indeg[k]);
+        const snap = (cur, text) => F.push({ node: { ...mk(out.map(x => D.names.indexOf(x)), "seen"), ...mk(q, "open"), ...(cur >= 0 ? { [cur]: "cur" } : {}) }, label: Object.fromEntries(indeg.map((d, k) => [k, out.includes(D.names[k]) ? "" : d])), edge: { ...used }, list: qlist("Queue", q.map(k => D.names[k])) + qlist("Order", out), text });
+        snap(-1, `The numbers count incoming edges. ${q.map(k => D.names[k]).join(" and ")} have none: nothing must come before them`);
+        while (q.length) {
+          const u = q.shift(); out.push(D.names[u]);
+          const freed = [];
+          D.edges.forEach(([a, b], e) => { if (a === u) { used[e] = "skip"; if (--indeg[b] === 0) { q.push(b); freed.push(D.names[b]); } } });
+          snap(u, `Output ${D.names[u]} and delete its edges${freed.length ? `. ${freed.join(" and ")} now ${freed.length > 1 ? "have" : "has"} no incoming edge: queue ${freed.length > 1 ? "them" : "it"}` : ""}`);
+        }
+        snap(-1, `Order: ${out.join(" ")}. Fewer than V nodes output would mean a cycle. O(V + E)`);
+        return F;
+      },
+      mount: netMount(D),
+    });
+  }
+
+  // ===== 进阶篇 =====
+  {
+    const items = [5, 4, 3, 2], T = 7, pos = [], edges = [], sums = [];
+    for (let k = 1; k < 32; k++) { const d = Math.floor(Math.log2(k)), i = k - (1 << d); pos[k - 1] = [(i + 0.5) * (480 / (1 << d)), 22 + d * 46]; if (k > 1) edges.push([(k >> 1) - 1, k - 1]); sums[k - 1] = k === 1 ? 0 : sums[(k >> 1) - 1] + (k % 2 ? 0 : items[Math.floor(Math.log2(k)) - 1]); }
+    addVis("进4", {
+      title: "Pruning a search: pick items summing to 7",
+      frames() {
+        const node = mk(range(31), "hid"), edge = mk(range(30), "hid"), F = [];
+        let seen = 0, found = [];
+        const snap = (k, text) => F.push({ node: { ...node, ...(node[k] === "seen" ? { [k]: "cur" } : {}) }, edge: { ...edge }, list: qlist("Found", found), text });
+        const rest = d => items.slice(d).reduce((a, b) => a + b, 0);
+        const go = (k, d, chosen) => {
+          node[k - 1] = "seen"; seen++; if (k > 1) edge[k - 2] = "";
+          const s = sums[k - 1];
+          if (s > T) { node[k - 1] = "bad"; snap(k - 1, `Sum ${s} is already over ${T}: cut this branch`); return; }
+          if (s === T) { node[k - 1] = "hit"; found.push(chosen.join("+")); snap(k - 1, `Sum ${s}: ${chosen.join(" + ")} works`); return; }
+          if (s + rest(d) < T) { node[k - 1] = "bad"; snap(k - 1, `Even taking everything left gives ${s + rest(d)} < ${T}: cut this branch`); return; }
+          snap(k - 1, d < items.length ? `Sum ${s}. Next decide item ${items[d]}: left takes it, right skips it` : `Sum ${s}`);
+          if (d === items.length) return;
+          go(2 * k, d + 1, [...chosen, items[d]]); go(2 * k + 1, d + 1, chosen);
+        };
+        go(1, 0, []);
+        F.push({ node: { ...node }, edge: { ...edge }, list: qlist("Found", found), text: `Visited ${seen} of the 31 nodes. The two checks cut whole subtrees before they are searched` });
+        return F;
+      },
+      mount: netMount({ pos, edges, names: sums, r: 11, vb: "0 0 480 210" }),
+    });
+  }
+  addVis("进5", {
+    title: "Binary heap: push sifts up, pop sifts down",
+    frames() {
+      const h = [], F = [];
+      const snap = (cls, text) => F.push({ t: h.map((k, i) => ({ k, l: 2 * i + 1 < h.length ? 2 * i + 1 : -1, r: 2 * i + 2 < h.length ? 2 * i + 2 : -1, c: cls[i] || "" })), root: h.length ? 0 : -1, list: qlist("Array", h), text });
+      snap({}, "A min heap stored in an array: the children of i are 2i + 1 and 2i + 2, and each parent is at most its children");
+      for (const v of [5, 3, 8, 1, 9, 2]) {
+        h.push(v); let i = h.length - 1;
+        snap({ [i]: "cur" }, `push(${v}): put it in the next free slot, index ${i}`);
+        while (i && h[(i - 1) >> 1] > h[i]) { const p = (i - 1) >> 1; [h[p], h[i]] = [h[i], h[p]]; snap({ [p]: "cur", [i]: "seen" }, `${h[p]} < parent ${h[i]}: swap them`); i = p; }
+      }
+      const top = h[0]; h[0] = h.pop();
+      snap({ 0: "cur" }, `pop() takes the minimum ${top}, then moves the last value ${h[0]} to the root`);
+      let i = 0;
+      for (;;) {
+        let m = i; const l = 2 * i + 1, r = l + 1;
+        if (l < h.length && h[l] < h[m]) m = l;
+        if (r < h.length && h[r] < h[m]) m = r;
+        if (m === i) break;
+        [h[i], h[m]] = [h[m], h[i]]; snap({ [m]: "cur", [i]: "seen" }, `Swap with the smaller child ${h[i]}`); i = m;
+      }
+      snap({}, "The height is log n, so push and pop are O(log n) and the minimum is always h[0]. priority_queue is this, but a max heap by default");
+      return F;
+    },
+    mount: bstMount,
+  });
+  addVis("进7", {
+    title: "Trie: words sharing their prefixes",
+    frames() {
+      const par = [-1], names = ["·"], ch = [{}], end = {}, F = [];
+      const snap = (node, text, list) => F.push({ par: [...par], names: [...names], node: { ...mk(Object.keys(end).map(Number), "end"), ...node }, list, text });
+      snap({}, "The root is empty. Each edge adds one letter, so every node stands for the prefix spelled on the way down");
+      for (const w of ["cat", "car", "cart", "dog", "do"]) {
+        let u = 0; const path = [0], made = [];
+        for (const c of w) { if (ch[u][c] === undefined) { ch[u][c] = par.length; par.push(u); names.push(c); ch.push({}); made.push(par.length - 1); } u = ch[u][c]; path.push(u); }
+        end[u] = 1;
+        snap({ ...mk(path, "seen"), ...mk(made, "cur") }, `Insert "${w}": ${made.length ? `${made.length} new node${made.length > 1 ? "s" : ""}, the rest is shared` : "every node already exists, just mark the last one as a word end"}`);
+      }
+      for (const w of ["car", "ca"]) {
+        let u = 0; const path = [0];
+        for (const c of w) { u = ch[u][c]; path.push(u); }
+        snap(mk(path, "open"), `Search "${w}": the path exists and ${end[u] ? "its last node is a word end, so it is a word" : "its last node is not a word end, so it is only a prefix"}`);
+      }
+      snap({}, "Insert and search cost O(length), however many words are stored. The thick rings mark word ends");
+      return F;
+    },
+    mount: dynTreeMount,
+  });
+  addVis("进8", {
+    title: "Persistent segment tree: an update copies one path",
+    frames() {
+      const names = ["10", "3", "7", "1", "2", "3", "4", "16", "13", "9"], rg = ["[1,4]", "[1,2]", "[3,4]", "1", "2", "3", "4", "[1,4]", "[3,4]", "3"];
+      const F = [], newN = [7, 8, 9], newE = [6, 7, 8, 9];
+      const label = Object.fromEntries(rg.map((x, k) => [k, x]));
+      const base = { ...mk(newN, "hid") }, bedge = mk(newE, "hid");
+      F.push({ node: base, edge: bedge, label, text: "Version 0 over a = [1, 2, 3, 4]. Each node shows its sum, its range above it" });
+      F.push({ node: { ...base, 0: "open", 2: "open", 5: "open" }, edge: bedge, label, text: "Set a[3] = 9. Only the nodes whose range contains 3 change: [1,4], [3,4] and [3]" });
+      F.push({ node: { ...base, 9: "cur" }, edge: { ...bedge }, label, text: "Do not overwrite them. Make a new leaf [3] = 9" });
+      F.push({ node: { 7: "hid", 9: "seen", 8: "cur" }, edge: { 6: "hid", 7: "hid", 8: "mst", 9: "mst" }, label, text: "A new [3,4] = 13 points at the new leaf and at the old, unchanged leaf [4]" });
+      F.push({ node: { 9: "seen", 8: "seen", 7: "cur" }, edge: { 6: "mst", 7: "mst", 8: "mst", 9: "mst" }, label, text: "A new root for version 1 points at the new [3,4] and reuses the whole old [1,2] subtree" });
+      F.push({ node: { 0: "open", 1: "open", 2: "open", 3: "open", 4: "open", 5: "open", 6: "open" }, edge: {}, label, text: "Start a query at root 0 and you see version 0, untouched: sum 10" });
+      F.push({ node: { 7: "open", 1: "open", 8: "open", 3: "open", 4: "open", 9: "open", 6: "open" }, edge: { 6: "mst", 7: "mst", 8: "mst", 9: "mst" }, label, text: "Start at root 7 and you see version 1: sum 16. Each update costs O(log n) new nodes, so m versions fit in O(n + m log n)" });
+      return F;
+    },
+    mount: netMount({ names: ["10", "3", "7", "1", "2", "3", "4", "16", "13", "9"], pos: [[110, 30], [60, 95], [160, 95], [30, 160], [90, 160], [140, 160], [190, 160], [300, 30], [270, 95], [240, 160]], edges: [[0, 1], [0, 2], [1, 3], [1, 4], [2, 5], [2, 6], [7, 1], [7, 8], [8, 9], [8, 6]], vb: "0 0 340 190" }),
+  });
+  {
+    const par = [-1, 0, 0, 1, 1, 2, 3, 3, 5, 6, 6], T = treePos(par, { w: 340, dy: 44 }), names = range(11).map(k => String(k + 1));
+    const adj = par.map(() => []); par.forEach((p, k) => { if (p >= 0) { adj[p].push(k); adj[k].push(p); } });
+    const bfs = s => { const d = par.map(() => -1), q = [s], from = par.map(() => -1); d[s] = 0; while (q.length) { const u = q.shift(); for (const v of adj[u]) if (d[v] < 0) { d[v] = d[u] + 1; from[v] = u; q.push(v); } } return { d, from }; };
+    const net = netMount({ ...T, names, vb: "0 0 340 225" });
+    addVis("进9", [{
+      title: "LCA by binary lifting",
+      frames() {
+        const LOG = 3, up = [par.map(p => (p < 0 ? 0 : p))];
+        for (let k = 1; k <= LOG; k++) up[k] = up[k - 1].map(v => up[k - 1][v]);
+        const dep = T.depth, F = [];
+        let u = 9, v = 4;
+        const nm = x => names[x];
+        const snap = (extra, text) => F.push({ node: { [u]: "cur", [v]: "open", ...extra }, label: Object.fromEntries(range(11).map(k => [k, `d${dep[k]}`])), list: qlist(`up[k][${nm(u)}]`, range(LOG + 1).map(k => `2^${k}: ${nm(up[k][u])}`)), text });
+        snap({}, `up[k][x] is the ancestor 2ᵏ steps above x, built as up[k][x] = up[k−1][up[k−1][x]]. Find the LCA of ${nm(u)} and ${nm(v)}`);
+        const diff = dep[u] - dep[v];
+        for (let k = LOG; k >= 0; k--) if ((diff >> k) & 1) { const from = u; u = up[k][u]; snap({ [from]: "seen" }, `Depths differ by ${diff} = ${diff.toString(2)}₂: jump ${nm(from)} up 2^${k} to ${nm(u)}`); }
+        snap({}, `Same depth now. ${nm(u)} ≠ ${nm(v)}, so try jumps from the largest down`);
+        for (let k = LOG; k >= 0; k--) {
+          if (up[k][u] !== up[k][v]) { const a = u, b = v; u = up[k][u]; v = up[k][v]; snap({ [a]: "seen", [b]: "seen" }, `2^${k} up gives different nodes: jump both, to ${nm(u)} and ${nm(v)}`); }
+          else snap({ [up[k][u]]: "bad" }, `2^${k} up lands both on ${nm(up[k][u])}: that is a common ancestor but maybe too high, so do not jump`);
+        }
+        const l = up[0][u];
+        F.push({ node: { [l]: "hit", [u]: "seen", [v]: "seen" }, label: {}, text: `They sit just below the LCA: ${nm(l)}. O(n log n) to build, O(log n) per query` });
+        return F;
+      },
+      mount: net,
+    }, {
+      title: "Tree diameter with two searches",
+      frames() {
+        const F = [];
+        const lab = d => Object.fromEntries(d.map((x, k) => [k, x]));
+        const r1 = bfs(0), a = r1.d.indexOf(Math.max(...r1.d));
+        F.push({ node: { 0: "cur" }, label: lab(r1.d), text: "Search from any node, here 1. The labels are distances from it" });
+        F.push({ node: { 0: "seen", [a]: "hit" }, label: lab(r1.d), text: `The farthest node is ${names[a]}. It must be one end of some longest path` });
+        const r2 = bfs(a), b = r2.d.indexOf(Math.max(...r2.d));
+        F.push({ node: { [a]: "cur" }, label: lab(r2.d), text: `Search again from ${names[a]}` });
+        const path = [b]; while (path[path.length - 1] !== a) path.push(r2.from[path[path.length - 1]]);
+        const es = {}; for (let k = 0; k + 1 < path.length; k++) { const x = path[k], y = path[k + 1], e = par[x] === y ? T.pe[x] : T.pe[y]; es[e] = "mst"; }
+        F.push({ node: { ...mk(path, "seen"), [a]: "hit", [b]: "hit" }, edge: es, label: lab(r2.d), text: `The farthest from ${names[a]} is ${names[b]}, ${r2.d[b]} edges away: that path is a diameter. Two O(n) searches; with negative weights use tree DP instead` });
+        return F;
+      },
+      mount: net,
+    }]);
+  }
+  addVis("进10", {
+    title: "Floyd: allow one more middle node each round",
+    frames() {
+      const I = Infinity, d = [[0, 3, I, 7], [8, 0, 2, I], [5, I, 0, 1], [2, I, I, 0]], n = 4, F = [];
+      const show = x => (x === I ? "∞" : x);
+      const snap = (marks, text) => F.push({ rows: d.map((r, i) => ({ label: `from ${i + 1}`, vals: r.map(show), idx: range(n).map(j => `to ${j + 1}`), marks: marks[i] || {} })), text });
+      snap({}, "d[i][j] starts as the direct edge (∞ if none). After round k, paths may pass through nodes 1..k");
+      for (let k = 0; k < n; k++) {
+        const ch = {};
+        for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if (d[i][k] + d[k][j] < d[i][j]) { d[i][j] = d[i][k] + d[k][j]; (ch[i] = ch[i] || {})[j] = "hit"; }
+        const m = {}; for (let i = 0; i < n; i++) { m[i] = { [k]: "on", ...(ch[i] || {}) }; } m[k] = { ...mk(range(n), "on"), ...(ch[k] || {}) };
+        const cnt = Object.values(ch).reduce((s, r) => s + Object.keys(r).length, 0);
+        snap(m, `Round k = ${k + 1}: d[i][j] = min(d[i][j], d[i][${k + 1}] + d[${k + 1}][j]) using row and column ${k + 1}. ${cnt} entries improved`);
+      }
+      snap({}, "All pairs shortest paths in O(n³). k must be the outer loop; negative cycles show up as d[i][i] < 0");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  const SCCG = { names: "12345678".split(""), pos: [[40, 50], [130, 50], [85, 150], [220, 50], [310, 50], [265, 150], [175, 150], [175, 210]], edges: [[0, 1], [1, 2], [2, 0], [1, 3], [3, 4], [4, 5], [5, 3], [5, 6], [6, 7], [7, 6], [2, 6]], dir: true, vb: "0 0 350 240" };
+  addVis("进12", {
+    title: "Tarjan: strongly connected components in one DFS",
+    frames() {
+      const n = 8, dfn = Array(n).fill(0), low = Array(n).fill(0), onst = Array(n).fill(false), st = [], comp = Array(n).fill(-1), F = [], edge = {};
+      let t = 0, c = 0;
+      const cls = ["seen", "alt", "hit"];
+      const snap = (cur, text) => F.push({ node: { ...Object.fromEntries(range(n).map(k => [k, comp[k] >= 0 ? cls[comp[k] % 3] : dfn[k] ? "open" : ""])), ...(cur >= 0 ? { [cur]: "cur" } : {}) }, label: Object.fromEntries(range(n).map(k => [k, dfn[k] ? `${dfn[k]}/${low[k]}` : ""])), edge: { ...edge }, list: qlist("Stack", st.map(k => SCCG.names[k])), text });
+      const go = u => {
+        dfn[u] = low[u] = ++t; st.push(u); onst[u] = true;
+        snap(u, `Visit ${SCCG.names[u]}: dfn = low = ${t}, push it. Labels read dfn/low`);
+        SCCG.edges.forEach(([a, v], e) => {
+          if (a !== u) return;
+          if (!dfn[v]) { edge[e] = "mst"; go(v); low[u] = Math.min(low[u], low[v]); snap(u, `Back at ${SCCG.names[u]} from ${SCCG.names[v]}: low = min(low, low[${SCCG.names[v]}]) = ${low[u]}`); }
+          else if (onst[v]) { edge[e] = "hot"; low[u] = Math.min(low[u], dfn[v]); snap(u, `${SCCG.names[v]} is still on the stack: the edge reaches back, low[${SCCG.names[u]}] = ${low[u]}`); }
+        });
+        if (low[u] === dfn[u]) {
+          const g = []; let x;
+          do { x = st.pop(); onst[x] = false; comp[x] = c; g.push(SCCG.names[x]); } while (x !== u);
+          c++;
+          snap(u, `low = dfn at ${SCCG.names[u]}: nothing below reaches higher. Pop {${g.join(", ")}} as one component`);
+        }
+      };
+      snap(-1, "dfn is the visit time. low is the earliest visit time reachable from the subtree using one edge back to a node still on the stack");
+      go(0);
+      snap(-1, `${c} components, every node and edge handled once: O(V + E). Contract each into one node to get a DAG`);
+      return F;
+    },
+    mount: netMount(SCCG),
+  });
+  addVis("进15", {
+    title: "Interval DP: merging piles of stones",
+    frames() {
+      const a = [4, 1, 2, 3], n = a.length, S = [0], dp = range(n).map(() => Array(n).fill("")), F = [];
+      a.forEach(x => S.push(S[S.length - 1] + x));
+      const rows = m => dp.map((r, l) => ({ label: `l = ${l + 1}`, vals: r, idx: range(n).map(k => `r=${k + 1}`), marks: m[l] || {} }));
+      for (let i = 0; i < n; i++) dp[i][i] = 0;
+      F.push({ rows: rows({}), text: `Piles ${a.join(", ")}. Merging two neighbours costs their total. dp[l][r] = cheapest way to merge piles l..r into one; a single pile costs 0` });
+      for (let len = 2; len <= n; len++) for (let l = 0; l + len - 1 < n; l++) {
+        const r = l + len - 1; let best = Infinity, bk = -1;
+        for (let k = l; k < r; k++) { const v = dp[l][k] + dp[k + 1][r]; if (v < best) { best = v; bk = k; } }
+        dp[l][r] = best + S[r + 1] - S[l];
+        F.push({ rows: rows({ [l]: { [r]: "hit", [bk]: "on" }, [bk + 1]: { [r]: "on" } }), text: `dp[${l + 1}][${r + 1}]: best split after pile ${bk + 1}, ${dp[l][bk]} + ${dp[bk + 1][r]}, plus the final merge ${S[r + 1] - S[l]} = ${dp[l][r]}` });
+      }
+      F.push({ rows: rows({ 0: { [n - 1]: "hit" } }), text: `Cheapest total: ${dp[0][n - 1]}. Fill by length so both halves are ready: O(n³). For a ring, double the array` });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  {
+    const par = [-1, 0, 0, 1, 1, 2, 2, 4], h = [3, 5, 2, 4, 1, 6, 7, 3], T = treePos(par, { w: 320 });
+    addVis("进16", {
+      title: "Tree DP: the best party with no boss and employee together",
+      frames() {
+        const n = 8, f0 = Array(n).fill(null), f1 = Array(n).fill(null), F = [];
+        const lab = () => Object.fromEntries(range(n).map(k => [k, f0[k] === null ? "" : `${f0[k]}/${f1[k]}`]));
+        const go = u => {
+          T.kids[u].forEach(go);
+          f1[u] = h[u] + T.kids[u].reduce((s, v) => s + f0[v], 0);
+          f0[u] = T.kids[u].reduce((s, v) => s + Math.max(f0[v], f1[v]), 0);
+          F.push({ node: { ...mk(T.kids[u], "seen"), [u]: "cur" }, label: lab(), text: T.kids[u].length ? `Node ${h[u]}: skip it, and each child takes its best (${f0[u]}); or invite it (${h[u]}) and skip every child: ${f1[u]}` : `Leaf ${h[u]}: skip it for 0, or invite it for ${h[u]}` });
+        };
+        F.push({ node: {}, label: {}, text: "Each number is a guest's fun. f0/f1 = best for a subtree when its root stays home / comes. Children are done before their parent" });
+        go(0);
+        const pick = [], take = (u, can) => { const inv = can && f1[u] > f0[u]; if (inv) pick.push(u); T.kids[u].forEach(v => take(v, !inv)); };
+        take(0, true);
+        F.push({ node: mk(pick, "hit"), label: lab(), text: `Best total max(${f0[0]}, ${f1[0]}) = ${Math.max(f0[0], f1[0])}, with the green guests. One pass over the tree: O(n)` });
+        return F;
+      },
+      mount: netMount({ ...T, names: h, vb: "0 0 320 190" }),
+    });
+  }
+  addVis("进17", {
+    title: "Bitmask DP: the shortest tour of four towns",
+    frames() {
+      const d = [[0, 2, 9, 10], [1, 0, 6, 4], [15, 7, 0, 8], [6, 3, 12, 0]], n = 4, I = Infinity, dp = range(1 << n).map(() => Array(n).fill(I)), F = [];
+      const masks = range(1 << n).filter(m => m & 1);
+      const show = x => (x === I ? "" : x);
+      const rows = mm => masks.map(m => ({ label: `{${range(n).filter(k => (m >> k) & 1).map(k => k + 1).join(",")}}`, vals: dp[m].map(show), idx: range(n).map(k => `at ${k + 1}`), marks: mm[m] || {} }));
+      dp[1][0] = 0;
+      F.push({ rows: rows({ 1: { 0: "hit" } }), text: "dp[S][j] = shortest route that starts at town 1, visits exactly the set S and stands at j. Start: dp[{1}][1] = 0" });
+      for (const m of masks) for (let j = 1; j < n; j++) {
+        if (!((m >> j) & 1)) continue;
+        const pm = m ^ (1 << j); let best = I, bi = -1;
+        for (let i = 0; i < n; i++) if ((pm >> i) & 1 && dp[pm][i] + d[i][j] < best) { best = dp[pm][i] + d[i][j]; bi = i; }
+        dp[m][j] = best;
+        if (best < I) F.push({ rows: rows({ [m]: { [j]: "hit" }, [pm]: { [bi]: "on" } }), text: `dp[${rows({})[masks.indexOf(m)].label}][${j + 1}] = dp[without ${j + 1}][${bi + 1}] + d(${bi + 1}→${j + 1}) = ${dp[pm][bi]} + ${d[bi][j]} = ${best}` });
+      }
+      const full = (1 << n) - 1; let ans = I, aj = -1;
+      for (let j = 1; j < n; j++) if (dp[full][j] + d[j][0] < ans) { ans = dp[full][j] + d[j][0]; aj = j; }
+      F.push({ rows: rows({ [full]: { [aj]: "hit" } }), text: `Close the tour from ${aj + 1} back to 1: ${dp[full][aj]} + ${d[aj][0]} = ${ans}. O(2ⁿ · n²), fine up to n ≈ 20, while trying every order is n!` });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("进18", {
+    title: "Slope optimisation: a lower hull answered by a moving front",
+    frames() {
+      const P = [[0, 9], [1, 5], [2, 4], [3, 1.5], [4, 1], [5, 1.5], [6, 0.5]], F = [], q = [];
+      const X = x => 30 + x * 48, Y = y => 190 - y * 18, cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+      const draw = (extra, mark) => `<line class="ax" x1="20" y1="190" x2="340" y2="190"/>${q.length > 1 ? `<polyline class="hull" style="fill:none" points="${q.map(k => `${X(P[k][0])},${Y(P[k][1])}`).join(" ")}"/>` : ""}${extra || ""}${P.map((p, k) => `<circle class="pt ${mark[k] || (q.includes(k) ? "hit" : "")}" cx="${X(p[0])}" cy="${Y(p[1])}" r="5"/>`).join("")}`;
+      for (let k = 0; k < P.length; k++) {
+        while (q.length >= 2 && cross(P[q[q.length - 2]], P[q[q.length - 1]], P[k]) <= 0) { const j = q.pop(); F.push({ svg: draw("", { [j]: "bad", [k]: "on" }), list: qlist("Queue", q.map(i => `(${P[i]})`)), text: `Point (${P[j]}) lies on or above the segment to (${P[k]}): it can never be the best, pop it` }); }
+        q.push(k);
+        F.push({ svg: draw("", { [k]: "on" }), list: qlist("Queue", q.map(i => `(${P[i]})`)), text: `Add (${P[k]}). Points arrive sorted by x, so they only ever join at the back` });
+      }
+      for (const kk of [-2, -1, 0.25]) {
+        while (q.length >= 2 && P[q[1]][1] - P[q[0]][1] <= kk * (P[q[1]][0] - P[q[0]][0])) { const j = q.shift(); F.push({ svg: draw("", { [j]: "bad" }), list: qlist("Queue", q.map(i => `(${P[i]})`)), text: `Slope ${kk}: the next point is at least as good as the front (${P[j]}). Slopes only grow, so drop it for good` }); }
+        const b = P[q[0]], c = b[1] - kk * b[0];
+        F.push({ svg: draw(`<line class="hot" x1="${X(-0.4)}" y1="${Y(c + kk * -0.4)}" x2="${X(6.6)}" y2="${Y(c + kk * 6.6)}"/>`, { [q[0]]: "on" }), list: qlist("Queue", q.map(i => `(${P[i]})`)), text: `Query slope ${kk}: slide a line of that slope up from below. It first touches the front, (${b}): min of y − ${kk}·x is ${+c.toFixed(2)}` });
+      }
+      F.push({ svg: draw("", {}), list: qlist("Queue", q.map(i => `(${P[i]})`)), text: "dp[i] = min over j of (dp[j] + cost) turns into touching this hull. Each point enters and leaves once: O(n) instead of O(n²)" });
+      return F;
+    },
+    mount: svgMount("0 0 350 200"),
+  });
+  addVis("进19", [{
+    title: "Extended Euclid: 30x + 21y = gcd",
+    frames() {
+      const lv = [], F = [];
+      let a = 30, b = 21;
+      while (true) { lv.push({ a, b, q: b ? Math.floor(a / b) : "", x: "", y: "" }); if (!b) break; [a, b] = [b, a % b]; }
+      const rows = m => lv.map((r, k) => ({ label: `depth ${k}`, vals: [r.a, r.b, r.q, r.x, r.y], idx: ["a", "b", "a/b", "x", "y"], marks: m[k] || {} }));
+      lv.forEach((r, k) => F.push({ rows: rows({ [k]: { 0: "on", 1: "on" } }), text: r.b ? `gcd(${r.a}, ${r.b}) = gcd(${r.b}, ${r.a} mod ${r.b} = ${r.a % r.b})` : `b = 0: gcd = ${r.a}, and ${r.a}·1 + 0·0 = ${r.a}, so x = 1, y = 0` }));
+      let x = 1, y = 0; lv[lv.length - 1].x = 1; lv[lv.length - 1].y = 0;
+      F.push({ rows: rows({ [lv.length - 1]: { 3: "hit", 4: "hit" } }), text: "Now climb back up. Each level gets its x, y from the one below" });
+      for (let k = lv.length - 2; k >= 0; k--) { const nx = y, ny = x - lv[k].q * y; x = nx; y = ny; lv[k].x = x; lv[k].y = y; F.push({ rows: rows({ [k]: { 3: "hit", 4: "hit" }, [k + 1]: { 3: "on", 4: "on" } }), text: `x = y′ = ${x}, y = x′ − (a/b)·y′ = ${lv[k + 1].x} − ${lv[k].q}·${lv[k + 1].y} = ${y}. Check: ${lv[k].a}·${x} + ${lv[k].b}·${y} = ${lv[k].a * x + lv[k].b * y}` }); }
+      F.push({ rows: rows({ 0: { 3: "hit", 4: "hit" } }), text: `30·${x} + 21·${y} = 3. Solve ax ≡ 1 (mod m) this way when gcd(a, m) = 1: it gives the inverse in O(log m)` });
+      return F;
+    },
+    mount: rowsMount,
+  }, {
+    title: "Fast power: 3¹³ mod 1000 by squaring",
+    frames() {
+      const e = 13, m = 1000, bits = e.toString(2).split("").reverse().map(Number), base = [], ans = [], F = [];
+      let b = 3, r = 1;
+      const rows = k => [{ label: "bit of 13", vals: bits, marks: k >= 0 ? { [k]: "on" } : {} }, { label: "base", vals: [...base], idx: base.map((_, i) => `3^${1 << i}`), marks: k >= 0 ? { [k]: "on" } : {} }, { label: "answer", vals: [...ans], marks: k >= 0 && bits[k] ? { [k]: "hit" } : {} }];
+      F.push({ rows: rows(-1), text: "13 = 1101₂ = 8 + 4 + 1, so 3¹³ = 3⁸ · 3⁴ · 3¹. Read the bits from the lowest" });
+      bits.forEach((bit, k) => { base.push(b); if (bit) r = (r * b) % m; ans.push(r); F.push({ rows: rows(k), text: `${bit ? `Bit ${k} is 1: answer = answer · ${b} mod ${m} = ${r}` : `Bit ${k} is 0: answer stays ${r}`}. Then square the base: ${b}² mod ${m} = ${(b * b) % m}` }); b = (b * b) % m; });
+      F.push({ rows: rows(-1), text: `3¹³ mod 1000 = ${r} after ${bits.length} squarings instead of 12 multiplications: O(log e). Take mod after every multiply` });
+      return F;
+    },
+    mount: rowsMount,
+  }]);
+  addVis("进20", {
+    title: "Inclusion and exclusion: 1 to 30 divisible by 2, 3 or 5",
+    frames() {
+      const N = 30, F = [];
+      let total = 0;
+      const cnt = Array(N + 1).fill(0);
+      const rows = (mark, cls) => [1, 16].map(s => ({ label: `${s}–${s + 14}`, vals: range(15).map(k => s + k), idx: range(15).map(k => (cnt[s + k] ? `${cnt[s + k]}` : "")), marks: Object.fromEntries(range(15).map(k => [k, mark(s + k) ? cls : cnt[s + k] > 0 ? "done" : ""])) }));
+      F.push({ rows: rows(() => false, ""), text: "Count numbers hit by at least one of the sets: multiples of 2, of 3, of 5. The small number is how many times each is counted so far" });
+      const sets = [[2], [3], [5], [2, 3], [2, 5], [3, 5], [2, 3, 5]];
+      for (const s of sets) {
+        const p = s.reduce((a, b) => a * b, 1), sign = s.length % 2 ? 1 : -1, c = Math.floor(N / p);
+        for (let x = p; x <= N; x += p) cnt[x] += sign;
+        total += sign * c;
+        F.push({ rows: rows(x => x % p === 0, sign > 0 ? "on" : "bad"), text: `${sign > 0 ? "Add" : "Subtract"} multiples of ${s.join("·")} = ${p}: ${sign > 0 ? "+" : "−"}⌊30/${p}⌋ = ${sign > 0 ? "+" : "−"}${c}. Total ${total}` });
+      }
+      F.push({ rows: rows(x => cnt[x] === 1, "hit"), text: `Every number in a set is now counted exactly once: ${total}. The 30 − ${total} = ${N - total} others are coprime to 30, which is φ(30)` });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("进21", {
+    title: "Expected rolls to see all six faces",
+    frames() {
+      const F = [], p = [], w = [], cum = [];
+      let s = 0;
+      const rows = k => [{ label: "faces seen", vals: range(6) }, { label: "P(new face)", vals: [...p], marks: k >= 0 ? { [k]: "on" } : {} }, { label: "E[wait]", vals: [...w], marks: k >= 0 ? { [k]: "hit" } : {} }, { label: "E[total]", vals: [...cum], marks: k >= 0 ? { [k]: "on" } : {} }];
+      F.push({ rows: rows(-1), text: "Split the whole wait into six stages: the stage with k faces seen ends at the next new face" });
+      for (let k = 0; k < 6; k++) { p.push(`${6 - k}/6`); w.push(+(6 / (6 - k)).toFixed(2)); s += 6 / (6 - k); cum.push(+s.toFixed(2)); F.push({ rows: rows(k), text: `With ${k} seen, a roll is new with chance ${6 - k}/6, so this stage lasts 6/${6 - k} = ${(6 / (6 - k)).toFixed(2)} rolls on average` }); }
+      F.push({ rows: rows(-1), text: `Linearity of expectation: add the stage averages, 6·(1 + 1/2 + … + 1/6) = ${s.toFixed(2)}, with no need to know how the stages depend on each other` });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("进22", [{
+    title: "Gaussian elimination on three equations",
+    frames() {
+      const A = [[2, 1, -1, 8], [-3, -1, 2, -11], [-2, 1, 2, -3]], n = 3, F = [];
+      const fmt = v => { const r = Math.round(v * 100) / 100; return Object.is(r, -0) ? 0 : r; };
+      const snap = (m, text) => F.push({ rows: A.map((r, i) => ({ label: `row ${i + 1}`, vals: r.map(fmt), idx: ["x", "y", "z", "="], wide: true, marks: m[i] || {} })), text });
+      snap({}, "Each row is one equation: the coefficients of x, y, z and the right side");
+      for (let c = 0; c < n; c++) {
+        let p = c; for (let i = c + 1; i < n; i++) if (Math.abs(A[i][c]) > Math.abs(A[p][c])) p = i;
+        if (p !== c) { [A[p], A[c]] = [A[c], A[p]]; snap({ [c]: { [c]: "on" } }, `Swap in the row with the largest |value| in column ${c + 1} as the pivot: smaller rounding errors`); }
+        const pv = A[c][c]; A[c] = A[c].map(v => v / pv);
+        snap({ [c]: mk(range(4), "hit") }, `Divide row ${c + 1} by ${fmt(pv)} so the pivot is 1`);
+        for (let i = 0; i < n; i++) if (i !== c && A[i][c]) { const f = A[i][c]; A[i] = A[i].map((v, j) => v - f * A[c][j]); snap({ [c]: { [c]: "on" }, [i]: mk(range(4), "done") }, `Row ${i + 1} −= ${fmt(f)} × row ${c + 1}: column ${c + 1} becomes 0 there`); }
+      }
+      snap({ 0: { 3: "hit" }, 1: { 3: "hit" }, 2: { 3: "hit" } }, `Only the diagonal is left: x = ${fmt(A[0][3])}, y = ${fmt(A[1][3])}, z = ${fmt(A[2][3])}. O(n³); a zero pivot column means no unique solution`);
+      return F;
+    },
+    mount: rowsMount,
+  }, {
+    title: "Matrix power: Fibonacci in O(log n)",
+    frames() {
+      const mul = (a, b) => [a[0] * b[0] + a[1] * b[2], a[0] * b[1] + a[1] * b[3], a[2] * b[0] + a[3] * b[2], a[2] * b[1] + a[3] * b[3]];
+      const F = [], n = 10, bits = n.toString(2).split("").reverse().map(Number);
+      let base = [1, 1, 1, 0], r = [1, 0, 0, 1];
+      const snap = (k, text) => F.push({ rows: [{ label: "bit of 10", vals: bits, marks: k >= 0 ? { [k]: "on" } : {} }, { label: "M^(2^k)", vals: base, idx: ["a", "b", "c", "d"], wide: true }, { label: "result", vals: r, idx: ["a", "b", "c", "d"], wide: true, marks: k >= 0 && bits[k] ? mk(range(4), "hit") : {} }], text });
+      snap(-1, "[F(n+1) F(n); F(n) F(n−1)] = M^n with M = [1 1; 1 0]. Rows hold a b c d of a 2×2 matrix");
+      bits.forEach((b, k) => { if (b) r = mul(r, base); snap(k, `${b ? "Bit is 1: result ×= M^(2^k)" : "Bit is 0: result stays"}. Then square the base`); base = mul(base, base); });
+      snap(-1, `F(10) = ${r[1]}. The same squaring as fast power, with 2×2 products: any linear recurrence of order k runs in O(k³ log n)`);
+      return F;
+    },
+    mount: rowsMount,
+  }]);
+
+  // ===== 拓展篇 =====
+  {
+    const FN = { names: ["s", "1", "2", "3", "4", "t"], pos: [[30, 100], [120, 40], [120, 160], [230, 40], [230, 160], [320, 100]], edges: [[0, 1, 10], [0, 2, 10], [1, 2, 2], [1, 3, 4], [1, 4, 8], [2, 4, 9], [4, 3, 6], [3, 5, 10], [4, 5, 10]], dir: true, vb: "0 0 350 200" };
+    addVis("拓1", {
+      title: "Maximum flow: shortest augmenting paths",
+      frames() {
+        const E = FN.edges.map(([u, v, c]) => ({ u, v, c, f: 0 })), F = [];
+        let total = 0;
+        const elab = () => Object.fromEntries(E.map((e, k) => [k, `${e.f}/${e.c}`]));
+        F.push({ elab: elab(), text: "Labels read flow/capacity. Find a path from s to t with room left, push as much as it allows, repeat" });
+        for (;;) {
+          const from = Array(6).fill(null); from[0] = -1; const q = [0];
+          while (q.length && from[5] === null) { const u = q.shift(); E.forEach((e, k) => { if (e.u === u && e.f < e.c && from[e.v] === null) { from[e.v] = [k, 1]; q.push(e.v); } if (e.v === u && e.f > 0 && from[e.u] === null) { from[e.u] = [k, -1]; q.push(e.u); } }); }
+          if (from[5] === null) {
+            const reach = range(6).filter(k => from[k] !== null), cut = E.map((e, k) => (reach.includes(e.u) && !reach.includes(e.v) ? k : -1)).filter(k => k >= 0);
+            F.push({ node: mk(reach, "seen"), edge: mk(cut, "mst"), elab: elab(), text: `No path left. The nodes s can still reach are shaded; the full edges leaving them form a cut of capacity ${cut.reduce((s, k) => s + E[k].c, 0)}. Max flow = min cut = ${total}` });
+            break;
+          }
+          const path = []; let x = 5, add = Infinity;
+          while (x !== 0) { const [k, d] = from[x]; path.push([k, d]); add = Math.min(add, d > 0 ? E[k].c - E[k].f : E[k].f); x = d > 0 ? E[k].u : E[k].v; }
+          const nodes = [0]; path.slice().reverse().forEach(([k, d]) => nodes.push(d > 0 ? E[k].v : E[k].u));
+          const back = path.some(([, d]) => d < 0);
+          F.push({ node: mk(nodes, "open"), edge: mk(path.map(p => p[0]), "hot"), elab: elab(), text: `Breadth first search finds ${nodes.map(k => FN.names[k]).join(" → ")}${back ? ", which uses an edge backwards: that cancels flow sent earlier" : ""}. Its tightest edge allows ${add}` });
+          path.forEach(([k, d]) => (E[k].f += d * add)); total += add;
+          F.push({ node: mk(nodes, "seen"), edge: mk(path.map(p => p[0]), "hot"), elab: elab(), text: `Push ${add}. Total flow ${total}` });
+        }
+        return F;
+      },
+      mount: netMount(FN),
+    });
+  }
+  addVis("拓2", {
+    title: "Aho–Corasick: a trie with fail links",
+    frames() {
+      const words = ["he", "she", "his", "hers"], par = [-1], names = ["·"], ch = [{}], out = [[]], F = [];
+      for (const w of words) { let u = 0; for (const c of w) { if (ch[u][c] === undefined) { ch[u][c] = par.length; par.push(u); names.push(c); ch.push({}); out.push([]); } u = ch[u][c]; } out[u].push(w); }
+      const ends = range(par.length).filter(k => out[k].length), fail = Array(par.length).fill(0), links = [];
+      const base = () => ({ par, names, node: mk(ends, "end") });
+      F.push({ ...base(), text: `The trie of ${words.join(", ")}. A thick ring marks the end of a word` });
+      const q = Object.values(ch[0]);
+      while (q.length) {
+        const u = q.shift();
+        for (const [c, v] of Object.entries(ch[u])) {
+          let f = fail[u]; while (f && ch[f][c] === undefined) f = fail[f];
+          fail[v] = u && ch[f][c] !== undefined ? ch[f][c] : 0;
+          if (fail[v]) { links.push([v, fail[v]]); out[v] = out[v].concat(out[fail[v]]); F.push({ ...base(), node: { ...mk(ends, "end"), [v]: "cur", [fail[v]]: "open" }, extra: links.map(l => [...l]), text: `fail("${spell(v)}") is the longest proper suffix that is also in the trie: "${spell(fail[v])}"` }); }
+          q.push(v);
+        }
+      }
+      function spell(v) { let s = ""; while (v) { s = names[v] + s; v = par[v]; } return s; }
+      F.push({ ...base(), extra: links, text: "Links that would point to the root are not drawn. Build them breadth first, so every shorter node is done before it is used" });
+      let u = 0; const found = [];
+      for (const c of "ushers") {
+        const fell = [];
+        while (u && ch[u][c] === undefined) { u = fail[u]; fell.push(u ? `"${spell(u)}"` : "the root"); }
+        u = ch[u][c] ?? 0;
+        found.push(...out[u]);
+        F.push({ ...base(), node: { ...mk(ends, "end"), [u]: "cur" }, extra: links, list: qlist("Found", found), text: `Read '${c}'${fell.length ? `: no edge, so follow fail links to ${fell.join(", then ")}` : ""}. Stand at ${u ? `"${spell(u)}"` : "the root"}${out[u].length ? `, which ends ${out[u].join(" and ")}` : ""}` });
+      }
+      F.push({ ...base(), extra: links, list: qlist("Found", found), text: "One pass over the text finds every word, even overlapping ones: O(text + total word length + matches)" });
+      return F;
+    },
+    mount: dynTreeMount,
+  });
+  addVis("拓3", [{
+    title: "Z function of aabxaab",
+    frames() {
+      const s = "aabxaabxa".split(""), n = s.length, z = Array(n).fill(""), F = [];
+      z[0] = n;
+      let l = 0, r = 0;
+      const snap = (i, text, extra = {}) => F.push({ rows: [{ label: "s", vals: s, marks: { ...mk(range(n).filter(k => k >= l && k < r), "done"), ...(i >= 0 ? { [i]: "on" } : {}), ...extra } }, { label: "z", vals: [...z], marks: i >= 0 ? { [i]: "hit" } : {} }], text });
+      snap(-1, "z[i] = length of the longest common prefix of s and s[i..]. The green box [l, r) is the rightmost match found so far");
+      for (let i = 1; i < n; i++) {
+        let k = 0;
+        if (i < r) { k = Math.min(r - i, z[i - l]); }
+        const start = k;
+        while (i + k < n && s[k] === s[i + k]) k++;
+        z[i] = k;
+        const txt = i < r ? `i = ${i} is inside the box, so start from min(r − i, z[i − l]) = ${start} for free, then extend to ${k}` : `i = ${i} is outside the box: compare from scratch, z = ${k}`;
+        if (i + k > r) { l = i; r = i + k; }
+        snap(i, txt);
+      }
+      snap(-1, "r only moves right, so the total work is O(n). Search a pattern P in T by taking z of P + '#' + T");
+      return F;
+    },
+    mount: rowsMount,
+  }, {
+    title: "Manacher: every palindrome centre in O(n)",
+    frames() {
+      const t = ("#" + "abacaba".split("").join("#") + "#").split(""), n = t.length, p = Array(n).fill(""), F = [];
+      let c = 0, r = 0;
+      const snap = (i, text) => F.push({ rows: [{ label: "t", vals: t, marks: { ...mk(range(n).filter(k => k > 2 * c - r && k < r), "done"), ...(i >= 0 ? { [i]: "on", ...(2 * c - i >= 0 && i < r ? { [2 * c - i]: "hit" } : {}) } : {}) } }, { label: "radius", vals: [...p] }], text });
+      snap(-1, "Put # between letters so every palindrome has odd length. radius[i] = how far the palindrome centred at i reaches. Green is the palindrome reaching furthest right");
+      for (let i = 0; i < n; i++) {
+        let k = i < r ? Math.min(p[2 * c - i], r - i) : 1;
+        const start = k;
+        while (i - k >= 0 && i + k < n && t[i - k] === t[i + k]) k++;
+        p[i] = k;
+        snap(i, i < r ? `Mirror of ${i} around ${c} is ${2 * c - i}: start from ${start}, extend to radius ${k}` : `Outside every palindrome so far: grow from 1 to ${k}`);
+        if (i + k > r) { c = i; r = i + k; }
+      }
+      snap(-1, `The longest palindrome has radius ${Math.max(...p)}, so length ${Math.max(...p) - 1} in the original string. Like Z, the right edge only moves right: O(n)`);
+      return F;
+    },
+    mount: rowsMount,
+  }, {
+    title: "Suffix array of banana by doubling",
+    frames() {
+      const s = "banana", n = s.length, F = [];
+      let rk = s.split("").map(c => c.charCodeAt(0) - 96), sa = range(n);
+      const show = (k, text) => F.push({ rows: [{ label: "s", vals: s.split("") }, { label: `rank (${k})`, vals: [...rk] }], list: qlist("Sorted", sa.map(i => `${s.slice(i)} (${i})`)), text });
+      sa.sort((a, b) => rk[a] - rk[b] || a - b);
+      show(1, "Rank every suffix by its first letter");
+      for (let k = 1; k < n; k *= 2) {
+        const key = i => [rk[i], i + k < n ? rk[i + k] : 0];
+        sa.sort((a, b) => key(a)[0] - key(b)[0] || key(a)[1] - key(b)[1]);
+        const nr = Array(n); nr[sa[0]] = 1;
+        for (let j = 1; j < n; j++) nr[sa[j]] = nr[sa[j - 1]] + (key(sa[j])[0] !== key(sa[j - 1])[0] || key(sa[j])[1] !== key(sa[j - 1])[1] ? 1 : 0);
+        rk = nr;
+        show(2 * k, `Sort by the pair (rank of the first ${k}, rank of the next ${k}): now the first ${2 * k} letters are ranked`);
+        if (Math.max(...rk) === n) break;
+      }
+      F.push({ rows: [{ label: "sa", vals: sa }], list: qlist("Sorted", sa.map(i => s.slice(i))), text: "All ranks differ, so the order is final. log n rounds of sorting pairs: O(n log n) with radix sort" });
+      return F;
+    },
+    mount: rowsMount,
+  }]);
+  addVis("拓4", {
+    title: "Treap: insert as a BST, then rotate up by priority",
+    frames() {
+      const t = [], F = [];
+      let root = -1;
+      const snap = (cls, text) => F.push({ t: t.map((n, k) => ({ k: n.k, s: n.p, l: n.l, r: n.r, c: cls[k] || "" })), root, text });
+      snap({}, "Keys follow BST order; the random priorities above them follow heap order (a parent's is bigger). Together they fix one shape");
+      for (const [k, p] of [[50, 40], [30, 70], [70, 20], [20, 90], [40, 50], [60, 60]]) {
+        const id = t.length; t.push({ k, p, l: -1, r: -1 });
+        if (root < 0) { root = id; snap({ [id]: "cur" }, `${k} (priority ${p}) is the root`); continue; }
+        const path = []; let u = root;
+        for (;;) { path.push(u); const sd = k < t[u].k ? "l" : "r"; if (t[u][sd] < 0) { t[u][sd] = id; break; } u = t[u][sd]; }
+        snap({ [id]: "cur" }, `Insert ${k} as a leaf, as in any BST`);
+        while (path.length && t[path[path.length - 1]].p < p) {
+          const q = path.pop(), g = path.length ? path[path.length - 1] : -1;
+          if (t[q].l === id) { t[q].l = t[id].r; t[id].r = q; } else { t[q].r = t[id].l; t[id].l = q; }
+          if (g < 0) root = id; else if (t[g].l === q) t[g].l = id; else t[g].r = id;
+          snap({ [id]: "cur", [q]: "seen" }, `${p} > parent's ${t[q].p}: rotate ${k} above ${t[q].k}. The inorder (sorted) order does not change`);
+        }
+      }
+      snap({}, "Random priorities make the expected height O(log n), whatever order the keys arrive in");
+      return F;
+    },
+    mount: bstMount,
+  });
+  addVis("拓5", [{
+    title: "Square root blocks: a range sum from whole blocks and two ends",
+    frames() {
+      const a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3], B = 4, F = [], bs = range(4).map(b => a.slice(b * B, b * B + B).reduce((x, y) => x + y, 0));
+      const snap = (ma, mb, text) => F.push({ rows: [{ label: "a", vals: a, marks: ma }, { label: "block sum", vals: bs, idx: bs.map((_, b) => `${b * B}–${b * B + 3}`), marks: mb }], text });
+      snap({}, {}, "16 values in blocks of √16 = 4. Each block keeps its sum");
+      const l = 2, r = 13;
+      snap(mk([2, 3], "on"), {}, "Sum of a[2..13]: the left end 2..3 is part of a block, add those cells one by one");
+      snap({ ...mk([2, 3], "done"), ...mk(range(8).map(k => k + 4), "hit") }, { 1: "hit", 2: "hit" }, `Blocks 4–7 and 8–11 lie fully inside: use their sums ${bs[1]} and ${bs[2]}`);
+      const tot = a.slice(l, r + 1).reduce((x, y) => x + y, 0);
+      snap({ ...mk([2, 3, 12, 13], "on"), ...mk(range(8).map(k => k + 4), "done") }, { 1: "done", 2: "done" }, `The right end 12..13 is cells again. Total ${tot}: at most 2√n cells plus √n blocks`);
+      a[6] += 10; bs[1] += 10;
+      snap({ 6: "hit" }, { 1: "hit" }, "A point update changes one cell and one block sum: O(1). Queries are O(√n)");
+      return F;
+    },
+    mount: rowsMount,
+  }, {
+    title: "Mo's algorithm: reorder the queries, move two pointers",
+    frames() {
+      const a = [1, 2, 1, 3, 2, 2, 4, 1, 3, 3, 1, 2], B = 3, qs = [[0, 5], [7, 11], [1, 3], [4, 8], [2, 10], [6, 7]], F = [];
+      const order = qs.map((q, k) => k).sort((x, y) => Math.floor(qs[x][0] / B) - Math.floor(qs[y][0] / B) || qs[x][1] - qs[y][1]);
+      const cnt = {}; let L = 0, R = -1, distinct = 0, moves = 0;
+      const add = i => { if (!cnt[a[i]]++) distinct++; moves++; }, del = i => { if (!--cnt[a[i]]) distinct--; moves++; };
+      const snap = (text, ans) => F.push({ rows: [{ label: "a", vals: a, marks: mk(range(a.length).filter(k => k >= L && k <= R), "on") }], list: qlist("Order", order.map(k => `[${qs[k]}]`)) + (ans ? qlist("Answers", ans) : ""), text });
+      snap("Count distinct values in each query range. Sort queries by the block of l (size √n = 3), then by r");
+      const ans = [];
+      for (const k of order) {
+        const [l, r] = qs[k], m0 = moves;
+        while (R < r) add(++R); while (L > l) add(--L); while (R > r) del(R--); while (L < l) del(L++);
+        ans.push(`[${l},${r}]: ${distinct}`);
+        snap(`Query [${l}, ${r}]: ${moves - m0} pointer steps, ${distinct} distinct values. ${moves} steps so far`, ans);
+      }
+      snap(`${moves} steps in total. With this order the pointers move O((n + q)√n) in all, instead of O(n · q)`, ans);
+      return F;
+    },
+    mount: rowsMount,
+  }]);
+  {
+    const par = [-1, 0, 1, 2, 3, 2, 5, 0, 7], T = treePos(par, { w: 340, dy: 40 }), adj = par.map(() => []);
+    par.forEach((p, k) => { if (p >= 0) { adj[p].push(k); adj[k].push(p); } });
+    addVis("拓6", {
+      title: "Centroid decomposition: cut the tree at its centre, again and again",
+      frames() {
+        const gone = Array(9).fill(false), lvl = Array(9).fill(""), F = [], deadE = {};
+        const snap = (node, label, text) => F.push({ node: { ...Object.fromEntries(range(9).filter(k => gone[k]).map(k => [k, "seen"])), ...node }, label: label || Object.fromEntries(range(9).map(k => [k, lvl[k] === "" ? "" : `L${lvl[k]}`])), edge: { ...deadE }, names: range(9).map(k => k + 1), text });
+        const solve = (s, d) => {
+          const comp = [], sz = {}, pr = {};
+          const dfs = (u, p) => { comp.push(u); pr[u] = p; sz[u] = 1; for (const v of adj[u]) if (v !== p && !gone[v]) { dfs(v, u); sz[u] += sz[v]; } };
+          dfs(s, -1);
+          const n = comp.length; let c = s, best = Infinity;
+          for (const u of comp) { const big = Math.max(n - sz[u], ...adj[u].filter(v => !gone[v] && v !== pr[u]).map(v => sz[v])); if (big < best) { best = big; c = u; } }
+          snap({ ...mk(comp, "open"), [c]: "cur" }, Object.fromEntries(comp.map(u => [u, sz[u]])), n === 1 ? `${c + 1} is alone in its piece, so it is its own centroid` : `A piece of ${n} nodes (labels: subtree sizes). Remove ${c + 1} and the biggest part left has ${best} ≤ ${Math.floor(n / 2)} nodes: it is the centroid`);
+          gone[c] = true; lvl[c] = d;
+          adj[c].forEach(v => { const e = par[v] === c ? T.pe[v] : T.pe[c]; deadE[e] = "skip"; });
+          snap({ [c]: "hit" }, null, `Cut ${c + 1} out at level ${d}. Paths through it are handled here; every other path lies inside one of the parts`);
+          for (const v of adj[c]) if (!gone[v]) solve(v, d + 1);
+        };
+        snap({}, {}, "Goal: split the tree so that every path is counted at exactly one cut point, with few levels");
+        solve(0, 0);
+        snap({}, null, `Each part is at most half the size before, so there are O(log n) levels and O(n log n) work over all of them`);
+        return F;
+      },
+      mount: netMount({ ...T, names: range(9).map(k => k + 1), vb: "0 0 340 210" }),
+    });
+  }
+  addVis("拓7", {
+    title: "CDQ divide and conquer: count inversions across the middle",
+    frames() {
+      const a = [5, 2, 8, 1, 7, 3, 6, 4], F = [];
+      let inv = 0;
+      const snap = (l, m, r, text, hit = []) => F.push({ rows: [{ label: "a", vals: [...a], marks: { ...mk(range(a.length).filter(k => k >= l && k <= m), "on"), ...mk(range(a.length).filter(k => k > m && k <= r), "done"), ...mk(hit, "hit") } }], list: qlist("Inversions", [inv]), text });
+      snap(-1, -1, -1, "An inversion is a pair i < j with a[i] > a[j]. Split in half: pairs inside each half are solved by recursion, only pairs that cross the middle are counted here");
+      const go = (l, r) => {
+        if (l >= r) return;
+        const m = (l + r) >> 1; go(l, m); go(m + 1, r);
+        const L = a.slice(l, m + 1), R = a.slice(m + 1, r + 1), out = []; let i = 0, j = 0, here = 0;
+        while (i < L.length || j < R.length) { if (j >= R.length || (i < L.length && L[i] <= R[j])) out.push(L[i++]); else { here += L.length - i; out.push(R[j++]); } }
+        snap(l, m, r, `Both halves are sorted: [${L.join(" ")}] and [${R.join(" ")}]. While merging, each right value passes every left value still waiting: ${here} crossing inversions`);
+        inv += here; a.splice(l, out.length, ...out);
+        snap(-1, -1, -1, `Merged into [${out.join(" ")}]. ${inv} inversions so far`, range(out.length).map(k => l + k));
+      };
+      go(0, a.length - 1);
+      snap(-1, -1, -1, `${inv} inversions in O(n log n). CDQ is this idea in general: let the left half's changes answer the right half's questions`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓8", {
+    title: "NTT butterflies mod 17: evaluate at all 8 roots in 3 layers",
+    frames() {
+      const P = 17, n = 8, w8 = 9, pw = (b, e) => { let r = 1; b %= P; while (e) { if (e & 1) r = (r * b) % P; b = (b * b) % P; e >>= 1; } return r; };
+      const orig = [1, 2, 3, 4, 0, 0, 0, 0], a = [...orig], F = [];
+      const rev = range(n).map(i => parseInt(i.toString(2).padStart(3, "0").split("").reverse().join(""), 2));
+      const snap = (marks, text) => F.push({ rows: [{ label: "values", vals: [...a], marks }], text });
+      snap({}, "A(x) = 1 + 2x + 3x² + 4x³. Mod 17, ω = 9 has order 8, so it plays the role of e^(2πi/8)");
+      const b = rev.map(i => a[i]); a.splice(0, n, ...b);
+      snap({}, `Put the coefficients in bit reversed order: index i goes to ${rev.join(", ")}`);
+      for (let len = 2; len <= n; len <<= 1) {
+        const wl = pw(w8, n / len);
+        for (let i = 0; i < n; i += len) for (let j = 0; j < len / 2; j++) {
+          const w = pw(wl, j), u = a[i + j], v = (a[i + j + len / 2] * w) % P;
+          a[i + j] = (u + v) % P; a[i + j + len / 2] = (u - v + P) % P;
+          snap({ [i + j]: "on", [i + j + len / 2]: "hit" }, `Blocks of ${len}, w = ${w}: u = ${u}, w·v = ${v}. They become u + w·v = ${a[i + j]} and u − w·v = ${a[i + j + len / 2]} (mod 17)`);
+        }
+      }
+      const direct = range(n).map(k => orig.reduce((s, c, i) => (s + c * pw(w8, i * k)) % P, 0));
+      if (direct.join() !== a.join()) throw new Error("NTT check failed");
+      snap(mk(range(n), "done"), `These are A(ωᵏ) for k = 0..7 (checked against direct evaluation). Multiply two such lists pointwise and transform back: polynomial product in O(n log n)`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓9", {
+    title: "Möbius function μ(n) for n up to 30",
+    frames() {
+      const N = 30, mu = Array(N + 1).fill(""), F = [];
+      const rows = cur => [1, 16].map(s => ({ label: `${s}–${s + 14}`, vals: range(15).map(k => mu[s + k]), idx: range(15).map(k => s + k), marks: Object.fromEntries(range(15).map(k => [k, s + k === cur ? "on" : mu[s + k] === 0 ? "bad" : mu[s + k] === 1 ? "done" : mu[s + k] === -1 ? "hit" : ""])) }));
+      for (let n = 1; n <= N; n++) {
+        let x = n, cnt = 0, sq = false; const fs = [];
+        for (let p = 2; p * p <= x; p++) if (x % p === 0) { let e = 0; while (x % p === 0) { x /= p; e++; } fs.push(e > 1 ? `${p}^${e}` : p); cnt++; if (e > 1) sq = true; }
+        if (x > 1) { fs.push(x); cnt++; }
+        mu[n] = sq ? 0 : cnt % 2 ? -1 : 1;
+        if (n <= 12 || [18, 30].includes(n)) F.push({ rows: rows(n), text: n === 1 ? "μ(1) = 1" : `${n} = ${fs.join("·")}: ${sq ? "a square divides it, so μ = 0" : `${cnt} distinct prime${cnt > 1 ? "s" : ""}, so μ = (−1)^${cnt} = ${mu[n]}`}` });
+      }
+      F.push({ rows: rows(0), text: "Σ μ(d) over the divisors d of n is 1 when n = 1 and 0 otherwise. That turns [gcd = 1] into a sum you can swap with other sums" });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓10", {
+    title: "Sprague–Grundy values: take 1, 3 or 4 stones",
+    frames() {
+      const N = 14, moves = [1, 3, 4], sg = Array(N + 1).fill(""), F = [];
+      const snap = (n, from, text) => F.push({ rows: [{ label: "SG(n)", vals: [...sg], marks: { ...mk(from, "on"), ...(n >= 0 ? { [n]: "hit" } : {}), ...mk(range(N + 1).filter(k => sg[k] === 0 && k !== n), "bad") } }], text });
+      snap(-1, [], "SG(n) = mex of the SG values you can move to: the smallest non negative number not among them. 0 means the player to move loses");
+      for (let n = 0; n <= N; n++) {
+        const from = moves.filter(m => m <= n).map(m => n - m), vals = new Set(from.map(k => sg[k]));
+        let g = 0; while (vals.has(g)) g++;
+        sg[n] = g;
+        snap(n, from, from.length ? `From ${n} you reach ${from.join(", ")} with SG {${[...vals].join(", ")}}: mex = ${g}${g ? "" : ", a losing position"}` : "No move from 0: SG(0) = 0, the player to move has lost");
+      }
+      snap(-1, [], `The values repeat with period 7. For several piles XOR their SG values: e.g. piles 2, 5, 9 give ${sg[2]} ⊕ ${sg[5]} ⊕ ${sg[9]} = ${sg[2] ^ sg[5] ^ sg[9]}${sg[2] ^ sg[5] ^ sg[9] ? ", a win for the first player" : ", a loss for the first player"}`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓11", {
+    title: "XOR linear basis: insert, then read the maximum",
+    frames() {
+      const bits = 4, b = Array(bits).fill(0), F = [];
+      const show = v => v.toString(2).padStart(bits, "0").split("").map(Number);
+      const snap = (x, hi, text, mark = -1) => F.push({ rows: [{ label: "x", vals: x === null ? Array(bits).fill("") : show(x), idx: range(bits).map(k => `2^${bits - 1 - k}`), marks: hi >= 0 ? { [bits - 1 - hi]: "on" } : {} }, ...range(bits).reverse().map(i => ({ label: `b[${i}]`, vals: b[i] ? show(b[i]) : Array(bits).fill(""), marks: i === mark ? mk(range(bits), "hit") : i === hi && b[i] ? mk(range(bits), "on") : {} }))], text });
+      snap(null, -1, "b[i] is a vector whose highest set bit is i, or empty. Every XOR of the inserted numbers is an XOR of some b[i]");
+      for (const v of [13, 9, 7, 6, 2]) {
+        let x = v; snap(x, -1, `Insert ${v} = ${show(v).join("")}₂`);
+        let placed = false;
+        for (let i = bits - 1; i >= 0; i--) {
+          if (!((x >> i) & 1)) continue;
+          if (!b[i]) { b[i] = x; placed = true; snap(x, i, `Highest bit ${i} and b[${i}] is empty: store ${x} there`, i); break; }
+          const old = x; x ^= b[i]; snap(x, i, `Bit ${i} is set and b[${i}] = ${b[i]} exists: ${old} ⊕ ${b[i]} = ${x}`);
+        }
+        if (!placed) snap(0, -1, `${v} reduced to 0: it is already an XOR of the basis, so it adds nothing new`);
+      }
+      let best = 0; for (let i = bits - 1; i >= 0; i--) if ((best ^ b[i]) > best) best ^= b[i];
+      snap(best, -1, `Greedy from the top: XOR in b[i] whenever it makes the value bigger. Maximum XOR of any subset = ${best}. At most ${bits} vectors for ${bits} bit numbers`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓12", {
+    title: "Sum over subsets, one bit at a time",
+    frames() {
+      const a = [1, 2, 3, 4, 5, 6, 7, 8], f = [...a], F = [];
+      const idx = range(8).map(m => m.toString(2).padStart(3, "0"));
+      const snap = (marks, text) => F.push({ rows: [{ label: "a", vals: a, idx }, { label: "f", vals: [...f], idx, marks }], text });
+      snap({}, "f[mask] should be the sum of a[sub] over every sub ⊆ mask. Directly that is 3ⁿ work");
+      for (let i = 0; i < 3; i++) {
+        const hit = [];
+        for (let m = 0; m < 8; m++) if ((m >> i) & 1) { f[m] += f[m ^ (1 << i)]; hit.push(m); }
+        snap({ ...mk(hit, "hit"), ...mk(hit.map(m => m ^ (1 << i)), "on") }, `Bit ${i}: every mask with bit ${i} set adds f[mask without bit ${i}]. Now f covers subsets that differ in bits 0..${i}`);
+      }
+      snap({ 7: "hit" }, `f[111] = ${f[7]} = the sum of all 8 values. n passes over 2ⁿ masks: O(n · 2ⁿ)`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  {
+    const P = [[2, 3], [5, 1], [8, 2], [11, 4], [9, 7], [6, 9], [3, 7], [5, 5], [7, 4], [4, 4], [10, 9], [1, 6]];
+    const X = x => 20 + x * 27, Y = y => 190 - y * 18;
+    addVis("拓13", {
+      title: "Convex hull: Andrew's monotone chain",
+      frames() {
+        const p = P.map(q => [...q]).sort((a, b) => a[0] - b[0] || a[1] - b[1]), F = [], cross = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+        let h = [], done = [];
+        const pts = mark => p.map((q, k) => `<circle class="pt ${mark[k] || ""}" cx="${X(q[0])}" cy="${Y(q[1])}" r="5"/>`).join("");
+        const draw = (mark, text, closed) => F.push({ svg: `${done.length > 1 ? `<polyline class="hull" style="fill:none" points="${done.map(k => `${X(p[k][0])},${Y(p[k][1])}`).join(" ")}"/>` : ""}${h.length > 1 ? `<polyline class="${closed ? "hull" : "curve"}" points="${h.map(k => `${X(p[k][0])},${Y(p[k][1])}`).join(" ")}"/>` : ""}${pts(mark)}`, text });
+        draw({}, "Sort the points by x. Build the lower hull left to right, then the upper hull right to left");
+        for (const pass of [0, 1]) {
+          const ord = pass ? range(p.length).reverse() : range(p.length);
+          h = [];
+          for (const k of ord) {
+            while (h.length >= 2 && cross(p[h[h.length - 2]], p[h[h.length - 1]], p[k]) <= 0) { const j = h.pop(); draw({ [j]: "bad", [k]: "on" }, `(${p[j]}) makes a turn the wrong way (clockwise) towards (${p[k]}): pop it`); }
+            h.push(k); draw({ [k]: "on" }, `Push (${p[k]}). The ${pass ? "upper" : "lower"} chain keeps turning counterclockwise`);
+          }
+          done = done.length ? done.concat(h.slice(1)) : h.slice();
+          draw({}, pass ? "Upper hull done" : "Lower hull done: the leftmost and rightmost points are its ends");
+        }
+        h = done;
+        draw(mk(done, "hit"), `The hull has ${done.length - 1} corners. Sorting dominates: O(n log n). Use ≤ 0 to drop collinear points, < 0 to keep them`, true);
+        return F;
+      },
+      mount: svgMount("0 0 350 200"),
+    });
+  }
+  addVis("拓15", {
+    title: "Fisher–Yates shuffle",
+    frames() {
+      const a = range(8).map(k => k + 1), F = [];
+      let seed = 7; const rnd = m => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed % m; };
+      const snap = (marks, text) => F.push({ rows: [{ label: "a", vals: [...a], marks }], text });
+      snap({}, "Walk i from the back. Swap a[i] with a random a[j], j in 0..i. Cells right of i are final");
+      for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; snap({ ...mk(range(a.length).filter(k => k > i), "done"), [i]: "hit", [j]: "on" }, `i = ${i}: random j = ${j}, swap. a[${i}] = ${a[i]} is now fixed`); }
+      snap(mk(range(8), "done"), "Each of the n! orders comes out with equal chance. Picking j from 0..n−1 every time looks similar but is biased. In C++ use shuffle with mt19937");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  {
+    const w01 = [0, 1, 1, 0, 1, 0, 1, 1, 0, 1];
+    addVis("拓17", [{
+      title: "0-1 BFS: weight 0 to the front, weight 1 to the back",
+      frames() {
+        const adj = G.names.split("").map(() => []); G.edges.forEach(([u, v], e) => { adj[u].push([v, w01[e], e]); adj[v].push([u, w01[e], e]); });
+        const d = Array(8).fill(Infinity), dq = [0], done = [], F = [];
+        d[0] = 0;
+        const snap = (cur, e, text) => F.push({ node: { ...mk(done, "seen"), ...mk(dq, "open"), ...(cur >= 0 ? { [cur]: "cur" } : {}) }, label: d.map(x => (x === Infinity ? "∞" : x)), edge: e >= 0 ? { [e]: "hot" } : {}, elab: Object.fromEntries(w01.map((w, k) => [k, w])), list: qlist("Deque", dq.map(k => `${G.names[k]} ${d[k]}`)), text });
+        snap(-1, -1, "Edges cost 0 or 1. A deque keeps the nodes in order of distance without a heap");
+        while (dq.length) {
+          const u = dq.shift(); if (done.includes(u)) continue; done.push(u);
+          snap(u, -1, `Take ${G.names[u]} (${d[u]}) from the front`);
+          for (const [v, w, e] of adj[u]) if (d[u] + w < d[v]) { d[v] = d[u] + w; if (w) dq.push(v); else dq.unshift(v); snap(u, e, `${G.names[v]} gets ${d[v]}; the edge costs ${w}, so it goes to the ${w ? "back" : "front"}`); }
+        }
+        snap(-1, -1, "The deque always holds at most two distances, d and d + 1, in order. O(V + E), like plain BFS");
+        return F;
+      },
+      mount: netMount({ ...G, names: G.names.split(""), edges: G.edges.map((e, k) => [...e, w01[k]]) }),
+    }, {
+      title: "Is the graph bipartite? Two colour it",
+      frames() {
+        const adj = G.names.split("").map(() => []); G.edges.forEach(([u, v], e) => { adj[u].push([v, e]); adj[v].push([u, e]); });
+        const col = Array(8).fill(-1), q = [0], F = [];
+        col[0] = 0;
+        const snap = (cur, edge, text) => F.push({ node: { ...Object.fromEntries(col.map((c, k) => [k, c < 0 ? "" : c ? "alt" : "seen"])), ...(cur >= 0 ? { [cur]: "cur" } : {}) }, edge, list: qlist("Queue", q.map(k => G.names[k])), text });
+        snap(-1, {}, "Colour A green. Every neighbour must get the other colour");
+        let bad = null;
+        while (q.length && !bad) {
+          const u = q.shift();
+          for (const [v, e] of adj[u]) {
+            if (col[v] < 0) { col[v] = 1 - col[u]; q.push(v); snap(u, { [e]: "hot" }, `${G.names[v]} is a neighbour of ${G.names[u]}: give it the other colour`); }
+            else if (col[v] === col[u]) { bad = [u, v, e]; break; }
+          }
+        }
+        if (bad) snap(-1, { [bad[2]]: "skip" }, `${G.names[bad[0]]} and ${G.names[bad[1]]} are joined but got the same colour: there is an odd cycle (here C, E, G, H, F), so the graph is not bipartite`);
+        snap(-1, {}, "Bipartite exactly when no cycle has odd length. BFS or DFS decides it in O(V + E)");
+        return F;
+      },
+      mount: netMount({ ...G, names: G.names.split("") }),
+    }]);
+  }
+  addVis("拓18", {
+    title: "Cartesian tree with a stack",
+    frames() {
+      const a = [5, 2, 8, 1, 9, 3, 7, 4], t = a.map(k => ({ k, l: -1, r: -1 })), st = [], F = [];
+      const snap = (cls, text) => { const root = st.length ? st[0] : -1; F.push({ t: t.map((n, i) => ({ ...n, c: cls[i] || (st.includes(i) ? "open" : "") })), roots: root >= 0 ? [root] : [], list: qlist("Stack (right spine)", st.map(i => a[i])), text }); };
+      snap({}, "Build a min heap tree whose inorder is the array. The stack holds the right spine, increasing from bottom to top");
+      a.forEach((x, i) => {
+        let last = -1;
+        while (st.length && a[st[st.length - 1]] > x) last = st.pop();
+        t[i].l = last;
+        if (st.length) t[st[st.length - 1]].r = i;
+        st.push(i);
+        snap({ [i]: "cur", ...(last >= 0 ? { [last]: "seen" } : {}) }, last >= 0 ? `${x}: pop everything bigger; the last popped (${a[last]}) becomes ${x}'s left child${st.length > 1 ? `, and ${x} hangs right of ${a[st[st.length - 2]]}` : ", and the new root"}` : `${x} is bigger than the top: it hangs on the right`);
+      });
+      snap({}, "Each index is pushed and popped once: O(n). The minimum of a[l..r] is the LCA of l and r in this tree");
+      return F;
+    },
+    mount: bstMount,
+  });
+  addVis("拓19", {
+    title: "Union-find that can undo",
+    frames() {
+      const fa = range(6), sz = Array(6).fill(1), hist = [], F = [];
+      const find = x => { while (fa[x] !== x) x = fa[x]; return x; };
+      const snap = (marks, text) => F.push({ rows: [{ label: "parent", vals: [...fa], marks }, { label: "size", vals: [...sz] }], list: qlist("History", hist.map(([a, b]) => `${a} under ${b}`)), text });
+      snap({}, "No path compression, so every union changes exactly one parent and one size. That makes it easy to undo");
+      const union = (a, b) => { let x = find(a), y = find(b); if (x === y) { snap({}, `${a} and ${b} are already together`); return; } if (sz[x] > sz[y]) [x, y] = [y, x]; fa[x] = y; sz[y] += sz[x]; hist.push([x, y]); snap({ [x]: "hit", [y]: "on" }, `union(${a}, ${b}): hang the smaller root ${x} under ${y} and remember it`); };
+      [[0, 1], [2, 3], [1, 3], [4, 5]].forEach(([a, b]) => union(a, b));
+      for (let k = 0; k < 2; k++) { const [x, y] = hist.pop(); fa[x] = x; sz[y] -= sz[x]; snap({ [x]: "bad", [y]: "on" }, `Undo the last union: ${x} becomes a root again and ${y} gives back its size`); }
+      snap({}, "Union by size keeps finds O(log n) without compression. Segment tree on time uses this: add an edge going down, undo it coming back up");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓20", {
+    title: "Bounded knapsack: split 13 copies into 1, 2, 4, 6",
+    frames() {
+      const cnt = 13, parts = []; let k = 1, left = cnt;
+      while (left >= k) { parts.push(k); left -= k; k *= 2; } if (left) parts.push(left);
+      const F = [], idx = parts.map((_, i) => `piece ${i + 1}`);
+      F.push({ rows: [{ label: "pieces", vals: parts, idx }], text: `Up to ${cnt} copies of one item. Instead of ${cnt} separate 0/1 items, make pieces 1, 2, 4, … and the remainder: ${parts.join(" + ")} = ${cnt}` });
+      for (let c = 0; c <= cnt; c++) {
+        let r = c; const use = [];
+        for (let i = parts.length - 1; i >= 0; i--) if (parts[i] <= r && (i === parts.length - 1 ? r - parts[i] <= parts.slice(0, i).reduce((a, b) => a + b, 0) : true)) { r -= parts[i]; use.push(i); }
+        if (r) throw new Error("split check failed");
+        if (c <= 4 || c >= 11 || c === 7) F.push({ rows: [{ label: "pieces", vals: parts, idx, marks: mk(use, "hit") }], text: `${c} copies = ${use.length ? use.map(i => parts[i]).reverse().join(" + ") : "no pieces"}` });
+      }
+      F.push({ rows: [{ label: "pieces", vals: parts, idx }], text: `Every count 0..${cnt} is a choice of pieces, so ${parts.length} 0/1 items replace ${cnt}: O(C · log k) per item. A monotonic queue gets O(C)` });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓22", {
+    title: "Baby step giant step: 3ˣ ≡ 13 (mod 17)",
+    frames() {
+      const a = 3, b = 13, p = 17, m = Math.ceil(Math.sqrt(p)), table = {}, bv = [], F = [];
+      const rows = (mb, gv, mg) => [{ label: "b·aʲ", vals: [...bv], idx: bv.map((_, j) => `j=${j}`), marks: mb }, { label: "(aᵐ)ⁱ", vals: gv, idx: gv.map((_, i) => `i=${i + 1}`), marks: mg }];
+      F.push({ rows: rows({}, [], {}), text: `Write x = i·m − j with m = ⌈√17⌉ = ${m}. Then aˣ ≡ b becomes (aᵐ)ⁱ ≡ b·aʲ` });
+      let v = b;
+      for (let j = 0; j < m; j++) { bv.push(v); table[v] = j; F.push({ rows: rows({ [j]: "on" }, [], {}), text: `Baby step j = ${j}: b·a^${j} mod 17 = ${v}. Store it in a hash table` }); v = (v * a) % p; }
+      let am = 1; for (let k = 0; k < m; k++) am = (am * a) % p;
+      const gv = []; let g = 1, ans = -1;
+      for (let i = 1; i <= m; i++) {
+        g = (g * am) % p; gv.push(g);
+        if (table[g] !== undefined) { ans = i * m - table[g]; F.push({ rows: rows({ [table[g]]: "hit" }, [...gv], { [i - 1]: "hit" }), text: `Giant step i = ${i}: (a^${m})^${i} = ${g}, which is in the table at j = ${table[g]}. x = ${i}·${m} − ${table[g]} = ${ans}` }); break; }
+        F.push({ rows: rows({}, [...gv], { [i - 1]: "on" }), text: `Giant step i = ${i}: (a^${m})^${i} = ${g}, not in the table` });
+      }
+      F.push({ rows: rows({}, gv, {}), text: `3^${ans} mod 17 = ${(() => { let r = 1; for (let k = 0; k < ans; k++) r = (r * 3) % 17; return r; })()}. About √p steps each side: O(√p) instead of trying all p exponents` });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  {
+    const par = [3, 3, 3, -1, 3, 4, 5], T = treePos(par, { w: 300, dy: 50 }), lab = [1, 2, 3, 4, 5, 6, 7];
+    addVis("拓23", {
+      title: "Prüfer sequence: remove the smallest leaf, write its neighbour",
+      frames() {
+        const adj = par.map(() => new Set()); T.edges.forEach(([u, v]) => { adj[u].add(v); adj[v].add(u); });
+        const gone = new Set(), seq = [], F = [], dead = {};
+        const snap = (node, text) => F.push({ node: { ...mk([...gone], "hid"), ...node }, edge: { ...dead }, label: Object.fromEntries(range(7).filter(k => !gone.has(k)).map(k => [k, `deg ${adj[k].size}`])), list: qlist("Sequence", seq), text });
+        snap({}, "A labelled tree with n nodes becomes n − 2 numbers, and back. Labels show degrees: a leaf has degree 1");
+        while (7 - gone.size > 2) {
+          const leaf = range(7).filter(k => !gone.has(k) && adj[k].size === 1).sort((x, y) => lab[x] - lab[y])[0], nb = [...adj[leaf]][0];
+          snap({ [leaf]: "cur", [nb]: "open" }, `The smallest leaf is ${lab[leaf]}. Write its neighbour ${lab[nb]}`);
+          seq.push(lab[nb]); gone.add(leaf); adj[nb].delete(leaf); adj[leaf].clear();
+          const e = par[leaf] === nb ? T.pe[leaf] : T.pe[nb]; dead[e] = "hid";
+        }
+        snap({}, `Two nodes are left: stop. Sequence ${seq.join(" ")}. A node of degree d appears d − 1 times, and every sequence is some tree: n^(n−2) labelled trees (Cayley)`);
+        return F;
+      },
+      mount: netMount({ ...T, names: lab, vb: "0 0 300 200" }),
+    });
+  }
+  addVis("拓24", {
+    title: "Ternary search on a function with one valley",
+    frames() {
+      const f = x => (x - 5.3) ** 2 / 3 + 1, X = x => 20 + x * 32, Y = y => 190 - y * 18, F = [];
+      const curve = range(101).map(k => { const x = k / 10; return `${X(x)},${Y(f(x))}`; }).join(" ");
+      let l = 0, r = 10;
+      const snap = (m1, m2, text) => F.push({ svg: `<rect class="band" x="${X(l)}" y="10" width="${X(r) - X(l)}" height="180"/><line class="ax" x1="20" y1="190" x2="340" y2="190"/><polyline class="curve" points="${curve}"/>${m1 !== null ? `<circle class="pt on" cx="${X(m1)}" cy="${Y(f(m1))}" r="5"/><circle class="pt hit" cx="${X(m2)}" cy="${Y(f(m2))}" r="5"/>` : ""}`, text });
+      snap(null, null, "The function falls, then rises. The shaded range [l, r] holds the lowest point");
+      for (let it = 0; it < 7; it++) {
+        const m1 = l + (r - l) / 3, m2 = r - (r - l) / 3;
+        const keepLeft = f(m1) < f(m2);
+        snap(m1, m2, `m1 = ${m1.toFixed(2)}, m2 = ${m2.toFixed(2)}: f(m1) = ${f(m1).toFixed(2)} ${keepLeft ? "<" : "≥"} f(m2) = ${f(m2).toFixed(2)}, so the valley is not in ${keepLeft ? "(m2, r]" : "[l, m1)"}: drop that third`);
+        if (keepLeft) r = m2; else l = m1;
+      }
+      snap(null, null, `After 7 rounds the range is [${l.toFixed(2)}, ${r.toFixed(2)}]; each round keeps 2/3: O(log n). Flat parts break it: equal values do not tell which side to drop`);
+      return F;
+    },
+    mount: svgMount("0 0 350 200"),
+  });
+  addVis("拓25", {
+    title: "Flood fill: one breadth first wave from a cell",
+    frames() {
+      const g = ["..#.....", ".##..#..", "....##..", "#.#.....", "..#..##.", "....#..."].map(r => r.split("")), H = g.length, W = 8, d = g.map(r => r.map(() => -1)), F = [];
+      const snap = (front, text) => F.push({ rows: g.map((r, y) => ({ label: `row ${y}`, vals: r.map((c, x) => (c === "#" ? "■" : d[y][x] >= 0 ? d[y][x] : "")), marks: Object.fromEntries(r.map((c, x) => [x, c === "#" ? "pad" : front.some(([a, b]) => a === y && b === x) ? "hit" : d[y][x] >= 0 ? "done" : ""])) })), text });
+      let front = [[0, 0]]; d[0][0] = 0;
+      snap(front, "Start at the top left corner. ■ is a wall. Each wave fills the open cells next to the last wave");
+      let k = 0;
+      while (front.length) {
+        const nxt = [];
+        for (const [y, x] of front) for (const [dy, dx] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const a = y + dy, b = x + dx; if (a >= 0 && a < H && b >= 0 && b < W && g[a][b] === "." && d[a][b] < 0) { d[a][b] = k + 1; nxt.push([a, b]); } }
+        k++; front = nxt;
+        if (front.length) snap(front, `Wave ${k}: ${front.length} new cell${front.length > 1 ? "s" : ""}, each ${k} steps from the start`);
+      }
+      const left = g.flat().filter((c, i) => c === "." && d[Math.floor(i / W)][i % W] < 0).length;
+      snap([], `Done. The numbers are shortest step counts.${left ? ` ${left} open cells were never reached: they form other regions, so start a new fill there to count regions` : ""} Each cell is handled once: O(H · W)`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓26", {
+    title: "Forward star: edges kept as linked lists in arrays",
+    frames() {
+      const E = [[1, 2], [1, 3], [2, 3], [1, 4], [3, 4]], head = Array(5).fill(-1), to = [], nxt = [], F = [];
+      const snap = (mh, me, text) => F.push({ rows: [{ label: "head[u]", vals: head.slice(1), idx: [1, 2, 3, 4], marks: mh }, { label: "to[e]", vals: [...to], marks: me }, { label: "next[e]", vals: [...nxt], marks: me }], text });
+      snap({}, {}, "head[u] is the newest edge leaving u (−1 for none). next[e] is the edge added before e from the same node");
+      E.forEach(([u, v], e) => { to.push(v); nxt.push(head[u]); head[u] = e; snap({ [u - 1]: "hit" }, { [e]: "hit" }, `add(${u}, ${v}) as edge ${e}: to[${e}] = ${v}, next[${e}] = old head[${u}] = ${nxt[e]}, head[${u}] = ${e}`); });
+      const seen = [];
+      for (let e = head[1]; e !== -1; e = nxt[e]) { seen.push(e); snap({ 0: "on" }, mk(seen, "on"), `for (e = head[1]; e != −1; e = next[e]): edge ${e} goes to ${to[e]}`); }
+      snap({}, {}, "Edges come out newest first. Three flat arrays, no vector reallocation: memory O(V + E) and fast to rebuild between test cases");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓27", {
+    title: "Kosaraju: finish order, then search the reversed graph",
+    frames() {
+      const n = 8, vis = Array(n).fill(false), order = [], comp = Array(n).fill(-1), F = [];
+      const cls = ["seen", "alt", "hit"];
+      const snap = (cur, edge, text) => F.push({ node: { ...Object.fromEntries(range(n).map(k => [k, comp[k] >= 0 ? cls[comp[k] % 3] : vis[k] ? "open" : ""])), ...(cur >= 0 ? { [cur]: "cur" } : {}) }, edge, list: qlist("Finish order", order.map(k => SCCG.names[k])), text });
+      const dfs1 = u => { vis[u] = true; SCCG.edges.forEach(([a, v]) => { if (a === u && !vis[v]) dfs1(v); }); order.push(u); snap(u, {}, `${SCCG.names[u]} finishes: append it`); };
+      snap(-1, {}, "Pass 1: an ordinary DFS on the graph, recording each node when it finishes");
+      for (let s = 0; s < n; s++) if (!vis[s]) dfs1(s);
+      let c = 0;
+      const rev = SCCG.edges.map((e, k) => k);
+      snap(-1, mk(rev, "skip"), "Pass 2: reverse every edge (drawn dashed: follow them backwards) and start from the last finished node");
+      for (let k = n - 1; k >= 0; k--) {
+        const s = order[k]; if (comp[s] >= 0) continue;
+        const st = [s], got = []; comp[s] = c;
+        while (st.length) { const u = st.pop(); got.push(SCCG.names[u]); SCCG.edges.forEach(([a, b]) => { if (b === u && comp[a] < 0) { comp[a] = c; st.push(a); } }); }
+        snap(s, mk(rev, "skip"), `From ${SCCG.names[s]} the reversed graph reaches {${got.join(", ")}}: one component`);
+        c++;
+      }
+      snap(-1, {}, `${c} components, the same as Tarjan's, with two plain searches: O(V + E)`);
+      return F;
+    },
+    mount: netMount(SCCG),
+  });
+  addVis("拓28", {
+    title: "K-D tree: split by x, then y, at the median",
+    frames() {
+      const P = [[2, 3], [5, 4], [9, 6], [4, 7], [8, 1], [7, 2], [1, 8], [6, 9], [3, 5]], X = x => 20 + x * 32, Y = y => 190 - y * 19, F = [], lines = [];
+      const draw = (mark, text) => F.push({ svg: `<rect class="band" x="${X(0)}" y="${Y(10)}" width="${X(10) - X(0)}" height="${Y(0) - Y(10)}" style="fill:none;stroke:var(--line-strong)"/>${lines.join("")}${P.map((p, k) => `<circle class="pt ${mark[k] || ""}" cx="${X(p[0])}" cy="${Y(p[1])}" r="5"/>`).join("")}`, text });
+      draw({}, "Nine points in the box [0, 10]². Each level splits a region in two by the median point");
+      const build = (ids, d, x0, x1, y0, y1) => {
+        if (!ids.length) return;
+        const ax = d % 2; ids.sort((a, b) => P[a][ax] - P[b][ax]);
+        const m = ids[Math.floor(ids.length / 2)], v = P[m][ax];
+        lines.push(ax === 0 ? `<line class="${d ? "hot" : "mst"}" x1="${X(v)}" y1="${Y(y1)}" x2="${X(v)}" y2="${Y(y0)}"/>` : `<line class="${d ? "hot" : "mst"}" x1="${X(x0)}" y1="${Y(v)}" x2="${X(x1)}" y2="${Y(v)}"/>`);
+        draw({ [m]: "on", ...mk(ids.filter(i => i !== m), "hit") }, `Depth ${d}, split by ${ax ? "y" : "x"}: the median of these ${ids.length} points is (${P[m]}), so cut at ${ax ? "y" : "x"} = ${v}`);
+        const lo = ids.slice(0, Math.floor(ids.length / 2)), hi = ids.slice(Math.floor(ids.length / 2) + 1);
+        if (ax === 0) { build(lo, d + 1, x0, v, y0, y1); build(hi, d + 1, v, x1, y0, y1); } else { build(lo, d + 1, x0, x1, y0, v); build(hi, d + 1, x0, x1, v, y1); }
+      };
+      build(range(P.length), 0, 0, 10, 0, 10);
+      draw({}, "Height O(log n). A nearest point or range search skips every region that cannot hold a better answer; the worst case for a range query is O(√n)");
+      return F;
+    },
+    mount: svgMount("0 0 350 200"),
+  });
+  addVis("拓29", {
+    title: "Rolling array: why 0/1 knapsack loops capacity downwards",
+    frames() {
+      const C = 8, w = 3, v = 5, F = [];
+      for (const dir of ["down", "up"]) {
+        const dp = Array(C + 1).fill(0);
+        const used = Array(C + 1).fill(0);
+        F.push({ rows: [{ label: "dp", vals: [...dp] }], text: `One row dp[c] for one item (${w} kg, value ${v}). Loop c ${dir === "down" ? "from C down to w" : "from w up to C"}` });
+        const cs = dir === "down" ? range(C - w + 1).map(k => C - k) : range(C - w + 1).map(k => w + k);
+        for (const c of cs) {
+          const take = dp[c - w] + v;
+          if (take > dp[c]) { dp[c] = take; used[c] = used[c - w] + 1; }
+          F.push({ rows: [{ label: "dp", vals: [...dp], marks: { [c]: used[c] > 1 ? "bad" : "hit", [c - w]: "on" } }], text: `dp[${c}] = max(dp[${c}], dp[${c - w}] + ${v}). dp[${c - w}] is ${dir === "down" ? "still the old row: the item is not in it yet" : used[c - w] ? "already updated in this loop, so the item is counted again" : "the old value"}${used[c] > 1 ? `: the item is used ${used[c]} times` : ""}` });
+        }
+      }
+      F.push({ rows: [{ label: "dp", vals: Array(C + 1).fill("") }], text: "Downwards reads only old values: each item at most once (0/1 knapsack). Upwards reuses the item: that is the unbounded knapsack. Same code, one loop direction" });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓30", {
+    title: "Extended CRT: merge congruences two at a time",
+    frames() {
+      const eq = [[3, 4], [5, 6], [2, 7]], F = [];
+      const eg = (a, b) => { if (!b) return [a, 1, 0]; const [g, x, y] = eg(b, a % b); return [g, y, x - Math.floor(a / b) * y]; };
+      let r = eq[0][0], M = eq[0][1];
+      const snap = (k, text) => F.push({ rows: [{ label: "x ≡ r", vals: eq.map(e => e[0]), idx: eq.map(e => `mod ${e[1]}`), marks: k >= 0 ? { ...mk(range(k), "done"), [k]: "on" } : {} }, { label: "merged", vals: [r], idx: [`mod ${M}`], marks: { 0: "hit" } }], text });
+      snap(0, "Moduli 4 and 6 share a factor, so plain CRT does not apply. Keep one merged answer x ≡ r (mod M)");
+      for (let k = 1; k < eq.length; k++) {
+        const [b, m] = eq[k], [g, p] = eg(M, m), diff = b - r;
+        if (diff % g) { snap(k, "No solution: the difference is not a multiple of the gcd"); return F; }
+        const mg = m / g; let t = (((diff / g) * p) % mg + mg) % mg;
+        const nr = r + M * t, nM = (M / g) * m;
+        snap(k, `x = ${r} + ${M}t must be ≡ ${b} (mod ${m}): ${M}t ≡ ${diff} (mod ${m}). gcd = ${g} divides ${diff}; exgcd gives t ≡ ${t} (mod ${mg})`);
+        r = ((nr % nM) + nM) % nM; M = nM;
+        snap(k, `So x ≡ ${r} (mod ${M}), where ${M} = lcm. Check: ${eq.slice(0, k + 1).map(e => `${r} mod ${e[1]} = ${r % e[1]}`).join(", ")}`);
+      }
+      snap(-1, `x = ${r} is the smallest answer, and all answers are ${r} + ${M}k. Watch for overflow: multiply with __int128 or mod first`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("拓31", [{
+    title: "A permutation splits into cycles",
+    frames() {
+      const p = [2, 4, 1, 3, 6, 5, 8, 7], n = p.length, seen = Array(n).fill(false), cyc = [], F = [];
+      const cls = ["hit", "on", "done", "bad"];
+      const col = {};
+      const snap = (cur, text) => F.push({ rows: [{ label: "i", vals: range(n).map(k => k + 1), marks: { ...col, ...(cur >= 0 ? { [cur]: "on" } : {}) } }, { label: "p[i]", vals: p, marks: col }], list: qlist("Cycles", cyc.map(c => `(${c.join(" ")})`)), text });
+      snap(-1, "Follow i → p[i] → p[p[i]] … until you come back. Every element lies on exactly one cycle");
+      for (let s = 0; s < n; s++) {
+        if (seen[s]) continue;
+        const c = []; let x = s;
+        while (!seen[x]) { seen[x] = true; c.push(x + 1); col[x] = cls[cyc.length % 4]; x = p[x] - 1; }
+        cyc.push(c);
+        snap(s, `From ${s + 1}: ${c.join(" → ")} → ${s + 1}, a cycle of length ${c.length}`);
+      }
+      const g = (a, b) => (b ? g(b, a % b) : a), ord = cyc.reduce((l, c) => (l * c.length) / g(l, c.length), 1);
+      snap(-1, `Applying p ${ord} times (the lcm of the cycle lengths) gives the identity. Sorting by swaps needs n − cycles = ${n - cyc.length} swaps`);
+      return F;
+    },
+    mount: rowsMount,
+  }, {
+    title: "Pigeonhole: some block of 5 numbers sums to a multiple of 5",
+    frames() {
+      const a = [3, 1, 4, 1, 5], n = a.length, S = [0], F = [];
+      a.forEach(x => S.push(S[S.length - 1] + x));
+      const r = S.map(x => x % n), first = {};
+      const snap = (k, marks, text) => F.push({ rows: [{ label: "a", vals: a, base: 1, marks: marks.a || {} }, { label: "S mod 5", vals: r.slice(0, k + 1), marks: marks.s || {} }], text });
+      snap(-1, {}, "n prefix sums S[0..n] give n + 1 remainders mod n, but only n remainders exist. Two must be equal");
+      for (let k = 0; k <= n; k++) {
+        if (first[r[k]] !== undefined) {
+          const i = first[r[k]];
+          snap(k, { s: { [i]: "hit", [k]: "hit" }, a: mk(range(k - i).map(t => i + t), "hit") }, `S[${i}] and S[${k}] both leave ${r[k]}: so a[${i + 1}..${k}] = ${a.slice(i, k).join(" + ")} = ${S[k] - S[i]} is a multiple of 5`);
+          break;
+        }
+        first[r[k]] = k;
+        snap(k, { s: { [k]: "on" } }, `S[${k}] = ${S[k]}, remainder ${r[k]}${k ? "" : " (the empty prefix)"}`);
+      }
+      snap(-1, {}, "The proof is also the algorithm: remember where each remainder first appeared, O(n)");
+      return F;
+    },
+    mount: rowsMount,
+  }]);
+  addVis("拓32", {
+    title: "Point in polygon: count crossings of a ray",
+    frames() {
+      const poly = [[1, 1], [9, 2], [10, 8], [6, 5], [4, 9], [2, 6]], X = x => 20 + x * 30, Y = y => 190 - y * 18, F = [];
+      const shape = `<polygon class="poly" points="${poly.map(p => `${X(p[0])},${Y(p[1])}`).join(" ")}"/>`;
+      for (const q of [[5, 4], [5, 7.5]]) {
+        let inside = false, hits = 0;
+        const ray = `<line class="hot" x1="${X(q[0])}" y1="${Y(q[1])}" x2="345" y2="${Y(q[1])}"/>`;
+        F.push({ svg: shape + ray + `<circle class="pt on" cx="${X(q[0])}" cy="${Y(q[1])}" r="5"/>`, text: `Is (${q}) inside? Send a ray to the right and count the edges it crosses` });
+        poly.forEach((a, i) => {
+          const b = poly[(i + 1) % poly.length];
+          if ((a[1] > q[1]) !== (b[1] > q[1])) {
+            const x = a[0] + ((q[1] - a[1]) * (b[0] - a[0])) / (b[1] - a[1]);
+            if (x > q[0]) { inside = !inside; hits++; F.push({ svg: shape + ray + `<line class="mst" x1="${X(a[0])}" y1="${Y(a[1])}" x2="${X(b[0])}" y2="${Y(b[1])}"/><circle class="pt hit" cx="${X(x)}" cy="${Y(q[1])}" r="4"/><circle class="pt on" cx="${X(q[0])}" cy="${Y(q[1])}" r="5"/>`, text: `Edge (${a}) to (${b}) straddles y = ${q[1]} and is crossed at x = ${x.toFixed(2)}, right of the point: ${hits} crossing${hits > 1 ? "s" : ""}` }); }
+          }
+        });
+        F.push({ svg: shape + ray + `<circle class="pt ${inside ? "hit" : "bad"}" cx="${X(q[0])}" cy="${Y(q[1])}" r="6"/>`, text: `${hits} crossing${hits === 1 ? "" : "s"}: ${hits % 2 ? "odd, so inside" : "even, so outside"}` });
+      }
+      F.push({ svg: shape, text: "O(n) per point. Treat each edge as half open in y (one end in, one end out) so a ray through a corner is counted once" });
+      return F;
+    },
+    mount: svgMount("0 0 350 200"),
+  });
+
+  // ===== NOI篇 =====
+  addVis("N7", {
+    title: "Fast Walsh–Hadamard transform: XOR convolution",
+    frames() {
+      const a = [1, 2, 3, 4], b = [2, 0, 1, 1], n = 4, F = [], A = [...a], B = [...b], C = Array(n).fill("");
+      const idx = range(n).map(k => k.toString(2).padStart(2, "0"));
+      const snap = (ri, mark, text) => F.push({ rows: [A, B, C].map((v, k) => ({ label: "ABC"[k], vals: [...v], idx, marks: k === ri ? mk(mark, "on") : {} })), text });
+      const fwt = (x, ri, tag) => {
+        for (let len = 1; len < n; len <<= 1) {
+          const hit = [];
+          for (let i = 0; i < n; i += 2 * len) for (let j = i; j < i + len; j++) { const u = x[j], v = x[j + len]; x[j] = u + v; x[j + len] = u - v; hit.push(j, j + len); }
+          snap(ri, hit, `${tag}, step ${len}: each pair (u, v) that differs only in bit ${Math.log2(len)} becomes (u + v, u − v)`);
+        }
+      };
+      snap(-1, [], "Want c[k] = Σ a[i]·b[j] over i ⊕ j = k. Transform both, multiply cell by cell, transform back");
+      fwt(A, 0, "Transform a"); fwt(B, 1, "Transform b");
+      for (let i = 0; i < n; i++) C[i] = A[i] * B[i];
+      snap(2, range(n), `Multiply position by position: C = ${C.join(", ")}`);
+      fwt(C, 2, "Transform C back");
+      for (let i = 0; i < n; i++) C[i] /= n;
+      const direct = range(n).map(k => range(n).reduce((s, i) => s + a[i] * b[i ^ k], 0));
+      if (direct.join() !== C.join()) throw new Error("FWT check failed");
+      snap(2, range(n), `Divide by n = 4: c = ${C.join(", ")}, the same as the direct O(n²) sum. log n layers: O(n log n). AND and OR versions only change the butterfly`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("N10", {
+    title: "Adaptive Simpson: split only where the curve bends",
+    frames() {
+      const f = x => Math.sqrt(x), X = x => 20 + x * 78, Y = y => 190 - y * 80, F = [], done = [];
+      const curve = range(81).map(k => { const x = k / 20; return `${X(x)},${Y(f(x))}`; }).join(" ");
+      const simp = (a, b) => ((b - a) / 6) * (f(a) + 4 * f((a + b) / 2) + f(b));
+      let total = 0;
+      const draw = (cur, text) => F.push({ svg: `${done.map(([a, b], k) => `<rect class="band" style="opacity:${k % 2 ? 0.55 : 1}" x="${X(a)}" y="${Y(f(b))}" width="${X(b) - X(a)}" height="${Y(0) - Y(f(b))}"/>`).join("")}${cur ? `<rect x="${X(cur[0])}" y="10" width="${X(cur[1]) - X(cur[0])}" height="180" style="fill:none;stroke:var(--v-cmp);stroke-width:2"/>` : ""}<line class="ax" x1="20" y1="190" x2="340" y2="190"/><polyline class="curve" points="${curve}"/>`, text });
+      draw(null, "Integrate √x from 0 to 4 (exactly 16/3 ≈ 5.3333). Simpson's rule fits a parabola through the ends and the middle");
+      const go = (a, b, whole, eps, d) => {
+        const m = (a + b) / 2, l = simp(a, m), r = simp(m, b), err = l + r - whole;
+        if (Math.abs(err) <= 15 * eps || d > 7) { done.push([a, b]); total += l + r + err / 15; draw([a, b], `[${a.toFixed(3)}, ${b.toFixed(3)}]: the two halves agree with the whole to ${Math.abs(err).toExponential(1)}: accept. Total so far ${total.toFixed(4)}`); return; }
+        draw([a, b], `[${a.toFixed(3)}, ${b.toFixed(3)}]: halves and whole differ by ${Math.abs(err).toExponential(1)}: too much, split`);
+        go(a, m, l, eps / 2, d + 1); go(m, b, r, eps / 2, d + 1);
+      };
+      go(0, 4, simp(0, 4), 1e-3, 0);
+      draw(null, `${done.length} pieces, crowded near 0 where √x bends sharply: ${total.toFixed(4)} against 5.3333. Halve eps on each split so the errors add up to at most eps`);
+      return F;
+    },
+    mount: svgMount("0 0 350 200"),
+  });
+  addVis("N11", {
+    title: "Borůvka: every group grabs its cheapest outgoing edge",
+    frames() {
+      const fa = range(8), find = x => (fa[x] === x ? x : (fa[x] = find(fa[x]))), edge = {}, F = [];
+      let total = 0, round = 0;
+      const groups = () => { const g = {}; for (let k = 0; k < 8; k++) (g[find(k)] = g[find(k)] || []).push(G.names[k]); return Object.values(g).map(x => x.join("")); };
+      F.push({ node: {}, label: {}, edge: {}, list: qlist("Groups", groups()), text: "Every node is its own group. Each round, every group picks its cheapest edge leaving it, all at once" });
+      while (groups().length > 1) {
+        round++;
+        const best = {};
+        G.edges.forEach(([u, v], e) => { const a = find(u), b = find(v); if (a === b) return; for (const c of [a, b]) if (best[c] === undefined || GW[e] < GW[best[c]] || (GW[e] === GW[best[c]] && e < best[c])) best[c] = e; });
+        const pick = [...new Set(Object.values(best))];
+        F.push({ node: {}, label: {}, edge: { ...edge, ...mk(pick, "hot") }, list: qlist("Groups", groups()), text: `Round ${round}: the cheapest edges out of each group are ${pick.map(e => `${G.names[G.edges[e][0]]}–${G.names[G.edges[e][1]]} (${GW[e]})`).join(", ")}` });
+        pick.forEach(e => { const [u, v] = G.edges[e]; if (find(u) !== find(v)) { fa[find(u)] = find(v); edge[e] = "mst"; total += GW[e]; } });
+        F.push({ node: {}, label: {}, edge: { ...edge }, list: qlist("Groups", groups()), text: `Add them and merge: ${groups().length} group${groups().length > 1 ? "s" : ""} left, tree weight ${total}` });
+      }
+      F.push({ node: {}, label: {}, edge: { ...edge }, list: qlist("Groups", groups()), text: `The number of groups at least halves each round: O(log V) rounds, O(E log V). Break ties by edge index so no cycle forms` });
+      return F;
+    },
+    mount: stage => graphMount(stage, true),
+  });
+  addVis("N12", {
+    title: "zkw segment tree: answer a range from the leaves up",
+    frames() {
+      const n = 8, N = 8, t = Array(2 * N).fill(0), a = [5, 3, 7, 2, 6, 4, 1, 8], F = [];
+      a.forEach((v, i) => (t[N + i] = v)); for (let i = N - 1; i; i--) t[i] = t[2 * i] + t[2 * i + 1];
+      const lv = [[1], [2, 3], [4, 5, 6, 7], range(8).map(k => 8 + k)];
+      const rows = m => lv.map(L => ({ label: `node ${L[0]}+`, vals: L.map(i => t[i]), idx: L, marks: Object.fromEntries(L.map((i, k) => [k, m[i] || ""])) }));
+      F.push({ rows: rows({}), text: "Array layout with no recursion: leaf i sits at N + i, node p has children 2p and 2p + 1. Query a[1..5] (0 based)" });
+      let s = N + 1 - 1, e = N + 5 + 1, sum = 0;
+      const m = { [s]: "on", [e]: "on" };
+      F.push({ rows: rows(m), text: `Start just outside the range: s = ${s}, e = ${e}. Climb until they become siblings` });
+      while ((s ^ e) !== 1) {
+        if (!(s & 1)) { sum += t[s ^ 1]; m[s ^ 1] = "hit"; }
+        if (e & 1) { sum += t[e ^ 1]; m[e ^ 1] = "hit"; }
+        F.push({ rows: rows({ ...m, [s]: "on", [e]: "on" }), text: `s = ${s}, e = ${e}: if s is a left child take its right sibling; if e is a right child take its left sibling. Sum ${sum}` });
+        s >>= 1; e >>= 1;
+      }
+      F.push({ rows: rows(m), text: `s and e are siblings: stop. Sum = ${sum} = ${a.slice(1, 6).join(" + ")}. Short loops and no calls make it about twice as fast as the recursive tree` });
+      void n;
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("N13", {
+    title: "Duval: Lyndon factorisation in one pass",
+    frames() {
+      const s = "abbabbaaba".split(""), n = s.length, F = [], parts = [];
+      let i = 0;
+      const snap = (j, k, text) => F.push({ rows: [{ label: "s", vals: s, marks: { ...mk(range(Math.max(0, i)), "done"), ...(k >= 0 ? { [k]: "on" } : {}), ...(j >= 0 ? { [j]: "hit" } : {}) } }], list: qlist("Factors", parts), text });
+      snap(-1, -1, "A Lyndon word is strictly smaller than all its rotations. Every string splits uniquely into Lyndon words that never increase");
+      while (i < n) {
+        let j = i + 1, k = i;
+        snap(j, k, `Start a run at ${i}. k = ${k} walks a copy of the current period, j looks at the next letter`);
+        while (j < n && s[k] <= s[j]) {
+          if (s[k] < s[j]) { k = i; snap(j, k, `s[j] = ${s[j]} > s[k]: the whole prefix up to j is one Lyndon word, reset k to ${i}`); }
+          else { k++; snap(j, k - 1, `s[j] = s[k] = ${s[j]}: the period repeats, move both`); }
+          j++;
+        }
+        const len = j - k;
+        while (i <= k) { parts.push(s.slice(i, i + len).join("")); i += len; }
+        snap(-1, -1, `${j < n ? `s[j] = ${s[j]} < s[k] = ${s[k]}` : "End of string"}: cut copies of length ${len} off the front`);
+      }
+      const isLyndon = w => range(w.length).slice(1).every(r => w < w.slice(r) + w.slice(0, r));
+      if (!parts.every(isLyndon) || parts.join("") !== s.join("") || !parts.every((p, k) => !k || parts[k - 1] >= p)) throw new Error("Duval check failed");
+      snap(-1, -1, `${parts.join(" ≥ ")}. i only moves forward and j at most twice as far: O(n). The smallest rotation starts at the last such cut of s + s`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("N15", {
+    title: "Pick's theorem: area from counting lattice points",
+    frames() {
+      const P = [[1, 1], [7, 2], [8, 6], [4, 7], [2, 5]], X = x => 20 + x * 34, Y = y => 190 - y * 23, F = [];
+      const g = (a, b) => (b ? g(b, a % b) : Math.abs(a));
+      let A2 = 0; P.forEach((p, i) => { const q = P[(i + 1) % P.length]; A2 += p[0] * q[1] - q[0] * p[1]; }); A2 = Math.abs(A2);
+      const B = P.reduce((s, p, i) => { const q = P[(i + 1) % P.length]; return s + g(q[0] - p[0], q[1] - p[1]); }, 0);
+      const onSeg = (x, y) => P.some((p, i) => { const q = P[(i + 1) % P.length]; return (q[0] - p[0]) * (y - p[1]) === (q[1] - p[1]) * (x - p[0]) && Math.min(p[0], q[0]) <= x && x <= Math.max(p[0], q[0]) && Math.min(p[1], q[1]) <= y && y <= Math.max(p[1], q[1]); });
+      const inside = (x, y) => { let c = false; P.forEach((a, i) => { const b = P[(i + 1) % P.length]; if ((a[1] > y) !== (b[1] > y) && x < a[0] + ((y - a[1]) * (b[0] - a[0])) / (b[1] - a[1])) c = !c; }); return c; };
+      const pts = []; for (let x = 0; x <= 9; x++) for (let y = 0; y <= 7; y++) pts.push([x, y, onSeg(x, y) ? "b" : inside(x, y) ? "i" : ""]);
+      const I = pts.filter(p => p[2] === "i").length;
+      const pic = show => `<polygon class="poly" points="${P.map(p => `${X(p[0])},${Y(p[1])}`).join(" ")}"/>${pts.map(([x, y, t]) => `<circle class="pt ${show.includes(t) ? (t === "b" ? "on" : "hit") : ""}" style="${show.includes(t) ? "" : "opacity:.25"}" cx="${X(x)}" cy="${Y(y)}" r="${show.includes(t) ? 4 : 2.5}"/>`).join("")}`;
+      F.push({ svg: pic([]), text: "A polygon whose corners are lattice points. Its area can be read off from points alone" });
+      F.push({ svg: pic(["b"]), text: `Boundary points: an edge from (x₁, y₁) to (x₂, y₂) holds gcd(|Δx|, |Δy|) of them, not counting one end. B = ${B}` });
+      F.push({ svg: pic(["b", "i"]), text: `Interior points: I = ${I}` });
+      F.push({ svg: pic(["b", "i"]), text: `Pick: area = I + B/2 − 1 = ${I} + ${B}/2 − 1 = ${I + B / 2 - 1}. The shoelace formula agrees: ${A2}/2 = ${A2 / 2}. Run it backwards to get I from the area` });
+      if (I + B / 2 - 1 !== A2 / 2) throw new Error("Pick check failed");
+      return F;
+    },
+    mount: svgMount("0 0 350 200"),
+  });
+  addVis("N17", {
+    title: "Slope trick: make the array non decreasing at least cost",
+    frames() {
+      const a = [3, 1, 4, 1, 5, 9, 2, 6], h = [], F = [];
+      let cost = 0;
+      const snap = (i, text, popped) => F.push({ rows: [{ label: "a", vals: a, marks: { ...mk(range(Math.max(0, i)), "done"), ...(i >= 0 ? { [i]: "on" } : {}) } }], list: qlist("Max heap", h.slice().sort((x, y) => y - x).map((v, k) => (k === 0 && popped ? `${v}` : v))) + qlist("Cost", [cost]), text });
+      snap(-1, "Change values (by +1 or −1 per step) so the array never goes down. The heap holds the breakpoints of the best cost as a function of the last value");
+      a.forEach((x, i) => {
+        h.push(x);
+        const top = Math.max(...h);
+        if (top > x) { cost += top - x; h.splice(h.indexOf(top), 1); h.push(x); snap(i, `Push ${x}. The largest earlier breakpoint ${top} is above it: pay ${top} − ${x} = ${top - x} to close the gap, replace ${top} by ${x}`, true); }
+        else snap(i, `Push ${x}. It is at least every breakpoint, so it costs nothing`);
+      });
+      snap(-1, `Minimum total change ${cost}, in O(n log n). The cost function is convex and piecewise linear, and the heap stores exactly where its slope changes`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("N18", {
+    title: "bitset: subset sums by shifting",
+    frames() {
+      const items = [3, 5, 7], S = 16, F = [];
+      let bs = 1;
+      const row = (prev, text) => F.push({ rows: [{ label: "reachable", vals: range(S).map(k => (bs >> k) & 1), marks: Object.fromEntries(range(S).map(k => [k, (bs >> k) & 1 ? ((prev >> k) & 1 ? "done" : "hit") : ""])) }], text });
+      row(1, "Bit s says sum s can be made. At first only 0 can");
+      for (const w of items) { const prev = bs; bs = (bs | (bs << w)) & ((1 << S) - 1); row(prev, `bs |= bs << ${w}: every reachable sum s also makes s + ${w}. One line updates all sums at once`); }
+      row(bs, `Reachable: ${range(S).filter(k => (bs >> k) & 1).join(", ")}. A machine word does 64 bits per step, so this is O(n · S / 64)`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("N19", {
+    title: "Binary trie: the largest XOR with 4",
+    frames() {
+      const par = [-1], names = ["·"], ch = [[-1, -1]], F = [], B = 3, nums = [1, 5, 6, 3];
+      const snap = (node, text, list) => F.push({ par: [...par], names: [...names], node, list, text });
+      snap({}, "Store numbers bit by bit from the highest. A path from the root spells one number");
+      for (const v of nums) {
+        let u = 0; const path = [0];
+        for (let b = B - 1; b >= 0; b--) { const c = (v >> b) & 1; if (ch[u][c] < 0) { ch[u][c] = par.length; par.push(u); names.push(String(c)); ch.push([-1, -1]); } u = ch[u][c]; path.push(u); }
+        snap(mk(path, "seen"), `Insert ${v} = ${v.toString(2).padStart(B, "0")}₂`);
+      }
+      const x = 4; let u = 0, got = 0; const path = [0];
+      for (let b = B - 1; b >= 0; b--) {
+        const want = 1 - ((x >> b) & 1), go = ch[u][want] >= 0 ? want : 1 - want;
+        u = ch[u][go]; path.push(u); got |= go << b;
+        snap({ ...mk(path, "open"), [u]: "cur" }, `Bit ${b} of 4 is ${(x >> b) & 1}: ${go === want ? `take the opposite bit ${want} to make this XOR bit 1` : `no ${want} branch, so take ${go}`}`);
+      }
+      snap(mk(path, "hit"), `The path spells ${got}: 4 ⊕ ${got} = ${x ^ got}, the largest possible. Greedy from the top works because a higher bit beats all lower ones. O(bits) per query`);
+      return F;
+    },
+    mount: dynTreeMount,
+  });
+  addVis("N20", {
+    title: "Stable marriage: proposals in order of preference",
+    frames() {
+      const M = "ABCD", W = "wxyz", pref = { A: "xwyz", B: "xzwy", C: "wxzy", D: "zywx" }, wp = { w: "BACD", x: "CABD", y: "DABC", z: "ADCB" };
+      const next = { A: 0, B: 0, C: 0, D: 0 }, eng = {}, F = [], st = {};
+      const snap = text => F.push({ rows: M.split("").map(m => ({ label: `${m} prefers`, vals: pref[m].split(""), marks: st[m] || {} })), list: qlist("Women's ranking", W.split("").map(w => `${w}: ${wp[w].split("").join(">")}`)) + qlist("Engaged", Object.entries(eng).map(([w, m]) => `${m}–${w}`)), text });
+      snap("Each free man proposes to the best woman he has not asked yet. A woman keeps the better of her current partner and the new one");
+      const free = M.split("");
+      while (free.length) {
+        const m = free.shift(), w = pref[m][next[m]], k = next[m]++;
+        st[m] = { ...(st[m] || {}), [k]: "on" };
+        if (!eng[w]) { eng[w] = m; st[m][k] = "hit"; snap(`${m} proposes to ${w}, who is free: engaged`); }
+        else if (wp[w].indexOf(m) < wp[w].indexOf(eng[w])) { const old = eng[w]; eng[w] = m; st[m][k] = "hit"; const ko = pref[old].indexOf(w); st[old] = { ...st[old], [ko]: "bad" }; free.push(old); snap(`${m} proposes to ${w}, who prefers ${m} to ${old}: ${old} is free again`); }
+        else { st[m][k] = "bad"; free.unshift(m); snap(`${m} proposes to ${w}, who prefers her ${eng[w]}: rejected`); }
+      }
+      snap("Nobody is free. No man and woman both prefer each other to their partners: the matching is stable. At most n² proposals");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("N22", {
+    title: "Partitions of n into parts no larger than k",
+    frames() {
+      const N = 8, K = 5, p = range(K + 1).map(() => Array(N + 1).fill("")), F = [];
+      const rows = m => p.slice(1).map((r, k) => ({ label: `parts ≤ ${k + 1}`, vals: r, marks: m[k + 1] || {} }));
+      for (let k = 1; k <= K; k++) for (let n = 0; n <= N; n++) {
+        const no = k > 1 ? p[k - 1][n] : 0, yes = n >= k ? p[k][n - k] : 0;
+        p[k][n] = k === 1 ? 1 : no + yes;
+        if ((k === 3 && n >= 3) || (k === 1 && n === 0)) F.push({ rows: rows({ [k]: { [n]: "hit", ...(n >= k ? { [n - k]: "on" } : {}) }, [k - 1]: { [n]: "on" } }), text: k === 1 ? "With only 1s, there is exactly one way to write each n" : `p(${n}, ≤${k}) = no part equal to ${k}: ${no}, plus at least one ${k} (remove it): p(${n - k}, ≤${k}) = ${yes}. Total ${p[k][n]}` });
+      }
+      F.push({ rows: rows({ [K]: { [N]: "hit" } }), text: `${N} has ${p[K][N]} partitions into parts ≤ ${K} (and 22 in all). It is a complete knapsack over part sizes: O(n · k)` });
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("N24", {
+    title: "Simulated annealing: accept worse moves less as it cools",
+    frames() {
+      const f = x => Math.sin(x * 1.7) * 2 + Math.sin(x * 4.3) * 0.8 + (x - 6.5) ** 2 / 8 + 3, X = x => 20 + x * 32, Y = y => 190 - y * 22, F = [];
+      const curve = range(101).map(k => { const x = k / 10; return `${X(x)},${Y(f(x))}`; }).join(" ");
+      let seed = 3; const rnd = () => { seed = (seed * 1103515245 + 12345) % 2147483648; return seed / 2147483648; };
+      let x = 1, best = x, T = 3;
+      const draw = (cand, ok, text) => F.push({ svg: `<line class="ax" x1="20" y1="190" x2="340" y2="190"/><polyline class="curve" points="${curve}"/>${cand !== null ? `<circle class="pt ${ok ? "on" : "bad"}" cx="${X(cand)}" cy="${Y(f(cand))}" r="4"/>` : ""}<circle class="pt hit" cx="${X(best)}" cy="${Y(f(best))}" r="6"/><circle class="pt on" cx="${X(x)}" cy="${Y(f(x))}" r="5" style="fill:var(--v-cur)"/><text class="lbl" x="250" y="20">T = ${T.toFixed(2)}</text>`, text });
+      draw(null, false, "Minimise a bumpy function. Blue is where we stand, green the best seen. The temperature T controls how far we jump and how bold we are");
+      for (let it = 0; it < 26; it++) {
+        const c = Math.min(10, Math.max(0, x + (rnd() * 2 - 1) * T * 1.5)), dE = f(c) - f(x), pr = dE < 0 ? 1 : Math.exp(-dE / T), ok = rnd() < pr;
+        const was = x;
+        if (ok) x = c; if (f(x) < f(best)) best = x;
+        if (it < 8 || it % 3 === 0) draw(c, ok, `Try ${c.toFixed(2)}: ${dE < 0 ? "better, always move" : `worse by ${dE.toFixed(2)}, accept with chance e^(−Δ/T) = ${pr.toFixed(2)}: ${ok ? "moved" : "stayed"}`}${ok ? "" : ` at ${was.toFixed(2)}`}`);
+        T *= 0.88;
+      }
+      draw(null, false, `Best found ${best.toFixed(2)} with value ${f(best).toFixed(2)}. Early on it climbs out of shallow valleys; as T falls it settles. No guarantee: run it several times and keep the best`);
+      return F;
+    },
+    mount: svgMount("0 0 350 200"),
+  });
 
 
   // ---- shared numbers: tier, streaks, milestones, next chapter ----
@@ -3776,7 +5491,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (st) {
       document.querySelectorAll("[data-simtab]").forEach(b => b.setAttribute("aria-selected", String(b === st)));
       const host = $("#homeVis"); host.classList.remove("swap"); void host.offsetWidth; host.classList.add("swap");
-      mountVisInto(host, VIS[st.dataset.simtab]); enterSim(host); return;
+      mountVisInto(host, [].concat(VIS[st.dataset.simtab])[0]); enterSim(host); return;
     }
     const hb = e.target.closest("[data-heroid]");
     if (hb) { selected = hb.dataset.heroid; zoomS = 1; pulseId = selected; location.hash = "map"; return; }
