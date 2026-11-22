@@ -518,9 +518,8 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 
 /* map node states and path colours */
 .node.locked rect.box { stroke-dasharray: 4 3; }
-.node.locked text { opacity: .78; }
+.node.locked text { opacity: .9; }
 .node .lock { fill: none; stroke: var(--muted); stroke-width: 1.4; }
-.node.ready:not(.learned) rect.box { stroke: var(--c); stroke-width: 1.8; }
 .node.learning rect.box { stroke: var(--v-cmp); stroke-width: 2.2; stroke-dasharray: none; }
 .node.learned text.mark { fill: var(--surface); font-size: 13px; font-weight: 700; }
 .node.startpick rect.box { stroke: var(--v-cur); stroke-width: 3; }
@@ -729,9 +728,90 @@ body.mapopen { overflow: hidden; }
 .mpside .selcard { padding: 14px; }
 .mapbar { display: none; }
 .toast { z-index: 60; }
-.mapwrap.grouped { grid-template-columns: 0 minmax(0, 1fr); gap: 0; }
-.mapwrap.grouped .lanerail, .mapwrap.grouped .steprow, .mapwrap.grouped .minimap { visibility: hidden; }
-.mappanel .seg.arr { display: grid; grid-template-columns: 1fr 1fr; }
+/* the level rail slides away for other arrangements and flows back slowly for Prerequisites */
+.mapwrap { transition: grid-template-columns .8s var(--ease), column-gap .8s var(--ease); }
+.lanerail, .steprow, .minimap { transition: opacity .9s ease .25s, transform 1.1s var(--ease) .25s; }
+.mapwrap.grouped { grid-template-columns: 0px minmax(0, 1fr); column-gap: 0; }
+.mapwrap.grouped .lanerail, .mapwrap.grouped .steprow, .mapwrap.grouped .minimap { opacity: 0; pointer-events: none; transition-duration: .35s, .6s; transition-delay: 0s; }
+.mapwrap.grouped .lanerail { transform: translateX(-48px); }
+.mapwrap.grouped .steprow { transform: translateY(-8px); }
+.rail-label { transition: opacity .25s ease; }
+.arrsub { margin-top: 10px; }
+.mappanel .seg.arr { grid-template-columns: repeat(3, 1fr); }
+/* no scrollbars on the map or its panel: drag, wheel and touch move them */
+.mapfull .canvas, .mappanel { scrollbar-width: none; }
+.mapfull .canvas::-webkit-scrollbar, .mappanel::-webkit-scrollbar { display: none; }
+/* the ripple that covers the moment boxes change places */
+.mapcol::after { content: ""; position: absolute; inset: 30px 0 0; pointer-events: none; border-radius: var(--r-card); opacity: 0;
+  background: radial-gradient(circle at 50% 45%, transparent 0 22%, color-mix(in srgb, var(--accent) 16%, transparent) 24%, transparent 27%, transparent 40%, color-mix(in srgb, var(--accent) 10%, transparent) 42%, transparent 46%); }
+.mapcol.shifting::after { animation: ripple 1.4s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes ripple { 0% { opacity: 0; transform: scale(.35); } 20% { opacity: 1; } 100% { opacity: 0; transform: scale(1.6); } }
+/* chapter states, readable at a glance */
+.hatchbg { fill: var(--surface); } .hatchln { stroke: color-mix(in srgb, var(--fg) 9%, transparent); stroke-width: 3.5; }
+.node.locked rect.box { fill: url(#hatch); stroke: color-mix(in srgb, var(--fg) 30%, transparent); stroke-width: 1.4; stroke-dasharray: 5 4; }
+.node.locked text.t, .node.locked text.id { fill: var(--muted); }
+.node.ready:not(.learned):not(.learning) rect.box { fill: color-mix(in srgb, var(--c) 13%, var(--surface)); stroke: var(--c); stroke-width: 2.4; }
+.node.learning rect.box { fill: color-mix(in srgb, var(--v-cmp) 15%, var(--surface)); stroke: var(--v-cmp); stroke-width: 2.8; stroke-dasharray: none; }
+.node .badge { font-family: var(--f-mono); font-size: 10.5px; font-weight: 700; text-anchor: end; letter-spacing: .02em; }
+.node.ready .badge { fill: var(--c); } .node.learning .badge { fill: var(--v-cmp); }
+.node .lbar { fill: var(--v-cmp); }
+.node.learning circle.ready { display: none; }
+svg.far .node .badge { display: none; }
+.sw.locked { background: repeating-linear-gradient(45deg, transparent 0 3px, color-mix(in srgb, var(--fg) 14%, transparent) 3px 5px); border-style: dashed; opacity: 1; }
+.sw.ready { background: color-mix(in srgb, var(--accent) 18%, transparent); border-color: var(--accent); border-width: 2px; }
+.sw.learning { background: linear-gradient(to top, var(--v-cmp) 0 3px, color-mix(in srgb, var(--v-cmp) 18%, transparent) 3px); border-color: var(--v-cmp); border-width: 2px; border-style: solid; }
+/* folded levels read as finished */
+.foldbar { fill: color-mix(in srgb, var(--c) 22%, transparent); stroke: var(--c); stroke-width: 1.5; }
+.foldtxt { font-size: 18px; font-weight: 600; fill: var(--fg); }
+/* topic icons in group boxes: each has its own little animation when the group arrives or you point at it */
+.gicon { color: var(--c); overflow: visible; }
+.gicon * { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transform-box: fill-box; transform-origin: center; }
+.gi-algo rect, .gi-dp rect { fill: color-mix(in srgb, currentColor 35%, transparent); }
+.gi-algo rect { transform-origin: 50% 100%; } .gi-str path { transform-origin: 0 50%; }
+.gicon [pathLength] { stroke-dasharray: 1; }
+@keyframes iDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes iGrowY { from { transform: scaleY(0); } }
+@keyframes iGrowX { from { transform: scaleX(0); } }
+@keyframes iDrop { from { transform: translateY(-8px); opacity: 0; } }
+@keyframes iPop { 0% { transform: scale(.2); opacity: 0; } 70% { transform: scale(1.25); opacity: 1; } }
+@keyframes iLight { from { opacity: .1; } }
+@keyframes iPartL { 50% { transform: translateX(-3px); } } @keyframes iPartR { 50% { transform: translateX(3px); } }
+@keyframes iSpin { from { transform: rotate(-120deg) scale(.6); } }
+@keyframes iBlink { 25%, 75% { opacity: 0; } 50%, 100% { opacity: 1; } }
+:is(svg.arriving, .gbox:hover) .gi-basics .i1 { animation: iPartL .9s var(--ease) .4s; }
+:is(svg.arriving, .gbox:hover) .gi-basics .i2 { animation: iPartR .9s var(--ease) .4s; }
+:is(svg.arriving, .gbox:hover) .gi-algo rect { animation: iGrowY .6s var(--ease) both; }
+:is(svg.arriving, .gbox:hover) .gi-algo .i2 { animation-delay: .1s; } :is(svg.arriving, .gbox:hover) .gi-algo .i3 { animation-delay: .2s; } :is(svg.arriving, .gbox:hover) .gi-algo .i4 { animation-delay: .3s; }
+:is(svg.arriving, .gbox:hover) .gi-ds rect { animation: iDrop .5s var(--ease) both; }
+:is(svg.arriving, .gbox:hover) .gi-ds .i2 { animation-delay: .15s; } :is(svg.arriving, .gbox:hover) .gi-ds .i3 { animation-delay: .3s; }
+:is(svg.arriving, .gbox:hover) .gi-graph .ie { animation: iDraw .7s var(--ease) .3s both; }
+:is(svg.arriving, .gbox:hover) .gi-graph circle { animation: iPop .45s var(--ease) both; }
+:is(svg.arriving, .gbox:hover) .gi-graph .i2 { animation-delay: .12s; } :is(svg.arriving, .gbox:hover) .gi-graph .i3 { animation-delay: .24s; }
+:is(svg.arriving, .gbox:hover) .gi-dp rect { animation: iLight .4s ease-out both; }
+:is(svg.arriving, .gbox:hover) .gi-dp .c1 { animation-delay: .12s; } :is(svg.arriving, .gbox:hover) .gi-dp .c2 { animation-delay: .24s; } :is(svg.arriving, .gbox:hover) .gi-dp .c3 { animation-delay: .36s; } :is(svg.arriving, .gbox:hover) .gi-dp .c4 { animation-delay: .48s; }
+:is(svg.arriving, .gbox:hover) .gi-math .id { animation: iDraw .9s var(--ease) .2s both; }
+:is(svg.arriving, .gbox:hover) .gi-str path:not(.ic) { animation: iGrowX .45s var(--ease) both; }
+:is(svg.arriving, .gbox:hover) .gi-str .i2 { animation-delay: .12s; } :is(svg.arriving, .gbox:hover) .gi-str .i3 { animation-delay: .24s; }
+:is(svg.arriving, .gbox:hover) .gi-str .ic { animation: iBlink 1s steps(1) .5s 2; }
+:is(svg.arriving, .gbox:hover) .gi-geo .id { animation: iDraw .8s var(--ease) both, iSpin .9s var(--ease) both; }
+:is(svg.arriving, .gbox:hover) .gi-geo circle { animation: iPop .45s var(--ease) .6s both; }
+/* level polygons on the lane names: square, pentagon, hexagon, heptagon */
+.rail-key { display: inline-flex; align-items: center; gap: 6px; }
+.licon { width: 22px; height: 22px; flex: none; overflow: visible; }
+.licon .lp { fill: color-mix(in srgb, var(--c) 18%, transparent); stroke: var(--c); stroke-width: 1.8; stroke-linejoin: round; stroke-dasharray: 1; }
+.licon circle { fill: var(--c); transform-box: fill-box; transform-origin: center; }
+@keyframes lTurn { from { transform: rotate(0deg); } to { transform: rotate(var(--turn)); } }
+.lanerail.fresh .licon .lp { animation: iDraw 1s var(--ease) .2s both; }
+.lanerail.fresh .licon circle { animation: iPop .4s var(--ease) both; animation-delay: calc(.7s + var(--k) * 90ms); }
+.lanerail.fresh .licon { animation: lTurn 1.3s var(--ease) 1.4s both; }
+@media (hover: hover) and (pointer: fine) { .rail-item:hover .licon { animation: lTurn .9s var(--ease); } }
+.rail-item.tight .licon { width: 18px; height: 18px; }
+@media (prefers-reduced-motion: reduce) {
+  .mapwrap, .lanerail, .steprow, .minimap { transition: none; }
+  .gicon *, .licon, .licon * { animation: none !important; }
+  .mapcol.shifting::after { animation: none; }
+}
+.mappanel .seg.arr { display: grid; }
 @media (min-width: 768px) { .mapfull .peek { display: none; } }
 /* arrangements and the floating move */
 .node { transform-box: fill-box; transform-origin: center; }
@@ -1056,6 +1136,19 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     grouped = null;
   }
 
+
+  // A line from a chapter to one that builds on it: side to side when they sit apart horizontally, else top to bottom.
+  function edgeD(a, b) {
+    if (arrange === "map") {
+      const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = x1 + Math.max(24, (x2 - x1) / 2);
+      return `M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}`;
+    }
+    const ax = a.x + W / 2, ay = a.y + H / 2, bx = b.x + W / 2, by = b.y + H / 2, dx = bx - ax, dy = by - ay;
+    if (Math.abs(dx) >= Math.abs(dy)) { const sx = ax + Math.sign(dx) * W / 2, ex = bx - Math.sign(dx) * W / 2, m = (sx + ex) / 2; return `M${sx},${ay} C${m},${ay} ${m},${by} ${ex},${by}`; }
+    const sy = ay + Math.sign(dy) * H / 2, ey = by - Math.sign(dy) * H / 2, m = (sy + ey) / 2;
+    return `M${ax},${sy} C${ax},${m} ${bx},${m} ${bx},${ey}`;
+  }
+
   function svgTree() {
     if (!layout) computeLayout();
     if (arrange === "map") layout.height = layout.mapHeight; else computeGroups();
@@ -1064,22 +1157,21 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const anc = selected ? ancestors(selected) : null, desc = selected ? descendants(selected) : null;
     const hot = selected ? new Set([selected, ...anc, ...desc]) : null;
     let out = "";
-    if (arrange !== "map") out += `<g class="glayer">${grouped.boxes.map(b => `<g class="gbox${b.dim ? " dim" : ""}" style="--c: ${b.color}"><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="18"/><text class="gname" x="${b.x + 24}" y="${b.y + 40}">${esc(b.name)}</text><text class="gcount" x="${b.x + b.w - 24}" y="${b.y + 40}" text-anchor="end">${b.ids.length} · ${b.ids.filter(id => statusOf(id) === "learned").length} learned</text></g>`).join("")}</g>`;
+    if (arrange !== "map") out += `<g class="glayer">${grouped.boxes.map(b => `<g class="gbox${b.dim ? " dim" : ""}" style="--c: ${b.color}"><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="18"/>${TOPIC_ICON[b.key] ? `<svg class="gicon gi-${b.key}" x="${b.x + 18}" y="${b.y + 14}" width="36" height="36" viewBox="0 0 24 24" aria-hidden="true">${TOPIC_ICON[b.key]}</svg>` : ""}<text class="gname" x="${b.x + (TOPIC_ICON[b.key] ? 64 : 24)}" y="${b.y + 41}">${esc(b.name)}</text><text class="gcount" x="${b.x + b.w - 24}" y="${b.y + 40}" text-anchor="end">${b.ids.length} · ${b.ids.filter(id => statusOf(id) === "learned").length} learned</text></g>`).join("")}</g>`;
     if (arrange === "map") lanes.forEach(({ level: l, top, height: h }) => {
       const list = A.filter(c => c.id.startsWith(l.key));
       const done = list.filter(c => statusOf(c.id) === "learned").length;
       out += `<g style="--c: var(--lv-${l.slug})"><rect class="lane-bg" data-lv="${l.key}" x="0" y="${top}" width="${width}" height="${h}"/>
-        <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/>${lanes.find(x => x.level === l).folded ? `<text class="foldtxt" x="${LANEW + 8}" y="${top + 25}">${l.name} · all ${list.length} chapters learned · folded</text>` : ""}</g>`;
+        <line class="lane-rule" x1="0" x2="${width}" y1="${top}" y2="${top}"/>${lanes.find(x => x.level === l).folded ? `<rect class="foldbar" x="${LANEW + 4}" y="${top + 4}" width="${Math.min(width - LANEW - 8, 900)}" height="${h - 8}" rx="12"/><text class="foldtxt" x="${LANEW + 22}" y="${top + 27}">✓ ${l.name} complete · ${list.length} of ${list.length} learned · folded</text>` : ""}</g>`;
     });
-    if (arrange === "map") A.forEach(c => c.pre.forEach(p => {
-      if (isFoldedId(c.id) || isFoldedId(p)) return;
+    A.forEach(c => c.pre.forEach(p => {
+      if (arrange === "map" && (isFoldedId(c.id) || isFoldedId(p))) return;
       const a = xy[p], b = xy[c.id];
-      const x1 = a.x + W, y1 = a.y + H / 2, x2 = b.x, y2 = b.y + H / 2, mx = x1 + Math.max(24, (x2 - x1) / 2);
       const inc = selected && ((c.id === selected && anc.has(p)) || (anc.has(c.id) && anc.has(p)));
       const outg = selected && (p === selected || (desc.has(c.id) && desc.has(p)));
       const on = inc || outg;
       const filtered = levelFilter !== "all" && !(c.id.startsWith(levelFilter) || p.startsWith(levelFilter));
-      out += `<path data-f="${p}" data-t="${c.id}" class="edge${on ? " hot" + (inc ? " in" : " out") : ""}${goalSet && goalSet.has(p) && goalSet.has(c.id) ? " goaledge" : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="M${x1},${y1} C${mx},${y1} ${x2 - Math.max(24, (x2 - x1) / 2)},${y2} ${x2},${y2}"/>`;
+      out += `<path data-f="${p}" data-t="${c.id}" class="edge${on ? " hot" + (inc ? " in" : " out") : ""}${goalSet && goalSet.has(p) && goalSet.has(c.id) ? " goaledge" : ""}${(selected && !on) || filtered ? " dim" : ""}" pathLength="1" style="--d:${depthOf(p)}" d="${edgeD(a, b)}"/>`;
     }));
     A.forEach(c => {
       if (arrange === "map" && isFoldedId(c.id)) return;
@@ -1099,6 +1191,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         <rect class="box" width="${W}" height="${H}" rx="8"/>
         <text class="id" x="12" y="18">${esc(c.id)}</text>
         ${locked ? `<path class="lock" d="M${W - 17} 13.5h10v7h-10zM${W - 15} 13.5v-2.5a3 3 0 0 1 6 0v2.5"/>` : `<circle class="ready" cx="${W - 12}" cy="14" r="4"/>`}
+        ${st === "learning" ? `<text class="badge" x="${W - 12}" y="18">learning</text><rect class="lbar" x="2" y="${H - 6}" width="${(W - 4) / 2}" height="4" rx="2"/>` : st === "none" && isReady(c) ? `<text class="badge" x="${W - 22}" y="18">ready</text>` : ""}
         <text class="t" x="12" y="36"${fitT}>${esc(title)}</text>
         <text class="far" x="${W / 2}" y="${H / 2 + 12}" text-anchor="middle" aria-hidden="true">${esc(c.id)}</text>
         <text class="en" x="12" y="49">${esc(en)}</text>
@@ -1106,6 +1199,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         ${pulseId === c.id ? `<rect class="pulse" width="${W}" height="${H}" rx="8"/>` : ""}
       </g>`;
     });
+    out = `<defs><pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect class="hatchbg" width="9" height="9"/><line class="hatchln" x1="0" y1="0" x2="0" y2="9"/></pattern></defs>` + out;
     const intro = introPending; introPending = false; // the first map drawn each visit builds itself
     return `<svg class="${intro ? "intro" : ""}${arrange !== "map" ? " grouped" : ""}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet" role="group" aria-label="Course map: 101 chapters in four lanes, one per level. Arrow keys move between chapters, Enter selects, Escape clears">${out}</svg>`;
   }
@@ -1131,7 +1225,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const ready = A.filter(isReady).slice(0, 8).map(c => c.id);
       return `<div class="block"><p class="label">How to read the map</p>
         <p>Each lane is one level of the course. A line runs from a chapter to the chapters that build on it, left to right. Click a chapter to trace its path.</p>
-        <div class="legend"><span><i class="sw locked"></i>Locked</span><span><i class="sw ready"></i>Ready</span><span><i class="sw learning"></i>Learning</span><span><i class="sw learned"></i>Learned ✓</span><span><i class="ln in"></i>needs</span><span><i class="ln out"></i>unlocks</span></div>
+        <div class="legend"><span><i class="sw locked"></i>Locked</span><span><i class="sw ready"></i>Ready</span><span><i class="sw learning"></i>Learning</span><span><i class="sw learned"></i>Learned</span><span><i class="ln in"></i>needs</span><span><i class="ln out"></i>unlocks</span></div>
         <p class="hint" style="margin-top:12px">Steps count prerequisites: a step 3 chapter builds on chapters from steps 1 and 2. Prerequisites are estimated from the chapter contents</p></div>
         ${goalHtml()}
         <div class="block"><p class="label">Ready to learn next</p>${ready.length ? pathList(ready) : `<p class="hint">Everything is learned</p>`}</div>`;
@@ -1155,17 +1249,35 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   // ---- views ----
 
 
+
+  // ---- custom icons: one per topic (group boxes) and one polygon per level (the lane names) ----
+  const TOPIC_ICON = {
+    basics: '<path class="i1" d="M9 4c-2 0-2 2-2 4s-1.5 3-3 4c1.5 1 3 2 3 4s0 4 2 4"/><path class="i2" d="M15 4c2 0 2 2 2 4s1.5 3 3 4c-1.5 1-3 2-3 4s0 4-2 4"/>',
+    algo: '<rect class="i1" x="2.5" y="13" width="3.5" height="7" rx="1"/><rect class="i2" x="7.8" y="8" width="3.5" height="12" rx="1"/><rect class="i3" x="13.1" y="11" width="3.5" height="9" rx="1"/><rect class="i4" x="18.4" y="4" width="3.5" height="16" rx="1"/>',
+    ds: '<rect class="i1" x="3" y="4" width="18" height="6" rx="1.5"/><rect class="i2" x="3" y="13" width="8" height="7" rx="1.5"/><rect class="i3" x="13" y="13" width="8" height="7" rx="1.5"/>',
+    graph: '<path class="ie" pathLength="1" d="M8.4 6.4 15.6 7.6M7.1 8.4l2.8 7.8M16.6 10.1l-4.2 6.2"/><circle class="i1" cx="6" cy="6" r="2.6"/><circle class="i2" cx="18" cy="8" r="2.6"/><circle class="i3" cx="11" cy="18.5" r="2.6"/>',
+    dp: [0, 1, 2].flatMap(r => [0, 1, 2].map(c => `<rect class="c${r + c}" x="${3.5 + c * 6.5}" y="${3.5 + r * 6.5}" width="4.5" height="4.5" rx="1"/>`)).join(""),
+    math: '<path class="id" pathLength="1" d="M18 4H6l7 8-7 8h12"/>',
+    str: '<path class="i1" d="M4 7h12"/><path class="i2" d="M4 12h16"/><path class="i3" d="M4 17h8"/><path class="ic" d="M15 14.5v5"/>',
+    geo: '<path class="id" pathLength="1" d="M12 3.5 21 19H3z"/><circle class="i1" cx="12" cy="14" r="2.8"/>',
+  };
+  const LEVEL_SIDES = { 基: 4, 进: 5, 拓: 6, N: 7 }; // square, pentagon, hexagon, heptagon
+  function levelIcon(key) {
+    const n = LEVEL_SIDES[key], a0 = n % 2 ? -Math.PI / 2 : -Math.PI / 2 + Math.PI / n;
+    const pts = Array.from({ length: n }, (_, k) => [12 + 8.5 * Math.cos(a0 + (2 * Math.PI * k) / n), 12 + 8.5 * Math.sin(a0 + (2 * Math.PI * k) / n)]);
+    return `<svg class="licon" viewBox="0 0 24 24" aria-hidden="true" style="--turn:${(360 / n).toFixed(2)}deg"><polygon class="lp" pathLength="1" points="${pts.map(p => p.map(v => v.toFixed(2)).join(",")).join(" ")}"/>${pts.map(([x, y], k) => `<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="1.7" style="--k:${k}"/>`).join("")}</svg>`;
+  }
+
   // ---- arrangements: chapters regroup by level, topic or status; the group you filter on floats to the front ----
   let arrange = "map", groupWrap = 0, grouped = null;
   const stateOf = c => { const st = statusOf(c.id); return st === "learned" ? "learned" : st === "learning" ? "learning" : isReady(c) ? "ready" : "locked"; };
   const ARRANGE = {
-    level: () => LEVELS.map(l => ({ key: l.key, name: l.name, color: `var(--lv-${l.slug})`, ids: A.filter(c => c.id.startsWith(l.key)).map(c => c.id) })),
     topic: () => FAMILIES.map(f => ({ key: f.key, name: f.name, color: `var(--fam-${f.key})`, ids: A.filter(c => c.fam === f.key).map(c => c.id) })),
     status: () => [["learned", "Learned", "var(--v-done)"], ["learning", "Learning", "var(--v-cmp)"], ["ready", "Ready", "var(--accent)"], ["locked", "Locked", "var(--muted)"]]
       .map(([key, name, color]) => ({ key, name, color, ids: A.filter(c => stateOf(c) === key).map(c => c.id) })),
   };
   function computeGroups() {
-    const front = arrange === "level" ? levelFilter : arrange === "topic" ? topicFilter : "all";
+    const front = arrange === "topic" ? topicFilter : "all";
     const gs = ARRANGE[arrange]().filter(g => g.ids.length).sort((a, b) => (b.key === front) - (a.key === front));
     const xy = {}, boxes = [], PAD = 24, HEAD = 64, GAP = 48, PER = 6, X0 = 24, maxW = Math.max(W + 2 * PAD + X0, groupWrap || layout.width);
     let x = X0, y = 24, rowH = 0;
@@ -1183,13 +1295,15 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   const curXY = () => { if (arrange === "map") return layout.xy; if (!grouped) computeGroups(); return grouped.xy; };
   // A box that changes place drifts there on a gentle curve, dips as if settling into water, and comes to rest.
   function floatNodes(before) {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return 0;
     const xy = curXY();
+    let moved = 0;
     document.querySelectorAll("#canvas .node").forEach(n => {
       const b = before[n.dataset.id], a = xy[n.dataset.id];
       if (!b || !a) return;
       const dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy);
       if (d < 2) return;
+      moved++;
       const side = Math.random() < 0.5 ? -1 : 1, amp = Math.min(80, d * 0.18) * side, rot = side * (2 + Math.random() * 2.5);
       const mx = b.x + dx / 2 - (dy / d) * amp, my = b.y + dy / 2 + (dx / d) * amp;
       const at = (x, y, r) => `translate(${x}px, ${y}px) rotate(${r}deg)`;
@@ -1201,21 +1315,36 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         { transform: at(a.x, a.y, 0) },
       ], { duration: 1100 + Math.random() * 300, delay: Math.random() * 320, fill: "backwards" });
     });
+    return moved;
   }
+  // A soft ripple across the map while boxes are between places.
+  function shimmer() {
+    const col = document.querySelector(".mapcol");
+    if (!col || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    col.classList.remove("shifting"); void col.offsetWidth; col.classList.add("shifting");
+    setTimeout(() => col.classList.remove("shifting"), 1500);
+  }
+  const arrSub = () => arrange === "topic" ? `<p class="label">Bring a topic to the front</p>${topicPills()}`
+    : arrange === "status" ? `<p class="hint">Chapters gather by where you are: learned, learning, ready and locked</p>`
+    : `<p class="hint">One lane per level. Click a level name on the left to fit it in view</p>`;
   function rearrange(mode) {
     const canvas = $("#canvas");
     if (!canvas || mode === arrange) return;
     const go = () => {
       arrange = mode; grouped = null;
+      if (mode !== "topic") topicFilter = "all";
+      const sub = $("#arrSub"); if (sub) sub.innerHTML = arrSub();
+      if (mode === "map") { const r = $("#laneRail"); if (r) { r.classList.add("fresh"); setTimeout(() => r.classList.remove("fresh"), 2600); } }
       groupWrap = Math.max(W + 96, canvas.clientWidth / curS - 24); // groups wrap to the width you can see at this zoom
       $(".mapwrap").classList.toggle("grouped", mode !== "map");
       refreshTree();
-      const svg = $("#canvas svg"); if (svg) svg.classList.add(mode === "map" ? "edgesback" : "arriving");
+      const svg = $("#canvas svg"); if (svg) svg.classList.add("edgesback", ...(mode === "map" ? [] : ["arriving"]));
       document.querySelectorAll("[data-arrange]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.arrange === arrange)));
       if (mode === "map") placeCanvas(); else canvas.scrollTo({ left: 0, top: 0, behavior: "smooth" });
     };
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return go();
     const svg = $("#canvas svg"); if (svg) svg.classList.add("leaving");
+    shimmer();
     setTimeout(go, 180);
   }
   function exitMap() {
@@ -1224,6 +1353,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   }
 
   // ---- tree: the floating card for a selection, keyboard movement, the ready count ----
+  const finishedLevels = () => LEVELS.filter(l => A.filter(c => c.id.startsWith(l.key)).every(c => statusOf(c.id) === "learned"));
+  const foldLabel = () => { const n = finishedLevels().length; return `Fold finished levels${n ? ` · ${n} finished` : " · none finished yet"}`; };
   const readyCount = () => A.filter(c => isReady(c) || statusOf(c.id) === "learning").length;
   const rovingId = () => selected || (nextChapter().cur || A[0]).id;
   function peekHtml() {
@@ -1268,6 +1399,20 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const pct = $("#zoomPct");
     if (pct) pct.textContent = Math.round(s * 100) + "%";
     requestAnimationFrame(updateOverlays); // after the caller has moved the scroll position
+  }
+  // Glide toward a zoom level a little each frame, keeping the point under (ax, ay) still.
+  let zTarget = null, zAnchor = [0, 0], zRaf = 0;
+  function smoothZoom(canvas, target, ax = canvas.clientWidth / 2, ay = canvas.clientHeight / 2) {
+    zTarget = clampS(target); zAnchor = [ax, ay];
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { zoomAt(canvas, zTarget, ax, ay); zTarget = null; return; }
+    if (zRaf) return;
+    const step = () => {
+      if (!canvas.isConnected || zTarget === null) { zRaf = 0; zTarget = null; return; }
+      const next = curS + (zTarget - curS) * 0.2, done = Math.abs(zTarget - next) < 0.003;
+      zoomAt(canvas, done ? zTarget : next, zAnchor[0], zAnchor[1]);
+      if (done) { zRaf = 0; zTarget = null; } else zRaf = requestAnimationFrame(step);
+    };
+    zRaf = requestAnimationFrame(step);
   }
   // Zoom keeping the map point under (ax, ay), canvas coordinates, where it is.
   function zoomAt(canvas, s, ax = canvas.clientWidth / 2, ay = canvas.clientHeight / 2) {
@@ -1347,11 +1492,12 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     canvas.addEventListener("pointerup", end);
     canvas.addEventListener("pointercancel", end);
     canvas.addEventListener("wheel", e => {
-      if (!e.ctrlKey) return; // plain wheel scrolls; Ctrl+wheel and trackpad pinch zoom
-      e.preventDefault();
+      e.preventDefault(); // the wheel zooms (around the pointer); drag to move
       const r = canvas.getBoundingClientRect();
-      zoomAt(canvas, curS * Math.exp(-e.deltaY * 0.002), e.clientX - r.left, e.clientY - r.top);
+      smoothZoom(canvas, (zTarget ?? curS) * Math.exp(-e.deltaY * (e.deltaMode ? 0.06 : 0.0018)), e.clientX - r.left, e.clientY - r.top);
     }, { passive: false });
+    // clicking empty map clears the selection: everything shows at full strength, the view stays where it is
+    canvas.addEventListener("click", e => { if (!dragMoved && !e.target.closest(".node") && selected) { selected = null; refreshTree(); } });
   }
   let canvasRO = null;
   // The Tree tab: the course map in miniature. Clicking it opens the full-screen map (#map).
@@ -1386,17 +1532,16 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       <div class="mapmain"><div class="mapwrap${arrange !== "map" ? " grouped" : ""}"><div class="lanerail" id="laneRail">${railHtml()}</div><div class="mapcol"><button class="skip" data-skipmap>Skip the map</button><div class="steprow" id="stepRow" title="Steps count prerequisites: a step 3 chapter builds on chapters from steps 1 and 2">${stepHtml()}</div><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}${peekHtml() || '<div id="peek" hidden></div>'}</div></div></div>
       <aside class="mappanel" id="mappanel" aria-label="Map settings">
         <div class="mphead"><b>Course map</b><a class="btn" href="#tree" title="Esc">Exit map</a></div>
-        <section><p class="label">Arrange by</p>${seg("data-arrange", arrange, [["map", "Prerequisites"], ["level", "Level"], ["topic", "Topic"], ["status", "Status"]], "Arrange the chapters")}</section>
+        <section><p class="label">Arrange by</p>${seg("data-arrange", arrange, [["map", "Prerequisites"], ["topic", "Topic"], ["status", "Status"]], "Arrange the chapters")}<div id="arrSub" class="arrsub">${arrSub()}</div></section>
         <section><p class="label">Zoom</p><div class="seg zoom" role="group" aria-label="Map zoom"><button data-zoomstep="-1" aria-label="Zoom out">−</button><span class="pct" id="zoomPct" aria-live="polite">100%</span><button data-zoomstep="1" aria-label="Zoom in">+</button><button data-zoomfit>Fit</button></div></section>
-        <section><p class="label">Level</p><div class="chipset" role="group" aria-label="Show a level"><button class="chip" data-level="all" aria-pressed="${levelFilter === "all"}">All levels</button>${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}</div></section>
-        <section><p class="label">Topic</p>${topicPills()}</section>
-        <section><p class="label">Show</p><div class="chipset"><button class="chip" data-readyonly aria-pressed="${readyOnly}">Ready only · ${readyCount()}</button><button class="chip" data-fold aria-pressed="${foldDone}">Fold finished levels</button></div></section>
+        <section><p class="label">Show</p><div class="chipset"><button class="chip" data-readyonly aria-pressed="${readyOnly}">Ready only · ${readyCount()}</button><button class="chip" data-fold aria-pressed="${foldDone}">${foldLabel()}</button></div></section>
         <div id="side" class="mpside">${sideCard()}</div>
-        <p class="hint">Drag to move · Ctrl + scroll or pinch to zoom · Esc to exit</p>
+        <p class="hint">Scroll to zoom · drag to move · click empty space to see everything · Esc to exit</p>
       </aside></div>`;
     const canvas = $("#canvas");
     wireCanvas(canvas);
     wireMinimap();
+    $("#laneRail").classList.add("fresh"); setTimeout(() => { const r = $("#laneRail"); if (r) r.classList.remove("fresh"); }, 2600);
     // first open in a visit: readable, on the chapter you're up to (phones a little smaller); Fit still shows everything
     if (!phoneOpened && zoomS === null && levelFilter === "all") zoomS = innerWidth < 768 ? 0.6 : 0.8;
     phoneOpened = true;
@@ -1413,7 +1558,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const sl = canvas.scrollLeft, st = canvas.scrollTop, before = {};
     canvas.querySelectorAll(".node").forEach(n => { const m = n.getAttribute("transform").match(/translate\(([-\d.]+),([-\d.]+)\)/); if (m) before[n.dataset.id] = { x: +m[1], y: +m[2] }; });
     canvas.innerHTML = svgTree();
-    floatNodes(before);
+    if (floatNodes(before)) { canvas.querySelector("svg").classList.add("edgesback"); shimmer(); }
     sizeSvg(canvas, curS);
     canvas.scrollLeft = sl; canvas.scrollTop = st;
     const mm = $("#minimap");
@@ -2483,7 +2628,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     return layout.lanes.map(({ level: l }) => {
       const list = A.filter(c => c.id.startsWith(l.key)), done = list.filter(c => statusOf(c.id) === "learned").length;
       return `<button class="rail-item" data-railfit="${l.key}" style="--c: var(--lv-${l.slug})" title="Fit ${l.name} in view"><span class="rail-label">
-        <span class="rail-key">${l.key}</span><span class="rail-name cjk">${l.name}</span><span class="rail-en">${l.en}</span>
+        <span class="rail-key">${levelIcon(l.key)}${l.key}</span><span class="rail-name cjk">${l.name}</span><span class="rail-en">${l.en}</span>
         <span class="rail-bar"><i style="width:${(done / list.length) * 100}%"></i></span><span class="rail-n"><b>${done}</b>/${list.length}</span></span></button>`;
     }).join("");
   }
@@ -2496,10 +2641,12 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const lane = layout.lanes[k], top = lane.top * curS - canvas.scrollTop, h = Math.max(lane.height * curS, 1);
       item.style.transform = `translateY(${top}px)`;
       item.style.height = h + "px";
-      const label = item.firstElementChild, lh = label.offsetHeight;
-      // the label sticks to the top of its lane while the lane is on screen
+      const label = item.firstElementChild;
+      item.classList.toggle("tight", h < label.offsetHeight + 8);
+      const lh = label.offsetHeight, room = h + Math.min(0, top); // how much of the lane is still below the top edge
+      // the label sticks to the top of its lane while the lane is on screen, and fades as the lane runs out
       label.style.transform = `translateY(${Math.max(0, Math.min(-top, h - lh))}px)`;
-      item.classList.toggle("tight", h < lh + 8);
+      label.style.opacity = Math.max(0, Math.min(1, (room - lh * 0.55) / (lh * 0.6)));
     });
     if (row) row.classList.toggle("narrow", COLW * curS < 72);
     if (row) [...row.children].forEach(el => {
@@ -2869,7 +3016,16 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if ("panel" in d) { const p = $("#mappanel"), open = p.classList.toggle("open"); el.setAttribute("aria-expanded", String(open)); return true; }
     if ("peekmore" in d) { $("#side").scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); return true; }
     if ("skipmap" in d) { const t = document.querySelector("#side a, #side button"); if (t) t.focus(); return true; }
-    if ("fold" in d) { foldDone = !foldDone; store.set("foldDone", foldDone); layout = null; viewTree(); return true; }
+    if ("fold" in d) {
+      const done = finishedLevels();
+      if (!foldDone && !done.length) { toast("No level is finished yet. A level folds into one bar once every chapter in it is learned"); return true; }
+      if (arrange !== "map") { toast("Folding works on the Prerequisites arrangement"); return true; }
+      foldDone = !foldDone; store.set("foldDone", foldDone); layout = null;
+      el.setAttribute("aria-pressed", String(foldDone));
+      refreshTree(); shimmer();
+      toast(foldDone ? `Folded ${done.map(l => l.name).join(", ")} into ${done.length === 1 ? "one bar" : "bars"}` : "Unfolded every level");
+      return true;
+    }
     if ("goal" in d) {
       goal = d.goal && goal !== d.goal ? d.goal : null; store.set("goal", goal);
       toast(goal ? `Goal set: ${goal}` : "Goal cleared");
@@ -2913,7 +3069,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     }
     if (base === "map" || (base === "tree" && qp.has("level"))) {
       $("#nav-tree").setAttribute("aria-current", "page");
-      if (qp.has("level")) { levelFilter = qp.get("level"); arrange = "map"; viewTree(); fitLane($("#canvas"), levelFilter); } else viewTree();
+      if (qp.has("level")) { arrange = "map"; viewTree(); fitLane($("#canvas"), qp.get("level")); } else viewTree();
       return;
     }
     const PRACTICE = { practice: () => viewPractice(), glossary: () => viewGlossary(), cards: () => viewCards(), contest: () => viewContest() };
@@ -2963,7 +3119,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const sp = e.target.closest("[data-start]");
     if (sp) { startPick = startPick === sp.dataset.start ? null : sp.dataset.start; store.set("start", startPick); viewHome(); return; }
     const rf = e.target.closest("[data-railfit]");
-    if (rf) { levelFilter = rf.dataset.railfit; selected = null; viewTree(); fitLane($("#canvas"), levelFilter); return; }
+    if (rf) { selected = null; refreshTree(); fitLane($("#canvas"), rf.dataset.railfit); return; }
     const tf = e.target.closest("[data-tagfill]");
     if (tf) { q.value = "#" + tf.dataset.tagfill; q.focus(); search(); return; }
     const tp = e.target.closest("[data-topic]");
@@ -3001,7 +3157,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     }
     if (e.target.closest("[data-lang]")) { setLang(lang === "en" ? "zh" : "en"); return; }
     if (e.target.closest("[data-skin]")) { setSkin(SKINS[(SKINS.indexOf(skin) + 1) % SKINS.length]); return; }
-    const t = e.target.closest("[data-status],[data-level],[data-zoomstep],[data-zoomfit],[data-clear],[data-copy-prog],[data-copy-io],[data-judge],[data-copy-cc],[data-bulk],[data-select],.node,[data-solve]");
+    const t = e.target.closest("[data-status],[data-zoomstep],[data-zoomfit],[data-clear],[data-copy-prog],[data-copy-io],[data-judge],[data-copy-cc],[data-bulk],[data-select],.node,[data-solve]");
     if (!t) return;
     if (t.classList.contains("node")) {
       const id = t.dataset.id;
@@ -3014,17 +3170,10 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     }
     if (t.dataset.status === "learned" && /^#ch-/.test(location.hash) && statusOf(t.dataset.id) !== "learned" && !checks[t.dataset.id] && byId[t.dataset.id].boxes.length) { startCheck(t.dataset.id); return; }
     if (t.dataset.status) { setStatus(t.dataset.id, t.dataset.status); route(); return; }
-    if (t.dataset.level) {
-      levelFilter = t.dataset.level; selected = null;
-      if (arrange !== "map") { refreshTree(); document.querySelectorAll("[data-level]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.level === levelFilter))); return; }
-      viewTree();
-      if (levelFilter === "all") { zoomS = null; placeCanvas(); } else fitLane($("#canvas"), levelFilter);
-      return;
-    }
     if (t.dataset.zoomstep) {
       const up = t.dataset.zoomstep === "1";
       const next = up ? ZSTEPS.find(z => z > curS + 0.01) : [...ZSTEPS].reverse().find(z => z < curS - 0.01);
-      zoomAt($("#canvas"), next ?? (up ? 1 : ZMIN));
+      smoothZoom($("#canvas"), next ?? (up ? 1 : ZMIN));
       return;
     }
     if (t.hasAttribute("data-zoomfit")) { zoomS = null; placeCanvas(); $("#canvas").scrollTo(0, 0); return; }
