@@ -152,7 +152,7 @@ main { max-width: 1520px; margin: 0 auto; padding-block: 24px 64px; }
 .zoom .pct { display: inline-flex; align-items: center; justify-content: center; min-width: 52px; font-size: 13px; color: var(--fg-2); font-variant-numeric: tabular-nums; border-inline: 1px solid var(--line-strong); }
 .lane-bg { fill: var(--c); opacity: .045; }
 .lane-rule { stroke: var(--line); stroke-width: 1; }
-.edge { fill: none; stroke: var(--line-strong); stroke-width: 1.2; }
+.edge { fill: none; stroke: color-mix(in srgb, var(--fg) 26%, transparent); stroke-width: 1.4; vector-effect: non-scaling-stroke; }
 .edge.hot { stroke: var(--fg); stroke-width: 2; }
 .edge.dim { opacity: .2; }
 .node { cursor: pointer; }
@@ -518,7 +518,8 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 
 /* map node states and path colours */
 .node.locked rect.box { stroke-dasharray: 4 3; }
-.node.locked text { opacity: .5; }
+.node.locked text { opacity: .78; }
+.node .lock { fill: none; stroke: var(--muted); stroke-width: 1.4; }
 .node.ready:not(.learned) rect.box { stroke: var(--c); stroke-width: 1.8; }
 .node.learning rect.box { stroke: var(--v-cmp); stroke-width: 2.2; stroke-dasharray: none; }
 .node.learned text.mark { fill: var(--surface); font-size: 13px; font-weight: 700; }
@@ -526,7 +527,7 @@ code.bigo { font-family: var(--f-mono); font-size: .92em; background: var(--rais
 .edge.hot.in { stroke: #22b8cf; } .edge.hot.out { stroke: var(--v-done); }
 .node .pulse { fill: none; stroke: var(--accent); stroke-width: 3; transform-box: fill-box; transform-origin: center; animation: pulse 1.2s var(--ease) 2; pointer-events: none; }
 @keyframes pulse { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(1.35); } }
-.sw.locked { border-style: dashed; opacity: .6; } .sw.ready { border-color: var(--accent); } .sw.learning { border-color: var(--v-cmp); border-style: solid; } .sw.learned { background: var(--muted); }
+.sw.locked { border-style: dashed; opacity: .6; } .sw.ready { border-color: var(--fg-2); background: radial-gradient(circle at 78% 30%, var(--fg-2) 0 2px, transparent 2.5px); } .sw.learning { border-color: var(--v-cmp); border-style: solid; } .sw.learned { background: var(--muted); }
 .ln { width: 18px; height: 3px; border-radius: 2px; display: inline-block; } .ln.in { background: #22b8cf; } .ln.out { background: var(--v-done); }
 
 /* chapter list: queue, card actions, table */
@@ -674,7 +675,7 @@ table.gloss td.cjk { font-size: 16px; white-space: nowrap; }
 .madd input { flex: 1; min-width: 0; height: 32px; border: 1px solid var(--line-strong); border-radius: var(--r-ctl); background: var(--surface); padding: 0 10px; }
 .mybox ul { margin: 0; padding-left: 20px; }
 .sol { font-size: 13px; margin-left: 6px; }
-.goalblock { border-left: 3px solid var(--accent); padding-left: 12px; }
+.goalblock { background: color-mix(in srgb, var(--accent) 7%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
 .node.goal rect.box { stroke: var(--accent); stroke-width: 2.2; }
 .node.goalend rect.box { stroke-width: 3.5; }
 .edge.goaledge { stroke: var(--accent); stroke-width: 2.2; opacity: .85; }
@@ -688,6 +689,38 @@ svg.searching .node:not(.match) { opacity: .22; }
 .shared .frame { margin-top: 16px; overflow: auto; }
 .shared .frame svg { width: 100%; height: auto; min-width: 900px; }
 @media (max-width: 767px) { .crow { grid-template-columns: 96px 1fr 64px; } .crow .links, .crow > a { display: none; } }
+
+
+/* ---- tree: far mode, floating card, filters menu, skip link ---- */
+.node text.far { display: none; font-family: var(--f-mono); font-size: 34px; font-weight: 700; fill: var(--c); }
+svg.far .node text.t, svg.far .node text.en, svg.far .node text.id, svg.far .node circle.ready, svg.far .node .lock { display: none; }
+svg.far .node text.far { display: block; }
+svg.far .node.learned text.far { fill: var(--surface); }
+.node.sel rect.box { stroke-dasharray: none; }
+::placeholder { color: var(--muted); opacity: 1; }
+.side p { text-wrap: pretty; }
+.peek { position: absolute; top: 42px; right: 12px; width: min(340px, calc(100% - 24px)); z-index: 3; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-card); padding: 14px 16px 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, .22); animation: peekin .2s var(--ease) both; }
+@keyframes peekin { from { opacity: 0; transform: translateY(-6px) scale(.98); } }
+.peek .label { margin: 0 24px 4px 0; }
+.peekt { font-size: 20px; font-weight: 600; margin: 0; line-height: 1.3; }
+.peek .hint { margin: 2px 0 0; }
+.peekn { margin: 8px 0 0; font-size: 14px; color: var(--fg-2); }
+.peek .btns { margin-top: 12px; }
+.peekx { position: absolute; top: 8px; right: 8px; }
+.filters { position: relative; }
+.filters > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; }
+.filters > summary::-webkit-details-marker { display: none; }
+.filters > summary::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg) translateY(-2px); margin-left: 8px; }
+.filters[open] > summary { background: var(--raised); }
+.filterpop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 6; width: min(420px, 90vw); background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r-card); padding: 12px 14px; box-shadow: 0 10px 30px rgba(0, 0, 0, .22); display: grid; gap: 8px; }
+.filterpop .label { margin: 4px 0 0; }
+.skip { position: absolute; left: 0; top: 0; z-index: 7; transform: translateY(-120%); opacity: 0; border: 1px solid var(--accent); background: var(--surface); border-radius: var(--r-ctl); padding: 6px 12px; }
+.skip:focus-visible { transform: none; opacity: 1; }
+@media (max-width: 767px) {
+  .peek { position: fixed; top: auto; left: 8px; right: 8px; width: auto; bottom: calc(60px + env(safe-area-inset-bottom, 0px)); z-index: 8; }
+  .peekt { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .peek { animation: none; } }
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -898,9 +931,12 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const x = [...c.stars.luogu.map(p => ["luogu", p]), ...c.stars.codeforces.map(p => ["codeforces", p])].find(([, p]) => !solved.has(p.id));
     return x ? { judge: x[0], p: x[1], label: (x[0] === "luogu" ? "" : "CF ") + x[1].id, url: problemUrl(x[0], x[1].id) } : null;
   }
-  function resumeHtml() {
+  function nextChapter() {
     const gp = goalPath(), gnext = gp.length ? byId[gp.find(id => isReady(byId[id])) || gp[0]] : null;
-    const cur = gnext || A.find(c => statusOf(c.id) === "learning") || A.find(isReady) || A.find(c => statusOf(c.id) !== "learned");
+    return { gnext, cur: gnext || A.find(c => statusOf(c.id) === "learning") || A.find(isReady) || A.find(c => statusOf(c.id) !== "learned") };
+  }
+  function resumeHtml() {
+    const { gnext, cur } = nextChapter();
     if (!cur) return "";
     const s = nextStar(cur);
     return `<p class="resume">${gnext ? `Toward ${esc(goal)}: ` : "Continue: "}<a href="#ch-${cur.slug}"><span class="lv ${lvClass(cur)}">${cur.id}</span> <span class="cjk">${esc(cur.title)}</span></a>${s ? ` → next ★ <a href="${s.url}" target="_blank" rel="noopener" class="mono">${esc(s.label)}</a> <span class="cjk">${esc(s.p.name)}</span>` : ""}</p>`;
@@ -977,7 +1013,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       }));
       height = place();
     }
-    layout = { xy, lanes, maxD, width: LANEW + maxD * COLW + W + 24, height: height - LANEGAP + 12 };
+    layout = { xy, lanes, maxD, width: LANEW + maxD * COLW + W + 24 + 216, height: height - LANEGAP + 12 }; // +216: room to scroll past the minimap
   }
 
   function svgTree() {
@@ -1008,22 +1044,28 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const { x, y } = xy[c.id];
       const st = statusOf(c.id);
       const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter)) || (topicFilter !== "all" && c.fam !== topicFilter) || (readyOnly && !(isReady(c) || st === "learning"));
-      const title = c.title.length > 15 ? c.title.slice(0, 14) + "…" : c.title;
+      // Chinese glyphs are about 14.5px wide here, Latin about 9px: squeeze a long title into the box instead of cutting it
+      const units = [...c.title].reduce((n, ch) => n + (ch.charCodeAt(0) > 0x2e80 ? 1 : 0.62), 0);
+      let title = c.title;
+      if (units > 17) { let u = 0; title = [...c.title].filter(ch => (u += ch.charCodeAt(0) > 0x2e80 ? 1 : 0.62) <= 16).join("") + "…"; }
+      const fitT = units > 13 ? ` textLength="${W - 24}" lengthAdjust="spacingAndGlyphs"` : "";
       const en = c.en.length > 30 ? c.en.slice(0, 29) + "…" : c.en;
       const locked = st === "none" && !isReady(c) && c.pre.length > 0;
-      out += `<g class="node ${st}${isReady(c) ? " ready" : ""}${locked ? " locked" : ""}${startPick === c.id ? " startpick" : ""}${goalSet && goalSet.has(c.id) ? (c.id === goal ? " goal goalend" : " goal") : ""}${selected === c.id ? " sel" : ""}${dim ? " dim" : ""}${justLearned === c.id ? " pop" : ""}" data-id="${c.id}" tabindex="0" role="button" aria-label="${esc(c.id + " " + c.title + ", " + c.en + ", " + (st === "none" ? "not started" : st))}" style="--c: var(--${lvClass(c)}); --d:${depthOf(c.id)}" transform="translate(${x},${y})">
+      const said = st === "learned" ? "learned" : st === "learning" ? "learning" : isReady(c) ? "ready to learn" : locked ? "locked, needs " + c.pre.join(" and ") : "ready to learn";
+      out += `<g class="node ${st}${isReady(c) ? " ready" : ""}${locked ? " locked" : ""}${startPick === c.id ? " startpick" : ""}${goalSet && goalSet.has(c.id) ? (c.id === goal ? " goal goalend" : " goal") : ""}${selected === c.id ? " sel" : ""}${dim ? " dim" : ""}${justLearned === c.id ? " pop" : ""}" data-id="${c.id}" tabindex="${c.id === rovingId() ? 0 : -1}" role="button" aria-label="${esc(c.id + " " + c.title + ", " + c.en + ", " + said)}" style="--c: var(--${lvClass(c)}); --d:${depthOf(c.id)}" transform="translate(${x},${y})">
         <title>${esc(c.id + " " + c.title + " · " + c.en)}</title>
         <rect class="box" width="${W}" height="${H}" rx="8"/>
         <text class="id" x="12" y="18">${esc(c.id)}</text>
-        <circle class="ready" cx="${W - 12}" cy="14" r="4"/>
-        <text class="t" x="12" y="36">${esc(title)}</text>
+        ${locked ? `<path class="lock" d="M${W - 17} 13.5h10v7h-10zM${W - 15} 13.5v-2.5a3 3 0 0 1 6 0v2.5"/>` : `<circle class="ready" cx="${W - 12}" cy="14" r="4"/>`}
+        <text class="t" x="12" y="36"${fitT}>${esc(title)}</text>
+        <text class="far" x="${W / 2}" y="${H / 2 + 12}" text-anchor="middle" aria-hidden="true">${esc(c.id)}</text>
         <text class="en" x="12" y="49">${esc(en)}</text>
         ${st === "learned" ? `<text class="mark" x="${W - 18}" y="19">✓</text>` : ""}
         ${pulseId === c.id ? `<rect class="pulse" width="${W}" height="${H}" rx="8"/>` : ""}
       </g>`;
     });
     const intro = introPending; introPending = false; // the first map drawn each visit builds itself
-    return `<svg class="${intro ? "intro" : ""}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Route map of all 101 chapters, one lane per level">${out}</svg>`;
+    return `<svg class="${intro ? "intro" : ""}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMinYMin meet" role="group" aria-label="Course map: 101 chapters in four lanes, one per level. Arrow keys move between chapters, Enter selects, Escape clears">${out}</svg>`;
   }
 
   // ---- shared bits ----
@@ -1047,8 +1089,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       const ready = A.filter(isReady).slice(0, 8).map(c => c.id);
       return `<div class="block"><p class="label">How to read the map</p>
         <p>Each lane is one level of the course. A line runs from a chapter to the chapters that build on it, left to right. Click a chapter to trace its path.</p>
-        <div class="legend"><span><i class="sw locked"></i>Locked</span><span><i class="sw ready"></i>Ready</span><span><i class="sw learning"></i>In progress</span><span><i class="sw learned"></i>Mastered ✓</span><span><i class="ln in"></i>needs</span><span><i class="ln out"></i>unlocks</span></div>
-        <p class="hint" style="margin-top:12px">Prerequisites are estimated from the chapter contents</p></div>
+        <div class="legend"><span><i class="sw locked"></i>Locked</span><span><i class="sw ready"></i>Ready</span><span><i class="sw learning"></i>Learning</span><span><i class="sw learned"></i>Learned ✓</span><span><i class="ln in"></i>needs</span><span><i class="ln out"></i>unlocks</span></div>
+        <p class="hint" style="margin-top:12px">Steps count prerequisites: a step 3 chapter builds on chapters from steps 1 and 2. Prerequisites are estimated from the chapter contents</p></div>
         ${goalHtml()}
         <div class="block"><p class="label">Ready to learn next</p>${ready.length ? pathList(ready) : `<p class="hint">Everything is learned</p>`}</div>`;
     }
@@ -1061,14 +1103,47 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       ${statusButtons(c.id)}
       <div class="btns even"><a class="btn primary" href="#ch-${c.slug}">Open chapter</a><a class="btn" href="handouts/${c.slug}.pdf" target="_blank" rel="noopener">Handout PDF</a></div>
       <div class="btns"><button class="btn" data-clear>Clear selection</button><button class="btn" data-goal="${c.id}">${goal === c.id ? "Clear goal" : "Set as my goal"}</button></div></div>
-      <div><div class="block"><p class="label">Needs</p><div class="links">${c.pre.length ? c.pre.map(chLink).join("") : '<span class="hint">Nothing, a starting point</span>'}</div></div>
-      <div class="block"><p class="label">Unlocks</p><div class="links">${(kids[c.id] || []).length ? kids[c.id].map(chLink).join("") : '<span class="hint">Nothing further in the course</span>'}</div></div>
+      <div><div class="block"><p class="label">Needs</p>${c.pre.length ? pathList(c.pre) : '<p class="hint">Nothing, a starting point</p>'}</div>
+      <div class="block"><p class="label">Unlocks</p>${(kids[c.id] || []).length ? pathList(kids[c.id]) : '<p class="hint">Nothing further in the course</p>'}</div>
       </div>
       <div class="block"><p class="label">Path to here · ${need.length} left</p>${need.length ? pathList(need) : `<p class="hint">All prerequisites learned</p>`}</div>
     </div>`;
   }
 
   // ---- views ----
+
+  // ---- tree: the floating card for a selection, keyboard movement, the ready count ----
+  const readyCount = () => A.filter(c => isReady(c) || statusOf(c.id) === "learning").length;
+  const rovingId = () => selected || (nextChapter().cur || A[0]).id;
+  function peekHtml() {
+    if (!selected || !byId[selected]) return "";
+    const c = byId[selected], st = statusOf(c.id), need = pathTo(c.id).length;
+    const state = st === "learned" ? "Learned ✓" : st === "learning" ? "Learning" : isReady(c) ? "Ready" : "Locked";
+    return `<div class="peek" id="peek" role="region" aria-label="Selected chapter" aria-live="polite" style="--c: var(--${lvClass(c)})">
+      <button class="iconbtn peekx" data-clear aria-label="Clear selection (Esc)">×</button>
+      <p class="label"><span class="lv ${lvClass(c)}">${c.id}</span> · ${state}</p>
+      <p class="peekt cjk">${esc(c.title)}</p><p class="hint">${esc(c.en)}</p>
+      <p class="peekn">${c.pre.length} need${c.pre.length === 1 ? "" : "s"} · unlocks ${(kids[c.id] || []).length}${need ? ` · <b>${need}</b> to learn first` : " · ready to start"}</p>
+      <div class="btns"><a class="btn primary" href="#ch-${c.slug}">Open chapter</a><button class="btn" data-goal="${c.id}">${goal === c.id ? "Clear goal" : "Set as goal"}</button><button class="btn" data-peekmore>More ↓</button></div></div>`;
+  }
+  // Arrow keys walk the map: left and right by step, up and down within a step.
+  function moveFocus(from, key) {
+    const p = layout.xy[from], dir = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowUp: [0, -1] }[key];
+    let best = null, bestScore = Infinity;
+    document.querySelectorAll("#canvas .node").forEach(n => {
+      const q = layout.xy[n.dataset.id], dx = q.x - p.x, dy = q.y - p.y;
+      const along = dir[0] ? dx * dir[0] : dy * dir[1], across = dir[0] ? Math.abs(dy) : Math.abs(dx);
+      if (along <= 0 || n.dataset.id === from) return;
+      const score = along + across * 3;
+      if (score < bestScore) { bestScore = score; best = n; }
+    });
+    if (!best) return;
+    document.querySelectorAll("#canvas .node[tabindex='0']").forEach(n => n.setAttribute("tabindex", "-1"));
+    best.setAttribute("tabindex", "0");
+    best.focus({ preventScroll: true });
+    best.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+
   // ---- map zoom: the svg is redrawn at width x scale, so text stays sharp and the canvas scrolls natively ----
   const clampS = s => Math.min(1, Math.max(ZMIN, s));
   const viewH = () => Math.max(560, innerHeight - 150);
@@ -1076,6 +1151,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function sizeSvg(canvas, s) {
     const svg = canvas.querySelector("svg");
     curS = s;
+    svg.classList.toggle("far", s < 0.45); // too small to read titles: show each chapter's id large instead
     svg.setAttribute("width", Math.round(layout.width * s));
     svg.setAttribute("height", Math.round(layout.height * s));
     const pct = $("#zoomPct");
@@ -1108,9 +1184,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (!canvas) return;
     sizeSvg(canvas, zoomS ?? fitScale(canvas));
     if (zoomS === null) return;
-    const focusId = selected || (A.find(c => statusOf(c.id) !== "learned") || A[0]).id;
+    const focusId = selected || (nextChapter().cur || A[0]).id;
     const p = layout.xy[focusId];
-    const left = Math.max(0, p.x * curS - (selected ? canvas.clientWidth / 2 - W * curS / 2 : LANEW * curS));
+    const left = Math.max(0, p.x * curS - (selected ? canvas.clientWidth / 2 - W * curS / 2 : canvas.clientWidth / 3));
     const top = Math.max(0, p.y * curS - canvas.clientHeight / 2 + H * curS / 2);
     if (pulseId && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
       canvas.scrollTo({ left: Math.max(0, left - 400), top: Math.max(0, top - 200) });
@@ -1166,6 +1242,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       zoomAt(canvas, curS * Math.exp(-e.deltaY * 0.002), e.clientX - r.left, e.clientY - r.top);
     }, { passive: false });
   }
+  let canvasRO = null;
   function viewTree() {
     requestAnimationFrame(updateRail);
     if (!layout) computeLayout();
@@ -1176,15 +1253,21 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           <button class="chip" data-level="all" aria-pressed="${levelFilter === "all"}">All levels</button>
           ${LEVELS.map(l => `<button class="chip" data-level="${l.key}" aria-pressed="${levelFilter === l.key}">${l.name}</button>`).join("")}
         </div>
-        <div class="chipset" role="group" aria-label="Map options"><button class="chip" data-readyonly aria-pressed="${readyOnly}">Ready only</button><button class="chip" data-fold aria-pressed="${foldDone}">Fold finished levels</button></div>
+        <button class="chip" data-readyonly aria-pressed="${readyOnly}">Ready only · ${readyCount()}</button>
+        <details class="filters"><summary class="chip">Filters${topicFilter !== "all" || foldDone ? " · on" : ""}</summary><div class="filterpop" role="group" aria-label="More map filters">
+          <p class="label">Topic</p>${topicPills()}
+          <p class="label">Levels you've finished</p><button class="chip" data-fold aria-pressed="${foldDone}">Fold finished levels</button></div></details>
         <span class="hint">Drag to move · Ctrl + scroll or pinch to zoom</span></div>
-      <div class="tools">${topicPills()}</div>
-      <div class="treeview"><div class="mapwrap"><div class="lanerail" id="laneRail">${railHtml()}</div><div class="mapcol"><div class="steprow" id="stepRow">${stepHtml()}</div><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}</div></div><aside class="side" id="side">${sideCard()}</aside></div>`;
-    wireCanvas($("#canvas"));
+      <div class="treeview"><div class="mapwrap"><div class="lanerail" id="laneRail">${railHtml()}</div><div class="mapcol"><button class="skip" data-skipmap>Skip the map</button><div class="steprow" id="stepRow" title="Steps count prerequisites: a step 3 chapter builds on chapters from steps 1 and 2">${stepHtml()}</div><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}${peekHtml() || '<div id="peek" hidden></div>'}</div></div><aside class="side" id="side">${sideCard()}</aside></div>`;
+    const canvas = $("#canvas");
+    wireCanvas(canvas);
     wireMinimap();
-    // phones open close enough to read the boxes, on the chapter you're up to; Fit still shows everything
-    if (!phoneOpened && zoomS === null && innerWidth < 768) zoomS = 0.6;
+    // first open in a visit: readable, on the chapter you're up to (phones a little smaller); Fit still shows everything
+    if (!phoneOpened && zoomS === null && levelFilter === "all") zoomS = innerWidth < 768 ? 0.6 : 0.8;
     phoneOpened = true;
+    if (canvasRO) canvasRO.disconnect();
+    canvasRO = new ResizeObserver(() => { if (zoomS === null) sizeSvg(canvas, fitScale(canvas)); else updateOverlays(); });
+    canvasRO.observe(canvas);
     placeCanvas();
     updateMinimap();
   }
@@ -1201,6 +1284,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const rail = $("#laneRail");
     if (rail) { rail.innerHTML = railHtml(); updateRail(); }
     $("#side").innerHTML = sideCard();
+    const pk = $("#peek"), np = peekHtml();
+    if (pk) pk.outerHTML = np || '<div id="peek" hidden></div>';
+    const rc = $("[data-readyonly]"); if (rc) rc.textContent = `Ready only · ${readyCount()}`;
     const s = document.querySelector(".strip"), r = document.querySelector(".resume");
     if (r) r.remove();
     if (s) s.outerHTML = stripHtml(true);
@@ -2323,7 +2409,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function goalHtml() {
     if (!goal || !byId[goal]) return "";
     const gp = goalPath(), c = byId[goal];
-    return `<div class="block goalblock"><p class="label">Your goal · ${chLink(goal)} <span class="cjk">${esc(c.title)}</span></p>
+    return `<div class="block goalblock card"><p class="label">Your goal · ${chLink(goal)} <span class="cjk">${esc(c.title)}</span></p>
       ${gp.length ? `<p class="hint" style="margin:0 0 8px">${gp.length} chapter${gp.length === 1 ? "" : "s"} to go, in this order. They're outlined on the map</p>${pathList(gp)}
       <div class="btns"><button class="btn primary" data-goalqueue>Put the next ${Math.min(5, gp.length)} in my study queue</button><button class="btn" data-goal="">Clear goal</button></div>`
         : `<p>Reached. Every chapter on the way is learned.</p><div class="btns"><button class="btn" data-goal="">Clear goal</button></div>`}</div>`;
@@ -2381,6 +2467,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     return ids.length ? `<div class="block"><p class="label">My mistakes · ${ids.reduce((n, id) => n + mistakes[id].length, 0)}</p>
       <ul class="mlist">${ids.flatMap(id => mistakes[id].map(m => `<li><span>${chLink(id)} ${esc(m.t)}</span></li>`)).join("")}</ul></div>` : "";
   }
+  document.addEventListener("click", e => { const f = document.querySelector("details.filters[open]"); if (f && !f.contains(e.target)) f.open = false; });
   document.addEventListener("submit", e => {
     const f = e.target.closest("[data-madd]");
     if (!f) return;
@@ -2633,7 +2720,16 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   // ---- clicks for everything above ----
   function extraClick(el, e) {
     const d = el.dataset;
-    if ("readyonly" in d) { readyOnly = !readyOnly; el.setAttribute("aria-pressed", String(readyOnly)); refreshTree(); return true; }
+    if ("readyonly" in d) {
+      readyOnly = !readyOnly; el.setAttribute("aria-pressed", String(readyOnly)); refreshTree();
+      // show what's ready instead of leaving a few lit boxes somewhere in a dim map
+      const ids = A.filter(c => isReady(c) || statusOf(c.id) === "learning").map(c => layout.xy[c.id]).filter(Boolean);
+      if (readyOnly && ids.length) fitBox($("#canvas"), Math.min(...ids.map(p => p.x)) - 40, Math.min(...ids.map(p => p.y)) - 40, Math.max(...ids.map(p => p.x)) + W + 40, Math.max(...ids.map(p => p.y)) + H + 40);
+      if (readyOnly && !ids.length) toast("Nothing is ready: every chapter left still needs another one first");
+      return true;
+    }
+    if ("peekmore" in d) { $("#side").scrollIntoView({ block: "start", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); return true; }
+    if ("skipmap" in d) { const t = document.querySelector("#side a, #side button"); if (t) t.focus(); return true; }
     if ("fold" in d) { foldDone = !foldDone; store.set("foldDone", foldDone); layout = null; viewTree(); return true; }
     if ("goal" in d) {
       goal = d.goal && goal !== d.goal ? d.goal : null; store.set("goal", goal);
@@ -2733,7 +2829,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       document.querySelectorAll("[data-topic]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.topic === topicFilter)));
       return;
     }
-    const ex = e.target.closest("[data-readyonly],[data-fold],[data-goal],[data-goalqueue],[data-chk],[data-mdel],[data-stuck],[data-copy-share],[data-card-img],[data-cardflip],[data-cardgrade],[data-cards],[data-contest],[data-csolve-btn]");
+    const ex = e.target.closest("[data-readyonly],[data-peekmore],[data-skipmap],[data-fold],[data-goal],[data-goalqueue],[data-chk],[data-mdel],[data-stuck],[data-copy-share],[data-card-img],[data-cardflip],[data-cardgrade],[data-cards],[data-contest],[data-csolve-btn]");
     if (ex && extraClick(ex, e)) return;
     const rv = e.target.closest("[data-reviewed]");
     if (rv) {
@@ -2822,6 +2918,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   });
   document.addEventListener("keydown", e => {
     const n = e.target.closest && e.target.closest(".node");
+    if (n && $("#canvas") && e.key.startsWith("Arrow")) { e.preventDefault(); moveFocus(n.dataset.id, e.key); return; }
+    if (e.key === "Escape" && selected && $("#canvas") && !(e.target.closest && e.target.closest("input, textarea"))) { const id = selected; selected = null; refreshTree(); const back = document.querySelector(`.node[data-id="${id}"]`); if (back) back.focus({ preventScroll: true }); return; }
     if (n && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
       if (selected === n.dataset.id && e.key === "Enter") { location.hash = "ch-" + byId[n.dataset.id].slug; return; }
