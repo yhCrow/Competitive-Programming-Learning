@@ -1252,7 +1252,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .trace span { position: relative; z-index: 1; transition: color .2s var(--ease); }
 .trace .tbar { position: absolute; left: 0; right: 0; top: 0; height: 0; z-index: 0; opacity: 0; pointer-events: none; background: color-mix(in srgb, var(--v-cmp) 18%, transparent); border-left: 3px solid var(--v-cmp);
   transition: transform .22s var(--ease-in-out), height .22s var(--ease-in-out), opacity .2s var(--ease); }
-.qcell.chg { animation: lsFlash .5s var(--ease); }
+
 @keyframes lsFlash { from { background: color-mix(in srgb, var(--v-cmp) 45%, var(--surface)); transform: scale(1.08); } }
 
 /* lesson widgets */
@@ -1371,7 +1371,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .wprint { display: grid; gap: 10px; padding: 16px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--line); }
 .wcall { color: var(--muted); font-size: 13.5px; }
 .wout { display: flex; gap: 3px; min-height: 40px; flex-wrap: wrap; }
-.wout span { width: 26px; height: 38px; display: grid; place-items: center; border-radius: 6px; background: var(--raised); font: 600 18px var(--f-mono); animation: lsIn .25s var(--ease) both; animation-delay: calc(var(--i) * 30ms); }
+.wout span { width: 26px; height: 38px; display: grid; place-items: center; border-radius: 6px; background: var(--raised); font: 600 18px var(--f-mono); }
 .wout span.pad { color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 14%, transparent); }
 .wsteps { max-width: none; }
 .wsteps code { white-space: normal !important; }
@@ -1425,9 +1425,9 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .wtree .tn.hit.leaf rect { fill: color-mix(in srgb, var(--v-done) 22%, var(--surface)); stroke: var(--v-done); }
 .wtree .tn.hit text { fill: var(--fg); font-weight: 600; }
 .wtree .tn { transform-box: fill-box; transform-origin: center; }
-.wtree .tn.hit { animation: lsPop .35s var(--ease) both; animation-delay: calc(var(--i) * 70ms); }
+
 .wsort { display: grid; gap: 8px; }
-.wsort > div { display: grid; grid-template-columns: 150px repeat(3, 44px); gap: 8px; align-items: center; animation: lsIn .3s var(--ease) both; animation-delay: calc(var(--i) * 70ms); }
+.wsort > div { display: grid; grid-template-columns: 150px repeat(3, 44px); gap: 8px; align-items: center; }
 .wsort small { color: var(--muted); font-size: 12.5px; }
 .wsort span { height: 38px; display: grid; place-items: center; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); font: 600 17px var(--f-mono); }
 .wsort span.cmp { border-color: var(--v-cmp); }
@@ -1457,7 +1457,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .wfor [data-p].on { background: color-mix(in srgb, var(--v-cmp) 24%, transparent); box-shadow: inset 0 -2px 0 var(--v-cmp); }
 .wfor input { width: 56px; height: 30px; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--bg); color: var(--fg); font: 600 15px var(--f-mono); text-align: center; }
 .wchips { display: flex; gap: 6px; flex-wrap: wrap; min-height: 34px; }
-.wchips span { min-width: 34px; height: 34px; padding: 0 6px; display: grid; place-items: center; border-radius: 8px; background: var(--raised); font: 600 14px var(--f-mono); animation: lsPop .25s var(--ease) both; }
+.wchips span { min-width: 34px; height: 34px; padding: 0 6px; display: grid; place-items: center; border-radius: 8px; background: var(--raised); font: 600 14px var(--f-mono); }
 .wchips span.on { background: color-mix(in srgb, var(--v-cmp) 30%, var(--surface)); }
 .wdiv span { animation-delay: calc(var(--k) * 25ms); }
 .wdiv span.no { color: var(--muted); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--muted) 60%, transparent); }
@@ -1467,7 +1467,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .wtab { font-size: 14.5px; }
 .wtab th, .wtab td { text-align: center; padding: 8px 10px; position: static; font-variant-numeric: tabular-nums; }
 .wtab td:first-child { font-weight: 700; }
-.wtab tbody tr { animation: lsIn .3s var(--ease) both; }
+
 .wtab td.chg { color: var(--v-cmp); font-weight: 600; }
 .wgrid { display: grid; grid-template-columns: repeat(var(--n), 32px); gap: 5px; }
 .wgrid span { height: 32px; border-radius: 6px; background: var(--raised); opacity: .35; display: grid; place-items: center; font: 600 11px var(--f-mono); color: transparent; }
@@ -1490,7 +1490,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .wcells span { position: relative; min-width: 40px; height: 44px; padding: 14px 4px 0; display: grid; place-items: center; border-radius: 8px; background: var(--bg); border: 1.5px solid var(--line-strong); font: 600 16px var(--f-mono); transition: background-color .2s var(--ease), border-color .2s var(--ease); }
 .wcells span small { position: absolute; top: 3px; left: 0; right: 0; text-align: center; font-size: 10px; font-weight: 500; color: var(--muted); }
 .wcells span.on { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 16%, var(--surface)); }
-.wcells span.hit { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 18%, var(--surface)); animation: lsPop .3s var(--ease); }
+.wcells span.hit { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 18%, var(--surface)); }
 .wcells span.bad { border-color: var(--v-bad); background: color-mix(in srgb, var(--v-bad) 16%, var(--surface)); color: var(--v-bad); }
 .wcells span.ghost { border-style: dashed; color: var(--muted); background: none; }
 .fbox .wcells span.ghost { border-color: var(--v-bad); color: var(--v-bad); }
@@ -1503,7 +1503,7 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .wlamps span small { font-size: 10px; color: var(--muted); }
 .wlamps span.lit { background: color-mix(in srgb, var(--v-cmp) 70%, var(--surface)); border-color: var(--v-cmp); box-shadow: 0 0 12px color-mix(in srgb, var(--v-cmp) 45%, transparent); }
 .wlamps span.lit small { color: var(--fg); }
-.wlamps span.flip { animation: lsPop .3s var(--ease); }
+
 .wmatrix { display: grid; grid-template-columns: repeat(var(--c), minmax(0, 52px)); gap: 4px; }
 .wmatrix span { height: 44px; display: grid; place-items: center; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); font: 600 13px var(--f-mono); text-align: center; line-height: 1.2; }
 .wmatrix span.hd { background: none; border: 0; color: var(--muted); font-size: 11px; font-weight: 500; }
@@ -1516,24 +1516,24 @@ img.lglogo { object-fit: contain; border-radius: 0; }
 .flow.lesson > * { min-width: 0; }
 .flow.lesson > :is(.lwid, .lfig) { overflow-x: auto; }
 .wpascal button { min-width: 40px; height: 36px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--bg); color: var(--fg); font: 600 14px var(--f-mono); cursor: pointer; transition: background-color .15s var(--ease), border-color .15s var(--ease); }
-.wpascal button.on { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 22%, var(--surface)); animation: lsPop .3s var(--ease); }
-.wpascal button.hit { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 24%, var(--surface)); animation: lsPop .3s var(--ease) .12s both; }
+.wpascal button.on { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 22%, var(--surface)); }
+.wpascal button.hit { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 24%, var(--surface)); }
 @media (hover: hover) and (pointer: fine) { .wpascal button:hover { border-color: var(--accent); } }
 .wspiral, .wmines { display: grid; grid-template-columns: repeat(var(--n), 40px); gap: 4px; }
 .wspiral span { height: 40px; display: grid; place-items: center; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); font: 600 14px var(--f-mono); }
-.wspiral span.on { background: color-mix(in srgb, var(--v-cur) 30%, var(--surface)); animation: lsPop .25s var(--ease); }
+.wspiral span.on { background: color-mix(in srgb, var(--v-cur) 30%, var(--surface)); }
 .wspiral span.cur { border-color: var(--v-cmp); color: var(--v-cmp); font-size: 18px; }
 .wmines button { height: 40px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg-2); font: 600 15px var(--f-mono); cursor: pointer; }
 .wmines button.n0 { color: var(--muted); opacity: .6; }
 .wmines button.n2, .wmines button.n3 { color: var(--v-cmp); }
-.wmines button.mine { background: color-mix(in srgb, var(--v-bad) 22%, var(--surface)); border-color: var(--v-bad); color: var(--v-bad); font-size: 20px; animation: lsPop .3s var(--ease); }
-.wmines button.near { border-color: var(--v-cmp); animation: lsPop .3s var(--ease); }
+.wmines button.mine { background: color-mix(in srgb, var(--v-bad) 22%, var(--surface)); border-color: var(--v-bad); color: var(--v-bad); font-size: 20px; }
+
 .wtrans { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
 .wtrans > i { font-style: normal; color: var(--muted); font-size: 20px; }
 .wt { display: grid; grid-template-columns: repeat(3, 44px); gap: 4px; }
 .wt span { height: 44px; display: grid; place-items: center; border-radius: 8px; background: var(--bg); border: 1px solid var(--line-strong); font: 700 18px var(--f-mono); }
 .wt span.on { border-color: var(--v-cmp); background: color-mix(in srgb, var(--v-cmp) 18%, var(--surface)); }
-.wt span.new { animation: lsPop .3s var(--ease) both; animation-delay: calc(var(--k) * 35ms); }
+
 .wbits { display: flex; gap: 4px; flex-wrap: wrap; }
 .wbits button { width: 36px; height: 44px; border-radius: 6px; border: 1.5px solid var(--line-strong); font: 700 17px var(--f-mono); cursor: pointer; color: var(--fg); }
 .wbits button.r0 { background: color-mix(in srgb, var(--v-cur) 14%, var(--surface)); }
@@ -1549,6 +1549,50 @@ img.lglogo { object-fit: contain; border-radius: 0; }
   .wmatrix { grid-template-columns: repeat(var(--c), minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .wcells span, .wlamps span, .wpascal button, .wspiral span, .wmines button, .wt span, .rv.in .fbox .wcells span { animation: none !important; } }
+
+
+/* a result that changed glows; nothing else moves */
+@keyframes lsGlowBox { from { box-shadow: 0 0 0 3px color-mix(in srgb, var(--v-cmp) 70%, transparent), 0 0 18px 2px color-mix(in srgb, var(--v-cmp) 55%, transparent); } }
+@keyframes lsGlowText { from { text-shadow: 0 0 14px var(--v-cmp), 0 0 4px var(--v-cmp); color: var(--v-cmp); } }
+@keyframes lsGlowSvg { from { filter: drop-shadow(0 0 5px var(--v-cmp)) drop-shadow(0 0 2px var(--v-cmp)); } }
+.glow { animation: lsGlowBox 1s var(--ease); }
+.pop { animation: lsGlowText 1s var(--ease); }
+.qcell.chg, .wtab td.chg { animation: lsGlowBox 1s var(--ease); }
+svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
+.cell.glow { animation: lsGlowBox 1s var(--ease); }
+@media (prefers-reduced-motion: reduce) { .glow, .pop, .qcell.chg, .wtab td.chg, svg .glow { animation: none; } }
+
+
+/* 基6 figures and widgets */
+.wtext { display: flex; flex-wrap: wrap; gap: 3px; }
+.wtext span { min-width: 26px; height: 34px; display: grid; place-items: center; border-radius: 6px; background: var(--bg); border: 1px solid var(--line); font: 600 15px var(--f-mono); white-space: pre; }
+.wtext span.ku { background: color-mix(in srgb, var(--v-cur) 26%, var(--surface)); }
+.wtext span.kl { background: color-mix(in srgb, var(--v-done) 22%, var(--surface)); }
+.wtext span.kd { background: color-mix(in srgb, var(--v-cmp) 24%, var(--surface)); }
+.wtext span.ko { color: var(--muted); }
+.wres.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.wres.four > div:nth-child(1) code { color: var(--v-cur); } .wres.four > div:nth-child(2) code { color: var(--v-done); } .wres.four > div:nth-child(3) code { color: var(--v-cmp); }
+.walpha { display: grid; gap: 4px; overflow-x: auto; }
+.walpha div { display: grid; grid-template-columns: repeat(26, minmax(18px, 1fr)); gap: 2px; }
+.walpha span { height: 28px; display: grid; place-items: center; border-radius: 4px; background: var(--bg); font: 600 13px var(--f-mono); color: var(--muted); }
+.walpha span.on { background: color-mix(in srgb, var(--v-cmp) 26%, var(--surface)); color: var(--fg); }
+.walpha span.hit { background: color-mix(in srgb, var(--v-done) 26%, var(--surface)); color: var(--fg); }
+.wbars { display: flex; gap: 8px; align-items: flex-end; height: 150px; padding-top: 8px; }
+.wbars > div { display: grid; grid-template-rows: auto 1fr auto; justify-items: center; height: 100%; width: 34px; }
+.wbars i { align-self: end; width: 100%; height: var(--h); border-radius: 6px 6px 2px 2px; background: color-mix(in srgb, var(--v-cur) 45%, var(--surface)); transition: height .3s var(--ease); }
+.wbars .mx i { background: color-mix(in srgb, var(--v-done) 60%, var(--surface)); }
+.wbars .mn i { background: color-mix(in srgb, var(--v-cmp) 60%, var(--surface)); }
+.wbars b { font: 600 13px var(--f-mono); } .wbars span { font: 600 14px var(--f-mono); color: var(--fg-2); }
+.wstream { display: flex; flex-wrap: wrap; gap: 2px; padding: 12px; border-radius: 10px; background: var(--code-bg); border: 1px solid var(--line); }
+.wstream span { min-width: 18px; height: 30px; display: grid; place-items: center; border-radius: 4px; font: 600 14px var(--f-mono); white-space: pre; }
+.wstream span.used { color: var(--muted); opacity: .5; }
+.wstream span.hit { background: color-mix(in srgb, var(--v-cmp) 30%, transparent); }
+.wstream span.cur { box-shadow: inset 2px 0 0 var(--v-done); }
+.wops span { white-space: pre-wrap; }
+.wjoin > div.best { border-color: var(--v-done); background: color-mix(in srgb, var(--v-done) 12%, var(--surface)); }
+.wjoin > div.best b { color: var(--v-done); }
+@media (max-width: 640px) { .wres.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } .wbars > div { width: 26px; } }
+@media (prefers-reduced-motion: reduce) { .wbars i { transition: none; } }
 
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
@@ -3020,7 +3064,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       ${G.pos.map(([x, y], k) => `<g class="gn" transform="translate(${x},${y})"><circle r="16"/><text dy="4">${G.names[k]}</text><text class="d" dy="-22"></text></g>`).join("")}</svg><div class="queue"></div>`;
     const nodes = [...stage.querySelectorAll(".gn")], lines = [...stage.querySelectorAll("line")], list = stage.querySelector(".queue");
     return f => {
-      nodes.forEach((n, k) => { n.setAttribute("class", "gn " + (f.node[k] || "")); n.querySelector(".d").textContent = f.label[k] ?? ""; });
+      nodes.forEach((n, k) => {
+        n.setAttribute("class", "gn " + (f.node[k] || ""));
+        const d = n.querySelector(".d"), v = String(f.label[k] ?? "");
+        if (d.textContent !== v) { const had = d.textContent !== ""; d.textContent = v; d.classList.remove("glow"); if (had && v) { d.getBoundingClientRect(); d.classList.add("glow"); } }
+      });
       lines.forEach((l, e) => l.setAttribute("class", f.edge[e] || ""));
       list.innerHTML = f.list;
     };
@@ -3073,7 +3121,9 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   function rowsMount(stage) {
     stage.classList.add("cells");
     return f => {
+      const old = [...stage.querySelectorAll(".cell")].map(c => c.textContent);
       stage.innerHTML = f.rows.map(r => `<div class="arow"><span class="alabel">${r.label}</span><div class="row${r.vals.length > 12 ? " tight" : ""}">${r.vals.map((v, k) => `<div class="cell ${r.wide ? "w " : ""}${(r.marks || {})[k] || ""}"><small>${r.idx ? r.idx[k] : k + (r.base ?? 0)}</small>${v}</div>`).join("")}</div></div>`).join("");
+      if (old.length) stage.querySelectorAll(".cell").forEach((c, k) => { if (old[k] !== undefined && old[k] !== c.textContent) c.classList.add("glow"); });
     };
   }
   VIS["进2"] = {
@@ -3567,6 +3617,13 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   };
   const say = (el, cls, text) => { el.className = "wfb " + cls; el.textContent = text; el.classList.remove("show"); void el.offsetWidth; el.classList.add("show"); };
   const pop = el => { el.classList.remove("pop"); void el.offsetWidth; el.classList.add("pop"); };
+  // Redraw box from html; the parts matching sel whose class or text changed glow, nothing else moves.
+  const partKey = n => `${(n.getAttribute("class") || "").replace(/\bglow\b/g, "").trim()}|${n.textContent}`;
+  const swap = (box, html, sel) => {
+    const old = [...box.querySelectorAll(sel)].map(partKey);
+    box.innerHTML = html;
+    if (old.length) [...box.querySelectorAll(sel)].forEach((n, k) => { if (old[k] !== partKey(n)) n.classList.add("glow"); });
+  };
   function mountWidgets() {
     document.querySelectorAll("[data-widget]").forEach(el => WIDGET[el.dataset.widget] && WIDGET[el.dataset.widget].init(el));
     // lesson pieces rise in as they scroll into view; their parts follow one after another
@@ -3748,7 +3805,12 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         ${P.map(([x, y], k) => `<g class="gn" transform="translate(${x},${y})"><circle r="${r}"/><text dy="4">${g.names[k]}</text><text class="d" dy="${-r - 6}"></text></g>`).join("")}</svg><div class="queue"></div>`;
       const nodes = [...stage.querySelectorAll(".gn")], lines = [...stage.querySelectorAll("line")], wts = [...stage.querySelectorAll("text.w")], list = stage.querySelector(".queue");
       return f => {
-        nodes.forEach((n, k) => { n.setAttribute("class", "gn " + ((f.node || {})[k] || "")); n.querySelector(".d").textContent = (f.label || {})[k] ?? ""; if (f.names) n.querySelector("text").textContent = f.names[k]; });
+        nodes.forEach((n, k) => {
+          n.setAttribute("class", "gn " + ((f.node || {})[k] || ""));
+          const d = n.querySelector(".d"), v = String((f.label || {})[k] ?? "");
+          if (d.textContent !== v) { const had = d.textContent !== ""; d.textContent = v; d.classList.remove("glow"); if (had && v) { d.getBoundingClientRect(); d.classList.add("glow"); } }
+          if (f.names) n.querySelector("text").textContent = f.names[k];
+        });
         lines.forEach((l, e) => l.setAttribute("class", (f.edge || {})[e] || ""));
         wts.forEach((t, e) => { const v = (f.elab || {})[e]; if (v !== undefined) t.textContent = v; t.setAttribute("class", "w " + ((f.edge || {})[e] === "hid" ? "hid" : "")); });
         list.innerHTML = f.list || "";
@@ -6015,7 +6077,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           const width = +w || 0, pad = Math.max(0, width - s.length);
           const cells = left ? [...s].map(ch => [ch, ""]).concat(Array(pad).fill(["·", "pad"])) : zero ? Array(pad).fill(["0", "pad"]).concat([...s].map(ch => [ch, ""])) : Array(pad).fill(["·", "pad"]).concat([...s].map(ch => [ch, ""]));
           el.querySelector(".wcall").textContent = `printf("${f}", ${type === "d" ? "n" : "x"});`;
-          el.querySelector(".wout").innerHTML = cells.map(([ch, c], k) => `<span class="${c}" style="--i:${k}">${esc(ch)}</span>`).join("");
+          swap(el.querySelector(".wout"), cells.map(([ch, c], k) => `<span class="${c}" style="--i:${k}">${esc(ch)}</span>`).join(""), "span");
           say(fb, "", ({ "%d": "The int as it is", "%5d": "Width 5: padded with spaces on the left (shown as dots)", "%-5d": "The minus sign moves the padding to the right", "%05d": "A leading 0 pads with zeros instead of spaces", "%.2f": "Exactly 2 decimals, rounded", "%.0f": "No decimals: rounded to a whole number", "%8.3f": "3 decimals inside a width of 8", "%f": "Plain %f always shows 6 decimals" })[f]);
         };
         el.querySelector(".wpre").onclick = e => { const b = e.target.closest("[data-f]"); if (!b) return; f = b.dataset.f; el.querySelectorAll("[data-f]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); };
@@ -6033,7 +6095,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         const run = () => {
           const s = Math.max(1, Math.trunc(+is.value || 1)), v = Math.max(1, Math.trunc(+iv.value || 1)), need = Math.floor((s + v - 1) / v) + 10, raw = 480 - need, t = ((raw % 1440) + 1440) % 1440;
           const hm = m => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-          el.querySelector(".wsteps").innerHTML = [[`(${s} + ${v} − 1) / ${v} + 10 = ${need}`, "minutes walking (rounded up) plus 10"], [`8 × 60 − ${need} = ${raw}`, "minutes after midnight"], [`(${raw} % 1440 + 1440) % 1440 = ${t}`, raw < 0 ? "negative, so wrap into the day before" : "already inside the day"]].map(([e, sm], k) => `<div style="--i:${k}"><span class="n">${k + 1}</span><code>${e}</code><small>${sm}</small></div>`).join("");
+          swap(el.querySelector(".wsteps"), [[`(${s} + ${v} − 1) / ${v} + 10 = ${need}`, "minutes walking (rounded up) plus 10"], [`8 × 60 − ${need} = ${raw}`, "minutes after midnight"], [`(${raw} % 1440 + 1440) % 1440 = ${t}`, raw < 0 ? "negative, so wrap into the day before" : "already inside the day"]].map(([e, sm], k) => `<div style="--i:${k}"><span class="n">${k + 1}</span><code>${e}</code><small>${sm}</small></div>`).join(""), ":scope > div");
           const c = el.querySelector(".wclock b"); c.textContent = hm(t); pop(c);
         };
         el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-sv]"); if (!c) return; [is.value, iv.value] = c.dataset.sv.split(" "); run(); };
@@ -6093,7 +6155,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         const run = () => {
           const L = ["switch (m) {", `  case 2: days = leap ? 29 : 28;${brk ? " break;" : ""}`, `  case 4: case 6: case 9: case 11: days = 30;${brk ? " break;" : ""}`, "  default: days = 31;", "}"];
           const entry = m === 2 ? 1 : [4, 6, 9, 11].includes(m) ? 2 : 3, ran = brk ? [entry] : range(4 - entry).map(k => entry + k), vals = { 1: 29, 2: 30, 3: 31 };
-          el.querySelector(".wcode").innerHTML = L.map((l, k) => `<span class="${k === entry ? "on" : ran.includes(k) ? "done" : ""}">${esc(l)}</span>`).join("");
+          swap(el.querySelector(".wcode"), L.map((l, k) => `<span class="${k === entry ? "on" : ran.includes(k) ? "done" : ""}">${esc(l)}</span>`).join(""), "span");
           const out = el.querySelector(".wclock b"); out.textContent = vals[ran[ran.length - 1]]; pop(out);
           el.querySelector(".wclock .mono").textContent = m;
           say(fb, !brk && ran.length > 1 ? "bad" : "ok", brk ? `m = ${m} jumps to its case, sets days, and break leaves the switch` : ran.length > 1 ? `No break: after its own case, m = ${m} falls through ${ran.length - 1} more line${ran.length > 2 ? "s" : ""}, and the last one wins: days = 31` : "The default case is last, so nothing is below it to fall into");
@@ -6124,8 +6186,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           const x = Math.max(-5, Math.min(5, Math.trunc(+ix.value || 0))), y = Math.max(-5, Math.min(5, Math.trunc(+iy.value || 0)));
           const path = x === 0 || y === 0 ? ["r", "ax"] : x > 0 ? ["r", "x", "y1", y > 0 ? "q1" : "q4"] : ["r", "x", "y2", y > 0 ? "q2" : "q3"];
           const on = (a, b) => path.includes(a) && path.includes(b) && path.indexOf(b) === path.indexOf(a) + 1;
-          tree.innerHTML = E.map(([a, b, l]) => `<line class="${on(a, b) ? "hit" : ""}" x1="${N[a][0]}" y1="${N[a][1]}" x2="${N[b][0]}" y2="${N[b][1]}"/><text class="el" x="${(N[a][0] + N[b][0]) / 2 + (l === "yes" ? -10 : 10)}" y="${(N[a][1] + N[b][1]) / 2}">${l}</text>`).join("")
-            + Object.entries(N).map(([k, [cx, cy, t]], i) => { const leaf = /^q|ax/.test(k), w = Math.max(30, t.length * 7.6 + 16); return `<g class="tn${path.includes(k) ? " hit" : ""}${leaf ? " leaf" : ""}" style="--i:${path.indexOf(k)}"><rect x="${cx - w / 2}" y="${cy - 13}" width="${w}" height="26" rx="${leaf ? 13 : 6}"/><text x="${cx}" y="${cy + 4}">${esc(t)}</text></g>`; }).join("");
+          swap(tree, E.map(([a, b, l]) => `<line class="${on(a, b) ? "hit" : ""}" x1="${N[a][0]}" y1="${N[a][1]}" x2="${N[b][0]}" y2="${N[b][1]}"/><text class="el" x="${(N[a][0] + N[b][0]) / 2 + (l === "yes" ? -10 : 10)}" y="${(N[a][1] + N[b][1]) / 2}">${l}</text>`).join("")
+            + Object.entries(N).map(([k, [cx, cy, t]], i) => { const leaf = /^q|ax/.test(k), w = Math.max(30, t.length * 7.6 + 16); return `<g class="tn${path.includes(k) ? " hit" : ""}${leaf ? " leaf" : ""}" style="--i:${path.indexOf(k)}"><rect x="${cx - w / 2}" y="${cy - 13}" width="${w}" height="26" rx="${leaf ? 13 : 6}"/><text x="${cx}" y="${cy + 4}">${esc(t)}</text></g>`; }).join(""), "line, g");
           const pt = plane.querySelector(".pt"); pt.setAttribute("cx", 100 + x * 16); pt.setAttribute("cy", 100 - y * 16);
           say(fb, "ok", `(${x}, ${y}): ${x === 0 || y === 0 ? "a zero coordinate, so the first question already answers it: on an axis" : `not on an axis, x ${x > 0 ? ">" : "<"} 0, y ${y > 0 ? ">" : "<"} 0, so quadrant ${path[3].slice(1)}`}`);
         };
@@ -6144,11 +6206,11 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         const run = () => {
           const v = ins.map(i => Math.max(1, Math.trunc(+i.value || 1))), rows = [[[...v], -1, -1, "start"]];
           for (const [i, j] of [[0, 1], [1, 2], [0, 1]]) { const sw = v[i] > v[j]; if (sw) [v[i], v[j]] = [v[j], v[i]]; rows.push([[...v], i, j, sw ? "swap" : "keep"]); }
-          el.querySelector(".wsort").innerHTML = rows.map(([r, i, j, s], k) => `<div style="--i:${k}"><small>${k ? `${"abc"[i]} > ${"abc"[j]}? ${s}` : "start"}</small>${r.map((x, q) => `<span class="${q === i || q === j ? (s === "swap" ? "swp" : "cmp") : ""}">${x}</span>`).join("")}</div>`).join("");
+          swap(el.querySelector(".wsort"), rows.map(([r, i, j, s], k) => `<div style="--i:${k}"><small>${k ? `${"abc"[i]} > ${"abc"[j]}? ${s}` : "start"}</small>${r.map((x, q) => `<span class="${q === i || q === j ? (s === "swap" ? "swp" : "cmp") : ""}">${x}</span>`).join("")}</div>`).join(""), "span");
           const [a, b, c] = v, tri = a + b > c, s2 = a * a + b * b, c2 = c * c;
           const steps = [[`${a} + ${b} ${tri ? ">" : "≤"} ${c}`, tri ? "a triangle" : "not a triangle: stop"]];
           if (tri) steps.push([`${a}² + ${b}² = ${s2} ${s2 === c2 ? "=" : s2 > c2 ? ">" : "<"} ${c2} = ${c}²`, s2 === c2 ? "right" : s2 > c2 ? "acute" : "obtuse"], [a === c ? `${a} == ${c}` : a === b || b === c ? "two sides equal" : "all sides differ", a === c ? "equilateral" : a === b || b === c ? "isosceles" : "no equal sides"]);
-          el.querySelector(".wsteps").innerHTML = steps.map(([e, s], k) => `<div style="--i:${k}"><span class="n">${k + 1}</span><code>${e}</code><small>${s}</small></div>`).join("");
+          swap(el.querySelector(".wsteps"), steps.map(([e, s], k) => `<div style="--i:${k}"><span class="n">${k + 1}</span><code>${e}</code><small>${s}</small></div>`).join(""), ":scope > div");
           const out = el.querySelector(".wclock b"); out.textContent = tri ? [s2 === c2 ? "Right" : s2 > c2 ? "Acute" : "Obtuse", a === c ? "Equilateral" : a === b || b === c ? "Isosceles" : ""].filter(Boolean).join(" · ") : "Not triangle"; out.classList.toggle("bad", !tri); pop(out);
         };
         el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-abc]"); if (!c) return; c.dataset.abc.split(" ").forEach((x, k) => (ins[k].value = x)); run(); };
@@ -6164,7 +6226,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         const inp = el.querySelector("input"), fb = el.querySelector(".wfb"), P = [[2, 2], [50, 30], [30, 27]];
         const run = () => {
           const n = Math.max(1, Math.trunc(+inp.value || 1)), cost = P.map(([s, p]) => Math.floor((n + s - 1) / s) * p), best = Math.min(...cost);
-          el.querySelector(".wpacks").innerHTML = P.map(([s, p], k) => `<div class="${cost[k] === best ? "best" : ""}" style="--i:${k}"><code>${s} per pack, ${p} each</code><small>⌈${n} / ${s}⌉ = ${Math.floor((n + s - 1) / s)} packs</small><b>${cost[k]}</b></div>`).join("");
+          swap(el.querySelector(".wpacks"), P.map(([s, p], k) => `<div class="${cost[k] === best ? "best" : ""}" style="--i:${k}"><code>${s} per pack, ${p} each</code><small>⌈${n} / ${s}⌉ = ${Math.floor((n + s - 1) / s)} packs</small><b>${cost[k]}</b></div>`).join(""), ":scope > div");
           say(fb, "ok", `best = min(${cost.join(", ")}) = ${best}`);
         };
         el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-n]"); if (!c) return; inp.value = c.dataset.n; run(); };
@@ -6197,7 +6259,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         const show = (part, text, cls = "") => {
           el.querySelectorAll("[data-p]").forEach(p => p.classList.toggle("on", p.dataset.p === part));
           [["i", st.i ?? "—"], ["sum", st.sum], ["r", st.r]].forEach(([k, v]) => { const o = el.querySelector(`[data-out="${k}"]`); if (o.textContent !== String(v)) { o.textContent = v; pop(o); } });
-          el.querySelector(".wchips").innerHTML = st.seen.map((v, k) => `<span class="${k === st.seen.length - 1 && part === "body" ? "on" : ""}">${v}</span>`).join("");
+          swap(el.querySelector(".wchips"), st.seen.map((v, k) => `<span class="${k === st.seen.length - 1 && part === "body" ? "on" : ""}">${v}</span>`).join(""), "span");
           say(fb, cls, text);
         };
         const reset = () => { st = { phase: "init", i: null, sum: 0, r: 0, seen: [] }; el.querySelector("[data-step]").disabled = el.querySelector("[data-all]").disabled = false; show("", "Nothing has run yet"); };
@@ -6295,7 +6357,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           let div = 0;
           for (let i = 2; i * i <= n; i++) { tried.push(i); if (n % i === 0) { div = i; break; } }
           const shown = tried.slice(0, 60);
-          el.querySelector(".wdiv").innerHTML = shown.map((i, k) => `<span class="${i === div ? "bad" : "no"}" style="--k:${k}">${i}</span>`).join("") + (tried.length > 60 ? `<span class="more">… ${tried.length - 60} more</span>` : "");
+          swap(el.querySelector(".wdiv"), shown.map((i, k) => `<span class="${i === div ? "bad" : "no"}" style="--k:${k}">${i}</span>`).join("") + (tried.length > 60 ? `<span class="more">… ${tried.length - 60} more</span>` : ""), "span");
           const prime = n >= 2 && !div, out = el.querySelector(".wclock b");
           out.textContent = prime ? "prime" : "not prime"; out.classList.toggle("bad", !prime); pop(out);
           say(fb, prime ? "ok" : "bad", n < 2 ? "Numbers below 2 are not prime" : div ? `${n} % ${div} == 0, so ${n} = ${div} × ${n / div}. Found after ${tried.length} test${tried.length === 1 ? "" : "s"}` : `No divisor up to √${n} ≈ ${Math.floor(Math.sqrt(n))}: ${tried.length} tests instead of ${n - 2}`);
@@ -6316,7 +6378,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           const rows = [];
           while (b !== 0 && rows.length < 30) { const r = a % b; rows.push([`gcd(${a}, ${b})`, `${a} % ${b} = ${r}`]); a = b; b = r; }
           rows.push([`gcd(${a}, 0) = ${a}`, "b is 0: stop"]);
-          el.querySelector(".wsteps").innerHTML = rows.map(([e, s], k) => `<div style="--i:${k}"><span class="n">${k + 1}</span><code>${e}</code><small>${s}</small></div>`).join("");
+          swap(el.querySelector(".wsteps"), rows.map(([e, s], k) => `<div style="--i:${k}"><span class="n">${k + 1}</span><code>${e}</code><small>${s}</small></div>`).join(""), ":scope > div");
           const o = el.querySelector(".wclock b"); o.textContent = a; pop(o);
         };
         el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-ab]"); if (!c) return; [ia.value, ib.value] = c.dataset.ab.split(" "); run(); };
@@ -6372,7 +6434,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           const L = Math.max(1, Math.min(40, Math.trunc(+iL.value || 1))), nums = ints(iC.value), cut = Array(L + 1).fill(0);
           const R = []; for (let k = 0; k + 1 < nums.length; k += 2) R.push([Math.max(0, Math.min(nums[k], nums[k + 1])), Math.min(L, Math.max(nums[k], nums[k + 1]))]);
           R.forEach(([l, r]) => { for (let p = l; p <= r; p++) cut[p]++; });
-          el.querySelector(".wroad").innerHTML = cellRow(cut.map(c => (c ? "✕" : "●")), k => (cut[k] > 1 ? "bad" : cut[k] ? "on" : ""), k => k);
+          swap(el.querySelector(".wroad"), cellRow(cut.map(c => (c ? "✕" : "●")), k => (cut[k] > 1 ? "bad" : cut[k] ? "on" : ""), k => k), ".wcells span");
           const left = cut.filter(c => !c).length, naive = L + 1 - R.reduce((s, [l, r]) => s + r - l + 1, 0);
           const o = el.querySelector(".wclock b"); o.textContent = left; pop(o);
           say(fb, "ok", cut.some(c => c > 1) ? `Red boxes were cut twice, but a mark is a mark. Subtracting lengths would give ${naive}, which is wrong` : `Each position is marked once. cut[p] == 0 means the tree is still there`);
@@ -6391,7 +6453,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         let n, k, on, last = [];
         const draw = () => {
           el.querySelector(".wq").textContent = k ? `Person ${k} flipped every ${k === 1 ? "lamp" : `${k}th lamp`}: on[p] ^= 1` : "All lamps start off. Person k flips lamps k, 2k, 3k, …";
-          el.querySelector(".wlamps").innerHTML = range(n).map(p => `<span class="${on[p + 1] ? "lit" : ""}${last.includes(p + 1) ? " flip" : ""}"><small>${p + 1}</small></span>`).join("");
+          swap(el.querySelector(".wlamps"), range(n).map(p => `<span class="${on[p + 1] ? "lit" : ""}"><small>${p + 1}</small></span>`).join(""), "span");
           if (k === n) say(fb, "ok", `On: ${range(n).map(p => p + 1).filter(p => on[p]).join(", ")}. Exactly the perfect squares, because only they have an odd number of divisors`);
           else say(fb, "", `${range(n).filter(p => on[p + 1]).length} lamps on`);
         };
@@ -6423,7 +6485,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
               cells.push(`<span class="${cls}" style="--k:${i * n + j}">${!visited ? "" : i === j ? "self" : close ? "✓" : "·"}</span>`);
             });
           });
-          const m = el.querySelector(".wmatrix"); m.style.setProperty("--c", n + 1); m.innerHTML = cells.join("");
+          const m = el.querySelector(".wmatrix"); m.style.setProperty("--c", n + 1); swap(m, cells.join(""), "span");
           const o = el.querySelector(".wclock b"); o.textContent = cnt; o.classList.toggle("bad", cnt !== right); pop(o);
           say(fb, cnt === right ? "ok" : "bad", from1 ? `Only the upper right triangle: n(n − 1) / 2 = ${(n * (n - 1)) / 2} pairs, each once` : `Every pair twice plus each element with itself: ${cnt} = 2 × ${right} + ${cnt - 2 * right}`);
         };
@@ -6442,7 +6504,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         let a, m, i, s, best;
         const set = (k, v) => { const o = el.querySelector(`[data-out="${k}"]`); if (o.textContent !== String(v)) { o.textContent = v; pop(o); } };
         const draw = (text, added, dropped) => {
-          el.querySelector(".wwin").innerHTML = cellRow(a, k => (k === added ? "hit" : k === dropped ? "ghost" : k >= i - m && k < i ? "on" : ""), k => k);
+          swap(el.querySelector(".wwin"), cellRow(a, k => (k === added ? "hit" : k === dropped ? "ghost" : k >= i - m && k < i ? "on" : ""), k => k), ".wcells span");
           set("s", s); set("b", best); say(fb, "", text);
           el.querySelector("[data-step]").disabled = i >= a.length;
         };
@@ -6469,7 +6531,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         a[1][1] = 1;
         for (let i = 2; i <= N; i++) for (let j = 1; j <= i; j++) a[i][j] = a[i - 1][j - 1] + a[i - 1][j];
         const draw = (si, sj) => {
-          el.querySelector(".wpascal").innerHTML = range(N).map(r => `<div>${range(r + 1).map(c => { const i = r + 1, j = c + 1, cls = i === si && j === sj ? "hit" : i === si - 1 && (j === sj || j === sj - 1) ? "on" : ""; return `<button type="button" class="${cls}" data-ij="${i} ${j}">${a[i][j]}</button>`; }).join("")}</div>`).join("");
+          swap(el.querySelector(".wpascal"), range(N).map(r => `<div>${range(r + 1).map(c => { const i = r + 1, j = c + 1, cls = i === si && j === sj ? "hit" : i === si - 1 && (j === sj || j === sj - 1) ? "on" : ""; return `<button type="button" class="${cls}" data-ij="${i} ${j}">${a[i][j]}</button>`; }).join("")}</div>`).join(""), "button");
           if (si > 1) say(fb, "ok", `a[${si}][${sj}] = a[${si - 1}][${sj - 1}] + a[${si - 1}][${sj}] = ${a[si - 1][sj - 1]} + ${a[si - 1][sj]} = ${a[si][sj]}${sj === 1 || sj === si ? ". One parent is the zero padding outside the triangle" : ""}`);
           else say(fb, "", "a[1][1] = 1 starts everything. The zeros around it make every edge 1 without an if");
         };
@@ -6486,7 +6548,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         let n, g, x, y, d, k, timer;
         const draw = turned => {
           const w = el.querySelector(".wspiral"); w.style.setProperty("--n", n);
-          w.innerHTML = range(n).map(i => range(n).map(j => { const v = g[i][j], cur = i === x && j === y; return `<span class="${cur ? "cur" : v ? "on" : ""}">${v || (cur ? AR[d] : "")}</span>`; }).join("")).join("");
+          swap(w, range(n).map(i => range(n).map(j => { const v = g[i][j], cur = i === x && j === y; return `<span class="${cur ? "cur" : v ? "on" : ""}">${v || (cur ? AR[d] : "")}</span>`; }).join("")).join(""), "span");
           say(fb, turned ? "bad" : "", k > n * n ? `Done: ${n * n} numbers, turning right each time the next cell is outside or already filled` : `Next: ${k} at row ${x + 1}, column ${y + 1}, heading ${AR[d]} (d = ${d})${turned ? ". Blocked, so d = (d + 1) % 4" : ""}`);
         };
         const reset = () => { clearInterval(timer); n = Math.max(2, Math.min(8, Math.trunc(+inp.value || 2))); g = range(n).map(() => Array(n).fill(0)); x = y = d = 0; k = 1; draw(false); };
@@ -6515,13 +6577,12 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         [[0, 0], [1, 2], [3, 5], [4, 1]].forEach(([i, j]) => (g[i][j] = true));
         const draw = (pi, pj) => {
           const w = el.querySelector(".wmines"); w.style.setProperty("--n", C);
-          w.innerHTML = range(R).map(i => range(C).map(j => {
+          swap(w, range(R).map(i => range(C).map(j => {
             if (g[i][j]) return `<button type="button" class="mine" data-ij="${i} ${j}">*</button>`;
             let c = 0; for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) { const ni = i + di, nj = j + dj; if ((di || dj) && ni >= 0 && ni < R && nj >= 0 && nj < C && g[ni][nj]) c++; }
-            const near = pi !== undefined && Math.abs(i - pi) <= 1 && Math.abs(j - pj) <= 1 && !(i === pi && j === pj);
-            return `<button type="button" class="n${c}${near ? " near" : ""}" data-ij="${i} ${j}">${c}</button>`;
-          }).join("")).join("");
-          say(fb, "", pi === undefined ? "Each number counts the * among its 8 neighbours, skipping any outside the grid" : `Changed (${pi}, ${pj}): only its 8 neighbours, highlighted, changed their counts`);
+            return `<button type="button" class="n${c}" data-ij="${i} ${j}">${c}</button>`;
+          }).join("")).join(""), "button");
+          say(fb, "", pi === undefined ? "Each number counts the * among its 8 neighbours, skipping any outside the grid" : `Changed (${pi}, ${pj}): only the counts around it changed, and they glow`);
         };
         el.onclick = e => { const b = e.target.closest("[data-ij]"); if (!b) return; const [i, j] = b.dataset.ij.split(" ").map(Number); g[i][j] = !g[i][j]; draw(i, j); };
         draw();
@@ -6537,8 +6598,8 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         let cur = range(n).map(i => range(n).map(j => A[i * n + j]));
         const grid = (g, cls) => g.map((row, i) => row.map((v, j) => `<span class="${cls(i, j)}" style="--k:${i * n + j}">${v}</span>`).join("")).join("");
         const show = (prev, k) => {
-          el.querySelector('[data-g="a"]').innerHTML = grid(prev, (i, j) => (i === 0 ? "on" : ""));
-          el.querySelector('[data-g="b"]').innerHTML = grid(cur, () => "new");
+          swap(el.querySelector('[data-g="a"]'), grid(prev, (i, j) => (i === 0 ? "on" : "")), "span");
+          swap(el.querySelector('[data-g="b"]'), grid(cur, () => ""), "span");
           el.querySelector(".wcall").textContent = k < 0 ? "Pick a transform. Row 0 of the left grid is highlighted" : `${WIDGET.transform.T[k][1]} = a[i][j]   (built in a second array, never in place)`;
         };
         el.onclick = e => {
@@ -6561,12 +6622,180 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           const runs = []; let cur = 0, r = 0;
           bits.forEach(b => { if (b === cur) r++; else { runs.push(r); cur = b; r = 1; } }); runs.push(r);
           let run = 0, left = runs[0];
-          el.querySelector(".wbits").innerHTML = bits.map((b, k) => { while (left === 0) { run++; left = runs[run]; } left--; return `<button type="button" class="b${b} r${run % 2}" data-k="${k}">${b}</button>`; }).join("");
+          swap(el.querySelector(".wbits"), bits.map((b, k) => { while (left === 0) { run++; left = runs[run]; } left--; return `<button type="button" class="b${b} r${run % 2}" data-k="${k}">${b}</button>`; }).join(""), "button");
           const o = el.querySelector(".wclock b"); o.textContent = runs.join(" "); pop(o);
           say(fb, "", bits[0] ? "The sequence starts with 1, so the first run (of 0s) has length 0" : `${runs.length} runs alternate 0s and 1s. Decoding just prints each run and flips the bit`);
         };
         el.onclick = e => { const b = e.target.closest("[data-k]"); if (!b) return; bits[+b.dataset.k] ^= 1; draw(); };
         draw();
+      },
+    },
+  });
+
+
+  // ---- 基6: figures and widgets ----
+  const vis1 = c => (c === " " ? "␣" : c);
+  Object.assign(FIG, {
+    cstr: () => `<div class="fbox"><code>char a[6] = "hello";</code>${cellRow(["h", "e", "l", "l", "o", "\\0"], k => (k === 5 ? "on" : ""), k => `a[${k}]`)}<p class="floop">Five letters need <b>six</b> boxes: the text ends at the hidden <code>\\0</code></p></div>`,
+    substr: () => `<div class="fbox"><code>string s = "abcdef";</code>${cellRow("abcdef".split(""), k => (k >= 1 && k <= 3 ? "on" : ""), k => k)}<p class="floop"><code>s.substr(1, 3)</code> starts at index 1 and takes 3 characters: <code>"bcd"</code>. The second number is a <b>length</b>, not an end index</p></div>`,
+    redirect: () => `<div class="fflow">${[["in.txt", "the sample input", ""], ["a.exe", "your program", " hot"], ["out.txt", "what it printed", ""], ["fc / diff", "against the answer", " ok"]].map(([h, s, c], k) => `${k ? '<i aria-hidden="true">→</i>' : ""}<div class="fchip${c}"><span class="mono">${h}</span><small>${s}</small></div>`).join("")}</div>
+      <p class="floop"><code>a &lt; in.txt &gt; out.txt</code> then <code>fc out.txt ans.txt</code>. No code changes needed</p>`,
+  });
+  Object.assign(WIDGET, {
+    classify: {
+      title: "What kind of character is it?",
+      html: () => `<div class="win"><label>line <input type="text" class="wide" value="Hello, World 42" data-k="s"></label></div>
+        <div class="wpre"><button type="button" class="chip" data-op="up">to UPPERCASE</button><button type="button" class="chip" data-op="low">to lowercase</button></div>
+        <div class="wtext"></div><div class="wres four"><div><code>upper</code><b data-out="u"></b></div><div><code>lower</code><b data-out="l"></b></div><div><code>digit</code><b data-out="d"></b></div><div><code>other</code><b data-out="o"></b></div></div>`,
+      init(el) {
+        const inp = el.querySelector("input"), box = el.querySelector(".wtext");
+        const kind = c => (c >= "A" && c <= "Z" ? "u" : c >= "a" && c <= "z" ? "l" : c >= "0" && c <= "9" ? "d" : "o");
+        const run = () => {
+          const s = inp.value, cnt = { u: 0, l: 0, d: 0, o: 0 };
+          [...s].forEach(c => cnt[kind(c)]++);
+          swap(box, [...s].map(c => `<span class="k${kind(c)}">${esc(vis1(c))}</span>`).join(""), "span");
+          Object.entries(cnt).forEach(([k, v]) => { const o = el.querySelector(`[data-out="${k}"]`); if (o.textContent !== String(v)) { o.textContent = v; pop(o); } });
+        };
+        el.querySelector(".wpre").onclick = e => {
+          const b = e.target.closest("[data-op]"); if (!b) return;
+          inp.value = [...inp.value].map(c => (b.dataset.op === "up" ? (c >= "a" && c <= "z" ? String.fromCharCode(c.charCodeAt(0) - 32) : c) : c >= "A" && c <= "Z" ? String.fromCharCode(c.charCodeAt(0) + 32) : c)).join("");
+          run();
+        };
+        inp.oninput = run;
+        run();
+      },
+    },
+    caesar: {
+      title: "Caesar shift",
+      html: () => `<div class="win"><label>text <input type="text" value="xyz" data-k="s"></label><label>k <input type="number" value="3" min="-25" max="25" data-k="k"></label></div>
+        <div class="walpha"></div><div class="wres two"><div><code>encoded</code><b data-out="e" class="sm"></b></div><div><code>decoded again</code><b data-out="d" class="sm"></b></div></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const [is, ik] = el.querySelectorAll("input"), fb = el.querySelector(".wfb");
+        const shift = (s, k) => [...s.toLowerCase()].map(c => (c >= "a" && c <= "z" ? String.fromCharCode((((c.charCodeAt(0) - 97 + k) % 26) + 26) % 26 + 97) : c)).join("");
+        const run = () => {
+          const k = Math.trunc(+ik.value || 0), s = is.value, used = new Set(s.toLowerCase());
+          const A = range(26).map(i => String.fromCharCode(97 + i));
+          swap(el.querySelector(".walpha"), `<div>${A.map(c => `<span class="${used.has(c) ? "on" : ""}">${c}</span>`).join("")}</div><div>${A.map(c => `<span class="${used.has(c) ? "hit" : ""}">${shift(c, k)}</span>`).join("")}</div>`, "span");
+          const e = shift(s, k);
+          [["e", e], ["d", shift(e, -k)]].forEach(([q, v]) => { const o = el.querySelector(`[data-out="${q}"]`); if (o.textContent !== v) { o.textContent = v || "—"; pop(o); } });
+          say(fb, "", `Each letter moves ${k >= 0 ? k : -k} place${Math.abs(k) === 1 ? "" : "s"} ${k >= 0 ? "forward" : "back"}: (c − 'a' + k) % 26. Going back, add 26 first so % never sees a negative`);
+        };
+        is.oninput = ik.oninput = run;
+        run();
+      },
+    },
+    letters: {
+      title: "Count the letters",
+      html: () => `<div class="wpre">${["error", "banana", "mississippi", "abc"].map(w => `<button type="button" class="chip" data-w="${w}">${w}</button>`).join("")}</div>
+        <div class="win"><label>word <input type="text" value="error" data-k="w"></label></div><div class="wbars"></div><div class="wclock"><b class="sm"></b><small></small></div>`,
+      init(el) {
+        const inp = el.querySelector("input");
+        const run = () => {
+          const s = inp.value.toLowerCase().replace(/[^a-z]/g, ""), cnt = Array(26).fill(0);
+          [...s].forEach(c => cnt[c.charCodeAt(0) - 97]++);
+          const seen = cnt.filter(x => x), mx = seen.length ? Math.max(...seen) : 0, mn = seen.length ? Math.min(...seen) : 0, dif = mx - mn;
+          let prime = dif >= 2; for (let i = 2; i * i <= dif; i++) if (dif % i === 0) prime = false;
+          swap(el.querySelector(".wbars"), range(26).filter(i => cnt[i]).map(i => `<div class="${cnt[i] === mx ? "mx" : cnt[i] === mn ? "mn" : ""}" style="--h:${(cnt[i] / Math.max(1, mx)) * 100}%"><b>${cnt[i]}</b><i></i><span>${String.fromCharCode(97 + i)}</span></div>`).join(""), ":scope > div");
+          const o = el.querySelector(".wclock b"); o.textContent = s ? (prime ? "Lucky Word" : "No Answer") : "—"; o.classList.toggle("bad", !prime); pop(o);
+          el.querySelector(".wclock small").textContent = s ? `max ${mx} − min ${mn} = ${dif}, ${prime ? "a prime" : "not a prime"}` : "";
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-w]"); if (!c) return; inp.value = c.dataset.w; run(); };
+        inp.oninput = run;
+        run();
+      },
+    },
+    getline: {
+      title: "Where does each read stop?",
+      html: () => `<div class="seg" role="group" aria-label="fix"><button type="button" data-fix="0" aria-pressed="true">One getline</button><button type="button" data-fix="1" aria-pressed="false">With the fix</button></div>
+        <div class="wstream"></div><div class="wcode small wops"></div>
+        <div class="btns"><button type="button" class="btn primary" data-step>Next read</button><button type="button" class="btn" data-reset>Start again</button></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const IN = "3 hello world\nTo be or not to be\n", fb = el.querySelector(".wfb");
+        let fix = false, pos, k, outs;
+        const ops = () => ["cin >> n;", "cin >> w;"].concat(fix ? ["getline(cin, line);  // throw away", "getline(cin, line);  // line 2"] : ["getline(cin, line);  // line 2?"]);
+        const draw = (from, to) => {
+          swap(el.querySelector(".wstream"), [...IN].map((c, i) => `<span class="${i < from ? "used" : i < to ? "hit" : ""}${i === to ? " cur" : ""}">${c === "\n" ? "↵" : vis1(c)}</span>`).join(""), "span");
+          el.querySelector(".wops").innerHTML = ops().map((o, i) => `<span class="${i < k ? "done" : i === k ? "on" : ""}">${esc(o)}${outs[i] !== undefined ? `   → ${esc(outs[i])}` : ""}</span>`).join("");
+        };
+        const reset = () => { pos = 0; k = 0; outs = []; el.querySelector("[data-step]").disabled = false; draw(0, 0); say(fb, "", "The input waits in a stream. Each read starts where the last one stopped"); };
+        const step = () => {
+          const op = ops()[k], from = pos;
+          if (op.startsWith("cin")) { while (IN[pos] === " " || IN[pos] === "\n") pos++; const st = pos; while (pos < IN.length && IN[pos] !== " " && IN[pos] !== "\n") pos++; outs[k] = IN.slice(st, pos); say(fb, "", `>> skips spaces, reads "${outs[k]}", and stops before the next space. The rest stays in the stream`); }
+          else { const st = pos; while (pos < IN.length && IN[pos] !== "\n") pos++; outs[k] = `"${IN.slice(st, pos)}"`; pos++; say(fb, !fix ? "bad" : "ok", !fix ? `You wanted line 2, but getline took the rest of line 1: ${outs[k]}. That is the trap` : k === 2 ? "This getline swallows the rest of line 1 on purpose" : `Now getline gets the whole of line 2: ${outs[k]}`); }
+          k++; draw(from, pos);
+          if (k === ops().length) el.querySelector("[data-step]").disabled = true;
+        };
+        el.onclick = e => {
+          const b = e.target.closest("[data-fix]");
+          if (b) { fix = b.dataset.fix === "1"; el.querySelectorAll("[data-fix]").forEach(x => x.setAttribute("aria-pressed", x === b)); return reset(); }
+          if (e.target.closest("[data-reset]")) return reset();
+          if (e.target.closest("[data-step]") && k < ops().length) step();
+        };
+        reset();
+      },
+    },
+    strtools: {
+      title: "The string toolkit",
+      OPS: [["s.substr(1, 3)", s => [s.substr(1, 3), [1, 4]]], ["s.substr(4)", s => [s.substr(4), [4, s.length]]], ['s.find("cd")', s => { const p = s.indexOf("cd"); return [p < 0 ? "npos" : String(p), p < 0 ? null : [p, p + 2]]; }], ['s.insert(2, "XY")', s => [s.slice(0, 2) + "XY" + s.slice(2), [2, 2]]], ["s.erase(2, 2)", s => [s.slice(0, 2) + s.slice(4), [2, 4]]], ['s.replace(0, 3, "Z")', s => ["Z" + s.slice(3), [0, 3]]], ["reverse(s)", s => [[...s].reverse().join(""), [0, s.length]]]],
+      html: () => `<div class="win"><label>s <input type="text" value="abcdef" data-k="s"></label></div>
+        <div class="wpre">${WIDGET.strtools.OPS.map(([l], k) => `<button type="button" class="chip mono" data-o="${k}" aria-pressed="${k === 0}">${esc(l)}</button>`).join("")}</div>
+        <div class="wstrip"></div><div class="wclock"><b class="sm"></b><small>result</small></div>`,
+      init(el) {
+        const inp = el.querySelector("input");
+        let op = 0;
+        const run = () => {
+          const s = inp.value, [res, span] = WIDGET.strtools.OPS[op][1](s);
+          swap(el.querySelector(".wstrip"), cellRow([...s].map(vis1), k => (span && k >= span[0] && k < span[1] ? "on" : ""), k => k), ".wcells span");
+          const o = el.querySelector(".wclock b"); o.textContent = res === "" ? '""' : res; pop(o);
+        };
+        el.querySelector(".wpre").onclick = e => { const b = e.target.closest("[data-o]"); if (!b) return; op = +b.dataset.o; el.querySelectorAll("[data-o]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); };
+        inp.oninput = run;
+        run();
+      },
+    },
+    wordfind: {
+      title: "Find a whole word",
+      html: () => `<div class="seg" role="group" aria-label="match"><button type="button" data-ww="1" aria-pressed="true">Whole words</button><button type="button" data-ww="0" aria-pressed="false">Any match</button></div>
+        <div class="win"><label>word <input type="text" value="be" data-k="w"></label><label>line <input type="text" class="wide" value="To be or not to be, maybe bee" data-k="l"></label></div>
+        <div class="wtext wline"></div><div class="wclock"><b class="sm"></b><small></small></div>`,
+      init(el) {
+        let whole = true;
+        const [iw, il] = el.querySelectorAll("input");
+        const run = () => {
+          const w = iw.value.toLowerCase(), line = il.value.toLowerCase(), pat = whole ? ` ${w} ` : w, text = whole ? ` ${line} ` : line, hits = [];
+          if (w) for (let p = text.indexOf(pat); p >= 0; p = text.indexOf(pat, p + 1)) hits.push(p);
+          const mark = new Set(); hits.forEach(p => { for (let i = 0; i < w.length; i++) mark.add(p + i); });
+          swap(el.querySelector(".wline"), [...il.value].map((c, i) => `<span class="${mark.has(i) ? "kl" : ""}">${esc(vis1(c))}</span>`).join(""), "span");
+          const o = el.querySelector(".wclock b"); o.textContent = hits.length ? `${hits.length} found` : "-1"; pop(o);
+          el.querySelector(".wclock small").textContent = hits.length ? `first at index ${hits[0]}` : "no match";
+        };
+        el.onclick = e => { const b = e.target.closest("[data-ww]"); if (!b) return; whole = b.dataset.ww === "1"; el.querySelectorAll("[data-ww]").forEach(x => x.setAttribute("aria-pressed", x === b)); run(); };
+        iw.oninput = il.oninput = run;
+        run();
+      },
+    },
+    strcmp: quizWidget("Which is smaller?", [
+      ['"10" < "9"', ["true", "false"], 0, "Strings compare letter by letter: '1' comes before '9'"],
+      ['"apple" < "apply"', ["true", "false"], 0, "The first difference decides: 'e' < 'y'"],
+      ['"Zoo" < "apple"', ["true", "false"], 0, "Every uppercase letter (65 to 90) is smaller than every lowercase one (97 to 122)"],
+      ['"abc" < "abcd"', ["true", "false"], 0, "A prefix is smaller than the longer string"],
+      ['stoi("10") < stoi("9")', ["true", "false"], 1, "As numbers, 10 is not smaller than 9"],
+    ], q => `Is <code>${esc(q)}</code> true or false?`),
+    concat: {
+      title: "Which order joins smaller?",
+      html: () => `<div class="wpre">${[["32", "321"], ["3", "32"], ["9", "90"], ["12", "121"]].map(([x, y]) => `<button type="button" class="chip mono" data-xy="${x} ${y}">${x}, ${y}</button>`).join("")}</div>
+        <div class="win"><label>x <input type="text" value="32" data-k="x"></label><label>y <input type="text" value="321" data-k="y"></label></div>
+        <div class="wres two wjoin"><div data-c="xy"><code>x + y</code><b></b></div><div data-c="yx"><code>y + x</code><b></b></div></div><p class="wfb" aria-live="polite"></p>`,
+      init(el) {
+        const [ix, iy] = el.querySelectorAll("input"), fb = el.querySelector(".wfb");
+        const run = () => {
+          const x = ix.value, y = iy.value, a = x + y, b = y + x, xFirst = a <= b;
+          [["xy", a, xFirst], ["yx", b, !xFirst]].forEach(([k, v, best]) => { const d = el.querySelector(`[data-c="${k}"]`), o = d.querySelector("b"); d.classList.toggle("best", best); if (o.textContent !== v) { o.textContent = v; pop(o); } });
+          say(fb, "ok", `${xFirst ? "x" : "y"} goes first. Sorting with the rule x + y < y + x gives the smallest join of all the strings`);
+        };
+        el.querySelector(".wpre").onclick = e => { const c = e.target.closest("[data-xy]"); if (!c) return; [ix.value, iy.value] = c.dataset.xy.split(" "); run(); };
+        ix.oninput = iy.oninput = run;
+        run();
       },
     },
   });
