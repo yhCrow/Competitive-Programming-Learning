@@ -783,6 +783,23 @@ svg.far .node .badge { display: none; }
 @keyframes iGrowX { from { transform: scaleX(0); } }
 @keyframes iDrop { from { transform: translateY(-8px); opacity: 0; } }
 @keyframes iPop { 0% { transform: scale(.2); opacity: 0; } 70% { transform: scale(1.25); opacity: 1; } }
+/* panel icons: drawn in when the panel opens; replayed (second name) when that button is picked */
+@keyframes pDraw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes pPop { 0% { transform: scale(.2); opacity: 0; } 70% { transform: scale(1.3); opacity: 1; } }
+.picon { width: 16px; height: 16px; flex: none; overflow: visible; }
+.picon * { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transform-box: fill-box; transform-origin: center; }
+.picon .dot { fill: currentColor; stroke: none; }
+.picon [pathLength] { stroke-dasharray: 1; }
+.mappanel .picon .pd { animation: iDraw .6s var(--ease) .2s both; }
+.mappanel .picon .pd2 { animation-delay: .45s; }
+.mappanel .picon .pp { animation: iPop .4s var(--ease) both; animation-delay: calc(.3s + var(--k, 0) * 90ms); }
+.mappanel [aria-pressed="true"] > .picon .pd { animation: pDraw .5s var(--ease) both; }
+.mappanel [aria-pressed="true"] > .picon .pd2 { animation-delay: .2s; }
+.mappanel [aria-pressed="true"] > .picon .pp { animation: pPop .4s var(--ease) both; animation-delay: calc(var(--k, 0) * 90ms); }
+/* panel buttons: icon above the label in the arrangement tiles; chips grow to fit their words */
+.mappanel .seg.arr button { display: flex; flex-direction: column; align-items: center; gap: 4px; height: auto; padding: 8px 4px; white-space: normal; text-align: center; }
+.mappanel .chip { display: inline-flex; align-items: center; gap: 6px; height: auto; min-height: 28px; padding: 5px 12px; line-height: 1.35; white-space: normal; text-align: left; }
+@media (prefers-reduced-motion: reduce) { .picon * { animation: none !important; } }
 @keyframes iLight { from { opacity: .1; } }
 @keyframes iPartL { 50% { transform: translateX(-3px); } } @keyframes iPartR { 50% { transform: translateX(3px); } }
 @keyframes iSpin { from { transform: rotate(-120deg) scale(.6); } }
@@ -1182,7 +1199,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       if (arrange === "map" && isFoldedId(c.id)) return;
       const { x, y } = xy[c.id];
       const st = statusOf(c.id);
-      const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter)) || (topicFilter !== "all" && c.fam !== topicFilter) || (readyOnly && !(isReady(c) || st === "learning"));
+      const dim = (hot && !hot.has(c.id)) || (levelFilter !== "all" && !c.id.startsWith(levelFilter)) || (readyOnly && !(isReady(c) || st === "learning"));
       // Chinese glyphs are about 14.5px wide here, Latin about 9px: squeeze a long title into the box instead of cutting it
       const units = [...c.title].reduce((n, ch) => n + (ch.charCodeAt(0) > 0x2e80 ? 1 : 0.62), 0);
       let title = c.title;
@@ -1282,7 +1299,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
       .map(([key, name, color]) => ({ key, name, color, ids: A.filter(c => stateOf(c) === key).map(c => c.id) })),
   };
   function computeGroups() {
-    const front = arrange === "topic" ? topicFilter : "all";
+    const front = "all";
     const gs = ARRANGE[arrange]().filter(g => g.ids.length).sort((a, b) => (b.key === front) - (a.key === front));
     const xy = {}, boxes = [], PAD = 24, HEAD = 64, GAP = 48, PER = 6, X0 = 24, maxW = Math.max(W + 2 * PAD + X0, groupWrap || layout.mapWidth);
     let x = X0, y = 24, rowH = 0;
@@ -1339,7 +1356,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     setTimeout(() => svg.classList.add("leaving"), 200);
     setTimeout(() => { liftFrom = 7; run(); liftFrom = 0; }, 440);
   }
-  const arrSub = () => arrange === "topic" ? `<p class="label">Bring a topic to the front</p>${topicPills()}`
+  const arrSub = () => arrange === "topic" ? `<p class="hint">Chapters gather by topic, each group under its own icon</p>`
     : arrange === "status" ? `<p class="hint">Chapters gather by where you are: learned, learning, ready and locked</p>`
     : `<p class="hint">One lane per level. Click a level name on the left to fit it in view</p>`;
   function rearrange(mode) {
@@ -1370,6 +1387,15 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   // ---- tree: the floating card for a selection, keyboard movement, the ready count ----
   const finishedLevels = () => LEVELS.filter(l => A.filter(c => c.id.startsWith(l.key)).every(c => statusOf(c.id) === "learned"));
   const foldLabel = () => { const n = finishedLevels().length; return `Fold finished levels${n ? ` · ${n} finished` : " · none finished yet"}`; };
+  // Small panel icons: lines draw (.pd) and parts pop in (.pp, staggered by --k)
+  const picon = inner => `<svg class="picon" viewBox="0 0 16 16" aria-hidden="true">${inner}</svg>`;
+  const PICON = {
+    map: picon('<path class="pd" pathLength="1" d="M4.6 7.3 11.3 4.5M4.6 8.7l6.7 2.8"/><circle class="pp" style="--k:0" cx="3" cy="8" r="1.8"/><circle class="pp" style="--k:1" cx="13" cy="3.8" r="1.8"/><circle class="pp" style="--k:2" cx="13" cy="12.2" r="1.8"/>'),
+    topic: picon([[2, 2], [9, 2], [2, 9], [9, 9]].map(([x, y], k) => `<rect class="pp" style="--k:${k}" x="${x}" y="${y}" width="5" height="5" rx="1.2"/>`).join("")),
+    status: picon('<circle class="pd" pathLength="1" cx="8" cy="8" r="6"/><path class="pd pd2" pathLength="1" d="M5.2 8.2l2 2 3.8-4.2"/>'),
+    ready: picon('<circle class="pp" style="--k:1" cx="8" cy="8" r="5.6"/><circle class="pp dot" style="--k:0" cx="8" cy="8" r="2"/>'),
+    fold: picon('<path class="pd" pathLength="1" d="M4 3.5l4 3 4-3"/><path class="pd pd2" pathLength="1" d="M4 12.5l4-3 4 3"/>'),
+  };
   const readyCount = () => A.filter(c => isReady(c) || statusOf(c.id) === "learning").length;
   const rovingId = () => selected || (nextChapter().cur || A[0]).id;
   function peekHtml() {
@@ -1581,7 +1607,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     requestAnimationFrame(updateRail);
     if (!layout) computeLayout();
     document.body.classList.add("mapopen");
-    const seg = (attr, cur, opts, label) => `<div class="seg arr" role="group" aria-label="${label}">${opts.map(([v, t]) => `<button ${attr}="${v}" aria-pressed="${cur === v}">${t}</button>`).join("")}</div>`;
+    const seg = (attr, cur, opts, label) => `<div class="seg arr" role="group" aria-label="${label}">${opts.map(([v, t]) => `<button ${attr}="${v}" aria-pressed="${cur === v}">${PICON[v]}<span>${t}</span></button>`).join("")}</div>`;
     $("#view").innerHTML = `<div class="mapfull" style="view-transition-name: atlasmap">
       <div class="mapbar"><a class="btn" href="#tree">Exit map</a><button class="btn" data-panel aria-expanded="false" aria-controls="mappanel">Settings</button></div>
       <div class="mapmain"><div class="mapwrap${arrange !== "map" ? " grouped" : ""}"><div class="lanerail" id="laneRail">${railHtml()}</div><div class="mapcol"><button class="skip" data-skipmap>Skip the map</button><div class="steprow" id="stepRow" title="Steps count prerequisites: a step 3 chapter builds on chapters from steps 1 and 2">${stepHtml()}</div><div class="canvas" id="canvas">${svgTree()}</div>${minimapHtml()}${peekHtml() || '<div id="peek" hidden></div>'}</div></div></div>
@@ -1589,7 +1615,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
         <div class="mphead"><b>Course map</b><a class="btn" href="#tree" title="Esc">Exit map</a></div>
         <section><p class="label">Arrange by</p>${seg("data-arrange", arrange, [["map", "Prerequisites"], ["topic", "Topic"], ["status", "Status"]], "Arrange the chapters")}<div id="arrSub" class="arrsub">${arrSub()}</div></section>
         <section><p class="label">Zoom</p><div class="seg zoom" role="group" aria-label="Map zoom"><button data-zoomstep="-1" aria-label="Zoom out">−</button><span class="pct" id="zoomPct" aria-live="polite">100%</span><button data-zoomstep="1" aria-label="Zoom in">+</button><button data-zoomfit>Fit</button></div></section>
-        <section><p class="label">Show</p><div class="chipset"><button class="chip" data-readyonly aria-pressed="${readyOnly}">Ready only · ${readyCount()}</button><button class="chip" data-fold aria-pressed="${foldDone}">${foldLabel()}</button></div></section>
+        <section><p class="label">Show</p><div class="chipset"><button class="chip" data-readyonly aria-pressed="${readyOnly}">${PICON.ready}<span class="rc">Ready only · ${readyCount()}</span></button><button class="chip" data-fold aria-pressed="${foldDone}">${PICON.fold}<span>${foldLabel()}</span></button></div></section>
         <div id="side" class="mpside">${sideCard()}</div>
         <p class="hint">Scroll to zoom · drag to move · click empty space to see everything · Esc to exit</p>
       </aside></div>`;
@@ -1626,7 +1652,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     if (selected && $("#mappanel")) $("#side").scrollIntoView({ block: "nearest" });
     const pk = $("#peek"), np = peekHtml();
     if (pk) pk.outerHTML = np || '<div id="peek" hidden></div>';
-    const rc = $("[data-readyonly]"); if (rc) rc.textContent = `Ready only · ${readyCount()}`;
+    const rc = $("[data-readyonly] .rc"); if (rc) rc.textContent = `Ready only · ${readyCount()}`;
     const s = document.querySelector(".strip"), r = document.querySelector(".resume");
     if (r) r.remove();
     if (s) s.outerHTML = stripHtml(true);
@@ -3190,7 +3216,7 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
     const tp = e.target.closest("[data-topic]");
     if (tp) {
       const pick = tp.dataset.topic;
-      if (location.hash.startsWith("#list")) { topicFilter = pick; viewList(); } else morph(() => (topicFilter = pick));
+      topicFilter = pick; viewList();
       document.querySelectorAll("[data-topic]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.topic === topicFilter)));
       return;
     }
