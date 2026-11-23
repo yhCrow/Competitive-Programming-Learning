@@ -1722,6 +1722,12 @@ svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
 .gsvg rect.disk { fill: color-mix(in srgb, var(--v-done) 55%, var(--surface)); stroke: var(--v-done); transition: fill .2s var(--ease); }
 .gsvg rect.disk.hot { fill: var(--v-cmp); stroke: var(--v-cmp); }
 
+
+/* 基12 widgets */
+.wqueue { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 12px; }
+.wgap { border: 1px dashed var(--line-strong); background: none; color: var(--muted); border-radius: 8px; width: 34px; height: 34px; cursor: pointer; font: 600 15px var(--f-mono); transition: color .15s var(--ease), border-color .15s var(--ease); }
+@media (hover: hover) and (pointer: fine) { .wgap:hover { color: var(--v-cmp); border-color: var(--v-cmp); } }
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -8332,6 +8338,102 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           const o = el.querySelector(".wclock b"); o.textContent = f[R - 1][C - 1]; pop(o);
         };
         el.onclick = e => { const b = e.target.closest("[data-ij]"); if (!b) return; const [i, j] = b.dataset.ij.split(" ").map(Number); blk[i][j] = !blk[i][j]; run(); };
+        run();
+      },
+    },
+  });
+
+
+  // ---- 基12: greedy players and two widgets ----
+  addVis("基12", {
+    title: "Remove 4 digits from 175438, line by line",
+    speed: 2,
+    frames() {
+      const code = ["for (char ch : s) {", "    while (k > 0 && !st.empty() && st.back() > ch) {", "        st.pop_back(); k--;   // bigger digit before a smaller one", "    }", "    st += ch;", "}", "st.resize(st.size() - k);    // still k left: cut the end"];
+      const s = "175438", st = [], F = [];
+      let k = 4;
+      const snap = (line, text, i) => F.push({ code, line, text, vars: { k, ch: i >= 0 && i < s.length ? s[i] : "—" }, rows: [{ label: "s", vals: [...s], marks: i >= 0 && i < s.length ? { [i]: "on" } : {} }, { label: "kept", vals: range(s.length).map(j => st[j] ?? ""), marks: st.length ? { [st.length - 1]: "hit" } : {} }] });
+      [...s].forEach((ch, i) => {
+        snap(0, `Next digit ${ch}`, i);
+        while (k > 0 && st.length && st[st.length - 1] > ch) { const d = st.pop(); k--; snap(2, `${d} > ${ch} and ${d} sits in a higher place: delete it. ${k} deletion${k === 1 ? "" : "s"} left`, i); }
+        st.push(ch); snap(4, `Keep ${ch}`, i);
+      });
+      st.length -= k; snap(6, k ? `Still ${k} left: cut from the end` : "No deletions left, nothing to cut", -1);
+      F.push({ ...F[F.length - 1], line: -1, text: `Answer ${st.join("")}. Kept digits never decrease, so no single deletion can make it smaller` });
+      return F;
+    },
+    mount: codeRowsMount,
+  });
+  addVis("基12", {
+    title: "Souvenir groups: the dearest takes the cheapest along",
+    frames() {
+      const limit = 100, p = [90, 20, 20, 30, 50, 60, 70, 80, 90].sort((a, b) => a - b), g = Array(p.length).fill(""), F = [];
+      const snap = (m, text) => F.push({ rows: [{ label: "price", vals: p, marks: m }, { label: "group", vals: [...g], marks: {} }], text });
+      snap({}, `Sorted prices, limit ${limit} per group of at most two`);
+      let i = 0, j = p.length - 1, n = 0;
+      while (i <= j) {
+        n++;
+        if (i < j && p[i] + p[j] <= limit) { g[i] = g[j] = n; snap({ [i]: "hit", [j]: "hit" }, `${p[j]} + ${p[i]} = ${p[i] + p[j]} ≤ ${limit}: the dearest takes the cheapest. Group ${n}`); i++; }
+        else { g[j] = n; snap({ [j]: "bad", ...(i < j ? { [i]: "on" } : {}) }, i < j ? `${p[j]} + ${p[i]} = ${p[i] + p[j]} > ${limit}: ${p[j]} goes alone. Group ${n}` : `${p[j]} is the last one left. Group ${n}`); }
+        j--;
+      }
+      snap({}, `${n} groups. The dearest must leave anyway; pairing it with the cheapest wastes nothing`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基12", {
+    title: "Huffman: always merge the two smallest",
+    frames() {
+      const ch = "abcdef", w0 = [5, 9, 12, 13, 16, 45], depth = Array(6).fill(0), F = [];
+      let heap = w0.map((w, k) => ({ w, leaves: [k] })), total = 0;
+      const snap = (hot, text) => F.push({ rows: [{ label: "heap", vals: heap.map(x => x.w), marks: Object.fromEntries(hot.map(k => [k, "hit"])) }, { label: "code len", vals: depth, idx: [...ch], marks: {} }], text });
+      heap.sort((a, b) => a.w - b.w); snap([], "Weights in a min heap. Each merge pushes every letter under it one level deeper");
+      while (heap.length > 1) {
+        const [a, b] = heap.splice(0, 2), m = { w: a.w + b.w, leaves: [...a.leaves, ...b.leaves] };
+        m.leaves.forEach(l => depth[l]++); total += m.w;
+        heap.push(m); heap.sort((x, y) => x.w - y.w);
+        snap([heap.indexOf(m)], `${a.w} + ${b.w} = ${m.w} goes back in the heap. Letters ${m.leaves.map(l => ch[l]).join(", ")} get one bit longer. Cost ${total - m.w} + ${m.w} = ${total}`);
+      }
+      snap([], `Total ${total} = 5·4 + 9·4 + 12·3 + 13·3 + 16·3 + 45·1. The rare letters ended deepest`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  Object.assign(WIDGET, {
+    coins: {
+      title: "Does \"biggest coin first\" work here?",
+      html: () => `<div class="win"><label>coins <input type="text" value="4 3 1" data-k="c"></label><label>amount <input type="number" value="6" min="1" max="200" data-k="a"></label></div>
+        <div class="wres two"><div><code>greedy</code><b data-out="g"></b></div><div><code>best</code><b data-out="b"></b></div></div><div class="wclock"><b class="sm"></b><small></small></div>`,
+      init(el) {
+        const [ci, ai] = el.querySelectorAll("input");
+        const run = () => {
+          const c = [...new Set(ints(ci.value).filter(x => x > 0))].sort((a, b) => b - a), n = Math.min(200, Math.max(1, Math.trunc(+ai.value || 1)));
+          const pick = [], best = Array(n + 1).fill(Infinity), from = Array(n + 1).fill(0);
+          let left = n; c.forEach(x => { while (left >= x) { pick.push(x); left -= x; } });
+          best[0] = 0; for (let x = 1; x <= n; x++) c.forEach(v => { if (v <= x && best[x - v] + 1 < best[x]) { best[x] = best[x - v] + 1; from[x] = v; } });
+          const bp = []; if (best[n] < Infinity) for (let x = n; x; x -= from[x]) bp.push(from[x]);
+          const g = left ? "stuck" : `${pick.length}: ${pick.join(" + ")}`, b = best[n] < Infinity ? `${bp.length}: ${bp.join(" + ")}` : "impossible";
+          [["g", g], ["b", b]].forEach(([q, v]) => { const o = el.querySelector(`[data-out="${q}"]`); if (o.textContent !== v) { o.textContent = v; pop(o); } });
+          const ok = !left && pick.length === best[n], o = el.querySelector(".wclock b");
+          o.textContent = ok ? "Greedy is optimal here" : "Greedy loses"; o.classList.toggle("bad", !ok); pop(o);
+          el.querySelector(".wclock small").textContent = ok ? "one example proves nothing: try other amounts" : "one counterexample kills the rule";
+        };
+        ci.oninput = ai.oninput = run;
+        run();
+      },
+    },
+    queue: {
+      title: "Swap two neighbours in the water queue",
+      html: () => `<p class="wq">Click a gap ⇄ to swap the two people beside it. Everyone pays the wait of all who go first</p><div class="wqueue"></div><div class="wclock"><b></b><small>total waiting time</small></div><button type="button" class="btn sm wsort">Shortest first</button>`,
+      init(el) {
+        let t = [56, 12, 1, 99, 33];
+        const run = () => {
+          let now = 0, wait = 0; t.forEach(x => { wait += now; now += x; });
+          swap(el.querySelector(".wqueue"), t.map((x, k) => `${k ? `<button type="button" class="wgap" data-k="${k}" aria-label="swap">⇄</button>` : ""}<span class="qcell">${x}</span>`).join(""), ".qcell");
+          const o = el.querySelector(".wclock b"); if (o.textContent !== String(wait)) { o.textContent = wait; pop(o); }
+        };
+        el.onclick = e => { const g = e.target.closest("[data-k]"); if (g) { const k = +g.dataset.k; [t[k - 1], t[k]] = [t[k], t[k - 1]]; run(); } else if (e.target.closest(".wsort")) { t = [...t].sort((a, b) => a - b); run(); } };
         run();
       },
     },
