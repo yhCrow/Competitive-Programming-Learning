@@ -1706,6 +1706,11 @@ svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
 .cr-rows .cell.void { visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .cr-rows .cell { transition: none; } }
 
+/* 基10: every placement of an h × w block */
+.wplaces { display: flex; flex-wrap: wrap; gap: 10px; }
+.wmini { display: grid; grid-template-columns: repeat(var(--m), 14px); gap: 2px; }
+.wmini i { height: 14px; border-radius: 3px; background: var(--raised); }
+.wmini i.on { background: color-mix(in srgb, var(--v-done) 65%, var(--surface)); }
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -8128,6 +8133,96 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
   };
   // chapter 9's sorting players: insertion, selection, bubble, quick, merge, counting (the unique player stays)
   VIS["基9"].splice(0, 6, ...["insertion", "selection", "bubble", "quick", "merge", "counting"].map(k => SORT_SPECS[k]()));
+
+
+  // ---- 基10: two code-synced recursion players, two widgets ----
+  addVis("基10", {
+    title: "Choose or skip: combinations of 4 choose 2",
+    speed: 2,
+    frames() {
+      const code = ["void choose(int next) {", "    if (picked.size() == r) { print(picked); return; }", "    for (int v = next; v <= n; v++) {", "        picked.push_back(v);   // take v", "        choose(v + 1);         // later numbers only", "        picked.pop_back();     // undo", "    }", "}"];
+      const n = 4, r = 2, picked = [], F = [];
+      let out = "";
+      const snap = (line, text, v, next) => F.push({ code, line, out, text, vars: { next, v: v ?? "—", depth: picked.length }, rows: [{ label: "picked", vals: range(r).map(k => picked[k] ?? ""), marks: picked.length ? { [picked.length - 1]: "hit" } : {} }, { label: "numbers", vals: range(n).map(k => k + 1), marks: Object.assign(mk(picked.map(x => x - 1), "done"), v ? { [v - 1]: "on" } : {}) }] });
+      const choose = next => {
+        snap(0, `choose(${next}): may take ${next} … ${n}`, null, next);
+        if (picked.length === r) { out += picked.join(" ") + "\n"; snap(1, `${r} picked: print ${picked.join(" ")} and go back`, null, next); return; }
+        for (let v = next; v <= n; v++) {
+          snap(2, `Try v = ${v}`, v, next);
+          picked.push(v); snap(3, `Take ${v}`, v, next);
+          snap(4, `Recurse with numbers after ${v} only, so no combination repeats`, v, next); choose(v + 1);
+          picked.pop(); snap(5, `Undo: drop ${v}, try the next value`, v, next);
+        }
+      };
+      choose(1);
+      F.push({ ...F[F.length - 1], line: -1, text: "6 combinations, each once and already in dictionary order" });
+      return F;
+    },
+    mount: codeRowsMount,
+  });
+  addVis("基10", {
+    title: "Permutations by recursion with used[]",
+    speed: 2,
+    frames() {
+      const code = ["void place(int pos) {", "    if (pos == n) { print(cur); return; }", "    for (int v = 1; v <= n; v++)", "        if (!used[v]) {", "            used[v] = true; cur[pos] = v;", "            place(pos + 1);", "            used[v] = false;   // undo", "        }", "}"];
+      const n = 3, cur = Array(n).fill(""), used = Array(n + 1).fill(false), F = [];
+      let out = "";
+      const snap = (line, text, pos, v) => F.push({ code, line, out, text, vars: { pos, v: v ?? "—" }, rows: [{ label: "cur", vals: [...cur], marks: pos < n ? { [pos]: "on" } : {} }, { label: "used", vals: range(n).map(k => (used[k + 1] ? "✓" : "")), idx: range(n).map(k => k + 1), marks: Object.assign(mk(range(n).filter(k => used[k + 1]), "done"), v ? { [v - 1]: used[v] && line === 3 ? "bad" : "hit" } : {}) }] });
+      const place = pos => {
+        snap(0, `place(${pos}): fill position ${pos}`, pos);
+        if (pos === n) { out += cur.join(" ") + "\n"; snap(1, `All ${n} filled: print ${cur.join(" ")}`, pos); return; }
+        for (let v = 1; v <= n; v++) {
+          snap(3, used[v] ? `${v} is already used: skip it` : `${v} is free`, pos, v);
+          if (used[v]) continue;
+          used[v] = true; cur[pos] = v; snap(4, `Put ${v} at position ${pos} and mark it used`, pos, v);
+          place(pos + 1);
+          used[v] = false; cur[pos] = ""; snap(6, `Undo: ${v} is free again`, pos, v);
+        }
+      };
+      place(0);
+      F.push({ ...F[F.length - 1], line: -1, text: `${n}! = 6 orderings. A rule broken early could stop a branch here, which next_permutation cannot do` });
+      return F;
+    },
+    mount: codeRowsMount,
+  });
+  Object.assign(WIDGET, {
+    sizes: {
+      title: "Enumerate the size, not the corners",
+      html: () => `<div class="win"><label>grid n <input type="number" value="2" min="1" max="6" data-k="n"></label><label>m <input type="number" value="3" min="1" max="8" data-k="m"></label><label>h <input type="number" value="1" min="1" max="6" data-k="h"></label><label>w <input type="number" value="2" min="1" max="8" data-k="w"></label></div>
+        <div class="wplaces"></div><div class="wres two"><div><code>(n − h + 1)(m − w + 1)</code><b data-out="p"></b></div><div><code>squares, other rectangles</code><b data-out="t" class="sm"></b></div></div>`,
+      init(el) {
+        const ins = [...el.querySelectorAll("input")];
+        const run = () => {
+          const [n, m] = [ins[0], ins[1]].map(x => Math.max(1, Math.trunc(+x.value || 1))), h = Math.min(n, Math.max(1, Math.trunc(+ins[2].value || 1))), w = Math.min(m, Math.max(1, Math.trunc(+ins[3].value || 1)));
+          const places = (n - h + 1) * (m - w + 1);
+          let sq = 0, all = 0; for (let a = 1; a <= n; a++) for (let b = 1; b <= m; b++) { const p = (n - a + 1) * (m - b + 1); all += p; if (a === b) sq += p; }
+          // every placement drawn small; the first one highlighted
+          swap(el.querySelector(".wplaces"), range(places).map(k => { const r0 = Math.floor(k / (m - w + 1)), c0 = k % (m - w + 1); return `<div class="wmini" style="--m:${m}">${range(n * m).map(c => { const r = Math.floor(c / m), cc = c % m; return `<i class="${r >= r0 && r < r0 + h && cc >= c0 && cc < c0 + w ? "on" : ""}"></i>`; }).join("")}</div>`; }).join(""), ":scope > div");
+          [["p", places], ["t", `${sq}, ${all - sq}`]].forEach(([q, v]) => { const o = el.querySelector(`[data-out="${q}"]`); if (o.textContent !== String(v)) { o.textContent = v; pop(o); } });
+        };
+        ins.forEach(x => (x.oninput = run));
+        run();
+      },
+    },
+    prune: {
+      title: "What pruning saves",
+      html: () => `<div class="win"><label>n grams <input type="range" value="11" min="10" max="30" data-k="n"></label><b class="mono wn"></b></div>
+        <div class="wres two"><div><code>calls, no pruning</code><b data-out="a"></b></div><div><code>calls, with pruning</code><b data-out="b"></b></div></div><div class="wclock"><b class="sm"></b><small>recipes found (same either way)</small></div>`,
+      init(el) {
+        const inp = el.querySelector("input");
+        const count = (n, prune) => { let calls = 0, found = 0; const go = (i, s) => { calls++; if (prune && (s + (10 - i) > n || s + (10 - i) * 3 < n)) return; if (i === 10) { if (s === n) found++; return; } for (let g = 1; g <= 3; g++) go(i + 1, s + g); }; go(0, 0); return [calls, found]; };
+        const run = () => {
+          const n = +inp.value, [a, f1] = count(n, false), [b, f2] = count(n, true);
+          if (f1 !== f2) throw new Error("pruning changed the answer");
+          el.querySelector(".wn").textContent = `n = ${n}`;
+          [["a", a], ["b", b]].forEach(([q, v]) => { const o = el.querySelector(`[data-out="${q}"]`); o.textContent = v.toLocaleString("en-US"); pop(o); });
+          const o = el.querySelector(".wclock b"); o.textContent = f2.toLocaleString("en-US"); pop(o);
+        };
+        inp.oninput = run;
+        run();
+      },
+    },
+  });
 
   // ---- shared numbers: tier, streaks, milestones, next chapter ----
   function longestStreak() {
