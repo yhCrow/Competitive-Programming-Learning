@@ -1711,6 +1711,17 @@ svg .glow, .gsvg text.glow { animation: lsGlowSvg 1s var(--ease); }
 .wmini { display: grid; grid-template-columns: repeat(var(--m), 14px); gap: 2px; }
 .wmini i { height: 14px; border-radius: 3px; background: var(--raised); }
 .wmini i.on { background: color-mix(in srgb, var(--v-done) 65%, var(--surface)); }
+
+/* 基11 widgets */
+.wpaths { display: grid; grid-template-columns: repeat(var(--n), 52px); gap: 6px; max-width: 100%; }
+.wpaths button { height: 46px; border: 1px solid var(--line-strong); border-radius: 8px; background: var(--surface); color: var(--fg); font: 600 15px var(--f-mono); cursor: pointer; transition: background-color .15s var(--ease), border-color .15s var(--ease); }
+.wpaths button.blk { background: color-mix(in srgb, var(--v-bad) 30%, var(--surface)); border-color: var(--v-bad); color: var(--v-bad); }
+.wpaths button.end { border-color: var(--v-done); color: var(--v-done); }
+@media (hover: hover) and (pointer: fine) { .wpaths button:hover { border-color: var(--v-cmp); } }
+@media (max-width: 640px) { .wpaths { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); } }
+.gsvg rect.disk { fill: color-mix(in srgb, var(--v-done) 55%, var(--surface)); stroke: var(--v-done); transition: fill .2s var(--ease); }
+.gsvg rect.disk.hot { fill: var(--v-cmp); stroke: var(--v-cmp); }
+
 /* a chapter card's title grows into the chapter heading */
 ::view-transition-group(chtitle) { animation-duration: .3s; animation-timing-function: var(--ease); }
 
@@ -8219,6 +8230,108 @@ details.prog[open] .progbody { animation: rise .22s var(--ease) both; }
           const o = el.querySelector(".wclock b"); o.textContent = f2.toLocaleString("en-US"); pop(o);
         };
         inp.oninput = run;
+        run();
+      },
+    },
+  });
+
+
+  // ---- 基11: recurrence and recursion players, one grid widget ----
+  addVis("基11", {
+    title: "Climbing stairs: f[i] = f[i − 1] + f[i − 2]",
+    frames() {
+      const n = 10, f = Array(n + 1).fill(""), F = [];
+      const snap = (m, text) => F.push({ rows: [{ label: "f[i]", vals: f.slice(1), base: 1, marks: m }], text });
+      f[1] = 1; f[2] = 2; snap({ 0: "hit", 1: "hit" }, "Base cases: one way to reach step 1, two ways to reach step 2 (1+1 or 2)");
+      for (let i = 3; i <= n; i++) { f[i] = f[i - 1] + f[i - 2]; snap({ [i - 3]: "on", [i - 2]: "on", [i - 1]: "hit" }, `The last move into step ${i} was 1 step (from ${i - 1}) or 2 steps (from ${i - 2}): ${f[i - 1]} + ${f[i - 2]} = ${f[i]}`); }
+      snap({}, "Filled from small to large, each entry once. Only the last two are ever needed, so two variables can replace the table");
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基11", {
+    title: "Pawn paths around the horse, line by line",
+    speed: 2,
+    frames() {
+      const code = ["f[1][0] = 1;", "for (int i = 1; i <= n + 1; i++)", "    for (int j = 1; j <= m + 1; j++)", "        f[i][j] = blocked[i][j] ? 0", "                : f[i - 1][j] + f[i][j - 1];"];
+      const n = 6, m = 6, hx = 3, hy = 3, B = range(n + 1).map(() => Array(m + 1).fill(false)), g = range(n + 1).map(() => Array(m + 1).fill("")), F = [];
+      [[0, 0], [1, 2], [1, -2], [-1, 2], [-1, -2], [2, 1], [2, -1], [-2, 1], [-2, -1]].forEach(([a, b]) => { const x = hx + a, y = hy + b; if (x >= 0 && x <= n && y >= 0 && y <= m) B[x][y] = true; });
+      const snap = (line, text, ci, cj) => F.push({ code, line, text, vars: ci === undefined ? {} : { i: ci + 1, j: cj + 1 }, rows: g.map((row, i) => ({ label: `row ${i}`, vals: row.map((v, j) => (B[i][j] ? "✕" : v)), marks: Object.assign(Object.fromEntries(range(m + 1).filter(j => B[i][j]).map(j => [j, "bad"])), i === ci ? { [cj]: "hit" } : {}, i === ci - 1 ? { [cj]: "on" } : {}, i === ci && cj > 0 ? { [cj - 1]: "on" } : {}) })) });
+      snap(0, `Target (${n}, ${m}). The horse at (${hx}, ${hy}) and the cells it attacks (✕) are blocked. The code shifts every index by 1 so row 0 and column 0 never go negative`);
+      for (let i = 0; i <= n; i++) for (let j = 0; j <= m; j++) {
+        const up = i > 0 ? +g[i - 1][j] || 0 : 0, left = j > 0 ? +g[i][j - 1] || 0 : 0;
+        g[i][j] = B[i][j] ? 0 : i === 0 && j === 0 ? 1 : up + left;
+        snap(B[i][j] ? 3 : 4, B[i][j] ? `(${i}, ${j}) is blocked: 0 ways` : i === 0 && j === 0 ? "The start has 1 way" : `(${i}, ${j}) = ${up} from above + ${left} from the left = ${g[i][j]}`, i, j);
+      }
+      snap(-1, `${g[n][m]} paths reach (${n}, ${m}). Each cell needs only its upper and left neighbours, which row order has already filled`);
+      return F;
+    },
+    mount: codeRowsMount,
+  });
+  addVis("基11", {
+    title: "Order dishes: why j goes downwards",
+    frames() {
+      const dishes = [1, 1, 2, 2], m = 4, f = Array(m + 1).fill(0), F = [];
+      f[0] = 1;
+      const snap = (d, mk2, text) => F.push({ rows: [{ label: "dishes", vals: dishes, marks: d >= 0 ? { [d]: "on" } : {} }, { label: "f[j]", vals: [...f], marks: mk2 }], text });
+      snap(-1, {}, "f[j] = ways to spend exactly j. Spending nothing: f[0] = 1");
+      dishes.forEach((a, d) => {
+        for (let j = m; j >= a; j--) { const before = f[j]; f[j] += f[j - a]; snap(d, { [j]: "hit", [j - a]: "on" }, `Dish ${d + 1} costs ${a}: f[${j}] += f[${j - a}] → ${before} + ${f[j - a]} = ${f[j]}`); }
+      });
+      snap(-1, { [m]: "done" }, `f[${m}] = ${f[m]} ways. Going down, f[j − a] still holds the value from before this dish, so each dish is used at most once`);
+      return F;
+    },
+    mount: rowsMount,
+  });
+  addVis("基11", {
+    title: "Tower of Hanoi with 3 disks",
+    frames() {
+      const pegs = [[3, 2, 1], [], []], names = "ABC", F = [], moves = [];
+      const hanoi = (n, a, b, c) => { if (!n) return; hanoi(n - 1, a, c, b); moves.push([a, c, n]); hanoi(n - 1, b, a, c); };
+      hanoi(3, 0, 1, 2);
+      const draw = (hot, text) => F.push({ svg: `<line x1="20" y1="170" x2="340" y2="170"/>${[0, 1, 2].map(p => `<line x1="${70 + p * 110}" y1="60" x2="${70 + p * 110}" y2="170"/><text class="lbl" x="${70 + p * 110}" y="190" text-anchor="middle">${names[p]}</text>${pegs[p].map((d, k) => `<rect class="${d === hot ? "disk hot" : "disk"}" x="${70 + p * 110 - d * 16}" y="${152 - k * 20}" width="${d * 32}" height="16" rx="5"/>`).join("")}`).join("")}`, text });
+      draw(0, "Move all 3 disks from A to C, never a bigger disk on a smaller one");
+      moves.forEach(([a, c, d], k) => { pegs[c].push(pegs[a].pop()); draw(d, `Move ${k + 1}: disk ${d} from ${names[a]} to ${names[c]}${d === 3 ? ". The largest moves once, in the middle: the 2 above it went to B first, and come back after" : ""}`); });
+      draw(0, `${moves.length} moves = 2³ − 1. Moving n disks takes 2ⁿ − 1`);
+      return F;
+    },
+    mount: svgMount("0 0 360 200"),
+  });
+  addVis("基11", {
+    title: "Decoding nested brackets: [2A[2B]]C",
+    frames() {
+      const s = "[2A[2B]]C", st = [], F = [];
+      const snap = text => F.push({ stack: st.map(x => ({ name: x.name, note: `out = "${x.out}"`, c: x === st[st.length - 1] ? "on" : "" })), list: qlist("Read so far", [s.slice(0, pos) || "nothing"]), text });
+      let pos = 0;
+      const decode = (name) => {
+        const me = { name, out: "" }; st.push(me); snap(`${name} starts reading at position ${pos}`);
+        while (pos < s.length && s[pos] !== "]") {
+          if (s[pos] === "[") { pos++; let k = 0; while (/\d/.test(s[pos])) k = k * 10 + +s[pos++]; snap(`"[" opens a group repeated ${k} times: call decode() for its inside`); const inner = decode(`decode() for ×${k}`); pos++; me.out += inner.repeat(k); snap(`The group "${inner}" × ${k} = "${inner.repeat(k)}" joins the output`); }
+          else { me.out += s[pos++]; snap(`Copy the letter "${s[pos - 1]}"`); }
+        }
+        st.pop(); if (st.length) snap(`"]" ends this group: return "${me.out}"`); return me.out;
+      };
+      const res = decode("decode()");
+      F.push({ stack: [], list: qlist("Result", [res]), text: `${res}: each "[" is the same problem again, one level deeper` });
+      return F;
+    },
+    mount: stackMount,
+  });
+  Object.assign(WIDGET, {
+    paths: {
+      title: "Count the paths, block cells yourself",
+      html: () => `<p class="wq">Click cells to block or unblock them. The pawn moves only right or down</p><div class="wpaths"></div><div class="wclock"><b></b><small>paths to the bottom right corner</small></div>`,
+      init(el) {
+        const R = 4, C = 5, blk = range(R).map(() => Array(C).fill(false));
+        blk[1][1] = blk[2][2] = true;  // the handout's grid: 9 paths
+        const run = () => {
+          const f = range(R).map(() => Array(C).fill(0));
+          for (let i = 0; i < R; i++) for (let j = 0; j < C; j++) f[i][j] = blk[i][j] ? 0 : i === 0 && j === 0 ? 1 : (i ? f[i - 1][j] : 0) + (j ? f[i][j - 1] : 0);
+          const w = el.querySelector(".wpaths"); w.style.setProperty("--n", C);
+          swap(w, range(R).map(i => range(C).map(j => `<button type="button" class="${blk[i][j] ? "blk" : ""}${i === R - 1 && j === C - 1 ? " end" : ""}" data-ij="${i} ${j}">${blk[i][j] ? "✕" : f[i][j]}</button>`).join("")).join(""), "button");
+          const o = el.querySelector(".wclock b"); o.textContent = f[R - 1][C - 1]; pop(o);
+        };
+        el.onclick = e => { const b = e.target.closest("[data-ij]"); if (!b) return; const [i, j] = b.dataset.ij.split(" ").map(Number); blk[i][j] = !blk[i][j]; run(); };
         run();
       },
     },
